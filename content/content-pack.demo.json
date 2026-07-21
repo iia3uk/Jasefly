@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "mode": "replace_content",
+  "_comment": "[DEMO] Minimal Jasefly CMS demo pack — import via admin/content tools, then delete.",
+  "singletons": {
+    "profile": {
+      "name": "Jasefly Demo",
+      "job_title": "Demo profile",
+      "short_bio": "[DEMO] Sample profile. Replace or delete.",
+      "bio": "<p><strong>[DEMO]</strong> Modular AI-ready CMS sample content.</p>",
+      "location": "",
+      "availability_status": "",
+      "years_experience": 0
+    },
+    "hero_settings": {
+      "headline": "[DEMO] Jasefly CMS",
+      "subheadline": "Modular AI-ready CMS",
+      "badge_text": "Demo",
+      "primary_cta_label": "About",
+      "primary_cta_href": "/about",
+      "secondary_cta_label": "Privacy",
+      "secondary_cta_href": "/privacy",
+      "show_scroll_indicator": 0,
+      "animation_style": "fade"
+    },
+    "site_settings": {
+      "site_name": "Jasefly CMS (Demo)",
+      "maintenance_mode": 0,
+      "timezone": "UTC",
+      "locale": "en",
+      "posts_per_page": 9,
+      "projects_per_page": 12
+    },
+    "seo_settings": {
+      "site_title": "Jasefly CMS — Demo",
+      "site_description": "[DEMO] Modular AI-ready CMS",
+      "site_keywords": "jasefly, cms, demo",
+      "og_title": "Jasefly CMS — Demo",
+      "og_description": "[DEMO] Sample site",
+      "twitter_card": "summary_large_image"
+    },
+    "contact_info": {
+      "email": "demo@example.com",
+      "phone": "",
+      "address": "",
+      "city": "",
+      "country": "",
+      "form_enabled": 1,
+      "form_success_message": "[DEMO] Message received."
+    },
+    "footer_settings": {
+      "copyright_text": "© {year} Jasefly CMS — Demo",
+      "tagline": "[DEMO] Modular AI-ready CMS",
+      "show_social": 0
+    },
+    "theme_settings": {
+      "preset": "midnight",
+      "primary_color": "#5b8cff",
+      "accent_color": "#8eb6ff",
+      "background_color": "#06080c",
+      "surface_color": "#0e1219",
+      "text_color": "#f4f6fa",
+      "muted_color": "#8b95a8",
+      "font_display": "Sora",
+      "font_body": "DM Sans",
+      "border_radius": "14px",
+      "glass_opacity": 0.08
+    },
+    "email_settings": {
+      "mailer": "php",
+      "from_email": "noreply@example.com",
+      "from_name": "Jasefly CMS",
+      "to_email": "demo@example.com"
+    }
+  },
+  "social_links": [],
+  "statistics": [],
+  "experience": [],
+  "education": [],
+  "skills": [],
+  "projects": [],
+  "blog_posts": [],
+  "services": [],
+  "testimonials": [],
+  "navigation_items": [
+    { "label": "Home", "href": "/", "location": "header", "sort_order": 1, "is_visible": 1 },
+    { "label": "About", "href": "/about", "location": "header", "sort_order": 2, "is_visible": 1 },
+    { "label": "Privacy", "href": "/privacy", "location": "footer", "sort_order": 1, "is_visible": 1 }
+  ],
+  "pages": [
+    {
+      "title": "About",
+      "slug": "about",
+      "status": "published",
+      "seo_title": "About — Jasefly CMS",
+      "seo_description": "[DEMO] About page"
+    },
+    {
+      "title": "Privacy Policy",
+      "slug": "privacy",
+      "status": "published",
+      "seo_title": "Privacy Policy",
+      "seo_description": "Privacy Policy template — replace with your legal text"
+    }
+  ]
+}

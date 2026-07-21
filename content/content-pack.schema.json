@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://portfolio.local/content-pack.schema.json",
+  "title": "Jasefly CMS Content Pack",
+  "type": "object",
+  "required": ["version"],
+  "properties": {
+    "version": { "const": 1 },
+    "mode": { "type": "string", "enum": ["replace_content"], "default": "replace_content" },
+    "singletons": {
+      "type": "object",
+      "properties": {
+        "profile": { "type": "object" },
+        "hero_settings": { "type": "object" },
+        "site_settings": { "type": "object" },
+        "seo_settings": { "type": "object" },
+        "contact_info": { "type": "object" },
+        "footer_settings": { "type": "object" },
+        "theme_settings": { "type": "object" },
+        "email_settings": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "social_links": { "type": "array", "items": { "type": "object" } },
+    "statistics": { "type": "array", "items": { "type": "object" } },
+    "experience": { "type": "array", "items": { "type": "object" } },
+    "education": { "type": "array", "items": { "type": "object" } },
+    "skill_categories": { "type": "array", "items": { "type": "object" } },
+    "skills": { "type": "array", "items": { "type": "object" } },
+    "project_categories": { "type": "array", "items": { "type": "object" } },
+    "project_tags": { "type": "array", "items": { "type": "object" } },
+    "projects": { "type": "array", "items": { "type": "object" } },
+    "blog_categories": { "type": "array", "items": { "type": "object" } },
+    "blog_tags": { "type": "array", "items": { "type": "object" } },
+    "blog_posts": { "type": "array", "items": { "type": "object" } },
+    "services": { "type": "array", "items": { "type": "object" } },
+    "products": { "type": "array", "items": { "type": "object" } },
+    "testimonials": { "type": "array", "items": { "type": "object" } },
+    "navigation_items": { "type": "array", "items": { "type": "object" } },
+    "homepage_sections": { "type": "array", "items": { "type": "object" } },
+    "pages": { "type": "array", "items": { "type": "object" } }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS `products` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `title` VARCHAR(255) NOT NULL,
+  `slug` VARCHAR(255) NOT NULL,
+  `sku` VARCHAR(64) NULL,
+  `short_description` TEXT NULL,
+  `description` LONGTEXT NULL,
+  `price` DECIMAL(12,2) NOT NULL DEFAULT 0,
+  `currency` VARCHAR(8) NOT NULL DEFAULT 'RUB',
+  `media_id` INT UNSIGNED NULL,
+  `stock` INT NULL DEFAULT NULL COMMENT 'NULL = unlimited',
+  `is_purchasable` TINYINT(1) NOT NULL DEFAULT 1,
+  `is_visible` TINYINT(1) NOT NULL DEFAULT 1,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `deleted_at` DATETIME NULL DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY `uq_products_slug` (`slug`),
+  KEY `idx_products_purchasable` (`is_purchasable`, `is_visible`),
+  KEY `idx_products_sort` (`sort_order`),
+  KEY `idx_products_deleted` (`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

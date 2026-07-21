@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "jasefly-cms": {
+      "command": "node",
+      "args": ["C:/JASEFLY_CMS/mcp-cms/src/index.js"],
+      "env": {
+        "CMS_REPO_ROOT": "C:/JASEFLY_CMS"
+      }
+    }
+  }
+}

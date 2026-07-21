@@ -1,0 +1,68 @@
+# Root
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.temp
+*.swp
+*~
+.env
+.env.*
+!.env.example
+!**/.env.example
+!backend/config/.env.example
+!mcp-cms/.env.example
+!frontend/.env.example
+!/.env.example
+
+# Local DX / IDE / Cursor
+.dev/
+.cursor/
+.idea/
+.vscode/
+*.code-workspace
+
+# Backend secrets & runtime
+backend/config/config.local.php
+backend/config/.env
+backend/vendor/
+backend/storage/.installed
+backend/storage/.demo_seeded
+backend/storage/uploads/**
+backend/storage/thumbnails/**
+backend/storage/backups/**
+backend/storage/logs/**
+backend/storage/cache/**
+backend/storage/updates/**
+backend/storage/sqlite/**
+!backend/storage/uploads/.gitkeep
+!backend/storage/thumbnails/.gitkeep
+!backend/storage/backups/.gitkeep
+!backend/storage/logs/.gitkeep
+!backend/storage/cache/.gitkeep
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.env.development.local
+
+# MCP
+mcp-cms/node_modules/
+mcp-cms/.env
+mcp-cms/.gate-state.json
+
+# Production packages & transfer
+release/
+transfer/
+*.zip
+!content/*.json
+
+# Portable Node/PHP (setup.bat)
+.tools/
+
+# Local build-hosting config (personal domain — copy from example)
+build-hosting.config.json
+
+# OS
+Desktop.ini

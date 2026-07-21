@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "mode": "replace_content",
+  "singletons": {
+    "profile": {
+      "name": "",
+      "job_title": "",
+      "short_bio": "",
+      "bio": "",
+      "location": "",
+      "availability_status": "",
+      "years_experience": 0
+    },
+    "hero_settings": {
+      "headline": "",
+      "subheadline": "",
+      "badge_text": "",
+      "primary_cta_label": "Смотреть работы",
+      "primary_cta_href": "/projects",
+      "secondary_cta_label": "Связаться",
+      "secondary_cta_href": "/contact",
+      "show_scroll_indicator": 1,
+      "animation_style": "fade"
+    },
+    "site_settings": {
+      "site_name": "",
+      "maintenance_mode": 0,
+      "timezone": "Europe/Moscow",
+      "locale": "ru",
+      "posts_per_page": 9,
+      "projects_per_page": 12
+    },
+    "seo_settings": {
+      "site_title": "",
+      "site_description": "",
+      "site_keywords": "",
+      "og_title": "",
+      "og_description": "",
+      "twitter_card": "summary_large_image"
+    },
+    "contact_info": {
+      "email": "",
+      "phone": "",
+      "address": "",
+      "city": "",
+      "country": "",
+      "form_enabled": 1,
+      "form_success_message": ""
+    },
+    "footer_settings": {
+      "copyright_text": "© {year} ",
+      "tagline": "",
+      "show_social": 1
+    },
+    "theme_settings": {
+      "preset": "midnight",
+      "primary_color": "#5b8cff",
+      "accent_color": "#8eb6ff",
+      "background_color": "#06080c",
+      "surface_color": "#0e1219",
+      "text_color": "#f4f6fa",
+      "muted_color": "#8b95a8",
+      "font_display": "Sora",
+      "font_body": "DM Sans",
+      "border_radius": "14px",
+      "glass_opacity": 0.08
+    },
+    "email_settings": {
+      "mailer": "php",
+      "from_email": "",
+      "from_name": "",
+      "to_email": ""
+    }
+  },
+  "social_links": [],
+  "statistics": [],
+  "experience": [],
+  "education": [],
+  "skill_categories": [],
+  "skills": [],
+  "project_categories": [],
+  "project_tags": [],
+  "projects": [],
+  "blog_categories": [],
+  "blog_tags": [],
+  "blog_posts": [],
+  "services": [],
+  "products": [],
+  "testimonials": [],
+  "navigation_items": [],
+  "homepage_sections": [],
+  "pages": []
+}
