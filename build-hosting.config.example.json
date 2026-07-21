@@ -1,0 +1,7 @@
+{
+  "_comment": "Copy to build-hosting.config.json. Use CLI flags to override. Never commit real secrets.",
+  "mode": "full",
+  "domain": "https://YOUR_DOMAIN",
+  "apiUrl": "",
+  "demo": "no"
+}

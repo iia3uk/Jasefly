@@ -1,0 +1,610 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #5b8cff;
+  --accent: #8eb6ff;
+  --background: #06080c;
+  --surface: #0e1219;
+  --text: #f4f6fa;
+  --muted: #8b95a8;
+  --font-heading: "Sora", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+  --radius: 14px;
+  --glass-opacity: 0.08;
+  --primary-foreground: #061018;
+  color: var(--text);
+  background: var(--background);
+  font-family: var(--font-body);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(4.5rem + var(--admin-bar-h, 0px)); }
+body {
+  margin: 0;
+  min-width: 320px;
+  overflow-x: clip;
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 60%),
+    radial-gradient(900px 500px at 90% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 55%),
+    var(--background);
+  color: var(--text);
+}
+
+/* Таблицы и широкие админ-блоки — горизонтальный скролл вместо вылезания */
+.admin-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+::selection { background: color-mix(in srgb, var(--primary) 40%, transparent); color: #fff; }
+
+/* iframe must NOT get height:auto — embeds collapse to a thin chrome strip */
+img, video { max-width: 100%; height: auto; }
+iframe { max-width: 100%; display: block; border: 0; }
+
+.font-heading { font-family: var(--font-heading); }
+.glass {
+  background: color-mix(in srgb, var(--surface) calc(var(--glass-opacity) * 100% + 55%), transparent);
+  border: 1px solid rgb(255 255 255 / .08);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 24px 80px rgb(0 0 0 / .25);
+}
+
+a, button, summary, [role="button"], label[for], .button {
+  cursor: pointer;
+}
+a:disabled, button:disabled, .button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+a:focus-visible,
+button:focus-visible,
+.button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 80%, white);
+  outline-offset: 3px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--background);
+  padding: .85rem 1.35rem;
+  font-size: .9rem;
+  font-weight: 600;
+  min-height: 2.75rem;
+  box-shadow: 0 0 0 0 transparent;
+  transition: transform .2s ease, opacity .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease, color .2s ease;
+}
+.button:hover { opacity: 1; transform: translateY(-1px); box-shadow: 0 10px 28px rgb(0 0 0 / .28); }
+.button:active { transform: translateY(0); }
+.button-ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgb(255 255 255 / .22);
+}
+.button-ghost:hover {
+  background: rgb(255 255 255 / .06);
+  border-color: rgb(255 255 255 / .4);
+  box-shadow: none;
+}
+
+/* Text / nav affordances */
+.link-text {
+  color: var(--text);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+  transition: color .2s ease, text-decoration-color .2s ease;
+}
+.link-text:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+.link-nav {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding-block: .2rem;
+  transition: color .2s ease;
+}
+.link-nav::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -.15rem;
+  height: 1.5px;
+  border-radius: 999px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .22s ease;
+}
+.link-nav:hover,
+.link-nav[aria-current="page"] {
+  color: var(--text);
+}
+.link-nav:hover::after,
+.link-nav[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+
+.link-row {
+  position: relative;
+  display: block;
+  transition: color .2s ease, padding-left .2s ease, background .2s ease;
+}
+.link-row:hover {
+  color: var(--text);
+  padding-left: .35rem;
+}
+
+.link-card {
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+.link-card:hover {
+  transform: translateY(-2px);
+}
+.link-card:hover .link-card-surface {
+  border-color: rgb(255 255 255 / .16);
+  box-shadow: 0 18px 40px rgb(0 0 0 / .28);
+}
+.link-card:hover .link-card-cue {
+  color: var(--text);
+  transform: translate(2px, -2px);
+}
+
+@media (max-width: 639px) {
+  .prose { font-size: 1rem; line-height: 1.75; }
+}
+
+input, textarea, select {
+  width: 100%;
+  border: 1px solid rgb(255 255 255 / .1);
+  border-radius: 12px;
+  background: rgb(255 255 255 / .035);
+  padding: .85rem 1rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+input::placeholder, textarea::placeholder {
+  color: color-mix(in srgb, var(--muted) 80%, transparent);
+}
+input:focus, textarea:focus, select:focus {
+  border-color: color-mix(in srgb, var(--primary) 65%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+/* Native <select> dropdown lists render with the OS default (white on
+   Windows) while inheriting the page's light text color — producing
+   invisible white-on-white options. Force a dark panel + readable text so
+   the open menu matches the dark admin theme. */
+select option {
+  background: #0e1219;
+  color: var(--text);
+}
+select option:checked {
+  background: color-mix(in srgb, var(--primary) 35%, #0e1219);
+  color: #fff;
+}
+
+/* Inside the admin shell, give inputs a solid dark surface (not translucent)
+   so forms read as a cohesive dark UI rather than floating over the page. */
+.admin-shell input,
+.admin-shell textarea,
+.admin-shell select {
+  background: #10141c;
+  border-color: rgb(255 255 255 / .08);
+}
+.admin-shell input:focus,
+.admin-shell textarea:focus,
+.admin-shell select:focus {
+  border-color: color-mix(in srgb, var(--primary) 70%, white);
+}
+.admin-shell select option {
+  background: #10141c;
+  color: var(--text);
+}
+
+.prose { color: var(--muted); line-height: 1.85; font-size: 1.05rem; }
+.prose > :first-child { margin-top: 0; }
+.prose h2, .prose h3, .prose h4 {
+  color: var(--text);
+  font-family: var(--font-heading);
+  letter-spacing: -0.03em;
+  margin-top: 2.25rem;
+  margin-bottom: .8rem;
+}
+.prose h2 { font-size: 1.35rem; font-weight: 600; }
+.prose h3 { font-size: 1.15rem; font-weight: 600; }
+.prose p { margin: 1rem 0; }
+.prose p:first-of-type strong:first-child {
+  color: var(--text);
+  font-weight: 600;
+}
+.prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: color .2s ease, text-decoration-color .2s ease;
+}
+.prose a:hover { color: var(--text); text-decoration-color: var(--text); }
+.prose ul, .prose ol { padding-left: 1.25rem; margin: 1.15rem 0 1.35rem; }
+.prose li { margin: .4rem 0; padding-left: .15rem; }
+.prose li::marker { color: color-mix(in srgb, var(--accent) 75%, var(--muted)); }
+.prose hr {
+  border: 0;
+  height: 1px;
+  margin: 2.25rem 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / .12) 18%,
+    color-mix(in srgb, var(--primary) 45%, transparent) 50%,
+    rgb(255 255 255 / .12) 82%,
+    transparent
+  );
+}
+.prose blockquote {
+  margin: 1.5rem 0;
+  padding: .85rem 1.15rem;
+  border-left: 2px solid color-mix(in srgb, var(--primary) 70%, transparent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  color: var(--text);
+}
+.prose blockquote p { margin: .35rem 0; }
+.prose pre {
+  overflow: auto;
+  border: 1px solid rgb(255 255 255 / .08);
+  border-radius: 14px;
+  background: #0a0d13;
+  padding: 1rem 1.1rem;
+}
+.prose code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; }
+.prose img { max-width: 100%; border-radius: var(--radius); }
+
+.admin-shell { --background: #090b10; --surface: #10141c; --text: #f4f6fa; --muted: #8b95a8; }
+
+/* Quiet scrollbars — sidebar & preview */
+.admin-shell aside,
+.admin-quiet-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / .12) transparent;
+}
+.admin-shell aside::-webkit-scrollbar,
+.admin-quiet-scroll::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.admin-shell aside::-webkit-scrollbar-track,
+.admin-quiet-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-shell aside::-webkit-scrollbar-thumb,
+.admin-quiet-scroll::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / .1);
+  border-radius: 999px;
+}
+.admin-shell aside::-webkit-scrollbar-thumb:hover,
+.admin-quiet-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgb(255 255 255 / .2);
+}
+
+/* Public-site look inside admin preview (escape admin button overrides) */
+.admin-preview-surface {
+  --background: var(--preview-bg, #06080c);
+  --surface: var(--preview-surface, #10141c);
+  --text: var(--preview-text, #f4f6fa);
+  --muted: var(--preview-muted, #8b95a8);
+  --primary: var(--preview-primary, #5b8cff);
+  --accent: var(--preview-accent, #8eb6ff);
+  --radius: var(--preview-radius, 16px);
+  --font-heading: var(--preview-font-heading, inherit);
+  --font-body: var(--preview-font-body, inherit);
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+/* Page builder chrome — slim toolbar controls (canvas resets below) */
+.builder-shell .button {
+  border-radius: 7px;
+  background: rgb(255 255 255 / .05);
+  color: #e4e7ee;
+  border: 1px solid rgb(255 255 255 / .12);
+  padding: .35rem .7rem;
+  font-size: .75rem;
+  font-weight: 500;
+  min-height: 2rem;
+  gap: .35rem;
+  box-shadow: none;
+  transform: none;
+}
+.builder-shell .button:hover {
+  opacity: 1;
+  transform: none;
+  background: rgb(255 255 255 / .09);
+  border-color: rgb(255 255 255 / .2);
+  box-shadow: none;
+}
+.builder-shell .button.admin-primary {
+  background: color-mix(in srgb, var(--accent, #8eb6ff) 18%, transparent);
+  border-color: color-mix(in srgb, var(--accent, #8eb6ff) 40%, transparent);
+  color: #eef3ff;
+}
+.builder-shell .button.admin-primary:hover {
+  background: color-mix(in srgb, var(--accent, #8eb6ff) 28%, transparent);
+}
+
+/*
+ * Live preview / builder canvas CTAs must match public .button 1:1.
+ * Higher specificity than .builder-shell .button so chrome does not bleed in.
+ */
+.admin-preview-surface .button,
+.builder-shell .admin-preview-surface .button {
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--background);
+  border: 1px solid transparent;
+  padding: .85rem 1.35rem;
+  font-size: .9rem;
+  font-weight: 600;
+  min-height: 2.75rem;
+  gap: .5rem;
+  box-shadow: 0 0 0 0 transparent;
+}
+.admin-preview-surface .button:hover,
+.builder-shell .admin-preview-surface .button:hover {
+  opacity: 1;
+  background: var(--text);
+  border-color: transparent;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgb(0 0 0 / .28);
+}
+.admin-preview-surface .button-ghost,
+.builder-shell .admin-preview-surface .button-ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgb(255 255 255 / .22);
+}
+.admin-preview-surface .button-ghost:hover,
+.builder-shell .admin-preview-surface .button-ghost:hover {
+  background: rgb(255 255 255 / .06);
+  border-color: rgb(255 255 255 / .4);
+  color: var(--text);
+  box-shadow: none;
+}
+.builder-shell .builder-tool {
+  display: inline-flex;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  border-radius: 7px;
+  border: 1px solid rgb(255 255 255 / .1);
+  background: transparent;
+  padding: 0 .65rem;
+  font-size: .75rem;
+  font-weight: 500;
+  color: #a1a7b5;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.builder-shell .builder-tool:hover {
+  background: rgb(255 255 255 / .06);
+  color: #f0f2f6;
+  border-color: rgb(255 255 255 / .18);
+}
+.builder-shell .builder-tool.is-active {
+  background: rgb(255 255 255 / .1);
+  color: #fff;
+  border-color: rgb(255 255 255 / .16);
+}
+.builder-shell .builder-tool:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+/* Phone-first builder: bottom dock + sheets */
+.builder-mobile-dock {
+  box-shadow: 0 -8px 28px rgb(0 0 0 / .45);
+}
+.builder-dock-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .2rem;
+  min-height: 3.75rem;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #8b919f;
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.builder-dock-btn.is-active {
+  color: #f2f4f8;
+}
+.builder-dock-btn.is-active svg {
+  color: var(--accent, #8eb6ff);
+}
+.builder-mobile-sheet {
+  animation: builder-sheet-up .22s ease-out;
+}
+@keyframes builder-sheet-up {
+  from { transform: translateY(12%); opacity: .85; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .builder-mobile-sheet { animation: none; }
+}
+.builder-shell {
+  -webkit-tap-highlight-color: transparent;
+}
+@media (max-width: 1023px) {
+  .builder-shell input,
+  .builder-shell textarea,
+  .builder-shell select {
+    font-size: 16px; /* iOS: avoid zoom-on-focus */
+  }
+}
+
+/* Minimal admin controls — not the fat public CTA pills */
+.admin-shell .button {
+  border-radius: 8px;
+  background: rgb(255 255 255 / .06);
+  color: #e8eaef;
+  border: 1px solid rgb(255 255 255 / .12);
+  padding: .45rem .85rem;
+  font-size: .8125rem;
+  font-weight: 500;
+  min-height: 2.15rem;
+  box-shadow: none;
+  transform: none;
+}
+.admin-shell .button:hover {
+  opacity: 1;
+  transform: none;
+  background: rgb(255 255 255 / .1);
+  border-color: rgb(255 255 255 / .22);
+  box-shadow: none;
+}
+.admin-shell .button:active { transform: none; }
+.admin-shell .button-ghost {
+  background: transparent;
+  border-color: rgb(255 255 255 / .14);
+  color: #c4c9d4;
+}
+.admin-shell .button-ghost:hover {
+  background: rgb(255 255 255 / .06);
+  border-color: rgb(255 255 255 / .28);
+  color: #fff;
+}
+
+/* Primary save / publish stays slightly stronger without going "fat white" */
+.admin-shell .button.admin-primary,
+.admin-shell form > .button:only-of-type,
+.admin-shell .sticky .button:first-child {
+  background: color-mix(in srgb, var(--accent, #8eb6ff) 22%, transparent);
+  border-color: color-mix(in srgb, var(--accent, #8eb6ff) 45%, transparent);
+  color: #f0f4ff;
+}
+.admin-shell .button.admin-primary:hover,
+.admin-shell .sticky .button:first-child:hover {
+  background: color-mix(in srgb, var(--accent, #8eb6ff) 32%, transparent);
+}
+
+/* Admin form fields — consistent, readable dark controls */
+.admin-shell label {
+  color: #c4c9d4;
+}
+.admin-shell .glass {
+  background: #10141c;
+  border-color: rgb(255 255 255 / .07);
+}
+.admin-shell input[type="checkbox"] {
+  width: auto;
+  accent-color: var(--accent, #8eb6ff);
+}
+.admin-shell textarea {
+  resize: vertical;
+  min-height: 6rem;
+  line-height: 1.6;
+}
+
+/* List rows — subtle hover affordance */
+.admin-shell .divide-white\/10 > * {
+  transition: background .12s;
+}
+.admin-shell .divide-white\/10 > *:hover {
+  background: rgb(255 255 255 / .025);
+}
+
+.mp-theme {
+  -webkit-font-smoothing: antialiased;
+}
+.mp-theme a {
+  text-decoration: none;
+}
+
+.tiptap { min-height: 280px; outline: none; }
+.tiptap p.is-editor-empty:first-child::before {
+  color: var(--muted);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.rte-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .3rem;
+  min-height: 1.75rem;
+  padding: .2rem .55rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #a1a8b8;
+  font-size: .75rem;
+  font-weight: 500;
+  line-height: 1;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.rte-toolbar-btn:hover {
+  background: rgb(255 255 255 / .06);
+  color: #f0f2f7;
+  border-color: rgb(255 255 255 / .08);
+}
+.rte-toolbar-btn.is-active {
+  background: rgb(255 255 255 / .1);
+  color: #fff;
+  border-color: rgb(255 255 255 / .16);
+}
+.rte-mode-tab {
+  min-height: 1.85rem;
+  padding: .25rem .7rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #8b95a8;
+  font-size: .75rem;
+  font-weight: 500;
+}
+.rte-mode-tab.is-active {
+  background: rgb(255 255 255 / .08);
+  color: #fff;
+  border-color: rgb(255 255 255 / .12);
+}
+.rte-html-editor {
+  width: 100%;
+  min-height: 320px;
+  resize: vertical;
+  border: 0;
+  border-radius: 0;
+  background: #0c0e14;
+  color: #d7dde8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .8rem;
+  line-height: 1.55;
+  padding: 1rem 1.1rem;
+  outline: none;
+}

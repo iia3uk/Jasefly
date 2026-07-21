@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "mode": "replace_content",
+  "singletons": {
+    "profile": {
+      "name": "Имя Фамилия",
+      "job_title": "Должность",
+      "short_bio": "Краткое био в 1–2 предложения.",
+      "bio": "<p>Развёрнутое био. Можно HTML.</p>",
+      "location": "Город / Remote",
+      "availability_status": "Открыт к проектам",
+      "years_experience": 5
+    },
+    "hero_settings": {
+      "headline": "Главный заголовок на главной",
+      "subheadline": "Подзаголовок под hero",
+      "badge_text": "Бейдж",
+      "primary_cta_label": "Смотреть работы",
+      "primary_cta_href": "/projects",
+      "secondary_cta_label": "Связаться",
+      "secondary_cta_href": "/contact",
+      "show_scroll_indicator": 1,
+      "animation_style": "fade"
+    },
+    "site_settings": {
+      "site_name": "Jasefly CMS",
+      "maintenance_mode": 0,
+      "timezone": "UTC",
+      "locale": "en",
+      "posts_per_page": 9,
+      "projects_per_page": 12
+    },
+    "seo_settings": {
+      "site_title": "Jasefly CMS",
+      "site_description": "Modular AI-ready CMS",
+      "site_keywords": "cms, jasefly, modular",
+      "og_title": "Jasefly CMS",
+      "og_description": "Modular AI-ready CMS",
+      "twitter_card": "summary_large_image"
+    },
+    "contact_info": {
+      "email": "hello@example.com",
+      "phone": "+7 (900) 000-00-00",
+      "address": "Удалённо",
+      "city": "Москва",
+      "country": "Россия",
+      "form_enabled": 1,
+      "form_success_message": "Спасибо! Отвечу в ближайшие дни."
+    },
+    "footer_settings": {
+      "copyright_text": "© {year} Имя. Все права защищены.",
+      "tagline": "Слоган в подвале",
+      "show_social": 1
+    },
+    "theme_settings": {
+      "preset": "midnight",
+      "primary_color": "#5b8cff",
+      "accent_color": "#8eb6ff",
+      "background_color": "#06080c",
+      "surface_color": "#0e1219",
+      "text_color": "#f4f6fa",
+      "muted_color": "#8b95a8",
+      "font_display": "Sora",
+      "font_body": "DM Sans",
+      "border_radius": "14px",
+      "glass_opacity": 0.08
+    },
+    "email_settings": {
+      "mailer": "php",
+      "from_email": "noreply@example.com",
+      "from_name": "Jasefly CMS",
+      "to_email": "hello@example.com"
+    }
+  },
+  "social_links": [
+    { "platform": "github", "label": "GitHub", "url": "https://github.com/you", "icon": "github", "sort_order": 1, "is_visible": 1 }
+  ],
+  "statistics": [
+    { "label": "Лет опыта", "value": "5", "suffix": "+", "icon": "calendar", "sort_order": 1, "is_visible": 1 }
+  ],
+  "experience": [
+    {
+      "company": "Компания",
+      "role": "Разработчик",
+      "location": "Remote",
+      "description": "<p>Чем занимались.</p>",
+      "start_date": "2022-01-01",
+      "end_date": null,
+      "is_current": 1,
+      "technologies": ["React", "PHP"],
+      "sort_order": 1,
+      "is_visible": 1
+    }
+  ],
+  "education": [
+    {
+      "institution": "Университет",
+      "degree": "Бакалавр",
+      "field_of_study": "Информатика",
+      "description": "Кратко об учёбе.",
+      "start_date": "2016-09-01",
+      "end_date": "2020-06-30",
+      "sort_order": 1,
+      "is_visible": 1
+    }
+  ],
+  "skill_categories": [
+    { "ref": "frontend", "name": "Frontend", "slug": "frontend", "description": "Интерфейсы", "icon": "monitor", "sort_order": 1 }
+  ],
+  "skills": [
+    { "category_ref": "frontend", "name": "React", "percentage": 90, "icon": "react", "sort_order": 1, "is_visible": 1 }
+  ],
+  "project_categories": [
+    { "ref": "product", "name": "Product", "slug": "product", "description": "Продукты", "sort_order": 1 }
+  ],
+  "project_tags": [
+    { "ref": "cms", "name": "CMS", "slug": "cms" }
+  ],
+  "projects": [
+    {
+      "ref": "my-project",
+      "title": "Мой проект",
+      "slug": "my-project",
+      "short_description": "Короткое описание.",
+      "description": "Полнее.",
+      "content": "<h2>Обзор</h2><p>Текст кейса.</p>",
+      "category_ref": "product",
+      "status": "published",
+      "project_status": "completed",
+      "is_featured": 1,
+      "sort_order": 1,
+      "role": "Full-Stack",
+      "team_size": 1,
+      "completion_date": "2024-06-01",
+      "github_url": null,
+      "website_url": null,
+      "challenges": "",
+      "seo_title": "Мой проект",
+      "seo_description": "SEO описание",
+      "published_at": "2024-06-01 12:00:00",
+      "technologies": [{ "name": "React", "sort_order": 1 }],
+      "features": [{ "title": "Фича", "description": "Описание", "sort_order": 1 }],
+      "timeline": [{ "title": "Запуск", "description": "", "event_date": "2024-06-01", "sort_order": 1 }],
+      "tag_refs": ["cms"]
+    }
+  ],
+  "blog_categories": [
+    { "ref": "notes", "name": "Заметки", "slug": "notes", "description": "", "sort_order": 1 }
+  ],
+  "blog_tags": [
+    { "ref": "tips", "name": "Tips", "slug": "tips" }
+  ],
+  "blog_posts": [
+    {
+      "title": "Первый пост",
+      "slug": "first-post",
+      "excerpt": "Краткий анонс.",
+      "content": "<p>Текст поста.</p>",
+      "content_format": "html",
+      "category_ref": "notes",
+      "status": "published",
+      "reading_time": 3,
+      "seo_title": "Первый пост",
+      "seo_description": "Анонс",
+      "published_at": "2024-06-01 12:00:00",
+      "tag_refs": ["tips"]
+    }
+  ],
+  "services": [
+    {
+      "title": "Разработка",
+      "slug": "development",
+      "short_description": "Сайты и продукты.",
+      "description": "<p>Подробнее.</p>",
+      "icon": "code",
+      "features": ["Discovery", "Разработка", "Запуск"],
+      "sort_order": 1,
+      "is_visible": 1
+    }
+  ],
+  "testimonials": [
+    {
+      "author_name": "Клиент",
+      "author_role": "CEO",
+      "author_company": "ACME",
+      "content": "Отзыв.",
+      "rating": 5,
+      "sort_order": 1,
+      "is_visible": 1
+    }
+  ],
+  "navigation_items": [
+    { "label": "Работы", "href": "/projects", "location": "header", "sort_order": 1, "is_visible": 1 },
+    { "label": "Обо мне", "href": "/about", "location": "header", "sort_order": 2, "is_visible": 1 },
+    { "label": "Контакт", "href": "/contact", "location": "header", "sort_order": 3, "is_visible": 1 }
+  ],
+  "homepage_sections": [
+    { "section_key": "about_preview", "title": "Обо мне", "subtitle": "Кратко", "cta_label": "Подробнее", "cta_href": "/about", "is_visible": 1, "sort_order": 1 },
+    { "section_key": "featured_projects", "title": "Работы", "subtitle": "Избранное", "cta_label": "Все", "cta_href": "/projects", "is_visible": 1, "sort_order": 2, "settings_json": { "limit": 3 } },
+    { "section_key": "contact_cta", "title": "Свяжемся?", "subtitle": "Расскажите о задаче", "cta_label": "Написать", "cta_href": "/contact", "is_visible": 1, "sort_order": 3 }
+  ],
+  "pages": [
+    {
+      "title": "Политика конфиденциальности",
+      "slug": "privacy",
+      "content": "<h1>Конфиденциальность</h1><p>Текст политики.</p>",
+      "status": "published",
+      "seo_title": "Конфиденциальность",
+      "seo_description": "Как обрабатываются данные",
+      "template": "legal"
+    }
+  ]
+}
