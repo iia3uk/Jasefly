@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-07-24 — Technical SEO audit: redirects, headers, H1 prerender, OG
+
+- Canonical HTTPS + www→apex 301 redirects in root .htaccess
+- Security headers: HSTS, CSP, X-Frame-Options, Permissions-Policy
+- Asset caching immutable + HTML must-revalidate; gzip/deflate
+- Prerender H1 for hero-block + landing widgets; OG site_name/url/twitter:image
+- JSON-LD WebSite name fixed; nav aria-labels; SEO copy aligned
+
 ## 2026-07-24 — Mobile adaptive: steps-row, pipeline, features
 
 - steps-row stacks on phone / 2-col tablet / full row on lg (was always 6 squeezed columns)
