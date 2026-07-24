@@ -107,9 +107,11 @@ export function SeoHead({
       {seo?.site_keywords && <meta name="keywords" content={seo.site_keywords} />}
       {noIndex && <meta name="robots" content="noindex, nofollow" />}
       {canonical && <link rel="canonical" href={canonical} />}
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content={siteName || 'Jasefly'} />
+      {canonical && <meta property="og:url" content={canonical} />}
       <meta property="og:title" content={seo?.og_title || finalTitle} />
       <meta property="og:description" content={seo?.og_description || desc} />
-      <meta property="og:type" content="website" />
       {ogImage && <meta property="og:image" content={ogImage} />}
       <meta name="twitter:card" content={seo?.twitter_card || 'summary_large_image'} />
       {seo?.twitter_handle && <meta name="twitter:site" content={seo.twitter_handle} />}
@@ -159,7 +161,7 @@ export function Header() {
         <Link to="/" className="shrink-0 font-heading text-[0.95rem] font-semibold tracking-[-0.02em] transition hover:text-[var(--accent)]">
           {loading && !name ? <span className="inline-block h-4 w-28 animate-pulse rounded bg-white/10" /> : name}
         </Link>
-        <nav className="hidden min-w-0 flex-1 items-center justify-end gap-6 lg:flex xl:gap-7">
+        <nav className="hidden min-w-0 flex-1 items-center justify-end gap-6 lg:flex xl:gap-7" aria-label="Основная навигация">
           {links.map((item) => (
             <NavLink
               key={String(item.id)}
@@ -200,7 +202,7 @@ export function Header() {
           }
         >
           <button type="button" className="absolute inset-0 bg-black/65" aria-label="Закрыть" onClick={() => setOpen(false)} />
-          <nav className="absolute inset-x-0 top-0 max-h-[min(70dvh,calc(100dvh-3.5rem))] overflow-y-auto overscroll-contain border-b border-white/[0.08] bg-[color:var(--background)] px-4 py-2 shadow-2xl sm:max-h-[min(70dvh,calc(100dvh-4.25rem))] sm:px-6">
+          <nav className="absolute inset-x-0 top-0 max-h-[min(70dvh,calc(100dvh-3.5rem))] overflow-y-auto overscroll-contain border-b border-white/[0.08] bg-[color:var(--background)] px-4 py-2 shadow-2xl sm:max-h-[min(70dvh,calc(100dvh-4.25rem))] sm:px-6" aria-label="Мобильная навигация">
             {links.map((item) => (
               <NavLink
                 key={String(item.id)}
