@@ -11,6 +11,17 @@ import { EditCanvasGuard } from '@/builder/edit/Editable'
 import { readStyles, stylesToCss } from '@/builder/edit/StyleFields'
 import { collectGoogleFontsFromLayout, ensureGoogleFontsLoaded } from '@/builder/lib/googleFonts'
 import { isBuilderHidden } from '@/builder/tree'
+import {
+  readSectionFx,
+  readLayoutScrollMeta,
+  sectionResponsiveClass,
+  sectionMinHeightStyle,
+  sectionSnapClass,
+  sectionVAlignClass,
+  SectionAtmosphere,
+  Reveal,
+  useLayoutScrollSnap,
+} from '@/builder/lib/sectionEffects'
 import clsx from 'clsx'
 
 initBuilderWidgets()
@@ -34,7 +45,7 @@ function visibleChildren(els: BuilderElementDTO[] | undefined, editMode?: boolea
 
 function HiddenBadge() {
   return (
-    <span className="absolute right-2 top-2 z-10 rounded bg-zinc-800/90 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400 ring-1 ring-white/10">
+    <span className="builder-chrome-badge builder-chrome-badge--muted absolute right-2 top-2 z-10">
       Скрыто
     </span>
   )
@@ -144,18 +155,18 @@ function WidgetNode({
         }
       }}
       className={clsx(
-        'relative w-full scroll-mt-6 cursor-pointer rounded-sm transition',
+        'builder-node relative w-full scroll-mt-6 cursor-pointer rounded-sm transition-[box-shadow,outline-color] duration-200',
         hidden && 'opacity-45 outline outline-1 outline-dashed outline-zinc-500/50',
         selected && !selectedPart
-          ? 'ring-2 ring-[var(--accent,#8eb6ff)] ring-offset-2 ring-offset-[var(--background)]'
+          ? 'builder-node--selected'
           : selected
-            ? 'ring-1 ring-[var(--accent,#8eb6ff)]/50'
-            : 'hover:ring-1 hover:ring-white/25',
+            ? 'builder-node--part'
+            : 'builder-node--idle',
       )}
     >
       {hidden && <HiddenBadge />}
       {selected && !selectedPart && (
-        <span className="absolute -top-3 left-2 z-10 rounded bg-[var(--accent,#8eb6ff)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-black [color:#000] [-webkit-text-fill-color:#000]">
+        <span className="builder-chrome-badge builder-chrome-badge--accent absolute -top-3 left-2 z-10">
           {def?.label ?? el.widgetType}
         </span>
       )}
@@ -187,6 +198,7 @@ function ColumnNode({
 }) {
   const selected = selectedId === el.id
   const hidden = isBuilderHidden(el)
+  const fx = readSectionFx(el.settings)
   const width = Number(el.settings?.width || 100)
   const styleCss = stylesToCss(readStyles(el.settings))
 
@@ -209,9 +221,12 @@ function ColumnNode({
       data-builder-id={el.id}
       data-builder-hidden={hidden ? '1' : undefined}
       className={clsx(
-        'min-w-0 w-full scroll-mt-6',
-        editMode && 'rounded-lg border border-dashed border-white/10 p-1.5',
-        selected && 'border-[var(--accent,#8eb6ff)]',
+        'builder-column relative min-w-0 w-full scroll-mt-6',
+        sectionResponsiveClass(fx),
+        // На мобиле колонки секции в столбец — иначе 50%/33% сжимают текст
+        width < 100 && 'max-md:!max-w-full max-md:!basis-full max-md:!flex-none',
+        editMode && 'rounded-lg border border-dashed border-white/10 p-1.5 transition-[border-color,box-shadow] duration-200',
+        selected && 'builder-column--selected',
         hidden && editMode && 'opacity-45',
       )}
       style={{ flex: `1 1 ${width}%`, maxWidth: editMode ? undefined : `${width}%`, ...styleCss }}
@@ -225,10 +240,15 @@ function ColumnNode({
       onDrop={onDrop}
     >
       {hidden && editMode && <HiddenBadge />}
-      {editMode && (!el.elements || el.elements.length === 0) && (
-        <p className="py-8 text-center text-xs text-zinc-500">Перетащите виджет сюда</p>
+      {editMode && selected && (
+        <span className="builder-chrome-badge builder-chrome-badge--accent absolute -top-2.5 left-2 z-10">
+          Колонка
+        </span>
       )}
-      <div className="w-full space-y-4">
+      {editMode && (!el.elements || el.elements.length === 0) && (
+        <p className="builder-drop-hint py-8 text-center text-xs text-zinc-500">Перетащите виджет сюда</p>
+      )}
+      <div className="w-full space-y-4" data-builder-widgets>
         {visibleChildren(el.elements, editMode).map((child) => (
           <WidgetNode
             key={child.id}
@@ -255,6 +275,8 @@ function SectionNode({
   onSelectPart,
   onPatchSettings,
   onDropWidget,
+  pageSnap,
+  snapHeight,
 }: {
   el: BuilderElementDTO
   editMode?: boolean
@@ -264,27 +286,35 @@ function SectionNode({
   onSelectPart?: (part: string | null) => void
   onPatchSettings?: (id: string, patch: Record<string, unknown>) => void
   onDropWidget?: (parentId: string, widgetType: string) => void
+  pageSnap: ReturnType<typeof readLayoutScrollMeta>['scrollSnap']
+  snapHeight: string
 }) {
   const selected = selectedId === el.id
   const hidden = isBuilderHidden(el)
+  const fx = readSectionFx(el.settings)
   const styleCss = stylesToCss(readStyles(el.settings))
+  const defaultPad = pageSnap !== 'none' ? 'clamp(2.5rem, 5vh, 4rem)' : '3rem'
+  const tint = el.settings?.background ? String(el.settings.background) : ''
   const style: CSSProperties = {
-    paddingTop: String(el.settings?.paddingY || '3rem'),
-    paddingBottom: String(el.settings?.paddingY || '3rem'),
-    background: el.settings?.background ? String(el.settings.background) : undefined,
+    paddingTop: String(el.settings?.paddingY || defaultPad),
+    paddingBottom: String(el.settings?.paddingY || defaultPad),
+    // Opaque page fill + optional tint layer (avoids neighbour glow bleeding through)
+    backgroundColor: 'var(--background)',
+    ...(tint ? { backgroundImage: `linear-gradient(${tint}, ${tint})` } : {}),
+    ...sectionMinHeightStyle(fx, pageSnap, snapHeight),
     ...styleCss,
   }
-  const gap = String(el.settings?.gap || '1.5rem')
+  const gap = String(el.settings?.gap || (pageSnap !== 'none' ? '1.75rem' : '1.5rem'))
   const cols = visibleChildren(el.elements, editMode)
+  // Width is a section setting only — never auto-fullbleed by widget type.
+  const fullBleed = fx.fullBleed
 
-  const onlyHero =
-    (cols.length === 1) &&
-    (cols[0].elements?.length === 1) &&
-    cols[0].elements?.[0]?.widgetType === 'hero' &&
-    !isBuilderHidden(cols[0].elements[0])
+  const contentStyle: CSSProperties | undefined = fx.contentMaxWidth
+    ? { maxWidth: fx.contentMaxWidth, marginLeft: 'auto', marginRight: 'auto', width: '100%' }
+    : undefined
 
   const inner = (
-    <div className="flex w-full flex-wrap" style={{ gap }}>
+    <div className="relative z-10 flex w-full flex-wrap" style={{ gap, ...contentStyle }}>
       {cols.map((col) => (
         <ColumnNode
           key={col.id}
@@ -301,31 +331,73 @@ function SectionNode({
     </div>
   )
 
-  return (
-    <section
-      data-builder-id={el.id}
-      data-builder-hidden={hidden ? '1' : undefined}
-      style={style}
-      className={clsx(
-        'relative w-full scroll-mt-6',
-        editMode && 'outline outline-1 outline-transparent hover:outline-white/15',
-        selected && editMode && 'outline outline-2 outline-[var(--accent,#8eb6ff)]',
-        hidden && editMode && 'opacity-45 outline outline-1 outline-dashed outline-zinc-500/40',
-      )}
-      onClick={(e) => {
-        if (!editMode) return
-        e.stopPropagation()
-        onSelectPart?.(null)
-        onSelect?.(el.id)
-      }}
-    >
+  const body = (
+    <>
+      <SectionAtmosphere fx={fx} />
       {hidden && editMode && <HiddenBadge />}
       {editMode && selected && !hidden && (
-        <span className="absolute left-2 top-2 z-10 rounded bg-white/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-zinc-300">
+        <span className="builder-chrome-badge builder-chrome-badge--accent absolute left-2 top-2 z-10">
           Секция
         </span>
       )}
-      {onlyHero ? inner : <Container>{inner}</Container>}
+      <div data-cms-snap-body className="relative z-10 w-full">
+        {fullBleed ? inner : <Container>{inner}</Container>}
+      </div>
+    </>
+  )
+
+  const sectionClass = clsx(
+    'builder-section relative isolate w-full scroll-mt-6',
+    sectionResponsiveClass(fx),
+    sectionSnapClass(fx, pageSnap),
+    sectionVAlignClass(fx),
+    editMode && 'outline outline-1 outline-transparent transition-[outline-color,box-shadow] duration-200 hover:outline-white/15',
+    selected && editMode && 'builder-section--selected',
+    hidden && editMode && 'opacity-45 outline outline-1 outline-dashed outline-zinc-500/40',
+  )
+
+  const onSectionClick = (e: { stopPropagation: () => void }) => {
+    if (!editMode) return
+    e.stopPropagation()
+    onSelectPart?.(null)
+    onSelect?.(el.id)
+  }
+
+  const anim = !editMode && pageSnap === 'none' && fx.animation && fx.animation !== 'none'
+    ? fx.animation
+    : undefined
+
+  if (anim) {
+    return (
+      <Reveal
+        tag="section"
+        animation={anim}
+        className={sectionClass}
+        style={style}
+      >
+        <div
+          data-builder-id={el.id}
+          id={el.settings?.htmlId ? String(el.settings.htmlId) : undefined}
+          data-builder-hidden={hidden ? '1' : undefined}
+          className="contents"
+          onClick={onSectionClick}
+        >
+          {body}
+        </div>
+      </Reveal>
+    )
+  }
+
+  return (
+    <section
+      data-builder-id={el.id}
+      id={el.settings?.htmlId ? String(el.settings.htmlId) : undefined}
+      data-builder-hidden={hidden ? '1' : undefined}
+      style={style}
+      className={sectionClass}
+      onClick={onSectionClick}
+    >
+      {body}
     </section>
   )
 }
@@ -345,6 +417,8 @@ export function LayoutRenderer({
     if (families.length) ensureGoogleFontsLoaded(families)
   }, [layout])
 
+  const scroll = useLayoutScrollSnap(layout?.meta, editMode)
+
   if (!layout?.elements?.length) {
     return (
       <div className="px-6 py-20 text-center text-sm text-[var(--muted)]">
@@ -358,6 +432,7 @@ export function LayoutRenderer({
   const canvas = (
     <div
       className={clsx('w-full', editMode && 'min-h-[60vh]')}
+      data-scroll-snap={scroll.scrollSnap !== 'none' ? scroll.scrollSnap : undefined}
       onClick={() => {
         if (editMode) {
           onSelectPart?.(null)
@@ -376,6 +451,8 @@ export function LayoutRenderer({
           onSelectPart={onSelectPart}
           onPatchSettings={onPatchSettings}
           onDropWidget={onDropWidget}
+          pageSnap={scroll.scrollSnap}
+          snapHeight={scroll.snapHeight}
         />
       ))}
     </div>

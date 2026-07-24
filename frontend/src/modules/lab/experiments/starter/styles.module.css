@@ -1,0 +1,104 @@
+.root {
+  --lab-bg: #f4f7fb;
+  --lab-surface: #ffffff;
+  --lab-text: #0f172a;
+  --lab-muted: #64748b;
+  --lab-accent: #2563eb;
+  --lab-border: rgba(15, 23, 42, 0.08);
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 3rem 1.25rem 4rem;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, var(--lab-accent) 18%, transparent), transparent 60%),
+    radial-gradient(900px 500px at 90% 0%, color-mix(in srgb, var(--lab-accent) 10%, transparent), transparent 55%),
+    var(--lab-bg);
+  color: var(--lab-text);
+  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+}
+
+.root[data-theme='dark'] {
+  --lab-bg: #0b1220;
+  --lab-surface: #121a2b;
+  --lab-text: #e8eef9;
+  --lab-muted: #94a3b8;
+  --lab-border: rgba(232, 238, 249, 0.1);
+}
+
+.inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.themeBtn {
+  border: 1px solid var(--lab-border);
+  background: var(--lab-surface);
+  color: var(--lab-text);
+  border-radius: 10px;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.hero {
+  margin-bottom: 2.5rem;
+}
+
+.title {
+  margin: 0 0 0.75rem;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.subtitle {
+  margin: 0 0 1.5rem;
+  max-width: 40rem;
+  color: var(--lab-muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1.2rem;
+  border-radius: 12px;
+  background: var(--lab-accent);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: var(--lab-surface);
+  border: 1px solid var(--lab-border);
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+
+.cardTitle {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.cardText {
+  margin: 0;
+  color: var(--lab-muted);
+  line-height: 1.5;
+  font-size: 0.95rem;
+}

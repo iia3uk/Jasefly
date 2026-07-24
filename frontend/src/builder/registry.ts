@@ -6,7 +6,20 @@ const widgets = new Map<string, WidgetDefinition>()
 /** Infer owning plugin when `def.plugin` is omitted. */
 export function widgetRequiredPlugin(def: WidgetDefinition): string | null {
   if (def.plugin) return def.plugin
-  if (def.category === 'portfolio') return 'portfolio'
+  // Static landing widgets (cta-banner, faq, …) must NOT inherit Portfolio.
+  // Only widgets that actually pull portfolio data require the plugin.
+  if (def.category === 'portfolio') {
+    const portfolioDataWidgets = new Set([
+      'hero',
+      'projects-grid',
+      'skills',
+      'experience',
+      'services',
+      'testimonials',
+      'profile-card',
+    ])
+    return portfolioDataWidgets.has(def.type) ? 'portfolio' : null
+  }
   if (def.category === 'commerce') {
     if (
       def.type.startsWith('payment')
@@ -19,6 +32,7 @@ export function widgetRequiredPlugin(def: WidgetDefinition): string | null {
   }
   if (def.type === 'auth-register') return 'registration'
   if (def.type === 'contact-form') return 'mail'
+  if (def.type === 'blog-list') return 'blog'
   return null
 }
 

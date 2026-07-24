@@ -26,6 +26,18 @@ import '@/modules/ddos'
 import '@/modules/mail'
 import '@/modules/registration'
 import '@/modules/translate'
+import '@/modules/support'
+import '@/modules/lab'
+
+/** After deploy, stale hashed chunks/CSS can 404 — soft-reload once. */
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault()
+  const key = 'jasefly_vite_preload_reload'
+  if (!sessionStorage.getItem(key)) {
+    sessionStorage.setItem(key, '1')
+    window.location.reload()
+  }
+})
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 60_000 } },

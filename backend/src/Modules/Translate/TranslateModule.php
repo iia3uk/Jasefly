@@ -5,11 +5,12 @@ namespace App\Modules\Translate;
 
 use App\Core\AbstractModule;
 use App\Core\Container;
+use App\Core\EventDispatcher;
 use App\Core\ModuleRegistry;
 use App\Database;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\PermissionMiddleware;
-use App\Middleware\RateLimitMiddleware;
+use App\Middleware\SoftRateLimitMiddleware;
 use App\Request;
 use App\Response;
 use App\Router;
@@ -41,6 +42,86 @@ final class TranslateModule extends AbstractModule
             (new TranslateCache($db))->ensureTable();
         } catch (\Throwable) {
         }
+
+        try {
+            $this->migrateToFreeNeuralProvider($db);
+        } catch (\Throwable) {
+        }
+
+        // After admin/MCP saves content — translate new phrases into cache.
+        try {
+            $events = Container::getInstance()->get(EventDispatcher::class);
+            $events->subscribe('resource.afterSave', function (array $payload) use ($db): void {
+                $this->onContentSaved($db, $payload);
+            });
+            $events->subscribe('page.afterPublish', function (array $payload) use ($db): void {
+                // Soft nudge: mark cache not ready so warmup/status picks up new copy.
+                $this->persistReadyState('', false);
+            });
+        } catch (\Throwable) {
+        }
+    }
+
+    /**
+     * Prefer free neural (Google) when DeepL has no key or old default was MyMemory.
+     * Keeps DeepL if Auth Key is already saved.
+     */
+    private function migrateToFreeNeuralProvider(Database $db): void
+    {
+        try {
+            /** @var ModuleRegistry $reg */
+            $reg = Container::getInstance()->get(ModuleRegistry::class);
+            $module = $reg->get('translate');
+            if (!$module) {
+                return;
+            }
+            $state = $reg->state();
+            $s = $state->getSettings($module);
+            $provider = strtolower(trim((string) ($s['provider'] ?? 'google')));
+            $deeplKey = trim((string) ($s['deepl_api_key'] ?? ''));
+            $next = $provider;
+            if ($provider === 'deepl' && $deeplKey === '') {
+                $next = 'google';
+            } elseif ($provider === 'mymemory') {
+                $next = 'google';
+            }
+            if ($next === $provider) {
+                return;
+            }
+            $s['provider'] = $next;
+            $state->setSettings($module, $s);
+        } catch (\Throwable) {
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function onContentSaved(Database $db, array $payload): void
+    {
+        try {
+            $table = (string) ($payload['table'] ?? $payload['resource'] ?? '');
+            if ($table === '' || !in_array($table, TranslateSync::CONTENT_TABLES, true)) {
+                return;
+            }
+            $settings = $this->resolvedSettings();
+            if (!(bool) ($settings['sync_on_save'] ?? true)) {
+                return;
+            }
+            $data = $payload['data'] ?? null;
+            if (!is_array($data) || $data === []) {
+                return;
+            }
+            // Don't block forever — small batch of strings from this save.
+            @set_time_limit(60);
+            $sync = new TranslateSync($db, $settings);
+            $result = $sync->syncPayload($data, 36);
+            if (($result['fetched'] ?? 0) > 0 || ($result['failed'] ?? 0) > 0) {
+                $this->persistReadyState('', false);
+            }
+        } catch (\Throwable) {
+            // Never break content save because of translation.
+        }
     }
 
     public function settingsSchema(): array
@@ -50,7 +131,7 @@ final class TranslateModule extends AbstractModule
                 'key' => '_heading',
                 'label' => 'Оверлей-переводчик',
                 'type' => 'heading',
-                'help' => 'Виджет на сайте берёт переводы из кэша. При включённом автопрогреве сайт сам догоняет кэш в фоне, пока кто-то открывает страницы.',
+                'help' => 'На сайте виджет читает только кэш (мгновенно). Реальный перевод делает прогрев / автосинк при сохранении. Фейковые записи (оригинал = «перевод») не сохраняются.',
             ],
             [
                 'key' => 'widget_enabled',
@@ -59,11 +140,32 @@ final class TranslateModule extends AbstractModule
                 'default' => true,
             ],
             [
-                'key' => 'auto_warmup',
-                'label' => 'Автопрогрев кэша (в фоне на сайте)',
+                'key' => 'sync_on_save',
+                'label' => 'Переводить новый контент при сохранении',
                 'type' => 'checkbox',
                 'default' => true,
-                'help' => 'Пока посетители или вы открываете сайт, сервер порциями переводит недостающие фразы. Ручной прогрев в меню «Переводчик» тоже доступен.',
+                'help' => 'После сохранения страницы/статьи/навигации (админка или MCP) новые фразы сразу уходят в кэш для всех языков виджета.',
+            ],
+            [
+                'key' => 'auto_warmup',
+                'label' => 'Автопрогрев кэша (один раз, пока не готов)',
+                'type' => 'checkbox',
+                'default' => true,
+                'help' => 'Фоном догоняет кэш, пока не станет ready. Не крутится заново без смены контента.',
+            ],
+            [
+                'key' => 'content_hash',
+                'label' => 'Хеш контента (служебное)',
+                'type' => 'text',
+                'default' => '',
+                'help' => 'Служебное поле: обновляется при готовности кэша. Менять вручную не нужно.',
+            ],
+            [
+                'key' => 'cache_ready',
+                'label' => 'Кэш готов (служебное)',
+                'type' => 'checkbox',
+                'default' => false,
+                'help' => 'Служебный флаг готовности. Сбрасывается при смене контента на следующем прогреве.',
             ],
             [
                 'key' => 'source_lang',
@@ -83,7 +185,7 @@ final class TranslateModule extends AbstractModule
                 'label' => 'Языки в виджете (коды через запятую)',
                 'type' => 'text',
                 'default' => 'en,de,fr,es',
-                'help' => 'Чем меньше языков — тем быстрее прогрев. Рекомендуем 2–4.',
+                'help' => 'Меньше языков = быстрее прогрев. Для старта достаточно en; es/de/fr добавляйте после прогрева en.',
             ],
             [
                 'key' => 'position',
@@ -100,18 +202,45 @@ final class TranslateModule extends AbstractModule
                 'key' => 'provider',
                 'label' => 'Движок перевода',
                 'type' => 'select',
-                'default' => 'mymemory',
+                'default' => 'google',
                 'options' => [
-                    ['value' => 'mymemory', 'label' => 'MyMemory (бесплатно, без сервера)'],
-                    ['value' => 'libretranslate', 'label' => 'LibreTranslate (свой URL)'],
+                    ['value' => 'google', 'label' => 'Google Translate (бесплатно, нейросеть, без ключа)'],
+                    ['value' => 'libretranslate', 'label' => 'LibreTranslate (публичные инстансы / свой URL)'],
+                    ['value' => 'mymemory', 'label' => 'MyMemory (бесплатно, лимит символов/день)'],
+                    ['value' => 'deepl', 'label' => 'DeepL (только если есть свой API key)'],
                 ],
+                'help' => 'По умолчанию — бесплатный Google. DeepL оставляйте тем, у кого есть аккаунт API.',
+            ],
+            [
+                'key' => 'deepl_api_key',
+                'label' => 'DeepL Auth Key (опционально)',
+                'type' => 'password',
+                'default' => '',
+                'help' => 'Только если выбран движок DeepL. Ключ из DeepL API (Free/Pro), формат …:fx для Free.',
+            ],
+            [
+                'key' => 'deepl_plan',
+                'label' => 'DeepL план',
+                'type' => 'select',
+                'default' => 'free',
+                'options' => [
+                    ['value' => 'free', 'label' => 'Free (api-free.deepl.com)'],
+                    ['value' => 'pro', 'label' => 'Pro (api.deepl.com)'],
+                ],
+            ],
+            [
+                'key' => 'deepl_api_url',
+                'label' => 'DeepL API URL (опционально)',
+                'type' => 'text',
+                'default' => '',
+                'help' => 'Оставьте пустым для стандартного Free/Pro. Или укажите свой endpoint …/v2/translate.',
             ],
             [
                 'key' => 'api_url',
                 'label' => 'LibreTranslate URL',
                 'type' => 'text',
                 'default' => '',
-                'help' => 'Например https://translate.example.com — без /translate в конце.',
+                'help' => 'Пусто = публичные инстансы. Или свой сервер, например https://translate.example.com — без /translate.',
             ],
             [
                 'key' => 'api_key',
@@ -163,15 +292,16 @@ final class TranslateModule extends AbstractModule
     {
         $p = fn(string $path) => rtrim($apiPrefix, '/') . $path;
         $settings = $this->resolvedSettings();
-        $limit = max(5, min(180, (int) ($settings['rate_limit'] ?? 60)));
-        $rate = new RateLimitMiddleware($db, $limit, 60);
+        // Cache-only overlay: soft limit (HTTP 200) — hard 429 floods the browser console.
+        $batchLimit = max(30, min(180, (int) ($settings['rate_limit'] ?? 60) * 2));
+        $batchRate = new SoftRateLimitMiddleware($db, $batchLimit, 60);
         $protected = [
             new AuthMiddleware($app['jwt_secret']),
             new PermissionMiddleware(new PermissionService($db)),
         ];
 
-        // Background worker: ~5 req/min/tab; headroom for retries / multi-tab.
-        $autoRate = new RateLimitMiddleware($db, 20, 60);
+        // Background worker: soft throttle (HTTP 200) so console stays clean.
+        $autoRate = new SoftRateLimitMiddleware($db, 12, 60);
 
         $router->post($p('/translate/batch'), function (Request $r) use ($db) {
             $settings = $this->resolvedSettings();
@@ -201,18 +331,19 @@ final class TranslateModule extends AbstractModule
                     continue;
                 }
                 $texts[] = $t;
-                if (count($texts) >= 80) {
+                if (count($texts) >= 200) {
                     break;
                 }
             }
             if ($texts === []) {
-                Response::json(['data' => ['translations' => [], 'cached' => 0, 'fetched' => 0]]);
+                Response::json(['data' => ['translations' => [], 'cached' => 0, 'fetched' => 0, 'missing' => 0]]);
             }
 
+            // Public overlay is cache-only → near-instant; MT only via admin/auto warmup.
             $svc = new TranslateService($settings, $db);
-            $result = $svc->translateBatch($texts, $source, $target);
+            $result = $svc->translateBatch($texts, $source, $target, true);
             Response::json(['data' => $result]);
-        }, [$rate]);
+        }, [$batchRate]);
 
         // Background auto-warmup for visitors (no auth). Small batches + rate limit.
         $router->post($p('/translate/auto-warmup'), function (Request $r) use ($db) {
@@ -224,9 +355,64 @@ final class TranslateModule extends AbstractModule
             if (!(bool) ($settings['auto_warmup'] ?? true)) {
                 Response::json(['data' => ['enabled' => false, 'finished' => true, 'translated' => 0]]);
             }
+
+            $checkOnly = (bool) ($r->input('check_only') ?? false);
+            $status = $this->warmupStatus($db, $settings);
+            $hash = (string) ($status['content_hash'] ?? '');
+            $ready = (bool) ($status['ready'] ?? false);
+            $storedHash = (string) ($settings['content_hash'] ?? '');
+            $storedReady = (bool) ($settings['cache_ready'] ?? false);
+
+            // Fully cached for current fingerprint and already marked — skip MT.
+            if ($ready && $hash !== '' && $hash === $storedHash && $storedReady) {
+                Response::json([
+                    'data' => array_merge($status, [
+                        'enabled' => true,
+                        'finished' => true,
+                        'translated' => 0,
+                        'skipped' => true,
+                    ]),
+                ]);
+            }
+
+            // Content fully covered but fingerprint changed (or never marked) — just stamp ready.
+            if ($ready && $hash !== '') {
+                $this->persistReadyState($hash, true);
+                Response::json([
+                    'data' => array_merge($status, [
+                        'enabled' => true,
+                        'finished' => true,
+                        'translated' => 0,
+                        'skipped' => true,
+                    ]),
+                ]);
+            }
+
+            if ($checkOnly) {
+                Response::json([
+                    'data' => array_merge($status, [
+                        'enabled' => true,
+                        'finished' => false,
+                        'translated' => 0,
+                    ]),
+                ]);
+            }
+
+            // Stale ready flag while content still has gaps.
+            if ($storedReady && $hash !== $storedHash) {
+                $this->persistReadyState($hash, false);
+            }
+
             $batchSize = max(3, min(12, (int) ($r->input('batch_size') ?? 6)));
             $data = $this->runWarmupChunk($db, $settings, $batchSize, null);
             $data['enabled'] = true;
+            $data['content_hash'] = $this->corpusFingerprint(
+                (new TranslateCorpus($db))->collect(2500),
+                $this->allowedTargets($settings)
+            );
+            if (!empty($data['ready'])) {
+                $this->persistReadyState((string) $data['content_hash']);
+            }
             Response::json(['data' => $data]);
         }, [$autoRate]);
 
@@ -257,7 +443,27 @@ final class TranslateModule extends AbstractModule
                     'ready' => $ready,
                     'provider' => $settings['provider'] ?? 'mymemory',
                     'auto_warmup' => (bool) ($settings['auto_warmup'] ?? true),
+                    'sync_on_save' => (bool) ($settings['sync_on_save'] ?? true),
+                    'invalid_hint' => 'Если перевод «как оригинал» — нажмите «Очистить фейки и прогреть».',
                 ],
+            ]);
+        }, $protected);
+
+        // Delete bogus cache rows (source === translated) then report status.
+        $router->post($p('/admin/translate/purge-invalid'), function () use ($db) {
+            $cache = new TranslateCache($db);
+            $cache->ensureTable();
+            $deleted = $cache->purgeInvalid();
+            $this->persistReadyState('', false);
+            $settings = $this->resolvedSettings();
+            $status = $this->warmupStatus($db, $settings);
+            Response::json([
+                'data' => array_merge($status, [
+                    'purged' => $deleted,
+                    'message' => $deleted > 0
+                        ? "Удалено фейковых записей: {$deleted}. Запустите прогрев."
+                        : 'Фейковых записей не найдено.',
+                ]),
             ]);
         }, $protected);
 
@@ -265,7 +471,8 @@ final class TranslateModule extends AbstractModule
         $router->post($p('/admin/translate/warmup'), function (Request $r) use ($db) {
             @set_time_limit(120);
             $settings = $this->resolvedSettings();
-            $batchSize = max(5, min(40, (int) ($r->input('batch_size') ?? 15)));
+            // Smaller batches = fewer MyMemory rate-limits.
+            $batchSize = max(3, min(12, (int) ($r->input('batch_size') ?? 6)));
             $onlyTarget = strtolower(trim((string) ($r->input('target') ?? '')));
             if ($onlyTarget !== '') {
                 $allowed = $this->allowedTargets($settings);
@@ -275,8 +482,82 @@ final class TranslateModule extends AbstractModule
             } else {
                 $onlyTarget = null;
             }
-            Response::json(['data' => $this->runWarmupChunk($db, $settings, $batchSize, $onlyTarget)]);
+            $purgeFirst = (bool) ($r->input('purge_invalid') ?? false);
+            if ($purgeFirst) {
+                (new TranslateCache($db))->purgeInvalid();
+            }
+            $data = $this->runWarmupChunk($db, $settings, $batchSize, $onlyTarget);
+            $data['content_hash'] = $this->corpusFingerprint(
+                (new TranslateCorpus($db))->collect(2500),
+                $this->allowedTargets($settings)
+            );
+            if (!empty($data['ready'])) {
+                $this->persistReadyState($data['content_hash']);
+            } else {
+                $this->persistReadyState('', false);
+            }
+            Response::json(['data' => $data]);
         }, $protected);
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     * @return array{ready: bool, content_hash: string, missing_total: int, missing: array<string, int>, corpus_size: int, cache: array<string, mixed>}
+     */
+    private function warmupStatus(Database $db, array $settings): array
+    {
+        $source = (string) ($settings['source_lang'] ?? 'ru');
+        $targets = $this->allowedTargets($settings);
+        $cache = new TranslateCache($db);
+        $cache->ensureTable();
+        $corpus = (new TranslateCorpus($db))->collect(2500);
+        $hash = $this->corpusFingerprint($corpus, $targets);
+        $missing = [];
+        $missingTotal = 0;
+        $ready = true;
+        foreach ($targets as $t) {
+            $m = $cache->missingCount($source, $t, $corpus);
+            $missing[$t] = $m;
+            $missingTotal += $m;
+            if ($m > 0) {
+                $ready = false;
+            }
+        }
+        return [
+            'ready' => $ready,
+            'finished' => $ready,
+            'content_hash' => $hash,
+            'missing_total' => $missingTotal,
+            'missing' => $missing,
+            'corpus_size' => count($corpus),
+            'cache' => $cache->stats(),
+        ];
+    }
+
+    /**
+     * @param list<string> $corpus
+     * @param list<string> $targets
+     */
+    private function corpusFingerprint(array $corpus, array $targets): string
+    {
+        return hash('sha256', implode("\0", $corpus) . '|' . implode(',', $targets));
+    }
+
+    private function persistReadyState(string $contentHash, bool $ready = true): void
+    {
+        try {
+            /** @var ModuleRegistry $reg */
+            $reg = Container::getInstance()->get(ModuleRegistry::class);
+            $module = $reg->get('translate');
+            if (!$module) {
+                return;
+            }
+            $settings = $reg->state()->getSettings($module);
+            $settings['content_hash'] = $contentHash;
+            $settings['cache_ready'] = $ready;
+            $reg->state()->setSettings($module, $settings);
+        } catch (\Throwable) {
+        }
     }
 
     /**
@@ -299,6 +580,7 @@ final class TranslateModule extends AbstractModule
         $svc = new TranslateService($settings, $db);
 
         $translated = 0;
+        $failed = 0;
         $targetDone = null;
         $remainingForTarget = 0;
 
@@ -317,9 +599,12 @@ final class TranslateModule extends AbstractModule
                 continue;
             }
             $targetDone = $target;
-            $result = $svc->translateBatch($miss, $source, $target);
-            $translated = (int) ($result['fetched'] ?? count($miss));
+            $result = $svc->translateBatch($miss, $source, $target, false);
+            $translated = (int) ($result['fetched'] ?? 0);
+            $failed = (int) ($result['failed'] ?? 0);
+            $quotaHit = !empty($result['quota_hit']);
             $remainingForTarget = $cache->missingCount($source, $target, $corpus);
+            // If everything failed this round, still advance reporting so FE can pause.
             break;
         }
 
@@ -337,6 +622,8 @@ final class TranslateModule extends AbstractModule
 
         return [
             'translated' => $translated,
+            'failed' => $failed,
+            'quota_hit' => $quotaHit ?? false,
             'target' => $targetDone,
             'remaining_for_target' => $remainingForTarget,
             'corpus_size' => count($corpus),
@@ -345,6 +632,13 @@ final class TranslateModule extends AbstractModule
             'ready' => $ready,
             'cache' => $cache->stats(),
             'finished' => $ready,
+            'provider_hint' => !empty($quotaHit)
+                ? (
+                    (($settings['provider'] ?? 'google') === 'mymemory')
+                        ? 'MyMemory: дневная квота исчерпана. Переключите движок на Google в настройках плагина или подождите до завтра.'
+                        : 'Провайдер временно ограничил запросы (rate limit). Подождите минуту и продолжите прогрев.'
+                )
+                : null,
         ];
     }
 
@@ -361,6 +655,9 @@ final class TranslateModule extends AbstractModule
             'languages' => $this->allowedTargets($s),
             'position' => (string) ($s['position'] ?? 'bottom-right'),
             'provider' => (string) ($s['provider'] ?? 'mymemory'),
+            'cache_ready' => (bool) ($s['cache_ready'] ?? false),
+            'content_hash' => (string) ($s['content_hash'] ?? ''),
+            'mode' => 'cache',
         ];
     }
 

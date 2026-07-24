@@ -140,6 +140,49 @@ export function SingletonPage({ path, title }: { path: string; title: string }) 
           ))}
           {path === 'seo' && (
             <>
+              <div className={`${adminFormFullClass} space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-4`}>
+                <div>
+                  <p className="text-sm font-semibold text-zinc-200">{fieldLabel('target_regions')}</p>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    Целевые рынки для schema.org areaServed. Регион в Яндекс.Вебмастере задаётся отдельно
+                    (один регион из их справочника) — эта настройка его не заменяет.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-4">
+                  {(['CIS', 'EU', 'USA', 'ASIA'] as const).map((code) => {
+                    const selected = (() => {
+                      const raw = form.target_regions
+                      if (Array.isArray(raw)) return raw.map(String)
+                      if (typeof raw === 'string' && raw.trim()) {
+                        try {
+                          const parsed = JSON.parse(raw) as unknown
+                          return Array.isArray(parsed) ? parsed.map(String) : []
+                        } catch {
+                          return []
+                        }
+                      }
+                      return [] as string[]
+                    })()
+                    const on = selected.includes(code)
+                    return (
+                      <label key={code} className="flex items-center gap-2 text-sm text-zinc-200">
+                        <input
+                          type="checkbox"
+                          checked={on}
+                          onChange={(e) => {
+                            const next = e.target.checked
+                              ? [...selected.filter((x) => x !== code), code]
+                              : selected.filter((x) => x !== code)
+                            const order = ['CIS', 'EU', 'USA', 'ASIA']
+                            set('target_regions', order.filter((c) => next.includes(c)))
+                          }}
+                        />
+                        <span>{code}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
               <div className={adminFormFullClass}>
                 <label className="block space-y-2 text-sm">
                   {fieldLabel('custom_head_scripts')}

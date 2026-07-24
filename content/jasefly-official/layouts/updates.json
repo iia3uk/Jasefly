@@ -1,0 +1,177 @@
+{
+  "title": "Обновления",
+  "slug": "updates",
+  "seo_title": "Обновления Jasefly CMS — install и update ZIP из админки",
+  "seo_description": "Как устроены install и update пакеты, проверка ZIP, сохранение uploads и config, миграции, журналы и рекомендации перед обновлением.",
+  "layout": {
+    "version": 1,
+    "meta": {
+      "product": "jasefly-official"
+    },
+    "elements": [
+      {
+        "id": "s_3q",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_3p",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_3n",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Обновления",
+                  "tag": "h1",
+                  "size": "2xl",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_3o",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p>Jasefly разделяет полный установочный пакет и пакет обновления. Update не затирает локальную конфигурацию, загрузки, резервные копии и журналы.</p>",
+                  "align": "left"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_3t",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_3s",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_3r",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "Пакеты",
+                  "subtitle": "",
+                  "columns": 2,
+                  "items": [
+                    {
+                      "icon": "package",
+                      "title": "Install package",
+                      "body": "Полный набор для новой площадки: frontend assets, API, installer, миграции схемы."
+                    },
+                    {
+                      "icon": "refresh",
+                      "title": "Update package",
+                      "body": "Runtime-файлы и миграции поверх существующей установки без медиа и локальных секретов."
+                    },
+                    {
+                      "icon": "shield",
+                      "title": "Проверка пакета",
+                      "body": "Перед применением CMS валидирует архив и состав обновления."
+                    },
+                    {
+                      "icon": "folder",
+                      "title": "Uploads",
+                      "body": "Файлы медиатеки сохраняются и не входят в типичный update wipe."
+                    },
+                    {
+                      "icon": "key",
+                      "title": "Локальный config",
+                      "body": "Секреты и config.local / .env на сервере не должны перезаписываться update-пакетом."
+                    },
+                    {
+                      "icon": "database",
+                      "title": "Миграции",
+                      "body": "SQL накатывается после обновления файлов; схема доводится до актуальной."
+                    },
+                    {
+                      "icon": "list",
+                      "title": "Журналирование",
+                      "body": "Действия и ошибки фиксируются для разбора после релиза."
+                    },
+                    {
+                      "icon": "save",
+                      "title": "Резервные копии",
+                      "body": "Перед крупным обновлением рекомендуется бэкап БД и файлов из админки/хостинга."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_3y",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_3x",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_3u",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Рекомендации перед обновлением",
+                  "tag": "h2",
+                  "size": "xl",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_3v",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<ol><li>Сделайте резервную копию БД и critical files.</li><li>Проверьте, что update собран из нужного коммита.</li><li>Загрузите ZIP через панель обновлений.</li><li>Дождитесь validate → migrate → ready.</li><li>Обновите админку (hard refresh) и проверьте ключевые страницы.</li></ol>",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_3w",
+                "elType": "widget",
+                "widgetType": "cta-banner",
+                "settings": {
+                  "title": "Как устроен весь цикл",
+                  "subtitle": "",
+                  "cta_label": "Как это работает",
+                  "cta_href": "/workflow"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

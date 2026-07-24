@@ -1,0 +1,86 @@
+[
+  {
+    "key": "__home",
+    "file": "layouts/__home.json",
+    "slug": "__home",
+    "id": 1,
+    "title": "Главная"
+  },
+  {
+    "key": "features",
+    "file": "layouts/features.json",
+    "slug": "features",
+    "id": null,
+    "title": "Возможности"
+  },
+  {
+    "key": "workflow",
+    "file": "layouts/workflow.json",
+    "slug": "workflow",
+    "id": null,
+    "title": "Как это работает"
+  },
+  {
+    "key": "modules",
+    "file": "layouts/modules.json",
+    "slug": "modules",
+    "id": null,
+    "title": "Модули"
+  },
+  {
+    "key": "mcp",
+    "file": "layouts/mcp.json",
+    "slug": "mcp",
+    "id": null,
+    "title": "MCP и AI"
+  },
+  {
+    "key": "shared-hosting",
+    "file": "layouts/shared-hosting.json",
+    "slug": "shared-hosting",
+    "id": null,
+    "title": "Shared Hosting"
+  },
+  {
+    "key": "docs",
+    "file": "layouts/docs.json",
+    "slug": "docs",
+    "id": null,
+    "title": "Документация"
+  },
+  {
+    "key": "updates",
+    "file": "layouts/updates.json",
+    "slug": "updates",
+    "id": null,
+    "title": "Обновления"
+  },
+  {
+    "key": "about",
+    "file": "layouts/about.json",
+    "slug": "about",
+    "id": 2,
+    "title": "О проекте"
+  },
+  {
+    "key": "contact",
+    "file": "layouts/contact.json",
+    "slug": "contact",
+    "id": 4,
+    "title": "Контакты"
+  },
+  {
+    "key": "privacy",
+    "file": "layouts/privacy.json",
+    "slug": "privacy",
+    "id": 3,
+    "title": "Политика конфиденциальности"
+  },
+  {
+    "key": "blog",
+    "file": "layouts/blog.json",
+    "slug": "blog",
+    "id": 5,
+    "title": "Блог"
+  }
+]

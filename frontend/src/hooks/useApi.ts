@@ -1,22 +1,56 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, endpoints } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
+import { siteHasPlugin } from '@/core/pluginGates'
 
 export const useSite = () => useQuery({ queryKey: ['site'], queryFn: endpoints.site })
-export const useProfile = () => useQuery({ queryKey: ['profile'], queryFn: endpoints.profile })
-export const useStatistics = () => useQuery({ queryKey: ['statistics'], queryFn: endpoints.statistics })
-export const useProjects = (featured = false) =>
-  useQuery({ queryKey: ['projects', featured], queryFn: () => endpoints.projects(featured) })
-export const useProject = (slug: string) =>
-  useQuery({ queryKey: ['project', slug], queryFn: () => endpoints.project(slug), enabled: !!slug })
+
+/** Wait for /site.enabled_plugins, then gate portfolio-owned public fetches. */
+function usePortfolioFetchEnabled(extra = true): boolean {
+  const { data: site } = useSite()
+  if (!Array.isArray(site?.enabled_plugins)) return false
+  return extra && siteHasPlugin(site.enabled_plugins, 'portfolio')
+}
+
+export const useProfile = () => {
+  const enabled = usePortfolioFetchEnabled()
+  return useQuery({ queryKey: ['profile'], queryFn: endpoints.profile, enabled })
+}
+export const useStatistics = () => {
+  const enabled = usePortfolioFetchEnabled()
+  return useQuery({ queryKey: ['statistics'], queryFn: endpoints.statistics, enabled })
+}
+export const useProjects = (featured = false, enabled = true) => {
+  const on = usePortfolioFetchEnabled(enabled)
+  return useQuery({ queryKey: ['projects', featured], queryFn: () => endpoints.projects(featured), enabled: on })
+}
+export const useProject = (slug: string) => {
+  const on = usePortfolioFetchEnabled(!!slug)
+  return useQuery({ queryKey: ['project', slug], queryFn: () => endpoints.project(slug), enabled: on })
+}
 export const useBlog = () => useQuery({ queryKey: ['blog'], queryFn: endpoints.blog })
 export const usePost = (slug: string) =>
   useQuery({ queryKey: ['post', slug], queryFn: () => endpoints.post(slug), enabled: !!slug })
-export const useSkills = () => useQuery({ queryKey: ['skills'], queryFn: endpoints.skills })
-export const useExperience = () => useQuery({ queryKey: ['experience'], queryFn: endpoints.experience })
-export const useEducation = () => useQuery({ queryKey: ['education'], queryFn: endpoints.education })
-export const useServices = () => useQuery({ queryKey: ['services'], queryFn: endpoints.services })
-export const useTestimonials = () => useQuery({ queryKey: ['testimonials'], queryFn: endpoints.testimonials })
+export const useSkills = () => {
+  const enabled = usePortfolioFetchEnabled()
+  return useQuery({ queryKey: ['skills'], queryFn: endpoints.skills, enabled })
+}
+export const useExperience = () => {
+  const enabled = usePortfolioFetchEnabled()
+  return useQuery({ queryKey: ['experience'], queryFn: endpoints.experience, enabled })
+}
+export const useEducation = () => {
+  const enabled = usePortfolioFetchEnabled()
+  return useQuery({ queryKey: ['education'], queryFn: endpoints.education, enabled })
+}
+export const useServices = () => {
+  const enabled = usePortfolioFetchEnabled()
+  return useQuery({ queryKey: ['services'], queryFn: endpoints.services, enabled })
+}
+export const useTestimonials = () => {
+  const enabled = usePortfolioFetchEnabled()
+  return useQuery({ queryKey: ['testimonials'], queryFn: endpoints.testimonials, enabled })
+}
 export const useContactInfo = () => useQuery({ queryKey: ['contact-info'], queryFn: endpoints.contactInfo })
 export const usePage = (slug: string) => {
   const { token } = useAuth()

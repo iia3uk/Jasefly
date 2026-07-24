@@ -13,7 +13,9 @@ import { AdminBar } from '@/components/layout/AdminBar'
 import { ensureGoogleFontsLoaded, findGoogleFontPreset } from '@/builder/lib/googleFonts'
 import { CookieBanner } from '@/components/layout/CookieBanner'
 import { TranslateWidget } from '@/components/TranslateWidget'
+import { SupportWidget } from '@/components/SupportWidget'
 import { TranslateAutoWarmup } from '@/components/TranslateAutoWarmup'
+import { SnapSectionRail } from '@/components/layout/SnapSectionRail'
 import { useCookieConsent } from '@/lib/cookieConsent'
 
 function parseJson<T>(value: unknown, fallback: T): T {
@@ -127,12 +129,21 @@ export function SeoHead({
   )
 }
 
+/** CTA-пункты в header (кнопка справа), остальные — текстовые ссылки. */
+function isHeaderCta(item: { label?: string }) {
+  const label = (item.label || '').trim().toLowerCase()
+  return /^(начать|посмотреть|скачать|получить|связаться|попробовать)\b/i.test(label)
+}
+
 export function Header() {
   const { site, loading } = useSiteContext()
   const { token } = useAuth()
   const [open, setOpen] = useState(false)
   const nav = site?.navigation ?? []
   const name = site?.site_settings?.site_name
+  const links = nav.filter((item) => !isHeaderCta(item))
+  const ctas = nav.filter((item) => isHeaderCta(item))
+  const primaryCta = ctas[ctas.length - 1]
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
@@ -144,26 +155,34 @@ export function Header() {
       className="sticky z-50 border-b border-white/[0.06] bg-[color:var(--background)]/75 backdrop-blur-xl"
       style={{ top: token ? 'var(--admin-bar-h, 36px)' : 0 }}
     >
-      <Container className="flex h-14 items-center justify-between sm:h-[4.25rem]">
-        <Link to="/" className="font-heading text-[0.95rem] font-semibold tracking-[-0.02em] transition hover:text-[var(--accent)]">
+      <Container className="flex h-14 items-center justify-between gap-4 sm:h-[4.25rem]">
+        <Link to="/" className="shrink-0 font-heading text-[0.95rem] font-semibold tracking-[-0.02em] transition hover:text-[var(--accent)]">
           {loading && !name ? <span className="inline-block h-4 w-28 animate-pulse rounded bg-white/10" /> : name}
         </Link>
-        <nav className="hidden items-center gap-7 md:flex">
-          {nav.map((item) => (
+        <nav className="hidden min-w-0 flex-1 items-center justify-end gap-6 lg:flex xl:gap-7">
+          {links.map((item) => (
             <NavLink
               key={String(item.id)}
               to={item.href}
               className={({ isActive }) =>
-                `link-nav text-sm ${isActive ? 'text-[var(--text)]' : 'text-[var(--muted)]'}`
+                `link-nav shrink-0 text-sm ${isActive ? 'text-[var(--text)]' : 'text-[var(--muted)]'}`
               }
             >
               {item.label}
             </NavLink>
           ))}
+          {primaryCta ? (
+            <NavLink
+              to={primaryCta.href}
+              className="shrink-0 rounded-[var(--radius)] bg-[color:var(--primary)] px-4 py-2 text-sm font-semibold text-[color:var(--background)] transition-opacity hover:opacity-90"
+            >
+              {primaryCta.label}
+            </NavLink>
+          ) : null}
         </nav>
         <button
           type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-[var(--text)] transition hover:border-white/40 hover:bg-white/[0.06] active:scale-95 md:hidden"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/20 text-[var(--text)] transition hover:border-white/40 hover:bg-white/[0.06] active:scale-95 lg:hidden"
           aria-label={open ? 'Закрыть меню' : 'Открыть меню'}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
@@ -176,13 +195,13 @@ export function Header() {
         <div
           className={
             token
-              ? 'fixed inset-x-0 bottom-0 z-40 top-[calc(var(--admin-bar-h,36px)+3.5rem)] sm:top-[calc(var(--admin-bar-h,36px)+4.25rem)] md:hidden'
-              : 'fixed inset-x-0 bottom-0 z-40 top-14 sm:top-[4.25rem] md:hidden'
+              ? 'fixed inset-x-0 bottom-0 z-40 top-[calc(var(--admin-bar-h,36px)+3.5rem)] sm:top-[calc(var(--admin-bar-h,36px)+4.25rem)] lg:hidden'
+              : 'fixed inset-x-0 bottom-0 z-40 top-14 sm:top-[4.25rem] lg:hidden'
           }
         >
           <button type="button" className="absolute inset-0 bg-black/65" aria-label="Закрыть" onClick={() => setOpen(false)} />
           <nav className="absolute inset-x-0 top-0 max-h-[min(70dvh,calc(100dvh-3.5rem))] overflow-y-auto overscroll-contain border-b border-white/[0.08] bg-[color:var(--background)] px-4 py-2 shadow-2xl sm:max-h-[min(70dvh,calc(100dvh-4.25rem))] sm:px-6">
-            {nav.map((item) => (
+            {links.map((item) => (
               <NavLink
                 key={String(item.id)}
                 to={item.href}
@@ -194,6 +213,15 @@ export function Header() {
                 {item.label}
               </NavLink>
             ))}
+            {primaryCta ? (
+              <NavLink
+                to={primaryCta.href}
+                onClick={() => setOpen(false)}
+                className="mt-3 mb-2 block rounded-[var(--radius)] bg-[color:var(--primary)] px-4 py-3 text-center text-base font-semibold text-[color:var(--background)]"
+              >
+                {primaryCta.label}
+              </NavLink>
+            ) : null}
           </nav>
         </div>
       )}
@@ -210,7 +238,7 @@ export function Footer() {
   const social = site?.social ?? []
 
   return (
-    <footer className="border-t border-white/[0.06] pt-12 pb-8 sm:pt-16 sm:pb-10">
+    <footer className="cms-snap-footer border-t border-white/[0.06] pt-12 pb-8 sm:pt-16 sm:pb-10">
       <Container>
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr]">
           <div className="sm:col-span-2 lg:col-span-1">
@@ -272,18 +300,23 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       <AdminBar />
       <div style={token ? { paddingTop: 'var(--admin-bar-h, 36px)' } : undefined}>
         <Header />
-        {customHtml ? (
-          <div
-            id="site-template-custom-html"
-            className="site-template-custom-html"
-            dangerouslySetInnerHTML={{ __html: sanitizeHtml(customHtml) }}
-          />
-        ) : null}
-        <main className="min-w-0 overflow-x-clip">{children}</main>
-        <Footer />
+        {/* Only this node scrolls when page snap is on (html/body overflow hidden). */}
+        <div id="cms-snap-scroller" className="min-w-0">
+          {customHtml ? (
+            <div
+              id="site-template-custom-html"
+              className="site-template-custom-html"
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(customHtml) }}
+            />
+          ) : null}
+          <main className="min-w-0 overflow-x-clip">{children}</main>
+          <Footer />
+        </div>
       </div>
       <CookieBanner />
+      <SnapSectionRail />
       <TranslateWidget />
+      <SupportWidget />
       <TranslateAutoWarmup />
     </>
   )

@@ -1,0 +1,206 @@
+{
+  "title": "Shared Hosting",
+  "slug": "shared-hosting",
+  "seo_title": "Jasefly CMS на shared-хостинге — без Node.js на production",
+  "seo_description": "Почему frontend собирается локально, что делает PHP API, как проходит установка ZIP и когда всё же нужен VPS.",
+  "layout": {
+    "version": 1,
+    "meta": {
+      "product": "jasefly-official"
+    },
+    "elements": [
+      {
+        "id": "s_2y",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_2x",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_2v",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Shared Hosting",
+                  "tag": "h1",
+                  "size": "2xl",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_2w",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p>React и TypeScript собираются локально через Vite. На хостинг уходят готовые статические assets и PHP API. Production не компилирует frontend и не требует постоянного Node.js runtime.</p>",
+                  "align": "left"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_31",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_30",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_2z",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "Как устроен production",
+                  "subtitle": "",
+                  "columns": 2,
+                  "items": [
+                    {
+                      "icon": "laptop",
+                      "title": "Локальная сборка",
+                      "body": "На машине разработчика: npm/Vite, проверки, упаковка ZIP."
+                    },
+                    {
+                      "icon": "code",
+                      "title": "PHP API",
+                      "body": "На хостинге отвечает за данные, авторизацию, медиа, MCP API и бизнес-логику."
+                    },
+                    {
+                      "icon": "file",
+                      "title": "Статический frontend",
+                      "body": "index.html и assets отдаются веб-сервером; SPA-маршруты через .htaccess/Nginx."
+                    },
+                    {
+                      "icon": "package",
+                      "title": "Установка",
+                      "body": "Распаковка ZIP в public_html, installer для БД и конфигурации, затем удаление установщика."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_38",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_37",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_32",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Чем отличается от постоянного Node-приложения",
+                  "tag": "h2",
+                  "size": "xl",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_33",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p>Классический Node на VPS держит процесс приложения, часто нуждается в process manager и отдельной сборке на сервере. Jasefly разделяет этапы: сборка локально, runtime на PHP+MySQL. Это удобно для сайтов и витрин, которым достаточно shared-хостинга.</p>",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_34",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Когда VPS всё же нужен",
+                  "tag": "h2",
+                  "size": "xl",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_35",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<ul><li>фоновые процессы и воркеры;</li><li>WebSocket;</li><li>игровые серверы;</li><li>интенсивные очереди;</li><li>специальные системные зависимости;</li><li>приложения с постоянным Node.js runtime;</li><li>высокие и нестандартные нагрузки.</li></ul><p>В этих случаях VPS или контейнерная платформа — нормальный выбор. Jasefly не претендует заменить их для любой нагрузки.</p>",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_36",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p><strong>Требования production:</strong> PHP 8.2+, MySQL, Apache или Nginx, HTTPS, возможность загрузить ZIP.</p>",
+                  "align": "left"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_3b",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_3a",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_39",
+                "elType": "widget",
+                "widgetType": "cta-banner",
+                "settings": {
+                  "title": "Обновления",
+                  "subtitle": "Как обновлять сайт без ручной замены проекта.",
+                  "cta_label": "Обновления",
+                  "cta_href": "/updates"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

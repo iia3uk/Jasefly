@@ -83,7 +83,7 @@ const PLUGIN_ALIASES: Record<string, string[]> = {
 const KNOWN_PLUGINS = [
   'system', 'users', 'content', 'site', 'media', 'portfolio', 'projects', 'blog',
   'services', 'seo', 'template', 'products', 'payments', 'mail', 'registration',
-  'ddos', 'webhooks', 'translate',
+  'ddos', 'webhooks', 'translate', 'support', 'lab',
 ]
 
 /** Subscribers notified whenever plugin enable/disable state changes

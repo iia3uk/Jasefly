@@ -23,30 +23,22 @@ final class MediaService
             throw new \RuntimeException('Invalid filename');
         }
 
-        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
-        $allowed = [
-            'image/jpeg' => 'jpg',
-            'image/png' => 'png',
-            'image/gif' => 'gif',
-            'image/webp' => 'webp',
-            'application/pdf' => 'pdf',
-            'video/mp4' => 'mp4',
-            'video/webm' => 'webm',
-        ];
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']) ?: '';
+        $clientExt = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+        $mime = $this->normalizeUploadMime($mime, $clientExt);
+        $allowed = $this->allowedUploadTypes();
         if (!isset($allowed[$mime])) {
             throw new \RuntimeException('Unsupported file type');
         }
-        // Cross-validate: the client-provided extension must match the
-        // MIME-detected one, blocking polyglot / disguised uploads.
-        $clientExt = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-        if ($clientExt !== '' && $clientExt !== $allowed[$mime]) {
+        $canonicalExt = $allowed[$mime];
+        // Cross-validate extension (aliases: jpeg↔jpg, etc.)
+        $extAliases = $this->extensionAliases($canonicalExt);
+        if ($clientExt !== '' && !in_array($clientExt, $extAliases, true)) {
             throw new \RuntimeException('File extension does not match its content type');
         }
-        // SVG is intentionally not in the allowlist: it can carry inline
-        // scripts and bypass sanitization. Enable explicitly only if needed.
 
         $folderSlug = $this->folderSlug($folderId);
-        [$pathRel, $filename, $width, $height, $thumbRel, $webpRel] = $this->storeFile($file, $mime, $allowed[$mime], $folderSlug);
+        [$pathRel, $filename, $width, $height, $thumbRel, $webpRel] = $this->storeFile($file, $mime, $canonicalExt, $folderSlug);
 
         $this->db->run(
             'INSERT INTO media(folder_id, filename, original_name, mime_type, extension, size_bytes, width, height, alt_text, caption, path, thumbnail_path, webp_path, uploaded_at)
@@ -56,7 +48,7 @@ final class MediaService
                 $filename,
                 $file['name'],
                 $mime,
-                $allowed[$mime],
+                $canonicalExt,
                 (int) $file['size'],
                 $width,
                 $height,
@@ -84,13 +76,17 @@ final class MediaService
 
         $this->removeFiles($existing);
 
-        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
-        $allowed = [
-            'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif',
-            'image/webp' => 'webp', 'application/pdf' => 'pdf', 'video/mp4' => 'mp4', 'video/webm' => 'webm',
-        ];
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']) ?: '';
+        $clientExt = strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
+        $mime = $this->normalizeUploadMime($mime, $clientExt);
+        $allowed = $this->allowedUploadTypes();
         if (!isset($allowed[$mime])) {
             throw new \RuntimeException('Unsupported file type');
+        }
+        $canonicalExt = $allowed[$mime];
+        $extAliases = $this->extensionAliases($canonicalExt);
+        if ($clientExt !== '' && !in_array($clientExt, $extAliases, true)) {
+            throw new \RuntimeException('File extension does not match its content type');
         }
 
         $folderSlug = $this->folderSlug(
@@ -98,14 +94,14 @@ final class MediaService
                 ? (int) $existing['folder_id']
                 : null
         );
-        [$pathRel, $filename, $width, $height, $thumbRel, $webpRel] = $this->storeFile($file, $mime, $allowed[$mime], $folderSlug);
+        [$pathRel, $filename, $width, $height, $thumbRel, $webpRel] = $this->storeFile($file, $mime, $canonicalExt, $folderSlug);
 
         $this->db->run(
             'UPDATE media SET filename=?, original_name=?, mime_type=?, extension=?, size_bytes=?, width=?, height=?,
              alt_text=COALESCE(?, alt_text), caption=COALESCE(?, caption), path=?, thumbnail_path=?, webp_path=?,
              replaced_at=NOW(), deleted_at=NULL WHERE id=?',
             [
-                $filename, $file['name'], $mime, $allowed[$mime], (int) $file['size'], $width, $height,
+                $filename, $file['name'], $mime, $canonicalExt, (int) $file['size'], $width, $height,
                 $alt, $caption, $pathRel, $thumbRel, $webpRel, $id,
             ]
         );
@@ -207,22 +203,77 @@ final class MediaService
             ? 'public, max-age=31536000, immutable'
             : 'private, no-store'));
         header('X-Content-Type-Options: nosniff');
+        // Harden SVG delivery: no scripts/network from the document itself.
+        if (($media['mime_type'] ?? '') === 'image/svg+xml' || str_ends_with(strtolower((string) ($media['path'] ?? '')), '.svg')) {
+            header("Content-Security-Policy: default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox");
+        }
         readfile($path);
         exit;
     }
 
-    public function ensurePhysicalFolder(string $slug): void
+    /** @return array<string, string> mime => canonical extension */
+    private function allowedUploadTypes(): array
     {
-        $slug = trim($slug, '/');
-        if ($slug === '') {
+        return [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            'image/avif' => 'avif',
+            'image/svg+xml' => 'svg',
+            'image/x-icon' => 'ico',
+            'image/vnd.microsoft.icon' => 'ico',
+            'image/bmp' => 'bmp',
+            'image/x-ms-bmp' => 'bmp',
+            'application/pdf' => 'pdf',
+            'video/mp4' => 'mp4',
+            'video/webm' => 'webm',
+        ];
+    }
+
+    /** @return list<string> */
+    private function extensionAliases(string $canonicalExt): array
+    {
+        return match ($canonicalExt) {
+            'jpg' => ['jpg', 'jpeg', 'jpe'],
+            'ico' => ['ico'],
+            'bmp' => ['bmp'],
+            default => [$canonicalExt],
+        };
+    }
+
+    private function normalizeUploadMime(string $mime, string $clientExt): string
+    {
+        // Some clients / finfo variants.
+        if ($mime === 'image/jpg') {
+            return 'image/jpeg';
+        }
+        // SVG often sniffed as xml/text; trust .svg extension only for those families.
+        if (
+            in_array($mime, ['text/xml', 'application/xml', 'text/plain', 'text/html'], true)
+            && $clientExt === 'svg'
+        ) {
+            return 'image/svg+xml';
+        }
+        if ($mime === 'image/ico' || ($mime === 'application/octet-stream' && $clientExt === 'ico')) {
+            return 'image/x-icon';
+        }
+        return $mime;
+    }
+
+    /** Strip obvious script vectors from SVG before storing. */
+    private function sanitizeSvgFile(string $absolutePath): void
+    {
+        $raw = @file_get_contents($absolutePath);
+        if ($raw === false || $raw === '') {
             return;
         }
-        foreach (['uploads', 'thumbnails'] as $root) {
-            $dir = $this->app['storage'] . "/$root/folders/$slug";
-            if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
-                throw new \RuntimeException('Could not create media folder on disk');
-            }
-        }
+        $clean = preg_replace('#<script\b[^>]*>.*?</script>#is', '', $raw) ?? $raw;
+        $clean = preg_replace('#<foreignObject\b[^>]*>.*?</foreignObject>#is', '', $clean) ?? $clean;
+        $clean = preg_replace('#\son[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)#i', '', $clean) ?? $clean;
+        $clean = preg_replace('#javascript\s*:#i', '', $clean) ?? $clean;
+        $clean = preg_replace('#data:\s*text/html#i', 'data:text/plain', $clean) ?? $clean;
+        @file_put_contents($absolutePath, $clean);
     }
 
     private function folderSlug(?int $folderId): ?string
@@ -255,10 +306,14 @@ final class MediaService
             throw new \RuntimeException('Could not save upload');
         }
 
+        if ($mime === 'image/svg+xml' || $ext === 'svg') {
+            $this->sanitizeSvgFile($absolute);
+        }
+
         $width = $height = null;
         $thumbRel = $webpRel = null;
 
-        if (str_starts_with($mime, 'image/')) {
+        if (str_starts_with($mime, 'image/') && $mime !== 'image/svg+xml' && $ext !== 'svg' && $ext !== 'ico') {
             $info = @getimagesize($absolute);
             if ($info) {
                 [$width, $height] = $info;
@@ -272,12 +327,26 @@ final class MediaService
                 $thumbRel = "$sub/$thumbName";
             }
             $webpPath = "$dir/" . pathinfo($filename, PATHINFO_FILENAME) . '.webp';
-            if ($ext !== 'webp' && ImageService::toWebp($absolute, $webpPath)) {
+            if ($ext !== 'webp' && $ext !== 'avif' && ImageService::toWebp($absolute, $webpPath)) {
                 $webpRel = "$sub/" . basename($webpPath);
             }
         }
 
         return ["$sub/$filename", $filename, $width, $height, $thumbRel, $webpRel];
+    }
+
+    public function ensurePhysicalFolder(string $slug): void
+    {
+        $slug = trim($slug, '/');
+        if ($slug === '') {
+            return;
+        }
+        foreach (['uploads', 'thumbnails'] as $root) {
+            $dir = $this->app['storage'] . "/$root/folders/$slug";
+            if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+                throw new \RuntimeException('Could not create media folder on disk');
+            }
+        }
     }
 
     /** Ensure uploads/.htaccess disables PHP execution (defense in depth). */

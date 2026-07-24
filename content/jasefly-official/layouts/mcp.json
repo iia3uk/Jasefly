@@ -1,0 +1,201 @@
+{
+  "title": "MCP и AI",
+  "slug": "mcp",
+  "seo_title": "MCP и AI в Jasefly CMS — управляемый доступ агента к сайту",
+  "seo_description": "Что такое MCP для CMS, как агент получает карту сайта, какие операции доступны, как ограничиваются права токена и зачем нужны throttling и digest.",
+  "layout": {
+    "version": 1,
+    "meta": {
+      "product": "jasefly-official"
+    },
+    "elements": [
+      {
+        "id": "s_2k",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_2j",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_2h",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "MCP и AI",
+                  "tag": "h1",
+                  "size": "2xl",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_2i",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p>MCP (Model Context Protocol) — способ подключить AI-агента (например Cursor) к инструментам CMS: карте сайта, контенту, проверкам и деплою. Это не «полный доступ к серверу», а набор операций через API с токеном.</p>",
+                  "align": "left"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_2n",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_2m",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_2l",
+                "elType": "widget",
+                "widgetType": "faq",
+                "settings": {
+                  "title": "Как устроен доступ",
+                  "subtitle": "",
+                  "items": [
+                    {
+                      "q": "Что такое MCP в контексте CMS?",
+                      "a": "Протокол и набор инструментов, через которые агент вызывает операции CMS: прочитать карту, обновить страницу, запустить pipeline сборки и деплоя."
+                    },
+                    {
+                      "q": "Зачем это CMS?",
+                      "a": "Чтобы нейросеть работала со структурой и контентом осознанно: через digest и карту, а не через хаотичный перебор эндпоинтов."
+                    },
+                    {
+                      "q": "Как агент получает структуру сайта?",
+                      "a": "Обычно одним запросом карты сайта: страницы, навигация, тема и ключевые singleton-настройки. Для деталей страницы — digest layout."
+                    },
+                    {
+                      "q": "Какие операции может выполнять агент?",
+                      "a": "В рамках токена: чтение/создание/обновление контента, singleton-настройки, bulk-операции, локальный build/test, changelog, deploy update, verify. Точный набор зависит от выданных прав и конфигурации MCP."
+                    },
+                    {
+                      "q": "Почему токен ≠ доступ к серверу?",
+                      "a": "Токен ходит в HTTP API CMS. Он не заменяет SSH, не открывает произвольные файлы хостинга и не даёт прав вне реализованных эндпоинтов. Это снижение поверхности, а не абсолютная гарантия безопасности."
+                    },
+                    {
+                      "q": "Зачем throttling и digest?",
+                      "a": "Shared-хостинг плохо переносит шторм запросов. Digest и карта уменьшают число round-trip, а Hosting Guard в MCP-клиенте ограничивает частоту и кэширует GET."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_2q",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_2p",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_2o",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "Типичный AI-контур",
+                  "subtitle": "",
+                  "columns": 2,
+                  "items": [
+                    {
+                      "icon": "map",
+                      "title": "Карта",
+                      "body": "cms_site_map — понять, что уже есть."
+                    },
+                    {
+                      "icon": "edit",
+                      "title": "Контент",
+                      "body": "create/update/bulk в пределах лимитов."
+                    },
+                    {
+                      "icon": "check",
+                      "title": "Build & test",
+                      "body": "Локально, до отправки на хостинг."
+                    },
+                    {
+                      "icon": "upload",
+                      "title": "Deploy",
+                      "body": "Управляемый pipeline с verify."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_2u",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_2t",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_2r",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p>Не заявляем абсолютную безопасность: токен нужно хранить секретно, права — минимально необходимыми, а действия агента — ревьюить. MCP делает работу с CMS удобнее и прозрачнее, но ответственность за секреты и изменения остаётся за человеком.</p>",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_2s",
+                "elType": "widget",
+                "widgetType": "cta-banner",
+                "settings": {
+                  "title": "Shared-хостинг",
+                  "subtitle": "Почему production обходится без Node.js.",
+                  "cta_label": "Shared Hosting",
+                  "cta_href": "/shared-hosting"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -2,30 +2,48 @@ import {
   Box,
   Braces,
   BriefcaseBusiness,
+  Bug,
   Calendar,
   ChartLine,
   CodeXml,
   Cpu,
+  CreditCard,
   Database,
+  File,
   FileCode,
+  Folder,
   Gamepad,
   Gamepad2,
+  Gauge,
   GitBranch,
   Globe,
+  Handshake,
   Hash,
   HelpCircle,
   Image,
+  KeyRound,
+  Laptop,
   Layers,
   LayoutTemplate,
+  List,
+  ListOrdered,
   Mail,
+  Map as MapIcon,
   MessageSquare,
   Monitor,
   MonitorPlay,
   Network,
+  Package,
   Pen,
+  Plug,
+  Puzzle,
+  RefreshCw,
+  Save,
   Send,
+  Server,
   Sparkles,
   Terminal,
+  UserPlus,
   Zap,
   Activity,
   Award,
@@ -45,7 +63,6 @@ import {
   GraduationCap,
   Heart,
   Home,
-  KeyRound,
   Link2,
   MapPin,
   Music,
@@ -69,6 +86,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { SOCIAL_ALIASES, SOCIAL_ICONS, type SocialIconData } from '@/shared/socialIconData'
+import { resolveTechBrandIcon } from '@/shared/techBrandIcons'
 
 /** Lucide components keyed by kebab slug (tree-shake friendly curated set). */
 const REGISTRY: Record<string, LucideIcon> = {
@@ -136,18 +154,32 @@ const REGISTRY: Record<string, LucideIcon> = {
   users: Users,
   video: Video,
   wrench: Wrench,
+  package: Package,
+  'refresh-cw': RefreshCw,
+  folder: Folder,
+  list: List,
+  'list-ordered': ListOrdered,
+  save: Save,
+  file: File,
+  'credit-card': CreditCard,
+  'user-plus': UserPlus,
+  map: MapIcon,
+  server: Server,
+  gauge: Gauge,
+  plug: Plug,
+  laptop: Laptop,
+  bug: Bug,
+  puzzle: Puzzle,
+  handshake: Handshake,
 }
 
-/** Content / tech aliases → Lucide registry (used when no social brand match). */
+/** Content / tech aliases → Lucide registry (used when no social/tech brand match). */
 const LUCIDE_ALIASES: Record<string, string> = {
   unreal: 'gamepad-2',
   unity: 'box',
   godot: 'gamepad',
-  php: 'file-code',
   js: 'braces',
   javascript: 'braces',
-  ts: 'braces',
-  typescript: 'braces',
   cpp: 'code-xml',
   csharp: 'code-xml',
   c: 'code-xml',
@@ -160,6 +192,35 @@ const LUCIDE_ALIASES: Record<string, string> = {
   website: 'globe',
   web: 'globe',
   site: 'globe',
+  package: 'package',
+  refresh: 'refresh-cw',
+  reload: 'refresh-cw',
+  sync: 'refresh-cw',
+  folder: 'folder',
+  key: 'key-round',
+  list: 'list',
+  save: 'save',
+  file: 'file',
+  briefcase: 'briefcase-business',
+  cart: 'shopping-bag',
+  shop: 'shopping-bag',
+  card: 'credit-card',
+  'user-plus': 'user-plus',
+  map: 'map',
+  edit: 'pen',
+  pencil: 'pen',
+  server: 'server',
+  hosting: 'server',
+  gauge: 'gauge',
+  speed: 'gauge',
+  plug: 'plug',
+  user: 'circle-user',
+  message: 'message-square',
+  bug: 'bug',
+  puzzle: 'puzzle',
+  handshake: 'handshake',
+  laptop: 'laptop',
+  desktop: 'monitor',
 }
 
 const SOCIAL_BY_SLUG = new Map(SOCIAL_ICONS.map((icon) => [icon.slug, icon]))
@@ -181,10 +242,16 @@ export function resolveSocialIcon(raw?: string | null): SocialIconData | null {
   return SOCIAL_BY_SLUG.get(slug) ?? null
 }
 
+export function resolveBrandIcon(raw?: string | null): SocialIconData | null {
+  return resolveSocialIcon(raw) ?? resolveTechBrandIcon(raw)
+}
+
 export function resolveIconSlug(raw?: string | null): string | null {
   const key = normalizeIconSlug(raw)
   if (!key) return null
   if (SOCIAL_ALIASES[key] || SOCIAL_BY_SLUG.has(key)) return SOCIAL_ALIASES[key] ?? key
+  const tech = resolveTechBrandIcon(key)
+  if (tech) return tech.slug
   return LUCIDE_ALIASES[key] ?? key
 }
 
@@ -192,7 +259,7 @@ export function getLucideIcon(raw?: string | null): LucideIcon | null {
   const key = normalizeIconSlug(raw)
   if (!key) return null
   // Prefer brand mark when both exist
-  if (resolveSocialIcon(key)) return null
+  if (resolveBrandIcon(key)) return null
   const resolved = LUCIDE_ALIASES[key] ?? key
   return REGISTRY[resolved] ?? null
 }
@@ -225,6 +292,43 @@ function BrandSvg({
   )
 }
 
+function StepNumberIcon({
+  n,
+  size = 24,
+  className,
+}: {
+  n: string
+  size?: number | string
+  className?: string
+}) {
+  const px = typeof size === 'number' ? size : 24
+  const fontSize = n.length > 1 ? Math.round(px * 0.42) : Math.round(px * 0.5)
+  return (
+    <svg
+      role="img"
+      viewBox="0 0 24 24"
+      width={px}
+      height={px}
+      className={cn('shrink-0', className)}
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.75" />
+      <text
+        x="12"
+        y="12"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fill="currentColor"
+        fontSize={fontSize}
+        fontWeight="700"
+        fontFamily="ui-sans-serif, system-ui, sans-serif"
+      >
+        {n}
+      </text>
+    </svg>
+  )
+}
+
 export function AppIcon({
   name,
   fallback = true,
@@ -232,9 +336,14 @@ export function AppIcon({
   size = 24,
   ...props
 }: { name?: string | null; fallback?: boolean } & LucideProps) {
-  const brand = resolveSocialIcon(name)
+  const brand = resolveBrandIcon(name)
   if (brand) {
     return <BrandSvg icon={brand} size={size} className={className} />
+  }
+
+  const key = normalizeIconSlug(name)
+  if (/^\d{1,2}$/.test(key)) {
+    return <StepNumberIcon n={key} size={size} className={className} />
   }
 
   const Icon = getLucideIcon(name)
@@ -254,6 +363,7 @@ const SOCIAL_POPULAR = [
 const LUCIDE_POPULAR = [
   'globe', 'mail', 'send', 'gamepad-2', 'cpu', 'code-xml', 'braces', 'database',
   'layers', 'sparkles', 'zap', 'network', 'monitor', 'pen', 'chart-line', 'rocket', 'star', 'users',
+  'server', 'package', 'layout-template', 'bot', 'shield',
 ]
 
 export function popularIcons(): IconOption[] {
@@ -300,6 +410,11 @@ export function searchIcons(query: string, limit = 40): IconOption[] {
       item: { slug: alias, label: `${alias} → ${SOCIAL_BY_SLUG.get(target)!.title}`, kind: 'social' },
       score: alias === q ? 0 : 1,
     })
+  }
+
+  const tech = resolveTechBrandIcon(q)
+  if (tech) {
+    scored.push({ item: { slug: tech.slug, label: tech.title, kind: 'social' }, score: 0 })
   }
 
   for (const slug of Object.keys(REGISTRY)) {

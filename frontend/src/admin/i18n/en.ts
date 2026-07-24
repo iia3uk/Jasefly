@@ -461,6 +461,7 @@ export const fields: Record<string, string> = {
   site_title: 'Site title',
   site_description: 'Site description',
   site_keywords: 'Keywords',
+  target_regions: 'Target markets',
   canonical_base_url: 'Canonical URL',
   og_title: 'OG title',
   og_description: 'OG description',

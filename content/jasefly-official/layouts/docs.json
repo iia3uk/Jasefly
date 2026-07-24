@@ -1,0 +1,161 @@
+{
+  "title": "Документация",
+  "slug": "docs",
+  "seo_title": "Документация Jasefly CMS — установка, MCP, модули, обновления",
+  "seo_description": "Вводные разделы: требования, установка, локальный запуск, структура, сборка, deployment, обновления, Page Builder, API, MCP и безопасность.",
+  "layout": {
+    "version": 1,
+    "meta": {
+      "product": "jasefly-official"
+    },
+    "elements": [
+      {
+        "id": "s_3f",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_3e",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_3c",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Документация",
+                  "tag": "h1",
+                  "size": "2xl",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_3d",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p>Ниже — вводные разделы по официальному сайту продукта. Расширенные гайды с пошаговыми скриншотами и полным справочником API находятся в разработке.</p>",
+                  "align": "left"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_3i",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_3h",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_3g",
+                "elType": "widget",
+                "widgetType": "faq",
+                "settings": {
+                  "title": "Разделы",
+                  "subtitle": "Кратко и по делу. Детали — в связанных страницах сайта.",
+                  "items": [
+                    {
+                      "q": "Системные требования",
+                      "a": "Production: PHP 8.2+, расширения PDO/MySQL (или SQLite), JSON, mbstring, openssl; MySQL; Apache/Nginx; HTTPS. Локально дополнительно нужны Node.js и npm для сборки frontend."
+                    },
+                    {
+                      "q": "Установка",
+                      "a": "Распакуйте install ZIP в корень сайта, откройте install.php, укажите БД и админа, затем удалите установщик. Подробнее — на странице Shared Hosting и в репозитории."
+                    },
+                    {
+                      "q": "Локальный запуск",
+                      "a": "Поднимите backend PHP и frontend Vite из репозитория. Контент и код разделяйте: контент правится в CMS/MCP, код — в git."
+                    },
+                    {
+                      "q": "Структура проекта",
+                      "a": "frontend/ (React), backend/ (PHP modules), mcp-cms/ (агент деплоя/контента), content/ (content packs). Новые домены — модулями, не патчем ядра."
+                    },
+                    {
+                      "q": "Сборка и deployment",
+                      "a": "Локальный build → update/install ZIP → загрузка на хостинг или через MCP cms_release. На production Node.js не требуется."
+                    },
+                    {
+                      "q": "Обновления",
+                      "a": "Update-пакет через админку: validate → files → migrations. Сохраняются config, uploads, логи и бэкапы. См. страницу «Обновления»."
+                    },
+                    {
+                      "q": "Модули и Page Builder",
+                      "a": "Модули включаются в админке. Страницы собираются из секций/колонок/виджетов. Каталог модулей и возможностей — на страницах «Модули» и «Возможности»."
+                    },
+                    {
+                      "q": "API и MCP",
+                      "a": "REST API под /api/v1. MCP даёт агенту карту сайта, CRUD и pipeline. Токен храните только в env. См. «MCP и AI»."
+                    },
+                    {
+                      "q": "Безопасность и устранение проблем",
+                      "a": "Роли, 2FA, JWT, журнал. При сбоях: диагностика в админке, логи, повтор verify после деплоя. Расширенный troubleshooting — в разработке."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_3m",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_3l",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_3j",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p><em>Статус:</em> вводная документация на сайте готова; глубокие руководства помечаем как «в разработке» и будем дополнять.</p>",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_3k",
+                "elType": "widget",
+                "widgetType": "cta-banner",
+                "settings": {
+                  "title": "Есть вопрос по продукту?",
+                  "subtitle": "Напишите через форму контактов.",
+                  "cta_label": "Контакты",
+                  "cta_href": "/contact"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

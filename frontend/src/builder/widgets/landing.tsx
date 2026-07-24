@@ -8,6 +8,27 @@ import { readStyles, stylesToCss } from '@/builder/edit/StyleFields'
 import { chooseVideoSource, isGeoRiskyPlatform, resolveVideoUrl } from '@/builder/lib/videoEmbed'
 import { mediaUrl } from '@/lib/api'
 import { ProjectGallery } from '@/modules/projects/components/ProjectGallery'
+import {
+  PlAudience,
+  PlCompare,
+  PlCta,
+  PlFeatures,
+  PlHero,
+  PlHow,
+  PlMcp,
+  PlModules,
+  PlShowcase,
+  PlTech,
+  PlUpdates,
+  ProductLanding,
+} from '@/modules/site/productLanding'
+import {
+  productLandingDefaultsFor,
+  PRODUCT_LANDING_DEFAULTS,
+  productLandingSettingsFields,
+  productLandingSettingsFieldsFor,
+  type PlSectionId,
+} from '@/modules/site/productLanding/contentDefaults'
 import { AppIcon } from '@/shared/icons'
 import type { ProjectMediaItem } from '@/types'
 import clsx from 'clsx'
@@ -179,26 +200,37 @@ function PricingRender({ settings }: { settings: Record<string, unknown> }) {
 }
 
 /* ——— Features ——— */
+function featuresGridClass(cols: number): string {
+  const n = Math.min(4, Math.max(1, cols))
+  if (n <= 1) return 'grid-cols-1'
+  if (n === 2) return 'grid-cols-1 sm:grid-cols-2'
+  // 3–4 cols: single column on phones so titles/body don't crush
+  if (n === 3) return 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
+  return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+}
+
 function FeaturesRender({ settings }: { settings: Record<string, unknown> }) {
   const items = asItems(settings.items)
   const cols = Number(settings.columns || 3)
   const styles = stylesToCss(readStyles(settings))
   return (
-    <div style={styles}>
+    <div className="min-w-0" style={styles}>
       <SectionTitle title={String(settings.title || 'Возможности')} subtitle={String(settings.subtitle || '')} />
-      <div
-        className="grid gap-4"
-        style={{ gridTemplateColumns: `repeat(${Math.min(4, Math.max(1, cols))}, minmax(0, 1fr))` }}
-      >
+      <div className={clsx('grid gap-3 sm:gap-4', featuresGridClass(cols))}>
         {items.length ? items.map((item, i) => (
-          <div key={i} className="rounded-[var(--radius)] border border-white/[0.08] bg-white/[0.02] p-5">
+          <div
+            key={i}
+            className="min-w-0 overflow-hidden rounded-[var(--radius)] border border-white/[0.08] bg-white/[0.02] p-3.5 sm:p-5"
+          >
             {item.icon ? (
-              <span className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-[var(--accent)]">
+              <span className="mb-2.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-[var(--accent)] sm:mb-3 sm:h-10 sm:w-10">
                 <AppIcon name={String(item.icon)} size={18} />
               </span>
             ) : null}
-            <h3 className="font-heading text-lg font-semibold">{String(item.title || 'Фича')}</h3>
-            {item.body ? <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{String(item.body)}</p> : null}
+            <h3 className="break-words font-heading text-base font-semibold sm:text-lg">{String(item.title || 'Фича')}</h3>
+            {item.body ? (
+              <p className="mt-1.5 break-words text-sm leading-6 text-[var(--muted)] sm:mt-2">{String(item.body)}</p>
+            ) : null}
           </div>
         )) : (
           <p className="text-sm text-[var(--muted)]">Добавьте карточки возможностей</p>
@@ -471,4 +503,44 @@ export function registerLandingWidgets() {
     ),
     Render: VideoRender,
   })
+
+  registerWidget({
+    type: 'product-landing',
+    label: 'Шаблон · Product Landing весь (устар.)',
+    category: 'landing',
+    defaultSettings: { ...PRODUCT_LANDING_DEFAULTS },
+    settingsFields: productLandingSettingsFields(),
+    Render: ({ settings, editMode }) => <ProductLanding settings={settings} editMode={editMode} />,
+  })
+
+  const plBlocks: Array<{
+    type: string
+    label: string
+    section: PlSectionId
+    Render: typeof PlHero
+  }> = [
+    { type: 'pl-hero', label: 'Шаблон · Hero (устар.)', section: 'hero', Render: PlHero },
+    { type: 'pl-how', label: 'Шаблон · Как работает (устар.)', section: 'how', Render: PlHow },
+    { type: 'pl-compare', label: 'Шаблон · Сравнение VPS (устар.)', section: 'compare', Render: PlCompare },
+    { type: 'pl-showcase', label: 'Шаблон · Showcase (устар.)', section: 'showcase', Render: PlShowcase },
+    { type: 'pl-features', label: 'Шаблон · Возможности (устар.)', section: 'features', Render: PlFeatures },
+    { type: 'pl-mcp', label: 'Шаблон · MCP (устар.)', section: 'mcp', Render: PlMcp },
+    { type: 'pl-updates', label: 'Шаблон · Обновления (устар.)', section: 'updates', Render: PlUpdates },
+    { type: 'pl-modules', label: 'Шаблон · Модули (устар.)', section: 'modules', Render: PlModules },
+    { type: 'pl-audience', label: 'Шаблон · Аудитория (устар.)', section: 'audience', Render: PlAudience },
+    { type: 'pl-tech', label: 'Шаблон · Стек (устар.)', section: 'tech', Render: PlTech },
+    { type: 'pl-cta', label: 'Шаблон · CTA (устар.)', section: 'cta', Render: PlCta },
+  ]
+
+  for (const block of plBlocks) {
+    const Comp = block.Render
+    registerWidget({
+      type: block.type,
+      label: block.label,
+      category: 'landing',
+      defaultSettings: productLandingDefaultsFor(block.section),
+      settingsFields: productLandingSettingsFieldsFor(block.section),
+      Render: ({ settings, editMode }) => <Comp settings={settings} editMode={editMode} />,
+    })
+  }
 }

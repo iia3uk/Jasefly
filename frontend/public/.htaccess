@@ -1,4 +1,5 @@
 Options -Indexes
+DirectoryIndex index.php
 RewriteEngine On
 RewriteBase /
 
@@ -27,12 +28,17 @@ RewriteRule ^api(?:/.*)?$ api/public/index.php [QSA,L]
 RewriteRule ^sitemap\.xml$ prerender.php?path=/sitemap.xml [L,QSA]
 RewriteRule ^robots\.txt$ prerender.php?path=/robots.txt [L,QSA]
 
+# Never serve raw Vite shell — always go through index.php (SEO meta / bots)
+RewriteRule ^index\.html$ index.php [L,QSA]
+
 # SEO: dynamic rendering for crawlers (empty SPA shell → HTML from DB)
-# Note: do not use !-f — `/` often resolves to index.html and would skip bots.
+# Note: do not use !-f — `/` often resolves to a static file and would skip bots.
 RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_URI} !^/prerender\.php
+RewriteCond %{REQUEST_URI} !^/index\.php
 RewriteCond %{REQUEST_URI} !^/admin
-RewriteCond %{REQUEST_URI} !\.(js|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|map|txt|xml)$ [NC]
+# Exclude static .html (Yandex/Google verification files at site root)
+RewriteCond %{REQUEST_URI} !\.(js|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|map|txt|xml|html)$ [NC]
 RewriteCond %{HTTP_USER_AGENT} (googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegrambot|discordbot|applebot|petalbot|semrushbot|ahrefsbot|mj12bot|dotbot|bytespider|gptbot|claudebot|google-inspectiontool|chrome-lighthouse) [NC]
 RewriteRule ^(.*)$ prerender.php?path=/$1 [L,QSA]
 
@@ -40,24 +46,28 @@ RewriteRule ^(.*)$ prerender.php?path=/$1 [L,QSA]
 RewriteCond %{QUERY_STRING} (^|&)(_escaped_fragment_|prerender=1)(&|$) [NC]
 RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_URI} !^/prerender\.php
+RewriteCond %{REQUEST_URI} !^/index\.php
 RewriteCond %{REQUEST_URI} !\.(js|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|map)$ [NC]
 RewriteRule ^(.*)$ prerender.php?path=/$1&prerender=1 [L,QSA]
 
-# React SPA fallback (do not catch /api)
+# React SPA fallback → index.php (SEO-enriched shell)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/api/
-RewriteRule ^ index.html [L]
+RewriteRule ^ index.php [L,QSA]
 
 <IfModule mod_headers.c>
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
 
-  # SPA shell: never cache so clients always pick up new hashed JS/CSS + asset ?v=
-  <Files "index.html">
+  <Files "index.php">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires "0"
+  </Files>
+
+  <Files "spa.html">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
   </Files>
 
   # Hashed Vite bundles may be cached forever
@@ -66,6 +76,7 @@ RewriteRule ^ index.html [L]
 
   # Brand / favicon: short TTL + revalidate (query ?v= still preferred)
   SetEnvIf Request_URI "^/brand/" BRAND_ASSET
-  SetEnvIf Request_URI "^/favicon(-jasefly)?\.svg$" BRAND_ASSET
+  SetEnvIf Request_URI "^/favicon(-jasefly)?\.(svg|ico|png)$" BRAND_ASSET
+  SetEnvIf Request_URI "^/apple-touch-icon\.png$" BRAND_ASSET
   Header set Cache-Control "public, max-age=300, must-revalidate" env=BRAND_ASSET
 </IfModule>

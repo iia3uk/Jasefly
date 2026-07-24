@@ -2,7 +2,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   FileText, FolderKanban, Image, LayoutDashboard, LogOut, Settings, Users, BriefcaseBusiness,
-  GraduationCap, Wrench, MessageSquare, PanelTop, Mail, Palette, Database, KeyRound, Globe,
+  GraduationCap, Wrench, MessageSquare, MessageCircle, HelpCircle, PanelTop, Mail, Palette, Database, KeyRound, Globe,
   Menu, Trash2, Activity, HeartPulse, X, Layers, ExternalLink, PanelLeftClose, PanelLeft, Pin, PinOff, Keyboard,
   LayoutTemplate, Webhook, ShoppingCart, CreditCard, Shield, RefreshCw, type LucideIcon,
 } from 'lucide-react'
@@ -38,6 +38,8 @@ const iconRegistry: Record<string, LucideIcon> = {
   'file-text': FileText,
   settings: Settings,
   'message-square': MessageSquare,
+  'message-circle': MessageCircle,
+  'help-circle': HelpCircle,
   trash: Trash2,
   'panel-top': PanelTop,
   'layout-template': LayoutTemplate,

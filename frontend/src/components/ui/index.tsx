@@ -12,6 +12,7 @@ export {
   EmptyState,
   RichText,
   MediaImage,
+  ImageLightbox,
   SectionHeading,
   Timeline,
   Field,

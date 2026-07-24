@@ -10,16 +10,18 @@ type AutoWarmupResult = {
   translated?: number
   missing_total?: number
   target?: string | null
+  throttled?: boolean
+  skipped?: boolean
+  content_hash?: string
 }
 
-const DONE_KEY = 'site.translate.warmup_done_v1'
+const FP_KEY = 'site.translate.content_hash_v1'
 const LOCK_KEY = 'site.translate.warmup_lock_v1'
-/** Stay under server rate (20/min): ~5 ticks/min per tab. */
-const PAUSE_MS = 12_000
-const START_DELAY_MS = 4_000
-const RATE_LIMIT_BACKOFF_MS = 70_000
-const MAX_TICKS = 500
-const LOCK_TTL_MS = 25_000
+const PAUSE_MS = 25_000
+const START_DELAY_MS = 8_000
+const THROTTLE_BACKOFF_MS = 90_000
+const MAX_TICKS = 200
+const LOCK_TTL_MS = 40_000
 
 function asData<T>(payload: { data?: T } | T): T {
   return (payload && typeof payload === 'object' && 'data' in (payload as object))
@@ -27,24 +29,38 @@ function asData<T>(payload: { data?: T } | T): T {
     : (payload as T)
 }
 
-function tryAcquireLock(): boolean {
+function readFp(): string {
+  try {
+    return localStorage.getItem(FP_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+function writeFp(hash: string) {
+  try {
+    if (hash) localStorage.setItem(FP_KEY, hash)
+  } catch {
+    /* ignore */
+  }
+}
+
+function tryAcquireLock(holdMs = LOCK_TTL_MS): boolean {
   try {
     const now = Date.now()
     const raw = localStorage.getItem(LOCK_KEY)
-    if (raw) {
-      const until = Number(raw)
-      if (Number.isFinite(until) && until > now) return false
-    }
-    localStorage.setItem(LOCK_KEY, String(now + LOCK_TTL_MS))
+    const until = raw ? Number(raw) : 0
+    if (Number.isFinite(until) && until > now) return false
+    localStorage.setItem(LOCK_KEY, String(now + holdMs))
     return true
   } catch {
     return true
   }
 }
 
-function renewLock(): void {
+function renewLock(holdMs: number): void {
   try {
-    localStorage.setItem(LOCK_KEY, String(Date.now() + LOCK_TTL_MS))
+    localStorage.setItem(LOCK_KEY, String(Date.now() + holdMs))
   } catch {
     /* ignore */
   }
@@ -59,8 +75,8 @@ function releaseLock(): void {
 }
 
 /**
- * Silent background worker: while the public site is open, nudges
- * POST /translate/auto-warmup until the translation cache is ready.
+ * Warms translation cache once until ready for current content_hash.
+ * Does not loop forever — only when content fingerprint changes.
  */
 export function TranslateAutoWarmup() {
   const { site } = useSiteContext()
@@ -69,12 +85,23 @@ export function TranslateAutoWarmup() {
   const pluginOn = siteHasPlugin(site?.enabled_plugins, 'translate')
   const widgetOn = site?.translate?.widget_enabled ?? true
   const autoOn = site?.translate?.auto_warmup ?? true
+  const serverReady = site?.translate?.cache_ready ?? false
+  const serverHash = site?.translate?.content_hash ?? ''
 
   useEffect(() => {
     if (!pluginOn || !widgetOn || !autoOn) return
 
+    // Server already marks this content as ready — nothing to do.
+    if (serverReady && serverHash && serverHash === readFp()) return
+    if (serverReady && serverHash) {
+      writeFp(serverHash)
+      return
+    }
+
     try {
-      if (sessionStorage.getItem(DONE_KEY) === '1') return
+      const lang = localStorage.getItem('site.translate.lang')
+      const source = (site?.translate?.source_lang || 'ru').toLowerCase()
+      if (lang && lang !== source) return
     } catch {
       /* ignore */
     }
@@ -85,45 +112,50 @@ export function TranslateAutoWarmup() {
 
     const sleep = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms))
 
-    const markDone = () => {
-      try {
-        sessionStorage.setItem(DONE_KEY, '1')
-      } catch {
-        /* ignore */
-      }
-    }
-
     const loop = async () => {
       if (running.current || cancelled) return
       running.current = true
       try {
         await sleep(START_DELAY_MS)
+
+        // Cheap status check first.
+        try {
+          const check = asData<AutoWarmupResult>(
+            await api.post('/translate/auto-warmup', { check_only: true }, { silent: true }),
+          )
+          if (check.content_hash) writeFp(check.content_hash)
+          if (check.enabled === false || check.ready || check.finished || check.skipped) {
+            return
+          }
+        } catch {
+          /* continue to warm */
+        }
+
         while (!cancelled && ticks < MAX_TICKS) {
-          if (!tryAcquireLock()) {
+          if (!tryAcquireLock(PAUSE_MS + 15_000)) {
             await sleep(PAUSE_MS)
             continue
           }
           ownsLock = true
           ticks++
+          let waitMs = PAUSE_MS
           try {
             const res = asData<AutoWarmupResult>(
-              await api.post('/translate/auto-warmup', { batch_size: 6 }, { silent: true }),
+              await api.post('/translate/auto-warmup', { batch_size: 8 }, { silent: true }),
             )
-            renewLock()
-            if (res.enabled === false || res.finished || res.ready) {
-              markDone()
+            if (res.content_hash) writeFp(res.content_hash)
+            if (res.enabled === false || res.finished || res.ready || res.skipped) {
               break
             }
-            await sleep(PAUSE_MS)
+            if (res.throttled) waitMs = THROTTLE_BACKOFF_MS
           } catch (err) {
             const status = err instanceof ApiRequestError ? err.details?.status : undefined
-            await sleep(status === 429 ? RATE_LIMIT_BACKOFF_MS : PAUSE_MS * 2)
-          } finally {
-            if (ownsLock) {
-              releaseLock()
-              ownsLock = false
-            }
+            waitMs = status === 429 ? THROTTLE_BACKOFF_MS : PAUSE_MS * 2
           }
+          renewLock(waitMs + 5_000)
+          await sleep(waitMs)
+          releaseLock()
+          ownsLock = false
         }
       } finally {
         if (ownsLock) releaseLock()
@@ -135,7 +167,7 @@ export function TranslateAutoWarmup() {
     return () => {
       cancelled = true
     }
-  }, [pluginOn, widgetOn, autoOn])
+  }, [pluginOn, widgetOn, autoOn, serverReady, serverHash, site?.translate?.source_lang])
 
   return null
 }

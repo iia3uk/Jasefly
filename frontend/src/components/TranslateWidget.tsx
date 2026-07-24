@@ -31,9 +31,21 @@ type TranslateConfig = {
   languages?: string[]
   position?: string
   provider?: string
+  cache_ready?: boolean
+  content_hash?: string
+  mode?: string
 }
 
-type BatchResponse = { data?: { translations?: string[] }; translations?: string[] }
+type BatchResponse = {
+  data?: {
+    translations?: string[]
+    cached?: number
+    missing?: number
+    throttled?: boolean
+  }
+  translations?: string[]
+  throttled?: boolean
+}
 
 function readStoredLang(source: string): string {
   try {
@@ -69,7 +81,6 @@ function collectTextNodes(root: ParentNode): Text[] {
       const text = node.nodeValue ?? ''
       if (!text.trim()) return NodeFilter.FILTER_REJECT
       if (shouldSkipNode(node)) return NodeFilter.FILTER_REJECT
-      // Skip pure punctuation / numbers-only noise lightly
       if (/^[\s\d\-–—.,:;!?/\\|@#$%^&*()[\]{}+=~`"']+$/.test(text.trim())) {
         return NodeFilter.FILTER_REJECT
       }
@@ -95,9 +106,24 @@ function positionClass(pos: string): string {
   }
 }
 
+function translationRoots(): ParentNode[] {
+  const roots: ParentNode[] = []
+  for (const sel of ['main', 'header', 'footer']) {
+    document.querySelectorAll(sel).forEach((el) => roots.push(el))
+  }
+  if (!roots.length) roots.push(document.body)
+  return roots
+}
+
+function withPreservedSpace(original: string, translated: string): string {
+  const m = original.match(/^(\s*)([\s\S]*?)(\s*)$/)
+  if (!m) return translated
+  return `${m[1]}${translated}${m[3]}`
+}
+
 /**
- * Floating language picker that translates visible DOM text on the fly
- * (Google Translate-style overlay), via CMS /translate/batch proxy.
+ * Cache-only overlay: applies translations from DB cache (no live MT).
+ * Near-instant when warmup has filled the cache.
  */
 export function TranslateWidget() {
   const { site } = useSiteContext()
@@ -115,111 +141,186 @@ export function TranslateWidget() {
   const [lang, setLang] = useState(() => readStoredLang(source))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const originals = useRef(new WeakMap<Text, string>())
-  const tracked = useRef(new Set<Text>())
-  const abortRef = useRef(0)
 
-  const restoreOriginals = useCallback(() => {
-    for (const node of tracked.current) {
-      const orig = originals.current.get(node)
-      if (orig != null && node.isConnected) node.nodeValue = orig
+  const sourceByKey = useRef(new Map<string, string>())
+  const abortRef = useRef(0)
+  const langRef = useRef(lang)
+  langRef.current = lang
+
+  const nodeKey = (node: Text): string => {
+    const parent = node.parentElement
+    if (!parent) return `orphan:${(node.nodeValue ?? '').slice(0, 40)}`
+    const parts: string[] = []
+    let el: Element | null = parent
+    while (el && el !== document.body) {
+      const tag = el.tagName.toLowerCase()
+      const owner: Element | null = el.parentElement
+      let idx = 0
+      if (owner) idx = Array.prototype.indexOf.call(owner.children, el)
+      parts.push(`${tag}[${idx}]`)
+      el = owner
     }
+    let tIdx = 0
+    for (let i = 0; i < parent.childNodes.length; i++) {
+      const c = parent.childNodes[i]
+      if (c === node) break
+      if (c.nodeType === Node.TEXT_NODE) tIdx++
+    }
+    return `${parts.join('>')}#t${tIdx}`
+  }
+
+  const restoreToSource = useCallback(() => {
+    for (const root of translationRoots()) {
+      for (const node of collectTextNodes(root)) {
+        const key = nodeKey(node)
+        const orig = sourceByKey.current.get(key)
+        if (orig != null) node.nodeValue = orig
+      }
+    }
+    document.documentElement.lang = source
+  }, [source])
+
+  const abortAll = useCallback(() => {
+    abortRef.current += 1
+    setBusy(false)
   }, [])
 
-  const applyTranslation = useCallback(async (target: string) => {
-    const ticket = ++abortRef.current
-    setError('')
+  const applyFromCache = useCallback(async (target: string) => {
     if (target === source) {
-      restoreOriginals()
-      document.documentElement.lang = source
+      abortAll()
+      restoreToSource()
       return
     }
 
+    const ticket = ++abortRef.current
+    setError('')
     setBusy(true)
-    try {
-      const roots: ParentNode[] = []
-      const main = document.querySelector('main')
-      const header = document.querySelector('header')
-      const footer = document.querySelector('footer')
-      if (main) roots.push(main)
-      if (header) roots.push(header)
-      if (footer) roots.push(footer)
-      if (!roots.length) roots.push(document.body)
 
-      // Always start from originals so we don't chain-translate.
-      restoreOriginals()
+    try {
+      restoreToSource()
 
       const nodes: Text[] = []
-      for (const root of roots) {
+      const originals: string[] = []
+
+      for (const root of translationRoots()) {
         for (const n of collectTextNodes(root)) {
-          if (!originals.current.has(n)) {
-            originals.current.set(n, n.nodeValue ?? '')
-            tracked.current.add(n)
+          const key = nodeKey(n)
+          const current = n.nodeValue ?? ''
+          if (!sourceByKey.current.has(key)) {
+            sourceByKey.current.set(key, current)
           }
+          const orig = sourceByKey.current.get(key) ?? current
+          if (n.nodeValue !== orig) n.nodeValue = orig
           nodes.push(n)
+          originals.push(orig)
         }
       }
 
-      // Unique strings → indices
       const unique: string[] = []
       const indexOf = new Map<string, number>()
       const mapNode: number[] = []
-      for (const n of nodes) {
-        const raw = originals.current.get(n) ?? n.nodeValue ?? ''
-        const key = raw
+      for (const raw of originals) {
+        const key = raw.trim()
         let idx = indexOf.get(key)
         if (idx === undefined) {
           idx = unique.length
           indexOf.set(key, idx)
-          unique.push(raw)
+          unique.push(key)
         }
         mapNode.push(idx)
       }
 
+      // Cache-only API — fewer large chunks; soft-throttle retries quietly.
       const translated = new Array<string>(unique.length)
-      const chunkSize = 25
+      const chunkSize = 200
       for (let i = 0; i < unique.length; i += chunkSize) {
-        if (ticket !== abortRef.current) return
+        if (ticket !== abortRef.current || langRef.current === source) return
         const slice = unique.slice(i, i + chunkSize)
-        const res = await api.post<BatchResponse>('/translate/batch', {
-          source,
-          target,
-          texts: slice,
-        })
-        const list = (res as BatchResponse)?.data?.translations
-          ?? (res as BatchResponse)?.translations
-          ?? []
+        let list: string[] = []
+        for (let attempt = 0; attempt < 4; attempt++) {
+          if (ticket !== abortRef.current || langRef.current === source) return
+          try {
+            const res = await api.post<BatchResponse>('/translate/batch', {
+              source,
+              target,
+              texts: slice,
+            }, { silent: true })
+            const payload = res?.data ?? res
+            if (payload?.throttled) {
+              await new Promise((r) => setTimeout(r, 800 * (attempt + 1)))
+              continue
+            }
+            list = payload?.translations ?? []
+            break
+          } catch (e) {
+            const status = e && typeof e === 'object' && 'status' in e
+              ? Number((e as { status?: number }).status)
+              : 0
+            if (status === 429 && attempt < 3) {
+              await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
+              continue
+            }
+            throw e
+          }
+        }
         for (let j = 0; j < slice.length; j++) {
-          translated[i + j] = typeof list[j] === 'string' ? list[j] : slice[j]
+          const got = typeof list[j] === 'string' ? list[j] : ''
+          translated[i + j] = got.trim() !== '' ? got : slice[j]
         }
       }
 
-      if (ticket !== abortRef.current) return
+      if (ticket !== abortRef.current || langRef.current === source) {
+        restoreToSource()
+        return
+      }
+
       nodes.forEach((node, i) => {
         const t = translated[mapNode[i]]
-        if (typeof t === 'string' && node.isConnected) node.nodeValue = t
+        if (typeof t === 'string' && node.isConnected) {
+          node.nodeValue = withPreservedSpace(originals[i], t)
+        }
       })
       document.documentElement.lang = target
     } catch (e) {
       if (ticket === abortRef.current) {
         setError(e instanceof Error ? e.message : 'Не удалось перевести')
-        restoreOriginals()
+        restoreToSource()
       }
     } finally {
       if (ticket === abortRef.current) setBusy(false)
     }
-  }, [restoreOriginals, source])
+  }, [abortAll, restoreToSource, source])
 
-  // Re-run when SPA navigates while a foreign lang is active.
   useEffect(() => {
     if (!enabledPlugin || !(cfg?.widget_enabled ?? true)) return
     if (lang === source) {
-      document.documentElement.lang = source
+      abortAll()
+      restoreToSource()
       return
     }
-    const id = window.setTimeout(() => void applyTranslation(lang), 180)
+    const id = window.setTimeout(() => void applyFromCache(lang), 80)
+    // One catch-up after late widgets — still cache-only / fast.
+    const id2 = window.setTimeout(() => {
+      if (langRef.current !== source) void applyFromCache(langRef.current)
+    }, 700)
+    return () => {
+      window.clearTimeout(id)
+      window.clearTimeout(id2)
+    }
+  }, [lang, source, enabledPlugin, cfg?.widget_enabled, applyFromCache, abortAll, restoreToSource])
+
+  useEffect(() => {
+    sourceByKey.current.clear()
+    if (!enabledPlugin || !(cfg?.widget_enabled ?? true)) return
+    if (langRef.current === source) {
+      restoreToSource()
+      return
+    }
+    const id = window.setTimeout(() => {
+      if (langRef.current !== source) void applyFromCache(langRef.current)
+    }, 100)
     return () => window.clearTimeout(id)
-  }, [lang, source, enabledPlugin, cfg?.widget_enabled, applyTranslation, pathname])
+  }, [pathname, enabledPlugin, cfg?.widget_enabled, applyFromCache, restoreToSource, source])
 
   if (!enabledPlugin || !cfg || !(cfg.widget_enabled ?? true) || targets.length === 0) {
     return null
@@ -229,16 +330,21 @@ export function TranslateWidget() {
   const currentLabel = LANG_LABELS[lang] || lang.toUpperCase()
 
   const pick = (next: string) => {
-    setLang(next)
     writeStoredLang(next)
     setOpen(false)
+    if (next === source) {
+      abortAll()
+      langRef.current = source
+      setLang(source)
+      restoreToSource()
+      return
+    }
+    langRef.current = next
+    setLang(next)
   }
 
   return (
-    <div
-      className={`translate-widget fixed z-[85] ${pos}`}
-      data-no-translate
-    >
+    <div className={`translate-widget fixed z-[85] ${pos}`} data-no-translate>
       {open && (
         <div
           className="mb-2 min-w-[11rem] overflow-hidden rounded-xl border border-white/15 bg-[color:var(--surface,#151518)]/95 shadow-2xl backdrop-blur-md"

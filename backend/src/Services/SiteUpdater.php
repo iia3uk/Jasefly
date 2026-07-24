@@ -56,7 +56,9 @@ final class SiteUpdater
         $this->apiRoot = $resolved !== false ? $resolved : dirname(__DIR__, 2);
         $parent = dirname($this->apiRoot);
         $this->hostingLayout = basename($this->apiRoot) === 'api'
-            || is_file($parent . DIRECTORY_SEPARATOR . 'index.html');
+            || is_file($parent . DIRECTORY_SEPARATOR . 'index.html')
+            || is_file($parent . DIRECTORY_SEPARATOR . 'spa.html')
+            || is_file($parent . DIRECTORY_SEPARATOR . 'index.php');
         $this->webRoot = $this->hostingLayout ? $parent : $this->apiRoot;
 
         $storage = (string) ($this->app['storage'] ?? ($this->apiRoot . '/storage'));
@@ -169,6 +171,14 @@ final class SiteUpdater
                     throw new \RuntimeException("Не удалось записать файл: {$rel}");
                 }
                 $copied++;
+            }
+
+            // Drop legacy Vite shell so nginx cannot serve empty #root instead of index.php
+            if ($this->hostingLayout && is_file($this->webRoot . '/spa.html')) {
+                $legacy = $this->webRoot . '/index.html';
+                if (is_file($legacy)) {
+                    @unlink($legacy);
+                }
             }
 
             $migrations = $this->runMigrations();
@@ -304,7 +314,10 @@ final class SiteUpdater
             throw new \RuntimeException('Пакет повреждён: нет Bootstrap.php.');
         }
         // Frontend optional for api-only patches, but update packages normally include it
-        $hasFront = is_file($root . '/index.html') || is_dir($root . '/assets');
+        $hasFront = is_file($root . '/index.html')
+            || is_file($root . '/spa.html')
+            || is_file($root . '/index.php')
+            || is_dir($root . '/assets');
         if (!$hasFront && $this->hostingLayout) {
             // Allow api-only updates on hosting
             return;
@@ -383,6 +396,8 @@ final class SiteUpdater
         $dist = $repoRoot . DIRECTORY_SEPARATOR . 'frontend' . DIRECTORY_SEPARATOR . 'dist';
         if (is_dir($dist) && (
             $rel === 'index.html'
+            || $rel === 'spa.html'
+            || $rel === 'index.php'
             || $rel === '.htaccess'
             || str_starts_with($rel, 'assets/')
             || preg_match('/\.(js|css|map|svg|png|jpg|webp|ico|woff2?)$/i', $rel)

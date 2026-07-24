@@ -62,6 +62,8 @@ export interface SeoSettings {
   site_title?: string
   site_description?: string
   site_keywords?: string
+  /** Target markets for schema.org areaServed: CIS | EU | USA | ASIA */
+  target_regions?: string[] | string | null
   canonical_base_url?: string
   og_title?: string
   og_description?: string
@@ -500,6 +502,9 @@ export interface TranslateSiteSettings {
   languages?: string[]
   position?: string
   provider?: string
+  cache_ready?: boolean
+  content_hash?: string
+  mode?: string
 }
 
 export interface AuthResponse {

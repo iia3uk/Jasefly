@@ -1,4 +1,7 @@
 import { registerBasicWidgets } from '@/builder/widgets/basic'
+import { registerStructureWidgets } from '@/builder/widgets/structure'
+import { registerBlockWidgets } from '@/builder/widgets/blocks'
+import { registerPanelWidgets } from '@/builder/widgets/panels'
 import { registerLandingWidgets } from '@/builder/widgets/landing'
 import { registerPortfolioWidgets } from '@/builder/widgets/portfolio'
 import { registerCommerceWidgets } from '@/builder/widgets/commerce'
@@ -12,6 +15,9 @@ export function initBuilderWidgets() {
   if (ready) return
   // Core built-in widgets (structure + basic + landing + portfolio + commerce + auth).
   registerBasicWidgets()
+  registerStructureWidgets()
+  registerBlockWidgets()
+  registerPanelWidgets()
   registerLandingWidgets()
   registerPortfolioWidgets()
   registerCommerceWidgets()

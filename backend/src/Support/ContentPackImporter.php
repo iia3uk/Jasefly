@@ -168,7 +168,7 @@ final class ContentPackImporter
                 'posts_per_page', 'projects_per_page',
             ],
             'seo_settings' => [
-                'site_title', 'site_description', 'site_keywords',
+                'site_title', 'site_description', 'site_keywords', 'target_regions',
                 'canonical_base_url', 'og_title', 'og_description',
                 'twitter_card', 'twitter_handle', 'google_analytics_id', 'google_tag_manager_id',
             ],

@@ -11,6 +11,7 @@ import { t, dashboardCounts } from '@/admin/i18n'
 import { PROJECT_STATUS_LABELS, projectStatusTone } from '@/modules/projects/projectStatus'
 import { fetchContentHealth, type HealthKind } from '@/admin/lib/contentHealth'
 import { adminUrl } from '@/admin/adminBasePath'
+import { isPluginEnabled } from '@/core/moduleRegistry'
 
 const COUNT_META: Record<string, { href: string; icon: LucideIcon }> = {
   projects: { href: adminUrl('/projects'), icon: FolderKanban },
@@ -163,12 +164,16 @@ export function DashboardPage() {
                 <span className="rounded border border-white/10 px-2 py-1 text-zinc-300">
                   {health.data?.mediaAltGaps ?? 0} без alt
                 </span>
-                <span className="rounded border border-white/10 px-2 py-1 text-zinc-300">
-                  {health.data?.projectGaps ?? 0} {t.contentHealthProjects}
-                </span>
-                <span className="rounded border border-white/10 px-2 py-1 text-zinc-300">
-                  {health.data?.blogGaps ?? 0} {t.contentHealthPosts}
-                </span>
+                {isPluginEnabled('projects') ? (
+                  <span className="rounded border border-white/10 px-2 py-1 text-zinc-300">
+                    {health.data?.projectGaps ?? 0} {t.contentHealthProjects}
+                  </span>
+                ) : null}
+                {isPluginEnabled('blog') ? (
+                  <span className="rounded border border-white/10 px-2 py-1 text-zinc-300">
+                    {health.data?.blogGaps ?? 0} {t.contentHealthPosts}
+                  </span>
+                ) : null}
                 {(['seo', 'draft', 'scheduled', 'alt', 'cover', 'slug', 'summary'] as const).map((kind) => (
                   <span key={kind} className="rounded border border-white/10 px-2 py-1 text-zinc-500">
                     {HEALTH_COUNT_LABEL[kind]}: {health.data?.counts[kind] ?? 0}
@@ -236,7 +241,9 @@ export function DashboardPage() {
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: t.weekProjects, value: data?.recent?.projects_7d, href: adminUrl('/projects') },
+          ...(isPluginEnabled('projects')
+            ? [{ label: t.weekProjects, value: data?.recent?.projects_7d, href: adminUrl('/projects') }]
+            : []),
           { label: t.weekPosts, value: data?.recent?.posts_7d, href: adminUrl('/blog') },
           { label: t.weekMedia, value: data?.recent?.media_7d, href: adminUrl('/media') },
           { label: t.weekMessages, value: data?.recent?.messages_7d, href: adminUrl('/messages') },
@@ -255,7 +262,14 @@ export function DashboardPage() {
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {isLoading
           ? Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="h-28" />)
-          : COUNT_ORDER.map((name) => {
+          : COUNT_ORDER.filter((name) => {
+              if (name === 'projects' || name === 'services' || name === 'testimonials' || name === 'experience' || name === 'education' || name === 'skills') {
+                return isPluginEnabled('portfolio') || isPluginEnabled('projects')
+              }
+              if (name === 'products') return isPluginEnabled('products')
+              if (name === 'blog_posts') return isPluginEnabled('blog')
+              return true
+            }).map((name) => {
               const count = data?.counts?.[name] ?? 0
               // Hide empty optional plugins that are zero and unused — still show products if module exists (always 0 ok)
               const meta = COUNT_META[name]
@@ -284,45 +298,51 @@ export function DashboardPage() {
       </div>
 
       <div className="mt-8 grid gap-4 lg:grid-cols-3">
-        <StatusBars title={t.publishProjects} href={adminUrl('/projects')} data={data?.publish?.projects} />
+        {isPluginEnabled('projects') ? (
+          <StatusBars title={t.publishProjects} href={adminUrl('/projects')} data={data?.publish?.projects} />
+        ) : null}
         <StatusBars title={t.publishPosts} href={adminUrl('/blog')} data={data?.publish?.posts} />
         <StatusBars title={t.publishPages} href={adminUrl('/pages')} data={data?.publish?.pages} />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <GlassPanel className="p-5">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="font-heading text-lg">{t.projectLifecycle}</h2>
-            <Link to={adminUrl('/projects')} className="text-xs text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline">
-              {t.projects}
-            </Link>
-          </div>
-          <div className="mt-4 space-y-2">
-            {isLoading ? <Skeleton className="h-32" /> : (
-              Object.entries(PROJECT_STATUS_LABELS).map(([key, label]) => {
-                const n = data?.project_lifecycle?.[key] ?? 0
-                const pct = lifecycleTotal ? Math.round((n / lifecycleTotal) * 100) : 0
-                return (
-                  <div key={key} className="flex items-center gap-3">
-                    <span className={`w-24 shrink-0 rounded border px-2 py-0.5 text-center text-[11px] ${projectStatusTone(key)}`}>
-                      {label}
-                    </span>
-                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/5">
-                      <div className="h-full rounded-full bg-white/25" style={{ width: `${pct}%` }} />
+        {isPluginEnabled('projects') ? (
+          <GlassPanel className="p-5">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-heading text-lg">{t.projectLifecycle}</h2>
+              <Link to={adminUrl('/projects')} className="text-xs text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline">
+                {t.projects}
+              </Link>
+            </div>
+            <div className="mt-4 space-y-2">
+              {isLoading ? <Skeleton className="h-32" /> : (
+                Object.entries(PROJECT_STATUS_LABELS).map(([key, label]) => {
+                  const n = data?.project_lifecycle?.[key] ?? 0
+                  const pct = lifecycleTotal ? Math.round((n / lifecycleTotal) * 100) : 0
+                  return (
+                    <div key={key} className="flex items-center gap-3">
+                      <span className={`w-24 shrink-0 rounded border px-2 py-0.5 text-center text-[11px] ${projectStatusTone(key)}`}>
+                        {label}
+                      </span>
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/5">
+                        <div className="h-full rounded-full bg-white/25" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="w-6 text-right text-sm tabular-nums text-zinc-400">{n}</span>
                     </div>
-                    <span className="w-6 text-right text-sm tabular-nums text-zinc-400">{n}</span>
-                  </div>
-                )
-              })
-            )}
-          </div>
-        </GlassPanel>
+                  )
+                })
+              )}
+            </div>
+          </GlassPanel>
+        ) : null}
 
         <GlassPanel className="p-5">
           <h2 className="font-heading text-lg">{t.drafts}</h2>
           <div className="mt-4 grid grid-cols-3 gap-3">
             {[
-              { label: t.projects, value: data?.drafts?.projects, href: adminUrl('/projects'), icon: FolderKanban },
+              ...(isPluginEnabled('projects')
+                ? [{ label: t.projects, value: data?.drafts?.projects, href: adminUrl('/projects'), icon: FolderKanban }]
+                : []),
               { label: t.posts, value: data?.drafts?.posts, href: adminUrl('/blog'), icon: FileText },
               { label: t.pagesLabel, value: data?.drafts?.pages, href: adminUrl('/pages'), icon: LayoutTemplate },
             ].map((item) => {

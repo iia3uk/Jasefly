@@ -188,9 +188,24 @@ export function AboutPage() {
 
 export function HomePage() {
   const { data: site, isLoading } = useSite()
+  const pluginsReady = Array.isArray(site?.enabled_plugins)
   const portfolioOn = siteHasPlugin(site?.enabled_plugins, 'portfolio')
-  const featured = useProjects(true)
-  const allProjects = useProjects(false)
+
+  const homeLayout: PageLayout | null = site?.home_page?.layout
+    ?? (typeof site?.home_page?.layout_json === 'string' && site.home_page.layout_json
+      ? (() => { try { return JSON.parse(site.home_page!.layout_json!) as PageLayout } catch { return null } })()
+      : null)
+
+  // Saved builder home wins over classic template once layout is marked useOnSite / non-seed.
+  const useBuilderHome =
+    !!homeLayout?.elements?.length
+    && !isSeedLayout(homeLayout)
+
+  // Classic portfolio home only — builder layout must not spam /projects when Portfolio is off.
+  const classicHome = pluginsReady && portfolioOn && !useBuilderHome
+
+  const featured = useProjects(true, classicHome)
+  const allProjects = useProjects(false, classicHome)
   const services = useServices()
   const testimonials = useTestimonials()
   const skills = useSkills()
@@ -203,23 +218,13 @@ export function HomePage() {
   const hero = site?.hero
   const projects = (featured.data?.length ? featured.data : allProjects.data)?.slice(0, 3)
 
-  if (isLoading || !Array.isArray(site?.enabled_plugins)) {
+  if (isLoading || !pluginsReady) {
     return (
       <Container>
         <Skeleton className="mt-24 h-[60vh]" />
       </Container>
     )
   }
-
-  const homeLayout: PageLayout | null = site?.home_page?.layout
-    ?? (typeof site?.home_page?.layout_json === 'string' && site.home_page.layout_json
-      ? (() => { try { return JSON.parse(site.home_page!.layout_json!) as PageLayout } catch { return null } })()
-      : null)
-
-  // Saved builder home wins over classic template once layout is marked useOnSite / non-seed.
-  const useBuilderHome =
-    !!homeLayout?.elements?.length
-    && !isSeedLayout(homeLayout)
 
   if (useBuilderHome) {
     return (

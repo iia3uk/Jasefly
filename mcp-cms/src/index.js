@@ -13,6 +13,7 @@ import { z } from 'zod';
 import fs from 'node:fs';
 import path from 'node:path';
 import { clientFromEnv, RESOURCES, SINGLETONS } from './client.js';
+import { sanitizeLabPayload } from './lab.js';
 import {
   assertDeployAllowed,
   markChangelog,
@@ -86,7 +87,7 @@ server.tool(
 
 server.tool(
   'cms_local_test',
-  'ШАГ 2/5. Локальный тест: lint + проверка ZIP (index.html, api Bootstrap). Только после cms_local_build. Дальше — cms_changelog.',
+  'ШАГ 2/5. Локальный тест: lint + проверка ZIP (spa.html, index.php, api Bootstrap). Только после cms_local_build. Дальше — cms_changelog.',
   {},
   async () => {
     try {
@@ -850,6 +851,112 @@ server.tool(
       }
       const pack = JSON.parse(fs.readFileSync(abs, 'utf8'));
       return ok({ path: abs, pack });
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+// ─── Jasefly Lab (metadata/content only; no code upload) ─────────────────────
+
+server.tool(
+  'list_lab_experiments',
+  'Список экспериментов Jasefly Lab (метаданные). Код экспериментов не отдаётся.',
+  {},
+  async () => {
+    try {
+      const cms = getClient();
+      const res = await cms.get('/admin/lab/experiments');
+      return ok(res?.data ?? res);
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool(
+  'get_lab_experiment',
+  'Получить эксперимент Lab по id (settings/content JSON, без исходников).',
+  {
+    id: z.union([z.string(), z.number()]),
+  },
+  async ({ id }) => {
+    try {
+      const cms = getClient();
+      const res = await cms.get(`/admin/lab/experiments/${id}`);
+      return ok(res?.data ?? res);
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool(
+  'create_lab_experiment',
+  'Создать эксперимент Lab. entry_key только из whitelist (GET /admin/lab/entries). Нельзя писать код.',
+  {
+    data: z.record(z.unknown()).describe('name, slug, entry_key, status, is_public, noindex, render_mode, settings_json, content_json'),
+  },
+  async ({ data }) => {
+    try {
+      const cms = getClient();
+      const payload = sanitizeLabPayload(data);
+      const res = await cms.post('/admin/lab/experiments', payload);
+      return ok(res?.data ?? res);
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool(
+  'update_lab_experiment',
+  'Обновить эксперимент Lab (метаданные и JSON-контент). Без загрузки JS/PHP.',
+  {
+    id: z.union([z.string(), z.number()]),
+    data: z.record(z.unknown()),
+  },
+  async ({ id, data }) => {
+    try {
+      const cms = getClient();
+      const payload = sanitizeLabPayload(data);
+      const res = await cms.put(`/admin/lab/experiments/${id}`, payload);
+      return ok(res?.data ?? res);
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool(
+  'publish_lab_experiment',
+  'Активировать / отключить / архивировать эксперимент Lab.',
+  {
+    id: z.union([z.string(), z.number()]),
+    action: z.enum(['activate', 'disable', 'archive']).default('activate'),
+  },
+  async ({ id, action }) => {
+    try {
+      const cms = getClient();
+      const res = await cms.post(`/admin/lab/experiments/${id}/${action}`, {});
+      return ok(res?.data ?? res);
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool(
+  'preview_lab_experiment',
+  'Получить payload preview эксперимента Lab (для проверки content/settings).',
+  {
+    id: z.union([z.string(), z.number()]),
+  },
+  async ({ id }) => {
+    try {
+      const cms = getClient();
+      const res = await cms.get(`/admin/lab/experiments/${id}/preview`);
+      return ok(res?.data ?? res);
     } catch (e) {
       return fail(e);
     }

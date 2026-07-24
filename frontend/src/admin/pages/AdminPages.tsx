@@ -11,7 +11,7 @@ import { MediaPicker } from '@/admin/components/MediaPicker'
 import { GalleryPicker } from '@/admin/components/GalleryPicker'
 import { IconPicker } from '@/admin/components/IconPicker'
 import { BlueprintForm } from '@/admin/components/BlueprintForm'
-import { getBlueprints } from '@/core/moduleRegistry'
+import { getBlueprints, isPluginEnabled } from '@/core/moduleRegistry'
 import { AppIcon } from '@/shared/icons'
 import { AdminSplitLayout, adminFormFullClass, adminFormGridClass } from '@/admin/components/AdminSplitLayout'
 import { PageContext } from '@/admin/components/PageContext'
@@ -709,7 +709,7 @@ function ProjectLinkedPosts({ projectId }: { projectId: unknown }) {
 export function BlogEditPage() {
   const { id = 'new' } = useAdminRouteParams()
   const { data } = useAdminItem<BlogPost>('blog', id)
-  const { data: projects = [] } = useAdminList<Project>('projects')
+  const { data: projects = [] } = useAdminList<Project>('projects', isPluginEnabled('projects'))
   const crud = useCrud('blog')
   const nav = useNavigate()
   const { form, setForm, baseline, setBaseline } = useHydratedForm<Data>(data as Data | undefined, String(id))
@@ -760,12 +760,14 @@ export function BlogEditPage() {
           <GlassPanel className={adminFormGridClass}>
             <Text label={fieldLabel('title')} value={form.title} onChange={v => set('title', v)} />
             <Text label={fieldLabel('slug')} value={form.slug} onChange={v => set('slug', v)} />
-            <Select
-              label={fieldLabel('project_id')}
-              value={form.project_id ?? ''}
-              onChange={v => set('project_id', v === '' ? null : v)}
-              options={projectOptions}
-            />
+            {isPluginEnabled('projects') ? (
+              <Select
+                label={fieldLabel('project_id')}
+                value={form.project_id ?? ''}
+                onChange={v => set('project_id', v === '' ? null : v)}
+                options={projectOptions}
+              />
+            ) : null}
             <Text label={fieldLabel('seo_title')} value={form.seo_title} onChange={v => set('seo_title', v)} />
             <Text label={fieldLabel('tags')} value={asText(form.tags)} onChange={v => set('tags', v)} />
             <div className={adminFormFullClass}><Field label={fieldLabel('excerpt')}><textarea value={form.excerpt ?? ''} onChange={e => set('excerpt', e.target.value)} /></Field></div>

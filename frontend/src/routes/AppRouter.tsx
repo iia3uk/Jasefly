@@ -13,6 +13,7 @@ import { useSiteContext } from '@/context/SiteContext'
 import { SLUG_PLUGIN_GATES, siteHasPlugin } from '@/core/pluginGates'
 import { RegisterPage, RegisterVerifyPage } from '@/pages/RegisterPages'
 import { adminUrl, getAdminBase, isAdminPathname, setAdminBaseFromSite } from '@/admin/adminBasePath'
+import { LabPublicPage } from '@/modules/lab/LabPublicPage'
 
 const publicPage = <T extends keyof typeof import('@/pages/PublicPages')>(name: T) =>
   lazy(() => import('@/pages/PublicPages').then((module) => ({ default: module[name] as ComponentType })))
@@ -140,18 +141,21 @@ export function AppRouter() {
           <Route path="/admin/*" element={<RetiredAdminPath />} />
         )}
 
+        {/* Lab: bare layout — outside SiteLayout / theme / nav */}
+        <Route path="/lab/:slug" element={<LabPublicPage />} />
+
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/register" element={<PluginOr404 plugin="registration"><RegisterPage /></PluginOr404>} />
           <Route path="/register/verify" element={<PluginOr404 plugin="registration"><RegisterVerifyPage /></PluginOr404>} />
-          <Route path="/about" element={<PluginOr404 plugin="portfolio"><CmsOr slug="about" path="/about"><AboutPage /></CmsOr></PluginOr404>} />
+          <Route path="/about" element={<CmsOr slug="about" path="/about"><AboutPage /></CmsOr>} />
           <Route path="/projects" element={<PluginOr404 plugin="portfolio"><CmsOr slug="projects" path="/projects"><ProjectsPage /></CmsOr></PluginOr404>} />
           <Route path="/projects/:slug" element={<PluginOr404 plugin="portfolio"><ProjectDetailPage /></PluginOr404>} />
           <Route path="/services" element={<PluginOr404 plugin="portfolio"><CmsOr slug="services" path="/services"><ServicesPage /></CmsOr></PluginOr404>} />
           <Route path="/products/:slug" element={<PluginOr404 plugin="products"><ProductDetailPage /></PluginOr404>} />
-          <Route path="/blog" element={<PluginOr404 plugin="portfolio"><CmsOr slug="blog" path="/blog"><BlogPage /></CmsOr></PluginOr404>} />
-          <Route path="/blog/:slug" element={<PluginOr404 plugin="portfolio"><BlogPostPage /></PluginOr404>} />
-          <Route path="/contact" element={<PluginOr404 plugin="portfolio"><CmsOr slug="contact" path="/contact"><ContactPage /></CmsOr></PluginOr404>} />
+          <Route path="/blog" element={<PluginOr404 plugin="blog"><CmsOr slug="blog" path="/blog"><BlogPage /></CmsOr></PluginOr404>} />
+          <Route path="/blog/:slug" element={<PluginOr404 plugin="blog"><BlogPostPage /></PluginOr404>} />
+          <Route path="/contact" element={<CmsOr slug="contact" path="/contact"><ContactPage /></CmsOr>} />
           <Route path="/privacy" element={<CmsOr slug="privacy" path="/privacy"><PrivacyPage /></CmsOr>} />
           <Route path="/:slug" element={<CmsSlugPage />} />
           <Route path="*" element={<CmsOr slug="not-found" path="/not-found"><NotFoundPage /></CmsOr>} />

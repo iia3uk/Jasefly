@@ -56,6 +56,10 @@ final class DdosGuardMiddleware
         }
 
         $ip = $info['ip'];
+        // Live-chat polling has its own SoftRateLimit; global DDoS rpm would 429 the widget.
+        if (str_contains($r->path, '/support/')) {
+            return $next();
+        }
         $endpoint = $r->method . ':' . $r->path;
 
         if (!$this->service->rateLimitAllow($ip, $endpoint)) {

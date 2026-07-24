@@ -46,6 +46,7 @@ function resolvePhpBin() {
   const fromEnv = (process.env.PHP_BIN || '').trim();
   const candidates = [
     fromEnv,
+    path.join(repoRoot(), '.tools', 'php', 'php.exe'),
     'C:/xampp/php/php.exe',
     'C:/php/php.exe',
     'C:/laragon/bin/php/php.exe',
@@ -174,7 +175,7 @@ export function localTest() {
     checks.push({ name: 'zip_list', ok: ps.ok || tarList.ok, detail: listing ? 'listed' : (ps.stderr || tarList.stderr).slice(0, 500) });
   }
 
-  const need = ['index.html', 'api/src/Bootstrap.php', 'api/public/index.php'];
+  const need = ['spa.html', 'index.php', 'api/src/Bootstrap.php', 'api/public/index.php'];
   const missing = need.filter((n) => {
     const re = new RegExp(`(^|[\\\\/])${n.replace(/\./g, '\\.')}$`, 'im');
     // tar may list as ./index.html or index.html

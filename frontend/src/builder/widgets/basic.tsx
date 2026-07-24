@@ -2,11 +2,14 @@ import { MediaImage, RichText } from '@/components/ui'
 import { registerWidget } from '@/builder/registry'
 import type { SettingsField } from '@/builder/types'
 import { EditableButton, EditableText } from '@/builder/edit/Editable'
+import { ItemsEditor } from '@/builder/edit/ItemsEditor'
 import { readStyles, stylesToCss } from '@/builder/edit/StyleFields'
 import { sanitizeHtml } from '@/shared/sanitize'
 import { useProductEntity } from '@/builder/context/ProductEntityContext'
 import { isFieldDynamic, resolveBound, resolveBoundString } from '@/builder/bind/resolveBound'
 import type { CSSProperties } from 'react'
+import clsx from 'clsx'
+import { Link } from 'react-router-dom'
 
 function fields(...items: SettingsField[]) {
   return items
@@ -109,21 +112,35 @@ function TextRender({ settings, editMode }: { settings: Record<string, unknown>;
 function ImageRender({ settings, editMode }: { settings: Record<string, unknown>; editMode?: boolean }) {
   const product = useProductEntity()
   const mediaId = resolveBound(settings, 'media_id', { product, editMode })
-  if (!mediaId) {
+  const url = String(settings.url || '').trim()
+  const alt = resolveBoundString(settings, 'alt', { product, editMode }, '')
+  const ratioStyle = { aspectRatio: settings.ratio === 'square' ? '1' : settings.ratio === '4/5' ? '4/5' : settings.ratio === '4/3' ? '4/3' : '16/9' }
+
+  if (!mediaId && !url) {
     return (
       <div className="flex aspect-video items-center justify-center rounded-[var(--radius)] border border-dashed border-white/15 text-sm text-[var(--muted)]">
         {isFieldDynamic(settings, 'media_id')
           ? (editMode ? 'Обложка товара (нет media_id у демо)' : 'Нет изображения')
-          : 'Выберите изображение'}
+          : 'Выберите изображение или URL'}
       </div>
+    )
+  }
+  if (!mediaId && url) {
+    return (
+      <img
+        src={url}
+        alt={alt}
+        className="w-full rounded-[var(--radius)] object-cover"
+        style={ratioStyle}
+      />
     )
   }
   return (
     <MediaImage
       media={mediaId as never}
-      alt={resolveBoundString(settings, 'alt', { product, editMode }, '')}
+      alt={alt}
       className="w-full rounded-[var(--radius)] object-cover"
-      style={{ aspectRatio: settings.ratio === 'square' ? '1' : settings.ratio === '4/5' ? '4/5' : '16/9' }}
+      style={ratioStyle}
     />
   )
 }
@@ -263,6 +280,99 @@ function PageLoaderRender({ settings }: { settings: Record<string, unknown> }) {
   )
 }
 
+/** Same look as product-landing hero chips. */
+const chipClass =
+  'inline-flex rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-[color:var(--muted)]'
+
+function ChipRender({ settings, editMode }: { settings: Record<string, unknown>; editMode?: boolean }) {
+  const label = String(settings.label || settings.text || '')
+  const href = String(settings.href || '').trim()
+  const styles = stylesToCss(readStyles(settings))
+  const align = String(settings.align || 'left')
+  const wrapClass = clsx(
+    'w-fit max-w-full',
+    align === 'center' && 'mx-auto',
+    align === 'right' && 'ml-auto',
+  )
+
+  if (editMode) {
+    return (
+      <div className={wrapClass} style={styles}>
+        <EditableText
+          field="label"
+          label="Чип"
+          value={label}
+          as="span"
+          className={chipClass}
+          placeholder="Чип"
+        />
+      </div>
+    )
+  }
+
+  if (!label) return null
+  if (href) {
+    const external = href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:')
+    if (external) {
+      return (
+        <div className={wrapClass} style={styles}>
+          <a href={href} className={chipClass}>{label}</a>
+        </div>
+      )
+    }
+    return (
+      <div className={wrapClass} style={styles}>
+        <Link to={href} className={chipClass}>{label}</Link>
+      </div>
+    )
+  }
+  return (
+    <div className={wrapClass} style={styles}>
+      <span className={chipClass}>{label}</span>
+    </div>
+  )
+}
+
+function ChipRowRender({ settings, editMode }: { settings: Record<string, unknown>; editMode?: boolean }) {
+  const items = Array.isArray(settings.items)
+    ? (settings.items as Array<Record<string, unknown>>)
+    : []
+  const styles = stylesToCss(readStyles(settings))
+  const align = String(settings.align || 'left')
+  const rowClass = clsx(
+    'flex flex-wrap gap-2',
+    align === 'center' && 'justify-center',
+    align === 'right' && 'justify-end',
+  )
+
+  if (!items.length) {
+    if (!editMode) return null
+    return (
+      <div className={rowClass} style={styles}>
+        <span className={clsx(chipClass, 'border-dashed opacity-60')}>Добавьте чипы в настройках</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className={rowClass} style={styles}>
+      {items.map((item, i) => {
+        const label = String(item.label || item.text || '')
+        const href = String(item.href || '').trim()
+        if (!label) return null
+        if (editMode || !href) {
+          return <span key={i} className={chipClass}>{label}</span>
+        }
+        const external = href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:')
+        if (external) {
+          return <a key={i} href={href} className={chipClass}>{label}</a>
+        }
+        return <Link key={i} to={href} className={chipClass}>{label}</Link>
+      })}
+    </div>
+  )
+}
+
 export function registerBasicWidgets() {
   registerWidget({
     type: 'heading',
@@ -306,12 +416,13 @@ export function registerBasicWidgets() {
     type: 'image',
     label: 'Изображение',
     category: 'basic',
-    defaultSettings: { media_id: null, alt: '', ratio: '16/9' },
+    defaultSettings: { media_id: null, url: '', alt: '', ratio: '16/9' },
     settingsFields: fields(
       { key: 'media_id', label: 'Медиа', type: 'media', bindable: true },
+      { key: 'url', label: 'Или URL (если нет медиа)', type: 'url' },
       { key: 'alt', label: 'Alt', type: 'text', bindable: true },
       { key: 'ratio', label: 'Пропорции', type: 'select', options: [
-        { value: '16/9', label: '16:9' }, { value: '4/5', label: '4:5' }, { value: 'square', label: '1:1' },
+        { value: '16/9', label: '16:9' }, { value: '4/3', label: '4:3' }, { value: '4/5', label: '4:5' }, { value: 'square', label: '1:1' },
       ] },
     ),
     Render: ImageRender,
@@ -392,5 +503,58 @@ export function registerBasicWidgets() {
       { key: 'fullscreen', label: 'По центру экрана', type: 'toggle' },
     ),
     Render: PageLoaderRender,
+  })
+
+  registerWidget({
+    type: 'chip',
+    label: 'Чип',
+    category: 'basic',
+    defaultSettings: { label: 'Shared Hosting Ready', href: '', align: 'left' },
+    settingsFields: fields(
+      { key: 'label', label: 'Текст', type: 'text' },
+      { key: 'href', label: 'Ссылка (необязательно)', type: 'url' },
+      { key: 'align', label: 'Выравнивание', type: 'select', options: [
+        { value: 'left', label: 'Слева' }, { value: 'center', label: 'По центру' }, { value: 'right', label: 'Справа' },
+      ] },
+    ),
+    Render: ChipRender,
+  })
+
+  registerWidget({
+    type: 'chip-row',
+    label: 'Ряд чипов',
+    category: 'basic',
+    defaultSettings: {
+      align: 'left',
+      items: [
+        { label: 'Локальная сборка', href: '' },
+        { label: 'MCP для AI-агентов', href: '' },
+        { label: 'Update ZIP', href: '' },
+        { label: 'Shared Hosting Ready', href: '' },
+      ],
+    },
+    settingsFields: fields(
+      { key: 'align', label: 'Выравнивание', type: 'select', options: [
+        { value: 'left', label: 'Слева' }, { value: 'center', label: 'По центру' }, { value: 'right', label: 'Справа' },
+      ] },
+      {
+        key: 'items',
+        label: 'Чипы',
+        type: 'custom',
+        component: ({ value, onChange }) => (
+          <ItemsEditor
+            value={value}
+            onChange={onChange}
+            addLabel="Чип"
+            blank={() => ({ label: '', href: '' })}
+            fields={[
+              { key: 'label', label: 'Текст', kind: 'text' },
+              { key: 'href', label: 'Ссылка', kind: 'url' },
+            ]}
+          />
+        ),
+      },
+    ),
+    Render: ChipRowRender,
   })
 }

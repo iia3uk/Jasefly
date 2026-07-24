@@ -160,7 +160,16 @@ final class TranslateCorpus
         if (!is_string($val) && !is_numeric($val)) {
             return;
         }
-        $text = html_entity_decode(strip_tags((string) $val), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $raw = (string) $val;
+        // Break block/list HTML into lines BEFORE strip_tags, otherwise
+        // "<li>a</li><li>b</li>" becomes one corpus string "a b" / "ab"
+        // while the DOM has separate text nodes that miss the cache.
+        if (str_contains($raw, '<')) {
+            $raw = preg_replace('/<br\s*\/?>/iu', "\n", $raw) ?? $raw;
+            $raw = preg_replace('/<\/(p|li|div|h[1-6]|tr|td|th|blockquote|section|article|figcaption)>/iu', "\n", $raw) ?? $raw;
+            $raw = preg_replace('/<(p|li|div|h[1-6]|tr|td|th|blockquote|section|article)\b[^>]*>/iu', "\n", $raw) ?? $raw;
+        }
+        $text = html_entity_decode(strip_tags($raw), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         // Split HTML leftovers / multiline into phrases
         $parts = preg_split('/[\r\n]+/u', $text) ?: [$text];
         foreach ($parts as $part) {
