@@ -83,6 +83,14 @@ Composer не используется.
 
 ---
 
+## Поддержать проект
+
+Если Jasefly CMS оказалась полезной — можно скинуть любую сумму:
+
+**https://pay.cloudtips.ru/p/4cbdc8ab**
+
+---
+
 ## License / authorship
 
 Jasefly CMS by IIA3UK.  
