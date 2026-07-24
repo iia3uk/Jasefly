@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-07-24 — Footer tip link (CloudTips) + external footer links
+
+- Footer supports external https links (CloudTips, GitHub)
+- Footer columns: Поддержать проект → pay.cloudtips.ru
+- README: support section with tip URL
+
 ## 2026-07-24 — Technical SEO audit: redirects, headers, H1 prerender, OG
 
 - Canonical HTTPS + www→apex 301 redirects in root .htaccess
