@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-07-24 — Platform modules: Forms, Scheduler, Automation, Notifications, Newsletter, Orders, Comments, Analytics
+
+- Scheduler job queue + CLI/HTTP/lazy tick
+- Forms engine + builder form widget + submissions
+- Automation workflows on events
+- Notifications bell + deliveries
+- Newsletter DOI/campaigns + signup widget
+- Orders extending Payments commerce
+- Comments/reviews moderation widgets
+- Analytics privacy-aware ingest + overview
+- MCP zip marker check fix (spa.html false negative)
+
+Cron: php api/bin/scheduler.php run --limit=20. Default: Scheduler+Forms on; other platform modules seed disabled. No breaking changes.
+
 ## 2026-07-24 — Stop admin /projects 404 when Projects plugin is off
 
 - Gate content-health and admin project fetches until plugins hydrate
