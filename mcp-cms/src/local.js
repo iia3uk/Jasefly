@@ -14,6 +14,7 @@ import { repoRoot, markBuild, markTest, readGate, sha256File } from './gate.js';
 function run(cmd, args, opts = {}) {
   const cwd = opts.cwd || repoRoot();
   const timeout = opts.timeoutMs ?? 15 * 60 * 1000;
+  const keepFull = Boolean(opts.fullOutput);
   const isWin = process.platform === 'win32';
   // On Windows, shell:true breaks paths with spaces (e.g. C:\Program Files\nodejs\node.exe).
   // Only use shell for .cmd/.bat shims like npm.cmd.
@@ -31,8 +32,9 @@ function run(cmd, args, opts = {}) {
   return {
     ok: r.status === 0,
     status: r.status,
-    stdout: stdout.slice(-12000),
-    stderr: stderr.slice(-12000),
+    // Truncating zip listings dropped early entries like ./spa.html and false-failed markers.
+    stdout: keepFull ? stdout : stdout.slice(-12000),
+    stderr: keepFull ? stderr : stderr.slice(-12000),
     error: r.error ? String(r.error.message || r.error) : null,
   };
 }
@@ -165,12 +167,12 @@ export function localTest() {
   const ps = run(
     'powershell',
     ['-NoProfile', '-Command', `Add-Type -AssemblyName System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::OpenRead('${zip.replace(/'/g, "''")}').Entries | ForEach-Object { $_.FullName }`],
-    { cwd: root, timeoutMs: 120000 },
+    { cwd: root, timeoutMs: 120000, fullOutput: true },
   );
   if (ps.ok && ps.stdout.trim()) {
     listing = ps.stdout;
   } else {
-    const tarList = run('tar', ['-tf', zip], { cwd: root, timeoutMs: 120000 });
+    const tarList = run('tar', ['-tf', zip], { cwd: root, timeoutMs: 120000, fullOutput: true });
     listing = tarList.ok ? tarList.stdout : '';
     checks.push({
       name: 'zip_list',
