@@ -1,0 +1,167 @@
+{
+  "title": "Как это работает",
+  "slug": "workflow",
+  "seo_title": "Как работает Jasefly CMS — от локальной разработки до хостинга",
+  "seo_description": "Полный цикл: локальная установка, разработка, MCP, build, ZIP, установка или обновление на shared-хостинге и дальнейшее управление сайтом.",
+  "layout": {
+    "version": 1,
+    "meta": {
+      "product": "jasefly-official"
+    },
+    "elements": [
+      {
+        "id": "s_1q",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_1p",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_1n",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Как это работает",
+                  "tag": "h1",
+                  "size": "2xl",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_1o",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p>Ниже — полный цикл от репозитория до работающего сайта на обычном хостинге.</p>",
+                  "align": "left"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_1t",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_1s",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_1r",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "Полный цикл",
+                  "subtitle": "",
+                  "columns": 2,
+                  "items": [
+                    {
+                      "icon": "1",
+                      "title": "1. Локальная установка",
+                      "body": "Клонируете репозиторий, поднимаете backend и frontend у себя."
+                    },
+                    {
+                      "icon": "2",
+                      "title": "2. Разработка",
+                      "body": "Меняете модули, виджеты, API и UI в привычном git-workflow."
+                    },
+                    {
+                      "icon": "3",
+                      "title": "3. Cursor / MCP",
+                      "body": "Агент получает карту сайта и правит контент через API в рамках токена."
+                    },
+                    {
+                      "icon": "4",
+                      "title": "4. Локальный запуск",
+                      "body": "Проверяете сайт и админку на своей машине."
+                    },
+                    {
+                      "icon": "5",
+                      "title": "5. Проверка",
+                      "body": "Линт, тесты пакета и ручной просмотр критичных сценариев."
+                    },
+                    {
+                      "icon": "6",
+                      "title": "6. Production build",
+                      "body": "Vite собирает статический frontend; API готовится к упаковке."
+                    },
+                    {
+                      "icon": "7",
+                      "title": "7. Install / Update ZIP",
+                      "body": "Сборщик создаёт пакет для первой установки или апдейта."
+                    },
+                    {
+                      "icon": "8",
+                      "title": "8. Загрузка на хостинг",
+                      "body": "ZIP попадает в public_html или через панель обновлений."
+                    },
+                    {
+                      "icon": "9",
+                      "title": "9. Installer / Updates",
+                      "body": "Первый запуск — install.php; дальше — обновления из админки."
+                    },
+                    {
+                      "icon": "10",
+                      "title": "10. Управление сайтом",
+                      "body": "Контент, SEO, модули и медиа правятся в админке или через MCP."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_1w",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_1v",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_1u",
+                "elType": "widget",
+                "widgetType": "cta-banner",
+                "settings": {
+                  "title": "Нужен AI-контур?",
+                  "subtitle": "Разберите, как MCP ограничивает агента и какие операции доступны.",
+                  "cta_label": "MCP и AI",
+                  "cta_href": "/mcp"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

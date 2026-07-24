@@ -19,6 +19,7 @@ final class SitemapService
         $seo = $this->db->one('SELECT canonical_base_url FROM seo_settings LIMIT 1');
         $base = rtrim((string) ($seo['canonical_base_url'] ?? $this->app['url']), '/');
         $portfolioOn = $this->pluginEnabled('portfolio');
+        $blogOn = $this->pluginEnabled('blog');
         $productsOn = $this->pluginEnabled('products');
 
         $urls = [
@@ -26,15 +27,36 @@ final class SitemapService
             ['loc' => $base . '/privacy', 'priority' => '0.3'],
         ];
 
-        // Custom CMS pages (non-system)
+        // System / template slugs — never index (align with robots.txt Disallow)
+        $excludeSlugs = [
+            '__home', 'privacy', 'not-found', 'admin-login', 'register', 'lazy-loader', 'maintenance',
+            'payment', 'payment-success', 'payment-fail',
+            'product-card', 'product-detail', 'product-detail-simple', 'product-detail-storefront',
+            'product-detail-marketplace', 'product-detail-digital', 'product-detail-landing',
+            // Portfolio/data templates — listed explicitly below when plugins on
+            'projects', 'services',
+        ];
+        $excludeList = "'" . implode("','", array_map(
+            static fn (string $s): string => str_replace("'", "''", $s),
+            $excludeSlugs
+        )) . "'";
+
+        // Custom CMS pages (non-system) — including about/contact/features without Portfolio
         try {
             foreach ($this->db->all(
                 "SELECT slug, updated_at, published_at FROM pages
                  WHERE status='published' AND is_home=0
-                   AND slug NOT IN ('__home','privacy','not-found','admin-login','register','lazy-loader','maintenance')"
+                   AND slug NOT IN ({$excludeList})"
             ) as $p) {
                 $slug = (string) ($p['slug'] ?? '');
                 if ($slug === '' || str_starts_with($slug, '__')) {
+                    continue;
+                }
+                // Skip plugin-owned index pages when plugin is off (also covered by page API gates)
+                if ($slug === 'blog' && !$blogOn) {
+                    continue;
+                }
+                if (($slug === 'projects' || $slug === 'services') && !$portfolioOn) {
                     continue;
                 }
                 $urls[] = [
@@ -48,11 +70,8 @@ final class SitemapService
         }
 
         if ($portfolioOn) {
-            $urls[] = ['loc' => $base . '/about', 'priority' => '0.8'];
             $urls[] = ['loc' => $base . '/projects', 'priority' => '0.9'];
             $urls[] = ['loc' => $base . '/services', 'priority' => '0.8'];
-            $urls[] = ['loc' => $base . '/blog', 'priority' => '0.8'];
-            $urls[] = ['loc' => $base . '/contact', 'priority' => '0.7'];
 
             foreach ($this->db->all("SELECT slug, updated_at, published_at FROM projects WHERE status='published'") as $p) {
                 $urls[] = [
@@ -61,6 +80,9 @@ final class SitemapService
                     'priority' => '0.7',
                 ];
             }
+        }
+
+        if ($blogOn) {
             foreach ($this->db->all("SELECT slug, updated_at, published_at FROM blog_posts WHERE status='published'") as $p) {
                 $urls[] = [
                     'loc' => $base . '/blog/' . $p['slug'],

@@ -37,6 +37,7 @@ final class MigrationService
         '016_cookie_consent.sql',
         '017_admin_base_path.sql',
         '018_harden_role_permissions.sql',
+        '019_seo_target_regions.sql',
     ];
 
     private SqlTranspiler $transpiler;
@@ -309,6 +310,10 @@ final class MigrationService
     /** @return list<string> */
     private function splitSql(string $sql): array
     {
+        // Editors/Windows sometimes save SQL with UTF-8 BOM; MySQL rejects it as syntax.
+        if (str_starts_with($sql, "\xEF\xBB\xBF")) {
+            $sql = substr($sql, 3);
+        }
         $sql = preg_replace('/^\s*--.*$/m', '', $sql) ?? $sql;
         $parts = preg_split('/;\s*\n/', $sql) ?: [];
         $out = [];

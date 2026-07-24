@@ -3,23 +3,21 @@
  * when the plugin is disabled.
  */
 export const PATH_PLUGIN_GATES: Array<{ prefix: string; plugin: string }> = [
-  { prefix: '/about', plugin: 'portfolio' },
-  { prefix: '/contact', plugin: 'portfolio' },
+  // about/contact — обычные CMS-страницы билдера, без Portfolio
   { prefix: '/services', plugin: 'portfolio' },
   { prefix: '/projects', plugin: 'portfolio' },
-  { prefix: '/blog', plugin: 'portfolio' },
+  { prefix: '/blog', plugin: 'blog' },
   { prefix: '/products', plugin: 'products' },
   { prefix: '/register', plugin: 'registration' },
   { prefix: '/checkout', plugin: 'payments' },
   { prefix: '/pay', plugin: 'payments' },
+  { prefix: '/lab', plugin: 'lab' },
 ]
 
-/** CMS page slugs seeded / owned by a plugin. */
+/** CMS page slugs seeded / owned by a plugin (не билдер-маркетинг). */
 export const SLUG_PLUGIN_GATES: Record<string, string> = {
-  about: 'portfolio',
-  contact: 'portfolio',
   projects: 'portfolio',
-  blog: 'portfolio',
+  blog: 'blog',
   services: 'portfolio',
 }
 

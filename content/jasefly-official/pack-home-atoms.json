@@ -1,0 +1,1421 @@
+{
+  "version": 1,
+  "mode": "replace_content",
+  "pages": [
+    {
+      "slug": "__home",
+      "title": "Главная",
+      "status": "published",
+      "template": "builder",
+      "layout": {
+        "version": 1,
+        "meta": {
+          "product": "jasefly-official",
+          "revision": "home-atoms-2026-07-22",
+          "useOnSite": true
+        },
+        "elements": [
+          {
+            "id": "s_8nc9zg6",
+            "elType": "section",
+            "settings": {
+              "paddingY": "3.5rem",
+              "gap": "1.5rem",
+              "columns": 1
+            },
+            "elements": [
+              {
+                "id": "c_zj0pg4q",
+                "elType": "column",
+                "settings": {
+                  "width": 100
+                },
+                "elements": [
+                  {
+                    "id": "w_mg110hr",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "PHP 8.3 · React · TypeScript · Vite · MySQL · MCP",
+                      "tag": "p",
+                      "size": "md",
+                      "align": "left",
+                      "styles": {
+                        "color": "var(--primary)",
+                        "fontSize": "0.75rem",
+                        "fontWeight": "600",
+                        "letterSpacing": "0.14em",
+                        "textTransform": "uppercase"
+                      }
+                    }
+                  },
+                  {
+                    "id": "w_9zy7dlb",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Разрабатывайте сайты с AI.",
+                      "tag": "h1",
+                      "size": "xl",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_vu1ogdl",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Разворачивайте без лишней инфраструктуры.",
+                      "tag": "h2",
+                      "size": "xl",
+                      "align": "left",
+                      "styles": {
+                        "color": "var(--accent)"
+                      }
+                    }
+                  },
+                  {
+                    "id": "w_ih76kjr",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<p>Jasefly — модульная CMS с MCP-доступом, локальной сборкой и управляемыми обновлениями. Собирайте frontend на своей машине и публикуйте готовый проект на PHP/MySQL-хостинге.</p>",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_kdvu4mp",
+                    "elType": "widget",
+                    "widgetType": "button",
+                    "settings": {
+                      "label": "Начать работу",
+                      "href": "/docs",
+                      "variant": "solid",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_dvwmm5y",
+                    "elType": "widget",
+                    "widgetType": "button",
+                    "settings": {
+                      "label": "Посмотреть, как это работает",
+                      "href": "#how-it-works",
+                      "variant": "ghost",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_ubi946t",
+                    "elType": "widget",
+                    "widgetType": "chip-row",
+                    "settings": {
+                      "align": "left",
+                      "items": [
+                        {
+                          "label": "Локальная сборка",
+                          "href": ""
+                        },
+                        {
+                          "label": "MCP для AI-агентов",
+                          "href": ""
+                        },
+                        {
+                          "label": "Update ZIP",
+                          "href": ""
+                        },
+                        {
+                          "label": "Shared Hosting Ready",
+                          "href": ""
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "w_lvqrax0",
+                    "elType": "widget",
+                    "widgetType": "image",
+                    "settings": {
+                      "url": "/landing/hero.png",
+                      "alt": "Интерфейс Jasefly CMS",
+                      "ratio": "4/3",
+                      "media_id": null
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_mtwe3qm",
+            "elType": "section",
+            "settings": {
+              "paddingY": "5rem",
+              "gap": "1.5rem",
+              "columns": 1,
+              "htmlId": "how-it-works"
+            },
+            "elements": [
+              {
+                "id": "c_ia5mh2x",
+                "elType": "column",
+                "settings": {
+                  "width": 100
+                },
+                "elements": [
+                  {
+                    "id": "w_crbl6ln",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "От локальной разработки до production",
+                      "tag": "h2",
+                      "size": "xl",
+                      "align": "center"
+                    }
+                  },
+                  {
+                    "id": "w_pty0tar",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<p style=\"text-align:center\">Сборка и проверки остаются на вашей машине. На сервер отправляется готовый пакет.</p>",
+                      "align": "center"
+                    }
+                  },
+                  {
+                    "id": "w_lmbgkx9",
+                    "elType": "widget",
+                    "widgetType": "steps-row",
+                    "settings": {
+                      "animate": true,
+                      "show_line": true,
+                      "line_inset_left": "8%",
+                      "line_inset_right": "8%",
+                      "line_top": "1.5rem",
+                      "items": [
+                        {
+                          "badge": "1",
+                          "title": "Develop",
+                          "text": "Frontend, backend и контент редактируются локально."
+                        },
+                        {
+                          "badge": "2",
+                          "title": "Build",
+                          "text": "Vite собирает React и TypeScript в production-assets."
+                        },
+                        {
+                          "badge": "3",
+                          "title": "Test",
+                          "text": "Проверки выполняются до упаковки проекта."
+                        },
+                        {
+                          "badge": "4",
+                          "title": "Package",
+                          "text": "Формируется install- или update-ZIP."
+                        },
+                        {
+                          "badge": "5",
+                          "title": "Upload",
+                          "text": "Пакет загружается через административную панель."
+                        },
+                        {
+                          "badge": "6",
+                          "title": "Ready",
+                          "text": "CMS проверяет пакет, применяет миграции и возвращает сайт в рабочее состояние."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_ip1r8zd",
+            "elType": "section",
+            "settings": {
+              "paddingY": "5rem",
+              "gap": "1.5rem",
+              "columns": 1,
+              "styles": {
+                "backgroundColor": "rgba(255,255,255,0.015)"
+              }
+            },
+            "elements": [
+              {
+                "id": "c_41ip527",
+                "elType": "column",
+                "settings": {
+                  "width": 100
+                },
+                "elements": [
+                  {
+                    "id": "w_26ysyst",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Не каждому сайту нужен отдельный application server",
+                      "tag": "h2",
+                      "size": "lg",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_nktzay1",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<p>Jasefly не заменяет VPS во всех сценариях. Она уменьшает объём серверного администрирования там, где достаточно PHP и MySQL.</p>",
+                      "align": "left"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_4tvs56i",
+            "elType": "section",
+            "settings": {
+              "paddingY": "0",
+              "gap": "1.25rem",
+              "columns": 2
+            },
+            "elements": [
+              {
+                "id": "c_nl0ojeg",
+                "elType": "column",
+                "settings": {
+                  "width": 50
+                },
+                "elements": [
+                  {
+                    "id": "w_ckb9njs",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Типичный самостоятельный VPS",
+                      "tag": "h3",
+                      "size": "md",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_lpirg7o",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<ul><li>Установка и обновление операционной системы</li><li>Настройка SSH</li><li>Настройка Nginx или Apache</li><li>Установка Node.js и npm</li><li>Управление процессами</li><li>Настройка deployment</li><li>Резервное копирование</li><li>Регулярное обслуживание сервера</li></ul>",
+                      "align": "left"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "c_39u3t6c",
+                "elType": "column",
+                "settings": {
+                  "width": 50
+                },
+                "elements": [
+                  {
+                    "id": "w_wfhu8u1",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Jasefly CMS",
+                      "tag": "h3",
+                      "size": "md",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_3vivj2j",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<ul><li>Собрать проект локально</li><li>Выполнить проверки</li><li>Получить ZIP-пакет</li><li>Загрузить его на хостинг</li><li>Запустить installer или update</li><li>Управлять сайтом через админку</li></ul>",
+                      "align": "left"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_7r8ute7",
+            "elType": "section",
+            "settings": {
+              "paddingY": "1rem",
+              "gap": "1.5rem",
+              "columns": 1
+            },
+            "elements": [
+              {
+                "id": "c_axtpr8g",
+                "elType": "column",
+                "settings": {
+                  "width": 100
+                },
+                "elements": [
+                  {
+                    "id": "w_c66ykba",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<p>VPS остаётся подходящим выбором для проектов со специальными требованиями к runtime, масштабированию и инфраструктуре.</p>",
+                      "align": "left"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_rur6ugg",
+            "elType": "section",
+            "settings": {
+              "paddingY": "5rem",
+              "gap": "1.5rem",
+              "columns": 1
+            },
+            "elements": [
+              {
+                "id": "c_hew2d4j",
+                "elType": "column",
+                "settings": {
+                  "width": 100
+                },
+                "elements": [
+                  {
+                    "id": "w_t21s545",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Не только CMS. Полный рабочий процесс.",
+                      "tag": "h2",
+                      "size": "lg",
+                      "align": "left"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_jr2te5q",
+            "elType": "section",
+            "settings": {
+              "paddingY": "2rem",
+              "gap": "2rem",
+              "columns": 2
+            },
+            "elements": [
+              {
+                "id": "c_1wexlvw",
+                "elType": "column",
+                "settings": {
+                  "width": 50
+                },
+                "elements": [
+                  {
+                    "id": "w_9exaiu7",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Управляйте страницами визуально",
+                      "tag": "h3",
+                      "size": "lg",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_om5bol2",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<p>Собирайте структуру страниц в Page Builder, редактируйте контент и сохраняйте изменения в CMS.</p>",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_scisydl",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<ul><li>Секции, колонки и виджеты в одном редакторе</li><li>Настройки страницы и SEO рядом с контентом</li><li>Публикация и черновики без ручной правки файлов</li></ul>",
+                      "align": "left"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "c_zjfn3tk",
+                "elType": "column",
+                "settings": {
+                  "width": 50
+                },
+                "elements": [
+                  {
+                    "id": "w_ihwg3xz",
+                    "elType": "widget",
+                    "widgetType": "image",
+                    "settings": {
+                      "url": "/landing/page-builder.png",
+                      "alt": "Управляйте страницами визуально",
+                      "ratio": "16/9",
+                      "media_id": null
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_5i5vh02",
+            "elType": "section",
+            "settings": {
+              "paddingY": "2rem",
+              "gap": "2rem",
+              "columns": 2
+            },
+            "elements": [
+              {
+                "id": "c_l83j81r",
+                "elType": "column",
+                "settings": {
+                  "width": 50
+                },
+                "elements": [
+                  {
+                    "id": "w_2m3xro6",
+                    "elType": "widget",
+                    "widgetType": "image",
+                    "settings": {
+                      "url": "/landing/mcp-workflow.png",
+                      "alt": "Подключайте AI через MCP",
+                      "ratio": "16/9",
+                      "media_id": null
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "c_3gk5zug",
+                "elType": "column",
+                "settings": {
+                  "width": 50
+                },
+                "elements": [
+                  {
+                    "id": "w_2bv8t9i",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Подключайте AI через MCP",
+                      "tag": "h3",
+                      "size": "lg",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_bmcdz5a",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<p>Давайте AI-агентам контекст и доступ только к тем операциям, которые нужны для работы с сайтом.</p>",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_hc2k2f5",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<ul><li>Карта сайта и digest страниц для быстрого контекста</li><li>Контролируемое изменение контента и структуры</li><li>Проверки перед выполнением чувствительных операций</li></ul>",
+                      "align": "left"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_0p8zpox",
+            "elType": "section",
+            "settings": {
+              "paddingY": "2rem",
+              "gap": "2rem",
+              "columns": 2
+            },
+            "elements": [
+              {
+                "id": "c_fr102pn",
+                "elType": "column",
+                "settings": {
+                  "width": 50
+                },
+                "elements": [
+                  {
+                    "id": "w_czdis9k",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Обновляйте production из админки",
+                      "tag": "h3",
+                      "size": "lg",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_oo9zx8h",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<p>Загружайте готовый пакет и проходите проверяемый путь обновления без ручной замены проекта на хостинге.</p>",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_o9pvtbr",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<ul><li>Валидация пакета до применения</li><li>Миграции в составе управляемого обновления</li><li>Сохранение контента и настроек сайта</li></ul>",
+                      "align": "left"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "c_xnk5yg0",
+                "elType": "column",
+                "settings": {
+                  "width": 50
+                },
+                "elements": [
+                  {
+                    "id": "w_xe2i1a3",
+                    "elType": "widget",
+                    "widgetType": "image",
+                    "settings": {
+                      "url": "/landing/update-zip.png",
+                      "alt": "Обновляйте production из админки",
+                      "ratio": "16/9",
+                      "media_id": null
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_xf89vzd",
+            "elType": "section",
+            "settings": {
+              "paddingY": "5rem",
+              "gap": "1.5rem",
+              "columns": 1,
+              "styles": {
+                "backgroundColor": "rgba(255,255,255,0.015)"
+              }
+            },
+            "elements": [
+              {
+                "id": "c_lai2x0r",
+                "elType": "column",
+                "settings": {
+                  "width": 100
+                },
+                "elements": [
+                  {
+                    "id": "w_1yrprq2",
+                    "elType": "widget",
+                    "widgetType": "features-grid",
+                    "settings": {
+                      "title": "Всё необходимое для разработки и поддержки сайта",
+                      "subtitle": "Модули, Page Builder, AI-доступ и production-пайплайн в одной системе.",
+                      "columns": 3,
+                      "items": [
+                        {
+                          "title": "Модульная архитектура",
+                          "body": "Подключайте нужные возможности без переписывания ядра.",
+                          "icon": "layers"
+                        },
+                        {
+                          "title": "Page Builder",
+                          "body": "Собирайте страницы из секций, колонок и виджетов.",
+                          "icon": "layout-template"
+                        },
+                        {
+                          "title": "MCP для AI",
+                          "body": "Давайте AI-агентам управляемый доступ к структуре и контенту.",
+                          "icon": "bot"
+                        },
+                        {
+                          "title": "Remote Deploy",
+                          "body": "Собирайте, проверяйте и отправляйте обновления через единый pipeline.",
+                          "icon": "rocket"
+                        },
+                        {
+                          "title": "Обновления из админки",
+                          "body": "Загружайте подготовленные ZIP-пакеты без ручной замены файлов.",
+                          "icon": "package"
+                        },
+                        {
+                          "title": "Shared Hosting Ready",
+                          "body": "Используйте готовый frontend и PHP API без Node.js на production.",
+                          "icon": "server"
+                        },
+                        {
+                          "title": "SEO и prerender",
+                          "body": "Управляйте metadata, sitemap, robots и представлением страниц для поисковых систем.",
+                          "icon": "search"
+                        },
+                        {
+                          "title": "Commerce",
+                          "body": "Работайте с товарами, каталогом, checkout, заказами и страницами оплаты.",
+                          "icon": "shopping-bag"
+                        },
+                        {
+                          "title": "Безопасность",
+                          "body": "Роли, разрешения, JWT, refresh-токены, 2FA, журнал действий и резервные копии.",
+                          "icon": "shield"
+                        },
+                        {
+                          "title": "Hosting Guard",
+                          "body": "Ограничивайте нагрузку AI-агентов с помощью троттлинга и кэширования.",
+                          "icon": "gauge"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_5rma90p",
+            "elType": "section",
+            "settings": {
+              "paddingY": "5rem",
+              "gap": "1.5rem",
+              "columns": 1
+            },
+            "elements": [
+              {
+                "id": "c_kvu6vi7",
+                "elType": "column",
+                "settings": {
+                  "width": 100
+                },
+                "elements": [
+                  {
+                    "id": "w_c1lb886",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "CMS, спроектированная для совместной работы с AI",
+                      "tag": "h2",
+                      "size": "lg",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_krieitm",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<p>Jasefly предоставляет AI-агентам управляемый доступ к структуре сайта, контенту и операциям.</p>",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_z8qoeh6",
+                    "elType": "widget",
+                    "widgetType": "chip-row",
+                    "settings": {
+                      "align": "left",
+                      "items": [
+                        {
+                          "label": "AI Agent",
+                          "href": ""
+                        },
+                        {
+                          "label": "MCP Client",
+                          "href": ""
+                        },
+                        {
+                          "label": "Permissions / Rate Limits",
+                          "href": ""
+                        },
+                        {
+                          "label": "Jasefly API",
+                          "href": ""
+                        },
+                        {
+                          "label": "Pages / Content / Navigation / Settings",
+                          "href": ""
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "w_vlyihsp",
+                    "elType": "widget",
+                    "widgetType": "features-grid",
+                    "settings": {
+                      "title": "",
+                      "subtitle": "",
+                      "columns": 4,
+                      "items": [
+                        {
+                          "title": "Карта сайта",
+                          "body": "Агент получает структуру и связи страниц.",
+                          "icon": "map"
+                        },
+                        {
+                          "title": "Сущности и digest",
+                          "body": "Короткий контекст вместо полного обхода проекта.",
+                          "icon": "file-text"
+                        },
+                        {
+                          "title": "Управляемое редактирование",
+                          "body": "Операции проходят через API и валидацию.",
+                          "icon": "pencil"
+                        },
+                        {
+                          "title": "Hosting Guard",
+                          "body": "Лимиты и проверки защищают production-среду.",
+                          "icon": "shield"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "w_pqo4obp",
+                    "elType": "widget",
+                    "widgetType": "chip-row",
+                    "settings": {
+                      "align": "left",
+                      "items": [
+                        {
+                          "label": "get_site_map",
+                          "href": ""
+                        },
+                        {
+                          "label": "get_page_digest",
+                          "href": ""
+                        },
+                        {
+                          "label": "update_content",
+                          "href": ""
+                        },
+                        {
+                          "label": "validate_update",
+                          "href": ""
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "w_a9imcwb",
+                    "elType": "widget",
+                    "widgetType": "image",
+                    "settings": {
+                      "url": "/landing/mcp-inspector.png",
+                      "alt": "Инспектор MCP",
+                      "ratio": "16/9",
+                      "media_id": null
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_pbbzq9a",
+            "elType": "section",
+            "settings": {
+              "paddingY": "5rem",
+              "gap": "1.5rem",
+              "columns": 1,
+              "styles": {
+                "backgroundColor": "rgba(255,255,255,0.015)"
+              }
+            },
+            "elements": [
+              {
+                "id": "c_efnjikq",
+                "elType": "column",
+                "settings": {
+                  "width": 100
+                },
+                "elements": [
+                  {
+                    "id": "w_7f0s3zp",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Обновления без ручной замены проекта",
+                      "tag": "h2",
+                      "size": "lg",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_jhszm8x",
+                    "elType": "widget",
+                    "widgetType": "chip-row",
+                    "settings": {
+                      "align": "left",
+                      "items": [
+                        {
+                          "label": "Build",
+                          "href": ""
+                        },
+                        {
+                          "label": "Package",
+                          "href": ""
+                        },
+                        {
+                          "label": "Upload",
+                          "href": ""
+                        },
+                        {
+                          "label": "Validate",
+                          "href": ""
+                        },
+                        {
+                          "label": "Migrate",
+                          "href": ""
+                        },
+                        {
+                          "label": "Ready",
+                          "href": ""
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_cbu26yd",
+            "elType": "section",
+            "settings": {
+              "paddingY": "1rem",
+              "gap": "1.25rem",
+              "columns": 2
+            },
+            "elements": [
+              {
+                "id": "c_ttto0t7",
+                "elType": "column",
+                "settings": {
+                  "width": 50
+                },
+                "elements": [
+                  {
+                    "id": "w_s3odj0m",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Сохраняется",
+                      "tag": "h3",
+                      "size": "md",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_jcz6pn4",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<ul><li>Локальная конфигурация</li><li>Пользовательские загрузки</li><li>Резервные копии</li><li>Журналы</li></ul>",
+                      "align": "left"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "c_vkbhixh",
+                "elType": "column",
+                "settings": {
+                  "width": 50
+                },
+                "elements": [
+                  {
+                    "id": "w_s0xaidg",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Обновляется",
+                      "tag": "h3",
+                      "size": "md",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_p45jjll",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<ul><li>Runtime</li><li>Frontend assets</li><li>API-файлы</li><li>Контролируемые миграции</li></ul>",
+                      "align": "left"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_vfv9u3e",
+            "elType": "section",
+            "settings": {
+              "paddingY": "1rem",
+              "gap": "1.5rem",
+              "columns": 1
+            },
+            "elements": [
+              {
+                "id": "c_nzx6hbd",
+                "elType": "column",
+                "settings": {
+                  "width": 100
+                },
+                "elements": [
+                  {
+                    "id": "w_pe05heg",
+                    "elType": "widget",
+                    "widgetType": "image",
+                    "settings": {
+                      "url": "/landing/update-pipeline.png",
+                      "alt": "Панель обновления",
+                      "ratio": "16/9",
+                      "media_id": null
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_dy27751",
+            "elType": "section",
+            "settings": {
+              "paddingY": "5rem",
+              "gap": "1.5rem",
+              "columns": 1
+            },
+            "elements": [
+              {
+                "id": "c_j92d92n",
+                "elType": "column",
+                "settings": {
+                  "width": 100
+                },
+                "elements": [
+                  {
+                    "id": "w_oxy1byk",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Подключайте только нужные возможности",
+                      "tag": "h2",
+                      "size": "lg",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_waax56e",
+                    "elType": "widget",
+                    "widgetType": "content-tabs",
+                    "settings": {
+                      "tabs": [
+                        {
+                          "name": "Система",
+                          "items": "Авторизация\nРоли и права\nМиграции\nОбновления\nЖурнал действий\nРезервные копии"
+                        },
+                        {
+                          "name": "Контент",
+                          "items": "Страницы\nPage Builder\nБлог\nПроекты\nМедиатека\nНавигация"
+                        },
+                        {
+                          "name": "Коммерция",
+                          "items": "Товары\nКаталог\nCheckout\nЗаказы\nСтраницы оплаты"
+                        },
+                        {
+                          "name": "Интеграции",
+                          "items": "Webhooks\nMail\nMCP\nRemote deploy"
+                        },
+                        {
+                          "name": "Продвижение",
+                          "items": "SEO\nSitemap\nRobots\nPrerender\nПользовательские CSS и JavaScript"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "w_47iojbj",
+                    "elType": "widget",
+                    "widgetType": "image",
+                    "settings": {
+                      "url": "/landing/modules.png",
+                      "alt": "Модули",
+                      "ratio": "16/9",
+                      "media_id": null
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_6xm5bws",
+            "elType": "section",
+            "settings": {
+              "paddingY": "5rem",
+              "gap": "1.5rem",
+              "columns": 1,
+              "styles": {
+                "backgroundColor": "rgba(255,255,255,0.015)"
+              }
+            },
+            "elements": [
+              {
+                "id": "c_35hdd1o",
+                "elType": "column",
+                "settings": {
+                  "width": 100
+                },
+                "elements": [
+                  {
+                    "id": "w_saj2reo",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Для разработчиков, которым важен результат, а не обслуживание инфраструктуры",
+                      "tag": "h2",
+                      "size": "lg",
+                      "align": "center"
+                    }
+                  },
+                  {
+                    "id": "w_pm8cqgr",
+                    "elType": "widget",
+                    "widgetType": "features-grid",
+                    "settings": {
+                      "title": "",
+                      "subtitle": "",
+                      "columns": 5,
+                      "items": [
+                        {
+                          "title": "Независимые разработчики",
+                          "body": "Запускайте клиентские сайты без создания инфраструктуры с нуля.",
+                          "icon": "code-xml"
+                        },
+                        {
+                          "title": "Фрилансеры",
+                          "body": "Быстро собирайте и поддерживайте несколько проектов.",
+                          "icon": "users"
+                        },
+                        {
+                          "title": "Небольшие студии",
+                          "body": "Используйте единое ядро и добавляйте проектные модули.",
+                          "icon": "layers"
+                        },
+                        {
+                          "title": "AI-first разработчики",
+                          "body": "Работайте со структурой и контентом сайта через MCP.",
+                          "icon": "bot"
+                        },
+                        {
+                          "title": "Владельцы shared hosting",
+                          "body": "Используйте современную админку и frontend без отдельного application server.",
+                          "icon": "server"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_h2lq7d1",
+            "elType": "section",
+            "settings": {
+              "paddingY": "5rem",
+              "gap": "1.5rem",
+              "columns": 1
+            },
+            "elements": [
+              {
+                "id": "c_3274ldx",
+                "elType": "column",
+                "settings": {
+                  "width": 100
+                },
+                "elements": [
+                  {
+                    "id": "w_gmzh7vn",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Современный стек разработки. Простой production-runtime.",
+                      "tag": "h2",
+                      "size": "lg",
+                      "align": "left"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_xvlwnvr",
+            "elType": "section",
+            "settings": {
+              "paddingY": "1rem",
+              "gap": "1.25rem",
+              "columns": 2
+            },
+            "elements": [
+              {
+                "id": "c_v0mwl17",
+                "elType": "column",
+                "settings": {
+                  "width": 50
+                },
+                "elements": [
+                  {
+                    "id": "w_i1hr0fh",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Разработка",
+                      "tag": "h3",
+                      "size": "md",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_h6hqhyc",
+                    "elType": "widget",
+                    "widgetType": "chip-row",
+                    "settings": {
+                      "items": [
+                        {
+                          "label": "React"
+                        },
+                        {
+                          "label": "TypeScript"
+                        },
+                        {
+                          "label": "Vite"
+                        },
+                        {
+                          "label": "Tailwind"
+                        },
+                        {
+                          "label": "framer-motion"
+                        },
+                        {
+                          "label": "MCP"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "c_322c9t8",
+                "elType": "column",
+                "settings": {
+                  "width": 50
+                },
+                "elements": [
+                  {
+                    "id": "w_c4regyv",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Production",
+                      "tag": "h3",
+                      "size": "md",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_0l1getd",
+                    "elType": "widget",
+                    "widgetType": "chip-row",
+                    "settings": {
+                      "items": [
+                        {
+                          "label": "PHP 8.3"
+                        },
+                        {
+                          "label": "MySQL"
+                        },
+                        {
+                          "label": "Готовый frontend"
+                        },
+                        {
+                          "label": "Shared Hosting"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_txmb24q",
+            "elType": "section",
+            "settings": {
+              "paddingY": "1rem",
+              "gap": "1.5rem",
+              "columns": 1
+            },
+            "elements": [
+              {
+                "id": "c_ko75ap7",
+                "elType": "column",
+                "settings": {
+                  "width": 100
+                },
+                "elements": [
+                  {
+                    "id": "w_3xou7f2",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<p>Тяжёлая работа — сборка, типизация и проверки — выполняется локально. На production остаётся предсказуемый PHP/MySQL runtime и готовые статические ресурсы.</p>",
+                      "align": "left"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_y6wmcgp",
+            "elType": "section",
+            "settings": {
+              "paddingY": "5rem",
+              "gap": "1.5rem",
+              "columns": 2
+            },
+            "elements": [
+              {
+                "id": "c_tzivsii",
+                "elType": "column",
+                "settings": {
+                  "width": 50
+                },
+                "elements": [
+                  {
+                    "id": "w_5n5xsys",
+                    "elType": "widget",
+                    "widgetType": "heading",
+                    "settings": {
+                      "text": "Создавайте сайт, а не серверную инфраструктуру",
+                      "tag": "h2",
+                      "size": "lg",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_39vavjn",
+                    "elType": "widget",
+                    "widgetType": "text",
+                    "settings": {
+                      "html": "<p>Jasefly объединяет локальную разработку, модульный backend, визуальное управление контентом, MCP-доступ и управляемый production deployment.</p>",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_xf9t804",
+                    "elType": "widget",
+                    "widgetType": "button",
+                    "settings": {
+                      "label": "Начать работу",
+                      "href": "/docs",
+                      "variant": "solid",
+                      "align": "left"
+                    }
+                  },
+                  {
+                    "id": "w_ewe9kwf",
+                    "elType": "widget",
+                    "widgetType": "button",
+                    "settings": {
+                      "label": "Открыть документацию",
+                      "href": "/docs",
+                      "variant": "ghost",
+                      "align": "left"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "c_hm6m760",
+                "elType": "column",
+                "settings": {
+                  "width": 50
+                },
+                "elements": [
+                  {
+                    "id": "w_yg4hat9",
+                    "elType": "widget",
+                    "widgetType": "image",
+                    "settings": {
+                      "url": "/landing/final-cta.png",
+                      "alt": "Jasefly CMS",
+                      "ratio": "16/9",
+                      "media_id": null
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "s_eqsykb6",
+            "elType": "section",
+            "settings": {
+              "paddingY": "4rem",
+              "gap": "1.5rem",
+              "columns": 1
+            },
+            "elements": [
+              {
+                "id": "c_omsue7c",
+                "elType": "column",
+                "settings": {
+                  "width": 100
+                },
+                "elements": [
+                  {
+                    "id": "w_lvegiu3",
+                    "elType": "widget",
+                    "widgetType": "blog-list",
+                    "settings": {
+                      "title": "Блог",
+                      "limit": 3
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

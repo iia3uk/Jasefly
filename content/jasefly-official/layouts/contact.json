@@ -1,0 +1,101 @@
+{
+  "title": "Контакты",
+  "slug": "contact",
+  "id": 4,
+  "seo_title": "Контакты Jasefly CMS — вопросы, ошибки, сотрудничество",
+  "seo_description": "Напишите о CMS, предложениях по разработке, ошибках, идеях модулей или сотрудничестве. Форма обратной связи на сайте.",
+  "layout": {
+    "version": 1,
+    "meta": {
+      "product": "jasefly-official"
+    },
+    "elements": [
+      {
+        "id": "s_4f",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_4e",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_4a",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Контакты",
+                  "tag": "h1",
+                  "size": "2xl",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_4b",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p>Если хотите обсудить Jasefly CMS, предложить улучшение, сообщить об ошибке, идее модуля или возможном сотрудничестве — напишите через форму. Публичный email и соцсети появятся здесь, когда будут официально опубликованы.</p>",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_4c",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "О чём можно написать",
+                  "subtitle": "",
+                  "columns": 2,
+                  "items": [
+                    {
+                      "icon": "message",
+                      "title": "Вопросы о CMS",
+                      "body": "Как устроены модули, MCP, деплой и shared-хостинг."
+                    },
+                    {
+                      "icon": "code",
+                      "title": "Разработка",
+                      "body": "Предложения по доработке и интеграции."
+                    },
+                    {
+                      "icon": "bug",
+                      "title": "Ошибки",
+                      "body": "Баги публичного сайта или сценариев установки/обновления."
+                    },
+                    {
+                      "icon": "puzzle",
+                      "title": "Модули",
+                      "body": "Идеи дополнительных модулей и виджетов."
+                    },
+                    {
+                      "icon": "handshake",
+                      "title": "Сотрудничество",
+                      "body": "Совместные проекты без обещаний SLA и выдуманных контактов."
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "w_4d",
+                "elType": "widget",
+                "widgetType": "contact-form",
+                "settings": {
+                  "title": "Форма сообщения",
+                  "subtitle": "Опишите задачу или вопрос."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

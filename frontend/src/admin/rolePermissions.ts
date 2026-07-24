@@ -19,6 +19,14 @@ const ADMIN_PERMS = [
   'activity.view',
   'commerce.manage',
   'integrations.manage',
+  'support.manage',
+  'support.agent',
+  'lab.view',
+  'lab.create',
+  'lab.update',
+  'lab.delete',
+  'lab.publish',
+  'lab.preview',
 ] as const
 
 const EDITOR_PERMS = [
@@ -28,6 +36,8 @@ const EDITOR_PERMS = [
   'content.delete',
   'content.publish',
   'media.manage',
+  'lab.view',
+  'lab.preview',
 ] as const
 
 /** '*' = all permissions (super_admin). */
@@ -72,6 +82,8 @@ export function permissionForAdminSegment(segment: string): string | null {
   media: 'media.manage',
     orders: 'commerce.manage',
     webhooks: 'integrations.manage',
+    support: 'support.agent',
+    lab: 'lab.view',
   }
   return map[segment] ?? null
 }

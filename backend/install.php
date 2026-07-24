@@ -23,6 +23,10 @@ use App\Core\Db\SqlTranspiler;
 
 function splitSql(string $sql): array
 {
+    // Editors/Windows sometimes save SQL with UTF-8 BOM; MySQL rejects it as syntax.
+    if (str_starts_with($sql, "\xEF\xBB\xBF")) {
+        $sql = substr($sql, 3);
+    }
     $sql = str_replace(["\r\n", "\r"], "\n", $sql);
     $sql = preg_replace('/^--.*$/m', '', $sql) ?? $sql;
     $sql = preg_replace('/\/\*.*?\*\//s', '', $sql) ?? $sql;

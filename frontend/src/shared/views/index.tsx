@@ -189,7 +189,8 @@ export function BlogPostView({ post }: { post: Partial<BlogPost> }) {
           <MediaImage
             media={post.cover ?? post.cover_media_id}
             alt={String(post.title ?? '')}
-            className="mt-6 aspect-video w-full rounded-[var(--radius)] object-cover sm:mt-8"
+            lightbox
+            className="mt-6 w-full rounded-[var(--radius)] object-contain sm:mt-8"
           />
         ) : null}
         {post.excerpt ? <p className="mt-6 text-[var(--muted)]">{String(post.excerpt)}</p> : null}

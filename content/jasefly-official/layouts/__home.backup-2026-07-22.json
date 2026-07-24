@@ -1,0 +1,769 @@
+{
+  "id": 1,
+  "title": "Главная",
+  "slug": "__home",
+  "content": null,
+  "layout_json": "{\"version\":1,\"meta\":{\"product\":\"jasefly-official\"},\"elements\":[{\"id\":\"s_3\",\"elType\":\"section\",\"settings\":{\"paddingY\":\"2rem\",\"gap\":\"1.5rem\",\"columns\":1},\"elements\":[{\"id\":\"c_2\",\"elType\":\"column\",\"settings\":{\"width\":100},\"elements\":[{\"id\":\"w_1\",\"elType\":\"widget\",\"widgetType\":\"hero\",\"settings\":{\"badge_text\":\"PHP 8.3 · React · TypeScript · Vite · MySQL · MCP\",\"headline\":\"Современная CMS, готовая к работе с AI\",\"subheadline\":\"Разрабатывайте сайт локально, управляйте контентом через MCP и разворачивайте готовую production-сборку даже на обычном shared-хостинге.\",\"primary_cta_label\":\"Изучить возможности\",\"primary_cta_href\":\"\\/features\",\"secondary_cta_label\":\"Как это работает\",\"secondary_cta_href\":\"\\/workflow\",\"background_media_id\":null}}]}]},{\"id\":\"s_6\",\"elType\":\"section\",\"settings\":{\"paddingY\":\"3.5rem\",\"gap\":\"1.5rem\",\"columns\":1},\"elements\":[{\"id\":\"c_5\",\"elType\":\"column\",\"settings\":{\"width\":100},\"elements\":[{\"id\":\"w_4\",\"elType\":\"widget\",\"widgetType\":\"features-grid\",\"settings\":{\"title\":\"От локальной разработки до shared-хостинга\",\"subtitle\":\"Сборка и проверка остаются на вашей машине. На production уходит готовый пакет.\",\"columns\":3,\"items\":[{\"icon\":\"code\",\"title\":\"Локальная разработка\",\"body\":\"Пишете и правите проект у себя: frontend, backend, контент через MCP.\"},{\"icon\":\"zap\",\"title\":\"Build\",\"body\":\"Vite собирает React\\/TypeScript в статические assets.\"},{\"icon\":\"shield\",\"title\":\"Test\",\"body\":\"Локальные проверки перед упаковкой обновления.\"},{\"icon\":\"package\",\"title\":\"ZIP\",\"body\":\"Install или update-пакет для загрузки на хостинг.\"},{\"icon\":\"server\",\"title\":\"Shared Hosting\",\"body\":\"PHP API + готовый frontend. Node.js на сервере не нужен.\"},{\"icon\":\"refresh\",\"title\":\"Обновление из админки\",\"body\":\"ZIP загружается в панели, миграции применяются контролируемо.\"}]}}]}]},{\"id\":\"s_a\",\"elType\":\"section\",\"settings\":{\"paddingY\":\"3.5rem\",\"gap\":\"1.5rem\",\"columns\":1},\"elements\":[{\"id\":\"c_9\",\"elType\":\"column\",\"settings\":{\"width\":100},\"elements\":[{\"id\":\"w_7\",\"elType\":\"widget\",\"widgetType\":\"heading\",\"settings\":{\"text\":\"Не каждый сайт требует отдельного VPS\",\"tag\":\"h2\",\"size\":\"xl\",\"align\":\"left\"}},{\"id\":\"w_8\",\"elType\":\"widget\",\"widgetType\":\"text\",\"settings\":{\"html\":\"<p>Для обычного современного сайта разработчику часто приходится устанавливать и обслуживать Node.js, Nginx, процессы сборки, SSL, резервные копии и систему деплоя. Jasefly переносит сборку на локальную машину, а на production отправляет уже готовый frontend и PHP API.<\\/p><p>Это не значит, что VPS плохой или небезопасный. Jasefly уменьшает необходимость в постоянном администрировании для проектов, которым достаточно PHP и MySQL.<\\/p>\",\"align\":\"left\"}}]}]},{\"id\":\"s_h\",\"elType\":\"section\",\"settings\":{\"paddingY\":\"3.5rem\",\"gap\":\"1.5rem\",\"columns\":2},\"elements\":[{\"id\":\"c_d\",\"elType\":\"column\",\"settings\":{\"width\":50},\"elements\":[{\"id\":\"w_b\",\"elType\":\"widget\",\"widgetType\":\"heading\",\"settings\":{\"text\":\"Типичный VPS\",\"tag\":\"h3\",\"size\":\"lg\",\"align\":\"left\"}},{\"id\":\"w_c\",\"elType\":\"widget\",\"widgetType\":\"text\",\"settings\":{\"html\":\"<ul><li>установка операционной системы;<\\/li><li>настройка SSH;<\\/li><li>настройка веб-сервера;<\\/li><li>установка Node.js и npm;<\\/li><li>настройка процессов;<\\/li><li>настройка deployment;<\\/li><li>обновление серверных пакетов;<\\/li><li>постоянное администрирование.<\\/li><\\/ul>\",\"align\":\"left\"}}]},{\"id\":\"c_g\",\"elType\":\"column\",\"settings\":{\"width\":50},\"elements\":[{\"id\":\"w_e\",\"elType\":\"widget\",\"widgetType\":\"heading\",\"settings\":{\"text\":\"Jasefly CMS\",\"tag\":\"h3\",\"size\":\"lg\",\"align\":\"left\"}},{\"id\":\"w_f\",\"elType\":\"widget\",\"widgetType\":\"text\",\"settings\":{\"html\":\"<ul><li>собрать проект локально;<\\/li><li>получить ZIP;<\\/li><li>загрузить на хостинг;<\\/li><li>запустить installer;<\\/li><li>работать через админку.<\\/li><\\/ul>\",\"align\":\"left\"}}]}]},{\"id\":\"s_k\",\"elType\":\"section\",\"settings\":{\"paddingY\":\"3.5rem\",\"gap\":\"1.5rem\",\"columns\":1},\"elements\":[{\"id\":\"c_j\",\"elType\":\"column\",\"settings\":{\"width\":100},\"elements\":[{\"id\":\"w_i\",\"elType\":\"widget\",\"widgetType\":\"features-grid\",\"settings\":{\"title\":\"Ключевые возможности\",\"subtitle\":\"Модули, билдер, AI-доступ и production-пайплайн в одной системе.\",\"columns\":2,\"items\":[{\"icon\":\"layers\",\"title\":\"Модульная архитектура\",\"body\":\"Включайте нужные возможности без переписывания всей системы.\"},{\"icon\":\"layout\",\"title\":\"Page Builder\",\"body\":\"Собирайте страницы из секций, колонок и виджетов.\"},{\"icon\":\"bot\",\"title\":\"MCP для нейросети\",\"body\":\"Подключайте Cursor и других AI-агентов к структуре и контенту сайта.\"},{\"icon\":\"upload\",\"title\":\"Remote Deploy\",\"body\":\"Собирайте, проверяйте и отправляйте обновления через управляемый pipeline.\"},{\"icon\":\"refresh\",\"title\":\"Обновления из админки\",\"body\":\"Устанавливайте подготовленные ZIP-обновления без ручной замены файлов.\"},{\"icon\":\"server\",\"title\":\"Shared Hosting Ready\",\"body\":\"Production требует PHP и MySQL, а frontend приходит уже собранным.\"},{\"icon\":\"search\",\"title\":\"SEO и Prerender\",\"body\":\"Метаданные, sitemap, robots и представление страниц для поисковых роботов.\"},{\"icon\":\"cart\",\"title\":\"Commerce\",\"body\":\"Товары, каталоги, checkout и страницы оплаты.\"},{\"icon\":\"shield\",\"title\":\"Безопасность\",\"body\":\"Роли, разрешения, JWT, refresh-токены, 2FA, журнал действий и резервные копии.\"},{\"icon\":\"gauge\",\"title\":\"Hosting Guard\",\"body\":\"Троттлинг и кэширование в MCP-клиенте ограничивают чрезмерную нагрузку от автоматических агентов.\"}]}}]}]},{\"id\":\"s_n\",\"elType\":\"section\",\"settings\":{\"paddingY\":\"3.5rem\",\"gap\":\"1.5rem\",\"columns\":1},\"elements\":[{\"id\":\"c_m\",\"elType\":\"column\",\"settings\":{\"width\":100},\"elements\":[{\"id\":\"w_l\",\"elType\":\"widget\",\"widgetType\":\"features-grid\",\"settings\":{\"title\":\"CMS, спроектированная для совместной работы с AI\",\"subtitle\":\"AI не должен бесконтрольно перебирать API. Jasefly использует карту сайта, digest-данные, ограничения запросов и управляемые операции.\",\"columns\":3,\"items\":[{\"icon\":\"map\",\"title\":\"Карта сайта\",\"body\":\"Агент получает структуру страниц, навигации и настроек одним запросом.\"},{\"icon\":\"list\",\"title\":\"Сущности и страницы\",\"body\":\"Читает доступные ресурсы и выжимки layout без лишних циклов.\"},{\"icon\":\"edit\",\"title\":\"Редактирование через API\",\"body\":\"Меняет контент через MCP\\/API в рамках разрешений токена.\"},{\"icon\":\"check\",\"title\":\"Локальная проверка\",\"body\":\"Build и test выполняются локально до отправки пакета.\"},{\"icon\":\"package\",\"title\":\"Production-пакет\",\"body\":\"Собирается install или update ZIP.\"},{\"icon\":\"upload\",\"title\":\"Обновление\",\"body\":\"Пакет отправляется и проверяется; ошибки и журналы — только в рамках токена.\"}]}}]}]},{\"id\":\"s_q\",\"elType\":\"section\",\"settings\":{\"paddingY\":\"3.5rem\",\"gap\":\"1.5rem\",\"columns\":1},\"elements\":[{\"id\":\"c_p\",\"elType\":\"column\",\"settings\":{\"width\":100},\"elements\":[{\"id\":\"w_o\",\"elType\":\"widget\",\"widgetType\":\"features-grid\",\"settings\":{\"title\":\"Модули\",\"subtitle\":\"Группы возможностей, доступные в установленной CMS.\",\"columns\":3,\"items\":[{\"icon\":\"settings\",\"title\":\"Система\",\"body\":\"Авторизация, роли и права, миграции, обновления, журнал действий, резервные копии.\"},{\"icon\":\"file\",\"title\":\"Контент\",\"body\":\"Страницы, Page Builder, блог, проекты, медиатека, навигация.\"},{\"icon\":\"cart\",\"title\":\"Коммерция\",\"body\":\"Товары, каталог, checkout, заказы, страницы оплаты.\"},{\"icon\":\"plug\",\"title\":\"Интеграции\",\"body\":\"Webhooks, mail, MCP, remote deploy.\"},{\"icon\":\"search\",\"title\":\"Продвижение\",\"body\":\"SEO, sitemap, robots, prerender, пользовательские CSS и JavaScript.\"}]}}]}]},{\"id\":\"s_v\",\"elType\":\"section\",\"settings\":{\"paddingY\":\"3.5rem\",\"gap\":\"1.5rem\",\"columns\":1},\"elements\":[{\"id\":\"c_u\",\"elType\":\"column\",\"settings\":{\"width\":100},\"elements\":[{\"id\":\"w_r\",\"elType\":\"widget\",\"widgetType\":\"heading\",\"settings\":{\"text\":\"Обновления без ручной замены проекта\",\"tag\":\"h2\",\"size\":\"xl\",\"align\":\"left\"}},{\"id\":\"w_s\",\"elType\":\"widget\",\"widgetType\":\"text\",\"settings\":{\"html\":\"<p>Сборщик создаёт специальный update-пакет. Администратор загружает ZIP через панель, после чего CMS обновляет runtime-файлы и применяет миграции, не затрагивая локальную конфигурацию, загрузки, резервные копии и журналы.<\\/p>\",\"align\":\"left\"}},{\"id\":\"w_t\",\"elType\":\"widget\",\"widgetType\":\"features-grid\",\"settings\":{\"title\":\"\",\"subtitle\":\"\",\"columns\":3,\"items\":[{\"icon\":\"zap\",\"title\":\"Build\",\"body\":\"Локальная сборка frontend и подготовка API.\"},{\"icon\":\"package\",\"title\":\"Package\",\"body\":\"Формирование update ZIP.\"},{\"icon\":\"upload\",\"title\":\"Upload\",\"body\":\"Загрузка пакета в админке.\"},{\"icon\":\"shield\",\"title\":\"Validate\",\"body\":\"Проверка пакета перед применением.\"},{\"icon\":\"database\",\"title\":\"Migrate\",\"body\":\"Накат SQL-миграций.\"},{\"icon\":\"check\",\"title\":\"Ready\",\"body\":\"Сайт снова в рабочем состоянии.\"}]}}]}]},{\"id\":\"s_z\",\"elType\":\"section\",\"settings\":{\"paddingY\":\"3.5rem\",\"gap\":\"1.5rem\",\"columns\":1},\"elements\":[{\"id\":\"c_y\",\"elType\":\"column\",\"settings\":{\"width\":100},\"elements\":[{\"id\":\"w_w\",\"elType\":\"widget\",\"widgetType\":\"heading\",\"settings\":{\"text\":\"Современный frontend без Node.js на production\",\"tag\":\"h2\",\"size\":\"xl\",\"align\":\"left\"}},{\"id\":\"w_x\",\"elType\":\"widget\",\"widgetType\":\"text\",\"settings\":{\"html\":\"<p>React и TypeScript собираются локально через Vite. На хостинг отправляются готовые статические assets и PHP API. Production-серверу не требуется самостоятельно компилировать frontend.<\\/p><ul><li>PHP 8.2+;<\\/li><li>MySQL;<\\/li><li>Apache или Nginx;<\\/li><li>HTTPS;<\\/li><li>возможность загрузки ZIP.<\\/li><\\/ul>\",\"align\":\"left\"}}]}]},{\"id\":\"s_12\",\"elType\":\"section\",\"settings\":{\"paddingY\":\"3.5rem\",\"gap\":\"1.5rem\",\"columns\":1},\"elements\":[{\"id\":\"c_11\",\"elType\":\"column\",\"settings\":{\"width\":100},\"elements\":[{\"id\":\"w_10\",\"elType\":\"widget\",\"widgetType\":\"features-grid\",\"settings\":{\"title\":\"Для кого\",\"subtitle\":\"\",\"columns\":3,\"items\":[{\"icon\":\"user\",\"title\":\"Независимые разработчики\",\"body\":\"Запускайте клиентские сайты без создания инфраструктуры с нуля.\"},{\"icon\":\"briefcase\",\"title\":\"Фрилансеры\",\"body\":\"Быстро собирайте и поддерживайте несколько проектов.\"},{\"icon\":\"users\",\"title\":\"Небольшие студии\",\"body\":\"Используйте единое ядро и добавляйте проектные модули.\"},{\"icon\":\"bot\",\"title\":\"AI-first разработчики\",\"body\":\"Работайте с контентом и структурой сайта через MCP.\"},{\"icon\":\"server\",\"title\":\"Владельцы shared-хостинга\",\"body\":\"Современная админка и frontend без отдельного application server.\"}]}}]}]},{\"id\":\"s_15\",\"elType\":\"section\",\"settings\":{\"paddingY\":\"3.5rem\",\"gap\":\"1.5rem\",\"columns\":1},\"elements\":[{\"id\":\"c_14\",\"elType\":\"column\",\"settings\":{\"width\":100},\"elements\":[{\"id\":\"w_13\",\"elType\":\"widget\",\"widgetType\":\"features-grid\",\"settings\":{\"title\":\"Технологии\",\"subtitle\":\"Стек, на котором строится Jasefly CMS.\",\"columns\":3,\"items\":[{\"icon\":\"php\",\"title\":\"PHP 8.3\",\"body\":\"Целевой runtime backend API.\"},{\"icon\":\"react\",\"title\":\"React\",\"body\":\"Публичный сайт и админка.\"},{\"icon\":\"typescript\",\"title\":\"TypeScript\",\"body\":\"Типизированный frontend.\"},{\"icon\":\"vite\",\"title\":\"Vite\",\"body\":\"Локальная сборка production assets.\"},{\"icon\":\"mysql\",\"title\":\"MySQL\",\"body\":\"Основное хранилище данных.\"},{\"icon\":\"jwt\",\"title\":\"JWT\",\"body\":\"Сессии и API-доступ.\"},{\"icon\":\"bot\",\"title\":\"MCP\",\"body\":\"Протокол для AI-агентов.\"},{\"icon\":\"tailwindcss\",\"title\":\"Tailwind\",\"body\":\"Утилитарные стили UI.\"},{\"icon\":\"framer\",\"title\":\"Framer Motion\",\"body\":\"Умеренные анимации интерфейса.\"},{\"icon\":\"layout\",\"title\":\"Page Builder\",\"body\":\"Секции, колонки, виджеты.\"},{\"icon\":\"server\",\"title\":\"Shared Hosting\",\"body\":\"Готовый пакет без Node на сервере.\"}]}}]}]},{\"id\":\"s_19\",\"elType\":\"section\",\"settings\":{\"paddingY\":\"3.5rem\",\"gap\":\"1.5rem\",\"columns\":1},\"elements\":[{\"id\":\"c_18\",\"elType\":\"column\",\"settings\":{\"width\":100},\"elements\":[{\"id\":\"w_16\",\"elType\":\"widget\",\"widgetType\":\"cta-banner\",\"settings\":{\"title\":\"Создавайте сайт, а не серверную инфраструктуру\",\"subtitle\":\"Jasefly CMS объединяет локальную разработку, модульный backend, визуальное управление контентом, AI-доступ и простой production deployment.\",\"cta_label\":\"Посмотреть документацию\",\"cta_href\":\"\\/docs\"}},{\"id\":\"w_17\",\"elType\":\"widget\",\"widgetType\":\"button\",\"settings\":{\"label\":\"Изучить возможности\",\"href\":\"\\/features\",\"variant\":\"secondary\",\"align\":\"center\",\"new_tab\":false}}]}]},{\"id\":\"s_1c\",\"elType\":\"section\",\"settings\":{\"paddingY\":\"3.5rem\",\"gap\":\"1.5rem\",\"columns\":1},\"elements\":[{\"id\":\"c_1b\",\"elType\":\"column\",\"settings\":{\"width\":100},\"elements\":[{\"id\":\"w_1a\",\"elType\":\"widget\",\"widgetType\":\"blog-list\",\"settings\":{\"title\":\"Из блога\",\"limit\":3}}]}]}]}",
+  "status": "published",
+  "seo_title": "Jasefly CMS — модульная AI-ready CMS на PHP и React",
+  "seo_description": "Jasefly CMS объединяет Page Builder, модули, MCP для AI, локальную production-сборку, обновления из админки и развёртывание на shared-хостинге.",
+  "template": "builder",
+  "is_home": true,
+  "updated_at": "2026-07-21 13:54:49",
+  "created_at": "2026-07-21 12:01:43",
+  "published_at": null,
+  "scheduled_at": null,
+  "layout": {
+    "version": 1,
+    "meta": {
+      "product": "jasefly-official"
+    },
+    "elements": [
+      {
+        "id": "s_3",
+        "elType": "section",
+        "settings": {
+          "paddingY": "2rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_2",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_1",
+                "elType": "widget",
+                "widgetType": "hero",
+                "settings": {
+                  "badge_text": "PHP 8.3 · React · TypeScript · Vite · MySQL · MCP",
+                  "headline": "Современная CMS, готовая к работе с AI",
+                  "subheadline": "Разрабатывайте сайт локально, управляйте контентом через MCP и разворачивайте готовую production-сборку даже на обычном shared-хостинге.",
+                  "primary_cta_label": "Изучить возможности",
+                  "primary_cta_href": "/features",
+                  "secondary_cta_label": "Как это работает",
+                  "secondary_cta_href": "/workflow",
+                  "background_media_id": null
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_6",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_5",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_4",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "От локальной разработки до shared-хостинга",
+                  "subtitle": "Сборка и проверка остаются на вашей машине. На production уходит готовый пакет.",
+                  "columns": 3,
+                  "items": [
+                    {
+                      "icon": "code",
+                      "title": "Локальная разработка",
+                      "body": "Пишете и правите проект у себя: frontend, backend, контент через MCP."
+                    },
+                    {
+                      "icon": "zap",
+                      "title": "Build",
+                      "body": "Vite собирает React/TypeScript в статические assets."
+                    },
+                    {
+                      "icon": "shield",
+                      "title": "Test",
+                      "body": "Локальные проверки перед упаковкой обновления."
+                    },
+                    {
+                      "icon": "package",
+                      "title": "ZIP",
+                      "body": "Install или update-пакет для загрузки на хостинг."
+                    },
+                    {
+                      "icon": "server",
+                      "title": "Shared Hosting",
+                      "body": "PHP API + готовый frontend. Node.js на сервере не нужен."
+                    },
+                    {
+                      "icon": "refresh",
+                      "title": "Обновление из админки",
+                      "body": "ZIP загружается в панели, миграции применяются контролируемо."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_a",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_9",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_7",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Не каждый сайт требует отдельного VPS",
+                  "tag": "h2",
+                  "size": "xl",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_8",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p>Для обычного современного сайта разработчику часто приходится устанавливать и обслуживать Node.js, Nginx, процессы сборки, SSL, резервные копии и систему деплоя. Jasefly переносит сборку на локальную машину, а на production отправляет уже готовый frontend и PHP API.</p><p>Это не значит, что VPS плохой или небезопасный. Jasefly уменьшает необходимость в постоянном администрировании для проектов, которым достаточно PHP и MySQL.</p>",
+                  "align": "left"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_h",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 2
+        },
+        "elements": [
+          {
+            "id": "c_d",
+            "elType": "column",
+            "settings": {
+              "width": 50
+            },
+            "elements": [
+              {
+                "id": "w_b",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Типичный VPS",
+                  "tag": "h3",
+                  "size": "lg",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_c",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<ul><li>установка операционной системы;</li><li>настройка SSH;</li><li>настройка веб-сервера;</li><li>установка Node.js и npm;</li><li>настройка процессов;</li><li>настройка deployment;</li><li>обновление серверных пакетов;</li><li>постоянное администрирование.</li></ul>",
+                  "align": "left"
+                }
+              }
+            ]
+          },
+          {
+            "id": "c_g",
+            "elType": "column",
+            "settings": {
+              "width": 50
+            },
+            "elements": [
+              {
+                "id": "w_e",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Jasefly CMS",
+                  "tag": "h3",
+                  "size": "lg",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_f",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<ul><li>собрать проект локально;</li><li>получить ZIP;</li><li>загрузить на хостинг;</li><li>запустить installer;</li><li>работать через админку.</li></ul>",
+                  "align": "left"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_k",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_j",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_i",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "Ключевые возможности",
+                  "subtitle": "Модули, билдер, AI-доступ и production-пайплайн в одной системе.",
+                  "columns": 2,
+                  "items": [
+                    {
+                      "icon": "layers",
+                      "title": "Модульная архитектура",
+                      "body": "Включайте нужные возможности без переписывания всей системы."
+                    },
+                    {
+                      "icon": "layout",
+                      "title": "Page Builder",
+                      "body": "Собирайте страницы из секций, колонок и виджетов."
+                    },
+                    {
+                      "icon": "bot",
+                      "title": "MCP для нейросети",
+                      "body": "Подключайте Cursor и других AI-агентов к структуре и контенту сайта."
+                    },
+                    {
+                      "icon": "upload",
+                      "title": "Remote Deploy",
+                      "body": "Собирайте, проверяйте и отправляйте обновления через управляемый pipeline."
+                    },
+                    {
+                      "icon": "refresh",
+                      "title": "Обновления из админки",
+                      "body": "Устанавливайте подготовленные ZIP-обновления без ручной замены файлов."
+                    },
+                    {
+                      "icon": "server",
+                      "title": "Shared Hosting Ready",
+                      "body": "Production требует PHP и MySQL, а frontend приходит уже собранным."
+                    },
+                    {
+                      "icon": "search",
+                      "title": "SEO и Prerender",
+                      "body": "Метаданные, sitemap, robots и представление страниц для поисковых роботов."
+                    },
+                    {
+                      "icon": "cart",
+                      "title": "Commerce",
+                      "body": "Товары, каталоги, checkout и страницы оплаты."
+                    },
+                    {
+                      "icon": "shield",
+                      "title": "Безопасность",
+                      "body": "Роли, разрешения, JWT, refresh-токены, 2FA, журнал действий и резервные копии."
+                    },
+                    {
+                      "icon": "gauge",
+                      "title": "Hosting Guard",
+                      "body": "Троттлинг и кэширование в MCP-клиенте ограничивают чрезмерную нагрузку от автоматических агентов."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_n",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_m",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_l",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "CMS, спроектированная для совместной работы с AI",
+                  "subtitle": "AI не должен бесконтрольно перебирать API. Jasefly использует карту сайта, digest-данные, ограничения запросов и управляемые операции.",
+                  "columns": 3,
+                  "items": [
+                    {
+                      "icon": "map",
+                      "title": "Карта сайта",
+                      "body": "Агент получает структуру страниц, навигации и настроек одним запросом."
+                    },
+                    {
+                      "icon": "list",
+                      "title": "Сущности и страницы",
+                      "body": "Читает доступные ресурсы и выжимки layout без лишних циклов."
+                    },
+                    {
+                      "icon": "edit",
+                      "title": "Редактирование через API",
+                      "body": "Меняет контент через MCP/API в рамках разрешений токена."
+                    },
+                    {
+                      "icon": "check",
+                      "title": "Локальная проверка",
+                      "body": "Build и test выполняются локально до отправки пакета."
+                    },
+                    {
+                      "icon": "package",
+                      "title": "Production-пакет",
+                      "body": "Собирается install или update ZIP."
+                    },
+                    {
+                      "icon": "upload",
+                      "title": "Обновление",
+                      "body": "Пакет отправляется и проверяется; ошибки и журналы — только в рамках токена."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_q",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_p",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_o",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "Модули",
+                  "subtitle": "Группы возможностей, доступные в установленной CMS.",
+                  "columns": 3,
+                  "items": [
+                    {
+                      "icon": "settings",
+                      "title": "Система",
+                      "body": "Авторизация, роли и права, миграции, обновления, журнал действий, резервные копии."
+                    },
+                    {
+                      "icon": "file",
+                      "title": "Контент",
+                      "body": "Страницы, Page Builder, блог, проекты, медиатека, навигация."
+                    },
+                    {
+                      "icon": "cart",
+                      "title": "Коммерция",
+                      "body": "Товары, каталог, checkout, заказы, страницы оплаты."
+                    },
+                    {
+                      "icon": "plug",
+                      "title": "Интеграции",
+                      "body": "Webhooks, mail, MCP, remote deploy."
+                    },
+                    {
+                      "icon": "search",
+                      "title": "Продвижение",
+                      "body": "SEO, sitemap, robots, prerender, пользовательские CSS и JavaScript."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_v",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_u",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_r",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Обновления без ручной замены проекта",
+                  "tag": "h2",
+                  "size": "xl",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_s",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p>Сборщик создаёт специальный update-пакет. Администратор загружает ZIP через панель, после чего CMS обновляет runtime-файлы и применяет миграции, не затрагивая локальную конфигурацию, загрузки, резервные копии и журналы.</p>",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_t",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "",
+                  "subtitle": "",
+                  "columns": 3,
+                  "items": [
+                    {
+                      "icon": "zap",
+                      "title": "Build",
+                      "body": "Локальная сборка frontend и подготовка API."
+                    },
+                    {
+                      "icon": "package",
+                      "title": "Package",
+                      "body": "Формирование update ZIP."
+                    },
+                    {
+                      "icon": "upload",
+                      "title": "Upload",
+                      "body": "Загрузка пакета в админке."
+                    },
+                    {
+                      "icon": "shield",
+                      "title": "Validate",
+                      "body": "Проверка пакета перед применением."
+                    },
+                    {
+                      "icon": "database",
+                      "title": "Migrate",
+                      "body": "Накат SQL-миграций."
+                    },
+                    {
+                      "icon": "check",
+                      "title": "Ready",
+                      "body": "Сайт снова в рабочем состоянии."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_z",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_y",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_w",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Современный frontend без Node.js на production",
+                  "tag": "h2",
+                  "size": "xl",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_x",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p>React и TypeScript собираются локально через Vite. На хостинг отправляются готовые статические assets и PHP API. Production-серверу не требуется самостоятельно компилировать frontend.</p><ul><li>PHP 8.2+;</li><li>MySQL;</li><li>Apache или Nginx;</li><li>HTTPS;</li><li>возможность загрузки ZIP.</li></ul>",
+                  "align": "left"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_12",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_11",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_10",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "Для кого",
+                  "subtitle": "",
+                  "columns": 3,
+                  "items": [
+                    {
+                      "icon": "user",
+                      "title": "Независимые разработчики",
+                      "body": "Запускайте клиентские сайты без создания инфраструктуры с нуля."
+                    },
+                    {
+                      "icon": "briefcase",
+                      "title": "Фрилансеры",
+                      "body": "Быстро собирайте и поддерживайте несколько проектов."
+                    },
+                    {
+                      "icon": "users",
+                      "title": "Небольшие студии",
+                      "body": "Используйте единое ядро и добавляйте проектные модули."
+                    },
+                    {
+                      "icon": "bot",
+                      "title": "AI-first разработчики",
+                      "body": "Работайте с контентом и структурой сайта через MCP."
+                    },
+                    {
+                      "icon": "server",
+                      "title": "Владельцы shared-хостинга",
+                      "body": "Современная админка и frontend без отдельного application server."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_15",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_14",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_13",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "Технологии",
+                  "subtitle": "Стек, на котором строится Jasefly CMS.",
+                  "columns": 3,
+                  "items": [
+                    {
+                      "icon": "php",
+                      "title": "PHP 8.3",
+                      "body": "Целевой runtime backend API."
+                    },
+                    {
+                      "icon": "react",
+                      "title": "React",
+                      "body": "Публичный сайт и админка."
+                    },
+                    {
+                      "icon": "typescript",
+                      "title": "TypeScript",
+                      "body": "Типизированный frontend."
+                    },
+                    {
+                      "icon": "vite",
+                      "title": "Vite",
+                      "body": "Локальная сборка production assets."
+                    },
+                    {
+                      "icon": "mysql",
+                      "title": "MySQL",
+                      "body": "Основное хранилище данных."
+                    },
+                    {
+                      "icon": "jwt",
+                      "title": "JWT",
+                      "body": "Сессии и API-доступ."
+                    },
+                    {
+                      "icon": "bot",
+                      "title": "MCP",
+                      "body": "Протокол для AI-агентов."
+                    },
+                    {
+                      "icon": "tailwindcss",
+                      "title": "Tailwind",
+                      "body": "Утилитарные стили UI."
+                    },
+                    {
+                      "icon": "framer",
+                      "title": "Framer Motion",
+                      "body": "Умеренные анимации интерфейса."
+                    },
+                    {
+                      "icon": "layout",
+                      "title": "Page Builder",
+                      "body": "Секции, колонки, виджеты."
+                    },
+                    {
+                      "icon": "server",
+                      "title": "Shared Hosting",
+                      "body": "Готовый пакет без Node на сервере."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_19",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_18",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_16",
+                "elType": "widget",
+                "widgetType": "cta-banner",
+                "settings": {
+                  "title": "Создавайте сайт, а не серверную инфраструктуру",
+                  "subtitle": "Jasefly CMS объединяет локальную разработку, модульный backend, визуальное управление контентом, AI-доступ и простой production deployment.",
+                  "cta_label": "Посмотреть документацию",
+                  "cta_href": "/docs"
+                }
+              },
+              {
+                "id": "w_17",
+                "elType": "widget",
+                "widgetType": "button",
+                "settings": {
+                  "label": "Изучить возможности",
+                  "href": "/features",
+                  "variant": "secondary",
+                  "align": "center",
+                  "new_tab": false
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_1c",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_1b",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_1a",
+                "elType": "widget",
+                "widgetType": "blog-list",
+                "settings": {
+                  "title": "Из блога",
+                  "limit": 3
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

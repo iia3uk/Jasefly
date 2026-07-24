@@ -1,8 +1,11 @@
-import { type ButtonHTMLAttributes, type HTMLAttributes, type ImgHTMLAttributes, type ReactNode } from 'react'
+import { type ButtonHTMLAttributes, type HTMLAttributes, type ImgHTMLAttributes, type ReactNode, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/cn'
 import { mediaUrl } from '@/lib/api'
 import { sanitizeHtml } from '@/shared/sanitize'
 import type { MediaAsset } from '@/types'
+import { ImageLightbox } from '@/shared/ui/ImageLightbox'
+
+export { ImageLightbox } from '@/shared/ui/ImageLightbox'
 
 /** Layout primitives */
 export const Container = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
@@ -18,9 +21,9 @@ export const Grid = ({ className, cols = 2, ...props }: HTMLAttributes<HTMLDivEl
     className={cn(
       'grid gap-6',
       cols === 1 && 'grid-cols-1',
-      cols === 2 && 'md:grid-cols-2',
-      cols === 3 && 'md:grid-cols-3',
-      cols === 4 && 'sm:grid-cols-2 lg:grid-cols-4',
+      cols === 2 && 'grid-cols-2',
+      cols === 3 && 'grid-cols-2 md:grid-cols-3',
+      cols === 4 && 'grid-cols-2 lg:grid-cols-4',
       className,
     )}
     {...props}
@@ -76,18 +79,92 @@ export const EmptyState = ({ children, className }: { children: ReactNode; class
 )
 
 /** Content */
-export const RichText = ({ html, className }: { html?: string | null; className?: string }) =>
-  html ? <div className={cn('prose', className)} dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }} /> : null
+export const RichText = ({
+  html,
+  className,
+  lightbox = true,
+}: {
+  html?: string | null
+  className?: string
+  /** Click images to open fullscreen preview */
+  lightbox?: boolean
+}) => {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [preview, setPreview] = useState<{ src: string; alt: string } | null>(null)
+
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root || !lightbox) return
+    root.querySelectorAll('img').forEach((img) => {
+      img.classList.add('cursor-zoom-in')
+      if (!img.getAttribute('title')) img.setAttribute('title', 'Нажмите, чтобы увеличить')
+    })
+    const onClick = (e: MouseEvent) => {
+      const t = e.target
+      if (!(t instanceof HTMLImageElement)) return
+      e.preventDefault()
+      setPreview({ src: t.currentSrc || t.src, alt: t.alt || '' })
+    }
+    root.addEventListener('click', onClick)
+    return () => root.removeEventListener('click', onClick)
+  }, [html, lightbox])
+
+  if (!html) return null
+  return (
+    <>
+      <div
+        ref={rootRef}
+        className={cn('prose', className)}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
+      />
+      <ImageLightbox
+        src={preview?.src ?? ''}
+        alt={preview?.alt}
+        open={!!preview}
+        onClose={() => setPreview(null)}
+      />
+    </>
+  )
+}
 
 export const MediaImage = ({
   media,
   alt = '',
   className,
+  lightbox = false,
   ...props
-}: ImgHTMLAttributes<HTMLImageElement> & { media?: MediaAsset | { id?: string | number; media_id?: string | number } | string | number | null }) => {
-  const src = mediaUrl(media as any)
+}: ImgHTMLAttributes<HTMLImageElement> & {
+  media?: MediaAsset | { id?: string | number; media_id?: string | number } | string | number | null
+  /** Click to open fullscreen preview (no zoom controls) */
+  lightbox?: boolean
+}) => {
+  const src = mediaUrl(media as never)
+  const [open, setOpen] = useState(false)
   if (!src) return <div className={cn('animate-pulse bg-white/5', className)} />
-  return <img src={src} alt={alt} className={className} loading="lazy" decoding="async" {...props} />
+  return (
+    <>
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        {...props}
+        className={cn(className, lightbox && 'cursor-zoom-in')}
+        title={lightbox ? 'Нажмите, чтобы увеличить' : props.title}
+        onClick={
+          lightbox
+            ? (e) => {
+                props.onClick?.(e)
+                setOpen(true)
+              }
+            : props.onClick
+        }
+      />
+      {lightbox ? (
+        <ImageLightbox src={src} alt={alt} open={open} onClose={() => setOpen(false)} />
+      ) : null}
+    </>
+  )
 }
 
 export const SectionHeading = ({

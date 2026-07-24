@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Modules\Projects;
 
 use App\Controllers\AdminController;
-use App\Controllers\PublicController;
 use App\Core\AbstractModule;
 use App\Database;
 use App\Middleware\AuthMiddleware;
@@ -33,12 +32,10 @@ final class ProjectsModule extends AbstractModule
     public function registerRoutes(Router $router, Database $db, array $app, string $apiPrefix): void
     {
         $p = fn(string $path) => rtrim($apiPrefix, '/') . $path;
-        $public = new PublicController($db, $app);
         $admin = new AdminController($db, $app);
         $protected = [new AuthMiddleware($app['jwt_secret']), new PermissionMiddleware(new PermissionService($db))];
 
-        $router->get($p('/projects'), [$public, 'projects']);
-        $router->get($p('/projects/{slug}'), [$public, 'projects']);
+        // Public GET /projects lives on ContentModule (always available; empty when portfolio off).
 
         $base = $p('/admin/projects');
         $router->get($base, fn(Request $r) => $admin->index($r, 'projects'), $protected);

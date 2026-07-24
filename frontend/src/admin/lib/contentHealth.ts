@@ -1,4 +1,5 @@
 import { adminUrl } from '@/admin/adminBasePath'
+import { isPluginEnabled } from '@/core/moduleRegistry'
 import { endpoints } from '@/lib/api'
 import type { BlogPost, MediaAsset, Page, Project } from '@/types'
 
@@ -104,9 +105,13 @@ function scanPage(p: Page): HealthIssue[] {
 
 export async function fetchContentHealth(): Promise<ContentHealthReport> {
   const [projects, posts, pages, media] = await Promise.all([
-    endpoints.adminList<Project>('projects'),
-    endpoints.adminList<BlogPost>('blog'),
-    endpoints.adminList<Page>('pages'),
+    isPluginEnabled('projects')
+      ? endpoints.adminList<Project>('projects').catch(() => [] as Project[])
+      : Promise.resolve([] as Project[]),
+    isPluginEnabled('blog')
+      ? endpoints.adminList<BlogPost>('blog').catch(() => [] as BlogPost[])
+      : Promise.resolve([] as BlogPost[]),
+    endpoints.adminList<Page>('pages').catch(() => [] as Page[]),
     endpoints.mediaList({}).catch(() => [] as MediaAsset[]),
   ])
 

@@ -1,4 +1,4 @@
-﻿-- Jasefly CMS Schema
+-- Jasefly CMS Schema
 -- MySQL 8.0+ / MariaDB 10.5+
 -- Normalized with foreign keys
 
@@ -507,6 +507,7 @@ CREATE TABLE seo_settings (
   site_title VARCHAR(255) NULL,
   site_description TEXT NULL,
   site_keywords VARCHAR(500) NULL,
+  target_regions JSON NULL,
   canonical_base_url VARCHAR(500) NULL,
   og_title VARCHAR(255) NULL,
   og_description TEXT NULL,

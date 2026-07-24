@@ -38,4 +38,4 @@
 - **A09 Logging/Monitoring** — activity log + `storage/logs`; не логировать пароли/токены.
 - **A10 SSRF** — не проксировать произвольные URL из user input без allowlist.
 
-Подробности деплоя: `DEPLOYMENT-RU.md` внутри hosting-пакета (секция «Безопасность»).
+Подробности деплоя: `release/DEPLOYMENT-RU.md` рядом с ZIP после `build-hosting` (секция «Безопасность»).

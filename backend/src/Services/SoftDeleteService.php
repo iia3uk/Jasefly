@@ -22,6 +22,7 @@ final class SoftDeleteService
         'testimonials' => 'testimonials',
         'pages' => 'pages',
         'products' => 'products',
+        'lab-experiments' => 'lab_experiments',
     ];
 
     public function __construct(private Database $db) {}
@@ -55,6 +56,24 @@ final class SoftDeleteService
 
     public function restore(string $table, int $id): bool
     {
+        if ($table === 'lab_experiments') {
+            $row = $this->db->one("SELECT slug FROM `$table` WHERE id=?", [$id]);
+            $slug = (string) ($row['slug'] ?? '');
+            if (preg_match('/^(.*)__deleted_\d+$/', $slug, $m)) {
+                $base = $m[1];
+                $taken = $this->db->one(
+                    "SELECT id FROM `$table` WHERE slug=? AND deleted_at IS NULL AND id<>?",
+                    [$base, $id]
+                );
+                if (!$taken) {
+                    $this->db->run(
+                        "UPDATE `$table` SET deleted_at=NULL, slug=? WHERE id=?",
+                        [$base, $id]
+                    );
+                    return true;
+                }
+            }
+        }
         $this->db->run("UPDATE `$table` SET deleted_at=NULL WHERE id=?", [$id]);
         return true;
     }

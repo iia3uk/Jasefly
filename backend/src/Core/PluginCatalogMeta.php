@@ -116,6 +116,14 @@ final class PluginCatalogMeta
                 'requires' => ['system'],
                 'suggests' => ['payments'],
             ],
+            'support' => [
+                'requires' => ['system'],
+                'suggests' => ['mail'],
+            ],
+            'lab' => [
+                'requires' => ['system'],
+                'suggests' => [],
+            ],
         ];
     }
 
@@ -281,10 +289,10 @@ final class PluginCatalogMeta
                 'description' => 'Виджет перевода сайта на лету (как Google Translate).',
                 'long_description' => "Оверлей-переводчик для посетителей.\n\n"
                     . "• Кнопка выбора языка на публичном сайте\n"
-                    . "• Переводит видимый текст страницы без отдельных копий контента\n"
-                    . "• MyMemory из коробки или свой LibreTranslate\n"
+                    . "• Кэш переводов + прогрев / синк при сохранении\n"
+                    . "• DeepL (API key), MyMemory или свой LibreTranslate\n"
                     . "• Настройки в Плагины → Переводчик сайта\n\n"
-                    . "Качество машинное — для витрины и черновика, не замена профессиональной локализации.",
+                    . "Качество машинное — для витрины; DeepL обычно заметно лучше MyMemory.",
             ],
             'webhooks' => [
                 'category' => 'integrations',
@@ -294,6 +302,27 @@ final class PluginCatalogMeta
                     . "• HTTP-уведомления на ваш URL\n"
                     . "• Полезно для CRM, Telegram-ботов, CI\n\n"
                     . "Включайте, только если настраиваете приёмник.",
+            ],
+            'support' => [
+                'category' => 'comms',
+                'description' => 'Живой чат и тикеты: виджет на сайте, inbox в админке, FAQ-бот.',
+                'long_description' => "Поддержка посетителей без WebSocket (polling).\n\n"
+                    . "• Плавающий виджет чата на публичном сайте\n"
+                    . "• Inbox агентов с правом support.agent\n"
+                    . "• Контакт (email MX / соцсеть) при уходе со страницы\n"
+                    . "• FAQ-бот, если агентов нет онлайн\n"
+                    . "• Уведомления: email, Telegram, Discord, Max\n\n"
+                    . "Ответы только в админке; мессенджеры — оповещения.",
+            ],
+            'lab' => [
+                'category' => 'other',
+                'description' => 'Jasefly Lab: изолированные визуальные и функциональные эксперименты.',
+                'long_description' => "Песочница для UI/UX экспериментов без влияния на продакшен.\n\n"
+                    . "• Отдельные страницы /lab/:slug вне SiteLayout и темы сайта\n"
+                    . "• Frontend entries только из whitelist (experimentRegistry)\n"
+                    . "• Черновики, публикация, noindex, soft delete\n"
+                    . "• CSS Modules и корневой класс jasefly-lab-{entry}\n\n"
+                    . "Не меняет Page Builder, обычные страницы и глобальную тему.",
             ],
         ];
     }

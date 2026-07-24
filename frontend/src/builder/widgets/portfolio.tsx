@@ -461,6 +461,7 @@ export function registerPortfolioWidgets() {
     type: 'projects-grid',
     label: 'Сетка проектов',
     category: 'portfolio',
+    plugin: 'portfolio',
     defaultSettings: { title: 'Проекты', subtitle: '', limit: 6, featured_only: false },
     settingsFields: [...titleFields, { key: 'limit', label: 'Лимит', type: 'number' }, { key: 'featured_only', label: 'Только избранные', type: 'toggle' }],
     Render: ProjectsGridWidget,
@@ -470,6 +471,7 @@ export function registerPortfolioWidgets() {
     type: 'skills',
     label: 'Навыки',
     category: 'portfolio',
+    plugin: 'portfolio',
     defaultSettings: {
       title: 'Навыки',
       subtitle: '',
@@ -509,6 +511,7 @@ export function registerPortfolioWidgets() {
     type: 'experience',
     label: 'Опыт',
     category: 'portfolio',
+    plugin: 'portfolio',
     defaultSettings: { title: 'Опыт', subtitle: '' },
     settingsFields: titleFields,
     Render: ExperienceWidget,
@@ -518,6 +521,7 @@ export function registerPortfolioWidgets() {
     type: 'services',
     label: 'Услуги',
     category: 'portfolio',
+    plugin: 'portfolio',
     defaultSettings: { title: 'Услуги', subtitle: '' },
     settingsFields: titleFields,
     Render: ServicesWidget,
@@ -527,6 +531,7 @@ export function registerPortfolioWidgets() {
     type: 'testimonials',
     label: 'Отзывы',
     category: 'portfolio',
+    plugin: 'portfolio',
     defaultSettings: { title: 'Отзывы', subtitle: '' },
     settingsFields: titleFields,
     Render: TestimonialsWidget,
@@ -535,7 +540,8 @@ export function registerPortfolioWidgets() {
   registerWidget({
     type: 'blog-list',
     label: 'Список постов',
-    category: 'portfolio',
+    category: 'landing',
+    plugin: 'blog',
     defaultSettings: { title: 'Блог', subtitle: '', limit: 3 },
     settingsFields: [...titleFields, { key: 'limit', label: 'Лимит', type: 'number' }],
     Render: BlogListWidget,
@@ -544,7 +550,7 @@ export function registerPortfolioWidgets() {
   registerWidget({
     type: 'contact-form',
     label: 'Форма контакта',
-    category: 'portfolio',
+    category: 'landing',
     plugin: 'mail',
     defaultSettings: { title: 'Связаться', subtitle: '' },
     settingsFields: titleFields,
@@ -555,6 +561,7 @@ export function registerPortfolioWidgets() {
     type: 'profile-card',
     label: 'Обо мне (кратко)',
     category: 'portfolio',
+    plugin: 'portfolio',
     defaultSettings: {
       title: 'Обо мне',
       subtitle: '',
@@ -573,7 +580,7 @@ export function registerPortfolioWidgets() {
   registerWidget({
     type: 'cta-banner',
     label: 'CTA-баннер',
-    category: 'portfolio',
+    category: 'landing',
     defaultSettings: { title: 'Готовы начать?', subtitle: '', cta_label: 'Написать', cta_href: '/contact' },
     settingsFields: fields(
       { key: 'title', label: 'Заголовок', type: 'text' },

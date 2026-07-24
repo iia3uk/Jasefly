@@ -49,6 +49,10 @@ final class ContentModule extends AbstractModule
         $router->get($p('/experience'), [$public, 'experience']);
         $router->get($p('/education'), [$public, 'education']);
         $router->get($p('/skills'), [$public, 'skills']);
+        // Public project list/detail stay on Content so a disabled Projects
+        // admin module does not 404 the SPA (controller returns [] / 404 by portfolio gate).
+        $router->get($p('/projects'), [$public, 'projects']);
+        $router->get($p('/projects/{slug}'), [$public, 'projects']);
         $router->get($p('/services'), [$public, 'services']);
         $router->get($p('/testimonials'), [$public, 'testimonials']);
         $router->get($p('/contact-info'), [$public, 'contactInfo']);

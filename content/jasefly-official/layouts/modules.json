@@ -1,0 +1,292 @@
+{
+  "title": "Модули",
+  "slug": "modules",
+  "seo_title": "Модули Jasefly CMS — система, контент, коммерция и SEO",
+  "seo_description": "Каталог реально доступных модулей: System, Users, Content, Blog, Projects, Portfolio, Products, Payments, SEO, Media, Mail и другие.",
+  "layout": {
+    "version": 1,
+    "meta": {
+      "product": "jasefly-official"
+    },
+    "elements": [
+      {
+        "id": "s_20",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_1z",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_1x",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Модули",
+                  "tag": "h1",
+                  "size": "2xl",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_1y",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p>Список отражает возможности установленной CMS. Стоимость не указана — модули входят в платформу как встроенные или подключаемые пакеты.</p>",
+                  "align": "left"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_23",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_22",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_21",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "Система",
+                  "subtitle": "Каркас runtime и администрирования.",
+                  "columns": 2,
+                  "items": [
+                    {
+                      "icon": "settings",
+                      "title": "System",
+                      "body": "Категория: системный. Назначение: ядро, плагины, обновления, бэкапы, журнал. Статус: системный."
+                    },
+                    {
+                      "icon": "users",
+                      "title": "Users",
+                      "body": "Категория: системный. Назначение: авторизация, роли, права, 2FA. Статус: системный."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_26",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_25",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_24",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "Контент",
+                  "subtitle": "",
+                  "columns": 2,
+                  "items": [
+                    {
+                      "icon": "file",
+                      "title": "Content",
+                      "body": "Категория: контент. Страницы, навигация, site settings, Page Builder layouts. Статус: встроенный."
+                    },
+                    {
+                      "icon": "pen",
+                      "title": "Blog",
+                      "body": "Категория: контент. Посты, категории, теги, SEO постов. Статус: встроенный / плагин."
+                    },
+                    {
+                      "icon": "folder",
+                      "title": "Projects",
+                      "body": "Категория: контент. Портфолио-проекты и медиа. Статус: встроенный / плагин."
+                    },
+                    {
+                      "icon": "briefcase",
+                      "title": "Portfolio",
+                      "body": "Категория: продукт поверх ядра. Услуги, навыки, опыт, отзывы и связанные виджеты. Статус: плагин."
+                    },
+                    {
+                      "icon": "image",
+                      "title": "Media",
+                      "body": "Категория: контент. Медиатека и использование файлов. Статус: встроенный."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_29",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_28",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_27",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "Коммерция и продвижение",
+                  "subtitle": "",
+                  "columns": 2,
+                  "items": [
+                    {
+                      "icon": "cart",
+                      "title": "Products",
+                      "body": "Категория: коммерция. Каталог товаров и витринные шаблоны. Статус: плагин."
+                    },
+                    {
+                      "icon": "card",
+                      "title": "Payments",
+                      "body": "Категория: коммерция. Checkout, провайдеры оплаты, оферта. Статус: плагин."
+                    },
+                    {
+                      "icon": "search",
+                      "title": "SEO",
+                      "body": "Категория: продвижение. Sitemap, robots, редиректы, SEO-настройки. Статус: встроенный."
+                    },
+                    {
+                      "icon": "mail",
+                      "title": "Mail",
+                      "body": "Категория: интеграции. Письма и уведомления с контакт-формы. Статус: встроенный."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_2c",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_2b",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_2a",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "Дополнительно",
+                  "subtitle": "",
+                  "columns": 2,
+                  "items": [
+                    {
+                      "icon": "globe",
+                      "title": "Translate",
+                      "body": "Категория: дополнительный. Помощь с переводами корпуса контента. Статус: плагин."
+                    },
+                    {
+                      "icon": "shield",
+                      "title": "DDoS",
+                      "body": "Категория: дополнительный. Интеграции с внешними anti-DDoS провайдерами при настройке. Статус: плагин."
+                    },
+                    {
+                      "icon": "user-plus",
+                      "title": "Registration",
+                      "body": "Категория: дополнительный. Публичная регистрация пользователей. Статус: плагин."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_2g",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_2f",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_2d",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p><strong>MCP и Hosting Guard</strong> — часть инструментария агента и конфигурации MCP-клиента, а не отдельный платный модуль в каталоге. Remote deploy выполняется через MCP pipeline, а не отдельным UI-модулем витрины.</p>",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_2e",
+                "elType": "widget",
+                "widgetType": "cta-banner",
+                "settings": {
+                  "title": "Подробнее про AI-доступ",
+                  "subtitle": "",
+                  "cta_label": "MCP и AI",
+                  "cta_href": "/mcp"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,152 @@
+{
+  "title": "О проекте",
+  "slug": "about",
+  "id": 2,
+  "seo_title": "О проекте Jasefly CMS — независимая разработка IIA3UK",
+  "seo_description": "Jasefly CMS создана независимым разработчиком IIA3UK: контроль кодовой базы, AI-first workflow, модульность и deployment на shared-хостинг.",
+  "layout": {
+    "version": 1,
+    "meta": {
+      "product": "jasefly-official"
+    },
+    "elements": [
+      {
+        "id": "s_42",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_41",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_3z",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "О проекте",
+                  "tag": "h1",
+                  "size": "2xl",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_40",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p>Jasefly CMS создана независимым разработчиком <strong>IIA3UK</strong> как собственная платформа для разработки сайтов, управления контентом через AI и безопасного развёртывания на обычном хостинге.</p>",
+                  "align": "left"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_45",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_44",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_43",
+                "elType": "widget",
+                "widgetType": "features-grid",
+                "settings": {
+                  "title": "Мотивация",
+                  "subtitle": "",
+                  "columns": 2,
+                  "items": [
+                    {
+                      "icon": "code",
+                      "title": "Контроль над кодовой базой",
+                      "body": "Собственное ядро вместо тяжёлой зависимости от чужой CMS."
+                    },
+                    {
+                      "icon": "layers",
+                      "title": "Удобное расширение",
+                      "body": "Новые домены — модулями, без бесконечных патчей ядра."
+                    },
+                    {
+                      "icon": "bot",
+                      "title": "AI-first workflow",
+                      "body": "Карта сайта, digest и MCP для работы с Cursor и агентами."
+                    },
+                    {
+                      "icon": "upload",
+                      "title": "Автоматизация deployment",
+                      "body": "Локальная сборка, ZIP и обновления из админки."
+                    },
+                    {
+                      "icon": "briefcase",
+                      "title": "Свои и клиентские проекты",
+                      "body": "Один стек для личных продуктов и заказов."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_49",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_48",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_46",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p>Проект развивается одним автором — это не команда и не компания. Связь по предложениям и ошибкам — через страницу контактов.</p>",
+                  "align": "left"
+                }
+              },
+              {
+                "id": "w_47",
+                "elType": "widget",
+                "widgetType": "cta-banner",
+                "settings": {
+                  "title": "Связаться",
+                  "subtitle": "",
+                  "cta_label": "Контакты",
+                  "cta_href": "/contact"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

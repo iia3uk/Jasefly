@@ -1,6 +1,6 @@
 # CMS Map — читать первым
 
-**Бренд:** Jasefly CMS · **Стек:** React/Vite (`frontend/`) + PHP API (`backend/`) · **Деплой:** MCP `user-portfolio-cms` → `cms_release`
+**Бренд:** Jasefly CMS · **Стек:** React/Vite (`frontend/`) + PHP API (`backend/`) · **Деплой:** MCP `user-jasefly-cms` → `cms_release`
 
 **Правила агента:** `.cursorrules` + `.cursor/rules/*.mdc` (alwaysApply).
 
@@ -13,13 +13,33 @@
 | Симптом / задача | Файл(ы) |
 | --- | --- |
 | Клик/выбор блока, инспектор, дерево | `frontend/src/builder/editor/PageBuilderPage.tsx`, `render/LayoutRenderer.tsx`, `edit/Editable.tsx` |
-| Виджет (heading/text/hero/…) | `frontend/src/builder/widgets/{basic,portfolio,landing,commerce,auth}.tsx` + `registry.ts` |
+| Иконки палитры билдера | `builder/lib/widgetIcons.tsx` + CSS `.builder-palette-tile` в `frontend/src/index.css` |
+| Виджет (heading/text/hero/…) | `builder/widgets/{basic,structure,blocks,portfolio,landing,commerce,auth}.tsx`; универсальные: `hero-block` `showcase-block` `compare-block` `cta-block` `steps-row` `media-placeholder` `stat-row`; секции: glow/overlay/animation/responsive в `lib/sectionEffects.tsx` |
+| Mobile: шаги пайплайна «плывут» | `widgets/structure.tsx` → `steps-row` (1/2 col → N на lg); `panels.tsx` pipeline scroll |
+| Snap-скролл / перелистывание секций | `snapPageController.ts` + `sectionEffects.tsx` / `#cms-snap-scroller` / `SnapSectionRail.tsx` |
+| UI-панели лендинга (модули/pipeline/MCP) | `builder/widgets/panels.tsx` → `module-toggles` `pipeline-panel` `mcp-inspector` |
+| Hero медиа размер / фон | `builder/widgets/blocks.tsx` → `media_mode` side\|background + `media_width/height/object_fit`; клик по картинке → fieldStyles |
 | Галерея фото+видео | `modules/projects/components/ProjectGallery.tsx` + виджет `image-gallery` в `builder/widgets/landing.tsx` |
+| Lightbox картинок (блог обложка/контент) | `shared/ui/ImageLightbox.tsx` + `MediaImage lightbox` / `RichText` в `shared/ui/index.tsx`, `BlogPostView` |
+| Иконки карточек (features-grid, ?) | `shared/icons.tsx` + `shared/techBrandIcons.ts` (Lucide + Simple Icons) |
+| Переводчик / auto-warmup 429 | `TranslateAutoWarmup.tsx` + `SoftRateLimitMiddleware` + `TranslateModule` (batch тоже soft) |
+| Переводчик не весь DOM (списки) | `TranslateWidget.tsx` + `TranslateCorpus.php` (split HTML li/p) |
+| Переводчик статичный (только кэш) | `TranslateService` cacheOnly + `TranslateWidget` / warmup по `content_hash` |
+| Переводчик фейки / синк контента | `TranslateCache::purgeInvalid` + `TranslateSync` (resource.afterSave) + админка «Очистить фейки» |
+| Google / LibreTranslate / MyMemory / DeepL | `TranslateService` + настройки плагина `provider` (default google) |
+| Тикеты / live chat / FAQ-бот | `modules/support/` ↔ `Modules/Support/` + `SupportWidget.tsx` |
+| Jasefly Lab / эксперименты | `modules/lab/` ↔ `Modules/Lab/` + `/lab/:slug` (вне SiteLayout); entries: `starter`, `reference` |
+| FAQ клик в чате | `POST /support/faq/{id}/ask` + чипы в `SupportWidget` |
+| Support poll 429 | `SoftRateLimit` на GET messages + backoff в `SupportWidget`; DDoS skip `/support/` |
+| История чата после reload | `GET /support/active` + cookie/localStorage `visitor_key` |
+| Звук чата (виджет / inbox) | `lib/supportNotifySound.ts` + `SupportWidget` / `SupportInboxPage` |
 | Стили/цвет/шрифт/градиент текста | `builder/edit/StyleFields.tsx`, `ColorControl.tsx`, `colorUtils.ts`, `lib/googleFonts.ts` |
 | Seed-лейауты страниц (home/about/…) | `frontend/src/builder/migrateHome.ts` |
 | Публичный рендер страницы из layout | `builder/public/CmsPages.tsx`, `builder/public/parseLayout.ts`, `builder/render/LayoutRenderer.tsx` |
 | Черновик на живом URL (только админ) | `backend/.../PublicController.php` → `page()` + `CmsPages.tsx` баннер |
 | SEO страницы (title/desc/OG/расписание) | `builder/editor/PageBuilderPage.tsx` → `PageSettings`; `SeoHead` в `SiteLayout.tsx` |
+| SEO целевые рынки (CIS/EU/USA/ASIA, areaServed) | `/admin/seo` → `seo_settings.target_regions` + `PrerenderService` JSON-LD |
+| SEO боты / пустой `#root` / Яндекс | корневой `index.php` + `spa.html` + `PrerenderService` / `.htaccess` (`?prerender=1`) |
 | Cookie-баннер + GA gate | `components/layout/CookieBanner.tsx` + `lib/cookieConsent.ts` + `site_settings` |
 | Кастомный путь админки (SPA) | `admin/adminBasePath.ts` + `site_settings.admin_base_path` + `AppRouter.tsx` |
 | Публичный поиск / 404 | `GET /search` → `SearchService::publicSearch`; `NotFoundPage` |
@@ -27,6 +47,8 @@
 | Telegram с контакт-формы | `Modules/Mail/ContactFormService.php` + `TelegramNotifier.php` + `/admin/mail` |
 | Отложенная публикация страниц | `PageScheduleService` (lazy publish) + `scheduled_at` в билдере |
 | Плагины вкл/выкл, гейты UI | `frontend/src/core/pluginGates.ts`, `components/RequirePlugin.tsx`, `admin/pages/PluginsPage.tsx` |
+| `/api/v1/projects` 404 при выкл. Portfolio | public GET в `ContentModule`; FE гейт `useProjects` + `HomePage` (не звать без portfolio) |
+| Билдер-страницы без Portfolio (about/contact/cta) | `pluginGates` + `widgetRequiredPlugin` (`cta-banner`/`blog-list`/`contact-form` ≠ portfolio) |
 | Админ-роуты / CRUD экраны | `admin/adminRoutes.tsx`, `core/moduleRegistry.ts`, `admin/pages/*` |
 | Публичные роуты | `frontend/src/routes/AppRouter.tsx`, `pages/PublicPages.tsx` |
 | API-клиент фронта | `frontend/src/lib/api.ts`, `hooks/useApi.ts` |
@@ -38,6 +60,7 @@
 | Миграции SQL | `backend/migrations/*.sql` (+ plugin migrations в `Modules/*/migrations/`) |
 | Залить апдейт на хостинг | MCP **`cms_release`** (summary + changes). Не invent deploy вручную |
 | Контент на проде (текст/страницы) | MCP `cms_site_map` → `cms_get` / `cms_bulk` / `cms_put_singleton` |
+| Публичная API-документация (люди + агенты) | страница CMS `/api-docs` + `GET /api/v1/docs` ([backend/docs/openapi.php](backend/docs/openapi.php)); локальный черновик `content/jasefly-official/apply-api-docs.mjs` |
 
 ---
 
@@ -83,9 +106,9 @@ portfolio/
 
 | types | файл |
 | --- | --- |
-| `heading` `text` `image` `button` `spacer` `divider` `html` `page-loader` | `widgets/basic.tsx` |
+| `heading` `text` `image` `button` `spacer` `divider` `html` `page-loader` `chip` `chip-row` `connector-line` `step-badge` `steps-row` `media-placeholder` | `widgets/basic.tsx` + `structure.tsx` + `blocks.tsx` |
 | `hero` `projects-grid` `skills` `experience` `services` `testimonials` `blog-list` `contact-form` `profile-card` `cta-banner` | `widgets/portfolio.tsx` |
-| `image-gallery` `faq` `logos-strip` `pricing-table` `features-grid` `video-embed` | `widgets/landing.tsx` |
+| `image-gallery` `faq` `logos-strip` `pricing-table` `features-grid` `video-embed` `content-tabs` `hero-block` `compare-block` `showcase-block` `cta-block` `stat-row` | `widgets/landing.tsx` + `structure.tsx` + `blocks.tsx` |
 | `payment-checkout` `payment-methods` `seller-info` `offer-document` | `widgets/commerce.tsx` |
 | `auth-login` `auth-register` | `widgets/auth.tsx` |
 
@@ -106,8 +129,10 @@ portfolio/
 | `media/` | `Media/` | файлы |
 | `users/` | `Users/` | админы/роли |
 | `site/` | `System` + Content | тема, SEO, settings |
+| `site/productLanding/` | — | витринный лендинг продукта Jasefly (`ProductLanding`) |
 | `registration/` | `Registration/` | публичная регистрация |
 | `translate/` | `Translate/` | оверлей-переводчик сайта |
+| `support/` | `Support/` | тикеты / live chat / FAQ-бот |
 | `mail/` `webhooks/` `ddos/` `system/` | одноимённые | интеграции |
 
 Новый модуль: `backend/docs/MODULES.md` + зеркало в `frontend/src/modules/{name}/`.
@@ -144,7 +169,7 @@ portfolio/
 
 ## MCP (хостинг / контент)
 
-Сервер: `user-portfolio-cms` (`mcp-cms/`). Секреты только в `mcp-cms/.env`.
+Сервер: `user-jasefly-cms` (`mcp-cms/`). Секреты только в `mcp-cms/.env`.
 
 | Инструмент | Когда |
 | --- | --- |
@@ -155,6 +180,7 @@ portfolio/
 | `cms_put_singleton` | theme, site settings, profile… |
 | `cms_verify_alive` / `cms_site_diagnostics` | После проблем |
 | `cms_hosting_guard` | Лимиты запросов к хостингу |
+| `list_lab_experiments` / `create_lab_experiment` / … | Lab CRUD + preview/publish |
 
 Не долбить хостинг циклами `cms_list`. Подробности: `mcp-cms/README.md`.
 

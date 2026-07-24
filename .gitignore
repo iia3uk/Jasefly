@@ -66,3 +66,20 @@ build-hosting.config.json
 
 # OS
 Desktop.ini
+
+# Extra env / credential dumps (public-repo hardening)
+**/.env.local
+**/.env.*.local
+*.pem
+*.p12
+*.pfx
+**/credentials.json
+**/service-account*.json
+
+# Local scratch / third-party dumps — not part of the product
+reference/
+*.rar
+*.7z
+/general/
+/good.png
+/good_2.png

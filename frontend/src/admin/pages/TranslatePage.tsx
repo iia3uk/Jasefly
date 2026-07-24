@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Languages, Loader2, Play, RefreshCw } from 'lucide-react'
+import { Eraser, Languages, Loader2, Play, RefreshCw } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
@@ -16,10 +16,15 @@ type Status = {
   ready: boolean
   provider: string
   auto_warmup?: boolean
+  sync_on_save?: boolean
+  invalid_hint?: string
 }
 
 type WarmupResult = {
   translated: number
+  failed?: number
+  quota_hit?: boolean
+  provider_hint?: string | null
   target: string | null
   remaining_for_target: number
   corpus_size: number
@@ -36,7 +41,7 @@ function asData<T>(payload: { data?: T } | T): T {
 }
 
 /**
- * Pre-translate CMS content into the translate_cache so the public widget is instant.
+ * Pre-translate CMS content into translate_cache so the public widget is instant.
  */
 export function TranslatePage() {
   const qc = useQueryClient()
@@ -48,32 +53,60 @@ export function TranslatePage() {
     queryFn: async () => asData<Status>(await api.get('/admin/translate/status')),
   })
 
-  const pushLog = (line: string) => setLog((prev) => [line, ...prev].slice(0, 40))
+  const pushLog = (line: string) => setLog((prev) => [line, ...prev].slice(0, 60))
 
-  const runWarmup = useCallback(async () => {
+  const runWarmup = useCallback(async (purgeFirst: boolean) => {
     setRunning(true)
-    pushLog('Старт прогрева…')
+    pushLog(purgeFirst ? 'Очистка фейков + прогрев…' : 'Старт прогрева…')
     try {
+      if (purgeFirst) {
+        const purged = asData<{ purged?: number; message?: string }>(
+          await api.post('/admin/translate/purge-invalid', {}),
+        )
+        pushLog(purged.message || `Удалено фейков: ${purged.purged ?? 0}`)
+      }
+
       let guard = 0
-      while (guard < 500) {
+      let idleRounds = 0
+      while (guard < 800) {
         guard++
         const res = asData<WarmupResult>(
-          await api.post('/admin/translate/warmup', { batch_size: 12 }),
+          await api.post('/admin/translate/warmup', {
+            batch_size: 5,
+            purge_invalid: false,
+          }),
         )
         if (res.translated > 0 && res.target) {
+          idleRounds = 0
           pushLog(
-            `${res.target}: +${res.translated} · осталось ~${res.remaining_for_target} · кэш ${res.cache?.rows ?? '—'}`,
+            `${res.target}: +${res.translated}`
+            + (res.failed ? ` · fail ${res.failed}` : '')
+            + ` · осталось ~${res.remaining_for_target} · кэш ${res.cache?.rows ?? '—'}`,
           )
-        } else if (res.finished) {
-          pushLog('Готово: все фразы в кэше.')
+        } else if (res.finished || res.ready) {
+          pushLog('Готово: все фразы в кэше с реальным переводом.')
           break
+        } else if ((res.failed ?? 0) > 0 && res.translated === 0) {
+          idleRounds++
+          if (res.quota_hit || res.provider_hint) {
+            pushLog(res.provider_hint || 'Провайдер ограничил запросы — подождите и продолжите.')
+            break
+          }
+          pushLog(`${res.target ?? '?'}: провайдер не ответил (${res.failed}), пауза…`)
+          if (idleRounds >= 8) {
+            pushLog('Слишком много отказов. Проверьте Плагины → Переводчик → движок Google и повторите прогрев.')
+            break
+          }
+          await new Promise((r) => setTimeout(r, 2500))
+          continue
         } else {
-          pushLog('Нет новых фраз в этом шаге.')
-          break
+          idleRounds++
+          pushLog('Нет прогресса в этом шаге.')
+          if (idleRounds >= 5) break
         }
         if (res.finished || res.ready) break
-        // Small pause so MyMemory free tier survives
-        await new Promise((r) => setTimeout(r, 200))
+        // Gentle pacing for free providers
+        await new Promise((r) => setTimeout(r, 800))
       }
       await qc.invalidateQueries({ queryKey: ['admin', 'translate', 'status'] })
     } catch (e) {
@@ -97,8 +130,8 @@ export function TranslatePage() {
           <div>
             <h1 className="font-heading text-3xl">Переводчик сайта</h1>
             <p className="mt-1 max-w-2xl text-sm text-zinc-500">
-              Пока сайт открыт, он сам понемногу прогревает кэш переводов (автопрогрев). Кнопка ниже — ручной ускоренный прогон.
-              Настройки — в{' '}
+              Сайт показывает только готовый кэш. Прогрев (или сохранение контента) реально переводит фразы.
+              Настройки —{' '}
               <Link to={adminUrl('/plugins')} className="underline hover:text-zinc-300">Плагины → Переводчик</Link>.
             </p>
           </div>
@@ -112,7 +145,16 @@ export function TranslatePage() {
               <RefreshCw size={15} className={refresh.isPending ? 'animate-spin' : undefined} />
               Обновить
             </Button>
-            <Button type="button" disabled={running} onClick={() => void runWarmup()}>
+            <Button
+              type="button"
+              className="border border-amber-500/30 bg-amber-500/10 text-amber-100"
+              disabled={running}
+              onClick={() => void runWarmup(true)}
+            >
+              {running ? <Loader2 size={15} className="animate-spin" /> : <Eraser size={15} />}
+              Очистить фейки и прогреть
+            </Button>
+            <Button type="button" disabled={running} onClick={() => void runWarmup(false)}>
               {running ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
               {running ? 'Прогрев…' : 'Прогнать контент'}
             </Button>
@@ -136,12 +178,12 @@ export function TranslatePage() {
             <GlassPanel className="p-4">
               <p className="text-xs uppercase tracking-wider text-zinc-500">Статус</p>
               <p className={`mt-1 text-lg ${status.data.ready ? 'text-emerald-300' : 'text-amber-200'}`}>
-                {status.data.ready ? 'Готово к быстрым переводам' : 'Нужен прогрев'}
+                {status.data.ready ? 'Кэш готов — перевод мгновенный' : 'Нужен прогрев кэша'}
               </p>
               <p className="mt-1 text-xs text-zinc-500">
-                {status.data.auto_warmup !== false
-                  ? 'автопрогрев на сайте включён'
-                  : 'автопрогрев выключен'}
+                {status.data.sync_on_save !== false ? 'синк при сохранении вкл' : 'синк при сохранении выкл'}
+                {' · '}
+                {status.data.auto_warmup !== false ? 'автопрогрев вкл' : 'автопрогрев выкл'}
               </p>
             </GlassPanel>
           </div>
@@ -170,8 +212,9 @@ export function TranslatePage() {
               })}
             </div>
             <p className="mt-4 text-xs text-zinc-500">
-              Автопрогрев крутится в фоне на публичном сайте (пока открыта вкладка). Ручная кнопка ускоряет прогон в админке.
-              После смены текстов сайта кэш догонит сам или через «Прогнать контент».
+              Если в БД «перевод» = русский оригинал — это фейк. Жмите «Очистить фейки и прогреть».
+              После правок страниц/статей новые фразы переводятся при сохранении (или через MCP / эту кнопку).
+              По умолчанию — бесплатный Google Translate. DeepL только если у вас есть свой API key.
             </p>
           </GlassPanel>
         )}

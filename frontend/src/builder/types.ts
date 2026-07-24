@@ -65,13 +65,14 @@ export function createColumn(width = 100): BuilderElement {
 }
 
 export function createSection(columns = 1): BuilderElement {
-  const cols = Array.from({ length: Math.min(4, Math.max(1, columns)) }, () =>
-    createColumn(Math.round(100 / columns)),
+  const n = Math.min(12, Math.max(1, columns))
+  const cols = Array.from({ length: n }, () =>
+    createColumn(Math.round((100 / n) * 100) / 100),
   )
   return {
     id: createId('sec'),
     elType: 'section',
-    settings: { paddingY: '3rem', gap: '1.5rem', columns },
+    settings: { paddingY: '3rem', gap: '1.5rem', columns: n },
     elements: cols,
   }
 }

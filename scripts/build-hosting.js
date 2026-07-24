@@ -54,9 +54,12 @@ function which(name) {
 }
 
 function findPhp() {
+  const fromEnv = (process.env.PHP_BIN || '').trim();
+  if (fromEnv && fs.existsSync(fromEnv)) return fromEnv;
   const inPath = which('php');
   if (inPath) return inPath;
   const candidates = [
+    path.join(ROOT, '.tools', 'php', 'php.exe'),
     'C:\\xampp\\php\\php.exe',
     'C:\\laragon\\bin\\php\\php-8.3*\\php.exe',
     'C:\\laragon\\bin\\php\\php-8.2*\\php.exe',
@@ -263,6 +266,7 @@ function publicApiHtaccess() {
 function rootHtaccess() {
   return [
     'Options -Indexes',
+    'DirectoryIndex index.php',
     'RewriteEngine On',
     'RewriteBase /',
     '',
@@ -322,30 +326,44 @@ function rootHtaccess() {
     'RewriteRule ^sitemap\\.xml$ prerender.php?path=/sitemap.xml [L,QSA]',
     'RewriteRule ^robots\\.txt$ prerender.php?path=/robots.txt [L,QSA]',
     '',
+    '# Never serve raw Vite shell — always go through index.php (SEO meta / bots)',
+    'RewriteRule ^index\\.html$ index.php [L,QSA]',
+    '',
     '# SEO: dynamic rendering for crawlers (HTML snapshot from DB)',
-    '# Do not use !-f — `/` often maps to index.html and would skip bots.',
+    '# Do not use !-f — `/` often maps to a static file and would skip bots.',
     'RewriteCond %{REQUEST_URI} !^/api/',
     'RewriteCond %{REQUEST_URI} !^/prerender\\.php',
+    'RewriteCond %{REQUEST_URI} !^/index\\.php',
     'RewriteCond %{REQUEST_URI} !^/admin',
-    'RewriteCond %{REQUEST_URI} !\\.(js|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|map|txt|xml)$ [NC]',
+    // Exclude static .html (Yandex/Google webmaster verification at site root)
+    'RewriteCond %{REQUEST_URI} !\\.(js|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|map|txt|xml|html)$ [NC]',
     'RewriteCond %{HTTP_USER_AGENT} (googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegrambot|discordbot|applebot|petalbot|semrushbot|ahrefsbot|mj12bot|dotbot|bytespider|gptbot|claudebot|google-inspectiontool|chrome-lighthouse) [NC]',
     'RewriteRule ^(.*)$ prerender.php?path=/$1 [L,QSA]',
     '',
     'RewriteCond %{QUERY_STRING} (^|&)(_escaped_fragment_|prerender=1)(&|$) [NC]',
     'RewriteCond %{REQUEST_URI} !^/api/',
     'RewriteCond %{REQUEST_URI} !^/prerender\\.php',
+    'RewriteCond %{REQUEST_URI} !^/index\\.php',
     'RewriteCond %{REQUEST_URI} !\\.(js|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|map)$ [NC]',
     'RewriteRule ^(.*)$ prerender.php?path=/$1&prerender=1 [L,QSA]',
     '',
-    '# React SPA fallback (do not catch /api)',
+    '# React SPA fallback → index.php (SEO-enriched shell)',
     'RewriteCond %{REQUEST_FILENAME} !-f',
     'RewriteCond %{REQUEST_FILENAME} !-d',
     'RewriteCond %{REQUEST_URI} !^/api/',
-    'RewriteRule ^ index.html [L]',
+    'RewriteRule ^ index.php [L,QSA]',
     '',
     '<IfModule mod_headers.c>',
     '  Header always set X-Content-Type-Options "nosniff"',
     '  Header always set Referrer-Policy "strict-origin-when-cross-origin"',
+    '  <Files "index.php">',
+    '    Header set Cache-Control "no-cache, no-store, must-revalidate"',
+    '    Header set Pragma "no-cache"',
+    '    Header set Expires "0"',
+    '  </Files>',
+    '  <Files "spa.html">',
+    '    Header set Cache-Control "no-cache, no-store, must-revalidate"',
+    '  </Files>',
     '</IfModule>',
     '',
   ].join('\n');
@@ -441,9 +459,9 @@ function deploymentRuMd(opts) {
     '- папку `api/` (PHP-бэкенд)',
     isUpdate ? '' : '- `install.php` (мастер первой установки — удалить после настройки)',
     isUpdate ? '- `migrate.php` (fallback; обычно не нужен — миграции накатываются сами из админки)' : '- `migrate.php` (fallback для апгрейда со старой БД)',
-    '- `DEPLOYMENT-RU.md` — эта инструкция (можно удалить после прочтения)',
-    '- `CONTENT_IMPORT.md` — импорт контента из JSON (без ручного заполнения админки)',
     '- `import-content.php` — загрузка content-pack.json (удалить после импорта)',
+    '',
+    'Документация (`DEPLOYMENT-RU.md`, `CONTENT_IMPORT.md`, `SECURITY.md`) лежит в репозитории / рядом с ZIP в `release/`, не в `public_html`.',
     '',
     'Структура на сервере после распаковки:',
     '',
@@ -452,7 +470,6 @@ function deploymentRuMd(opts) {
     '├── index.html',
     '├── assets/',
     '├── .htaccess',
-    '├── DEPLOYMENT-RU.md',
     isUpdate ? '├── migrate.php         ← накат SQL после update' : '├── install.php          ← только при первой установке',
     isUpdate ? '' : '├── migrate.php',
     '└── api/',
@@ -551,11 +568,14 @@ function deploymentRuMd(opts) {
     '',
     'Если файлы по какой-то причине остались — удалите их вручную и убедитесь, что есть `api/storage/.installed`.',
     '',
-    '## 9. SEO (prerender для ботов)',
+    '## 9. SEO (prerender + enriched SPA shell)',
     '',
-    'Обычные посетители получают SPA (`index.html`). Поисковые и соцботы через `.htaccess` направляются в `prerender.php`, который отдаёт HTML с title/description/контентом из БД.',
+    'Вход на сайт — `index.php` (не пустой Vite `index.html`):',
+    '- Посетители получают `spa.html` с вшитыми title / description / OG из БД.',
+    '- Поисковые и соцботы (или `?prerender=1`) получают полный HTML с `<main>` из `prerender.php`.',
     '',
-    '- Проверка вручную: `https://ваш-домен/?prerender=1` или `/projects?prerender=1` — в исходнике должны быть `<h1>` и текст, не пустой `#root`.',
+    '- Проверка meta: откройте исходник `https://ваш-домен/` — title не должен быть «Jasefly CMS».',
+    '- Проверка контента для ботов: `https://ваш-домен/?prerender=1` — в исходнике `<h1>` и текст, `data-prerender="1"`.',
     '- Sitemap: `/sitemap.xml`, robots: `/robots.txt`.',
     '- В админке **SEO → Очистить кэш prerender** после крупных правок контента.',
     '',
@@ -741,9 +761,127 @@ function copyFrontendDist() {
       copyFile(from, to);
     }
   }
+  // Rename Vite shell so DirectoryIndex cannot prefer an empty #root over index.php.
+  // Keep a copy as index.html too (legacy zip markers / tools still probe for it).
+  const builtIndex = path.join(PUBLIC_HTML, 'index.html');
+  const spaHtml = path.join(PUBLIC_HTML, 'spa.html');
+  if (fs.existsSync(builtIndex)) {
+    if (fs.existsSync(spaHtml)) fs.unlinkSync(spaHtml);
+    fs.renameSync(builtIndex, spaHtml);
+    fs.copyFileSync(spaHtml, builtIndex);
+    say(TAG.ok, 'Vite shell → spa.html (+ index.html copy for markers; entry is index.php)');
+  }
+  writeFile(path.join(PUBLIC_HTML, 'index.php'), rootIndexPhp());
   // Our generated root htaccess replaces any SPA-only dist one
   writeFile(path.join(PUBLIC_HTML, '.htaccess'), rootHtaccess());
   say(TAG.ok, 'Frontend dist copied');
+}
+
+/** Document-root entry: bots → prerender, humans → SPA with SEO meta from DB. */
+function rootIndexPhp() {
+  return `<?php
+declare(strict_types=1);
+
+/**
+ * Public HTML entry (SEO).
+ * - Search/social bots + ?prerender=1 → full HTML snapshot (PrerenderService)
+ * - Humans / Webmaster "server response" → Vite spa.html with title/description/OG injected
+ */
+
+use App\\Bootstrap;
+use App\\Services\\PrerenderService;
+
+function jasefly_spa_path(): ?string
+{
+    foreach ([__DIR__ . '/spa.html', __DIR__ . '/index.html'] as $f) {
+        if (is_file($f)) {
+            return $f;
+        }
+    }
+    return null;
+}
+
+function jasefly_spa_fail_open(): never
+{
+    $spa = jasefly_spa_path();
+    header('Content-Type: text/html; charset=utf-8');
+    if ($spa !== null) {
+        readfile($spa);
+        exit;
+    }
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'SPA unavailable';
+    exit;
+}
+
+try {
+    require __DIR__ . '/api/src/Bootstrap.php';
+    [$app, $db] = Bootstrap::init();
+
+    $uri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+    $reqPath = parse_url($uri, PHP_URL_PATH);
+    $reqPath = is_string($reqPath) && $reqPath !== '' ? $reqPath : '/';
+    $path = '/' . trim(str_replace('\\\\', '/', $reqPath), '/');
+    if ($path === '/index.php' || $path === '') {
+        $path = '/';
+    }
+
+    $force = (isset($_GET['prerender']) && (string) $_GET['prerender'] === '1')
+        || isset($_GET['_escaped_fragment_']);
+    $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
+    $svc = new PrerenderService($db, $app);
+
+    if ($force || PrerenderService::isBot($ua)) {
+        try {
+            $result = $svc->render($path);
+            if (!empty($result['redirect']) && in_array((int) $result['status'], [301, 302], true)) {
+                header('Location: ' . $result['redirect'], true, (int) $result['status']);
+                exit;
+            }
+            http_response_code((int) ($result['status'] ?? 200));
+            header('Content-Type: text/html; charset=utf-8');
+            header('X-Prerender: ' . (!empty($result['cached']) ? 'cache' : 'fresh'));
+            header('X-Robots-Tag: all');
+            echo (string) ($result['html'] ?? '');
+            exit;
+        } catch (Throwable $preErr) {
+            $logDir = __DIR__ . '/api/storage/logs';
+            if (!is_dir($logDir)) {
+                @mkdir($logDir, 0755, true);
+            }
+            @file_put_contents(
+                $logDir . '/spa-index.log',
+                date('c') . ' prerender ' . $preErr->getMessage() . "\\n",
+                FILE_APPEND
+            );
+            // fall through to enriched SPA
+        }
+    }
+
+    $spa = jasefly_spa_path();
+    if ($spa === null) {
+        jasefly_spa_fail_open();
+    }
+    $html = (string) file_get_contents($spa);
+    header('Content-Type: text/html; charset=utf-8');
+    header('Cache-Control: no-cache, no-store, must-revalidate');
+    header('X-Jasefly-Shell: enriched');
+    echo $svc->enrichSpaHtml($html, $path);
+    exit;
+} catch (Throwable $e) {
+    $logDir = __DIR__ . '/api/storage/logs';
+    if (!is_dir($logDir)) {
+        @mkdir($logDir, 0755, true);
+    }
+    @file_put_contents(
+        $logDir . '/spa-index.log',
+        date('c') . ' ' . $e->getMessage() . "\\n",
+        FILE_APPEND
+    );
+    jasefly_spa_fail_open();
+}
+`;
 }
 
 function collectFiles(dir, base = dir, list = []) {
@@ -761,7 +899,8 @@ function validatePackage(mode, opts) {
   const errors = [];
 
   const mustExist = [
-    'index.html',
+    'spa.html',
+    'index.php',
     '.htaccess',
     'prerender.php',
     'api/public/index.php',
@@ -773,8 +912,6 @@ function validatePackage(mode, opts) {
     'api/src/Support/ContentPackImporter.php',
     'api/content/content-pack.template.json',
     'import-content.php',
-    'CONTENT_IMPORT.md',
-    'DEPLOYMENT-RU.md',
     '.env.production.example',
   ];
 
@@ -888,16 +1025,24 @@ function createZip(zipPath) {
     }
   }
 
-  // Sanity: archive root must contain index.html (not hosting-package/ or public_html/)
+  // Sanity: archive root must contain spa.html + index.php (not nested public_html/)
   const list = run('tar', ['-tf', zipPath]);
   const names = (list.stdout || '').split(/\r?\n/).filter(Boolean);
   const hasNested = names.some((n) => /^(hosting-package|public_html)\//i.test(n.replace(/^\.\//, '')));
-  const hasIndex = names.some((n) => /(^|\/)index\.html$/i.test(n) || n === './index.html' || n === 'index.html');
+  const norm = (n) => n.replace(/^\.\//, '').replace(/\\/g, '/');
+  const hasSpa = names.some((n) => {
+    const x = norm(n);
+    return x === 'spa.html' || /(^|\/)spa\.html$/i.test(x);
+  });
+  const hasIndexPhp = names.some((n) => {
+    const x = norm(n);
+    return x === 'index.php' || /(^|\/)index\.php$/i.test(x);
+  });
   if (hasNested) {
     fail('ZIP incorrectly nests hosting-package/ or public_html/ — expected flat root.');
   }
-  if (!hasIndex) {
-    fail('ZIP missing index.html at archive root.');
+  if (!hasSpa || !hasIndexPhp) {
+    fail('ZIP missing spa.html and/or index.php at archive root.');
   }
 
   const size = fs.statSync(zipPath).size;
@@ -1043,9 +1188,6 @@ async function main() {
     const from = path.join(contentSrc, name);
     if (fs.existsSync(from)) copyFile(from, path.join(contentDest, name));
   }
-  if (fs.existsSync(path.join(ROOT, 'CONTENT_IMPORT.md'))) {
-    copyFile(path.join(ROOT, 'CONTENT_IMPORT.md'), path.join(PUBLIC_HTML, 'CONTENT_IMPORT.md'));
-  }
   writeFile(path.join(PUBLIC_HTML, 'import-content.php'), [
     '<?php',
     'declare(strict_types=1);',
@@ -1078,10 +1220,13 @@ async function main() {
   }
 
   writeFile(path.join(PUBLIC_HTML, '.env.production.example'), envProductionExample(opts.domain, opts.apiUrl));
-  writeFile(path.join(PUBLIC_HTML, 'DEPLOYMENT-RU.md'), deploymentRuMd(opts));
-  // Security checklist (also lives at repo root as SECURITY.md)
+  // Docs stay next to the ZIP in release/ — never in public_html (web root clutter + info leak)
+  writeFile(path.join(RELEASE, 'DEPLOYMENT-RU.md'), deploymentRuMd(opts));
+  if (fs.existsSync(path.join(ROOT, 'CONTENT_IMPORT.md'))) {
+    copyFile(path.join(ROOT, 'CONTENT_IMPORT.md'), path.join(RELEASE, 'CONTENT_IMPORT.md'));
+  }
   if (fs.existsSync(path.join(ROOT, 'SECURITY.md'))) {
-    fs.copyFileSync(path.join(ROOT, 'SECURITY.md'), path.join(PUBLIC_HTML, 'SECURITY.md'));
+    copyFile(path.join(ROOT, 'SECURITY.md'), path.join(RELEASE, 'SECURITY.md'));
   }
 
   // Incremental DB migrations helper (critical for update packages; also useful after full install upgrades)
@@ -1136,7 +1281,7 @@ async function main() {
   }
   console.log(`${C.green}  ╚══════════════════════════════════════════════════════╝${C.reset}`);
   console.log('');
-  console.log(`  ${C.dim}See DEPLOYMENT-RU.md inside the archive for Russian instructions.${C.reset}`);
+  console.log(`  ${C.dim}Docs (not in ZIP web root): release/DEPLOYMENT-RU.md${C.reset}`);
   console.log('');
 }
 

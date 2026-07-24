@@ -59,7 +59,7 @@ final class PublicController
             'data' => [
                 'site_settings' => $one('site_settings'),
                 'theme' => $one('theme_settings'),
-                'seo' => $one('seo_settings'),
+                'seo' => $this->normalizeSeo($one('seo_settings') ?: []),
                 'navigation' => $this->filterNavByPlugins($nav, $enabled),
                 'footer_nav' => $this->filterNavByPlugins($footerNav, $enabled),
                 'footer' => $one('footer_settings'),
@@ -181,8 +181,7 @@ final class PublicController
 
     public function blog(Request $r, ?string $slug = null): never
     {
-        // Public blog pages are owned by the portfolio product surface.
-        if (!$this->pluginEnabled('portfolio')) {
+        if (!$this->pluginEnabled('blog')) {
             if ($slug !== null) {
                 Response::error('Not found', 404);
             }
@@ -237,16 +236,20 @@ final class PublicController
 
     public function contactInfo(Request $r): never
     {
-        if (!$this->pluginEnabled('portfolio')) {
-            Response::json(['data' => null]);
-        }
+        // contact_info — системный singleton (форма/страница Контакты), не Portfolio.
         Response::json(['data' => $this->db->one('SELECT * FROM contact_info LIMIT 1')]);
     }
 
     public function page(Request $r, string $slug): never
     {
-        $portfolioSlugs = ['about', 'contact', 'projects', 'blog', 'services'];
-        if (in_array($slug, $portfolioSlugs, true) && !$this->pluginEnabled('portfolio')) {
+        // Только data-разделы Portfolio/Blog, не маркетинговые CMS-страницы about/contact.
+        $pluginSlugs = [
+            'projects' => 'portfolio',
+            'services' => 'portfolio',
+            'blog' => 'blog',
+        ];
+        $needed = $pluginSlugs[$slug] ?? null;
+        if ($needed !== null && !$this->pluginEnabled($needed)) {
             Response::error('Not found', 404);
         }
 
@@ -500,16 +503,16 @@ final class PublicController
      */
     private function filterNavByPlugins(array $items, array $enabled): array
     {
+        // about/contact — CMS-страницы билдера, не зависят от Portfolio.
         $gates = [
-            '/about' => 'portfolio',
-            '/contact' => 'portfolio',
             '/services' => 'portfolio',
             '/projects' => 'portfolio',
-            '/blog' => 'portfolio',
+            '/blog' => 'blog',
             '/products' => 'products',
             '/register' => 'registration',
             '/checkout' => 'payments',
             '/pay' => 'payments',
+            '/lab' => 'lab',
         ];
         $enabledSet = array_fill_keys($enabled, true);
         $out = [];
@@ -723,6 +726,31 @@ final class PublicController
             }
         }
         return $row;
+    }
+
+    /**
+     * @param array<string, mixed> $seo
+     * @return array<string, mixed>
+     */
+    private function normalizeSeo(array $seo): array
+    {
+        if ($seo === []) {
+            return $seo;
+        }
+        $regions = $this->decodeJson($seo['target_regions'] ?? null);
+        if (!is_array($regions)) {
+            $regions = [];
+        }
+        $allowed = ['CIS', 'EU', 'USA', 'ASIA'];
+        $clean = [];
+        foreach ($regions as $v) {
+            $code = strtoupper(trim((string) $v));
+            if (in_array($code, $allowed, true) && !in_array($code, $clean, true)) {
+                $clean[] = $code;
+            }
+        }
+        $seo['target_regions'] = $clean;
+        return $seo;
     }
 
     private function decodeJson(mixed $value): mixed

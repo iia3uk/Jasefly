@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  ArrowDown, ArrowLeft, ArrowUp, Boxes, ChevronDown, ChevronRight, ClipboardPaste, Columns2, Columns3, Columns4,
-  Copy, Eye, EyeOff, GripVertical, Home, Layers, LayoutTemplate, Monitor, MoreHorizontal, PanelRight,
+  ArrowDown, ArrowLeft, ArrowUp, Boxes, ChevronDown, ChevronRight, ClipboardPaste,
+  Copy, Eye, EyeOff, GripVertical, Home, Layers, Monitor, MoreHorizontal, PanelRight,
   Plus, Redo2, RotateCcw, Settings2, Smartphone, Tablet, Trash2, ExternalLink, Save, Undo2, X,
 } from 'lucide-react'
 import { useAdminItem, useCrud, useProfile, useSite } from '@/hooks/useApi'
@@ -39,6 +39,7 @@ import { RevisionsPanel } from '@/admin/components/RevisionsPanel'
 import { themeStyleVars } from '@/shared/themeStyleVars'
 import { getTemplateCss } from '@/shared/siteTemplates'
 import { adminUrl } from '@/admin/adminBasePath'
+import { SectionColsPreview, widgetIcon, widgetIconTone } from '@/builder/lib/widgetIcons'
 import clsx from 'clsx'
 
 initBuilderWidgets()
@@ -78,6 +79,9 @@ const PART_LABELS: Record<string, string> = {
   html: 'Текст',
   label: 'Кнопка',
   href: 'Ссылка',
+  connector: 'Линия',
+  media_id: 'Медиа',
+  background_media_id: 'Фон',
 }
 
 function elementLabel(el: BuilderElementDTO) {
@@ -505,7 +509,7 @@ export function PageBuilderPage() {
 
   const leftPanelBody = (
     <>
-      <div className="flex border-b border-white/10">
+      <div className="flex border-b border-white/[0.07]">
         {([
           ['widgets', 'Виджеты'],
           ['structure', 'Структура'],
@@ -516,44 +520,45 @@ export function PageBuilderPage() {
             key={tabId}
             type="button"
             className={clsx(
-              'flex-1 py-3 text-[10px] font-semibold uppercase tracking-wider lg:py-2.5',
-              tab === tabId ? 'text-white' : 'text-zinc-500',
+              'relative flex-1 py-3 text-[10px] font-semibold uppercase tracking-wider transition-colors lg:py-2.5',
+              tab === tabId ? 'text-white' : 'text-zinc-500 hover:text-zinc-300',
             )}
             onClick={() => setTab(tabId)}
           >
             {label}
+            {tab === tabId && (
+              <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[var(--accent,#8eb6ff)] shadow-[0_0_12px_var(--accent,#8eb6ff)]" />
+            )}
           </button>
         ))}
       </div>
       <div className="admin-quiet-scroll flex-1 overflow-y-auto overscroll-contain p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {tab === 'widgets' ? (
           <div className="space-y-4">
-            <input
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-white/20"
-              placeholder="Поиск виджетов…"
-              value={paletteQuery}
-              onChange={(e) => setPaletteQuery(e.target.value)}
-            />
+            <div className="builder-palette-search">
+              <input
+                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-[var(--accent,#8eb6ff)]/40 focus:bg-white/[0.06] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent,#8eb6ff)_18%,transparent)]"
+                placeholder="Поиск виджетов…"
+                value={paletteQuery}
+                onChange={(e) => setPaletteQuery(e.target.value)}
+              />
+            </div>
             <div>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">Секции</p>
-              <div className="grid grid-cols-4 gap-2">
-                {([
-                  [1, LayoutTemplate],
-                  [2, Columns2],
-                  [3, Columns3],
-                  [4, Columns4],
-                ] as const).map(([n, Icon]) => (
+              <p className="builder-palette-label mb-2">Секции</p>
+              <div className="grid grid-cols-5 gap-2">
+                {([1, 2, 3, 4, 6] as const).map((n) => (
                   <button
                     key={n}
                     type="button"
-                    className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl border border-white/10 px-1 py-2.5 text-[10px] text-zinc-400 active:bg-white/10 hover:bg-white/5 hover:text-white"
+                    className="builder-palette-tile builder-palette-tile--section"
+                    title={`Секция · ${n} ${n === 1 ? 'колонка' : n < 5 ? 'колонки' : 'колонок'}`}
                     onClick={() => {
                       apply(reduceLayout(layout, { type: 'addSection', columns: n }))
                       setMobileSheet(null)
                     }}
                   >
-                    <Icon size={18} />
-                    {n}
+                    <SectionColsPreview cols={n} />
+                    <span className="builder-palette-tile__label">{n}</span>
                   </button>
                 ))}
               </div>
@@ -611,12 +616,48 @@ export function PageBuilderPage() {
             scheduledAt={scheduledAt}
             isHome={isHome}
             siteName={site?.site_settings?.site_name || 'Сайт'}
+            layout={layout}
             onSlug={(v) => { setSlug(v); markDirty() }}
             onSeoTitle={(v) => { setSeoTitle(v); markDirty() }}
             onSeoDescription={(v) => { setSeoDescription(v); markDirty() }}
             onOgImageId={(v) => { setOgImageId(v); markDirty() }}
             onScheduledAt={(v) => { setScheduledAt(v); markDirty() }}
             onIsHome={(v) => { setIsHome(v); markDirty() }}
+            onLayoutMeta={(patch) => {
+              apply({
+                ...layout,
+                meta: { ...(layout.meta ?? {}), ...patch },
+              })
+            }}
+            onEnableSnapPages={() => {
+              const nextElements = (layout.elements ?? []).map((el) => {
+                if (el.elType !== 'section') return el
+                return {
+                  ...el,
+                  settings: {
+                    ...(el.settings ?? {}),
+                    min_height: el.settings?.min_height || '100dvh',
+                    paddingY: el.settings?.paddingY ?? '0',
+                    v_align: el.settings?.v_align || 'center',
+                    animation: el.settings?.animation && el.settings.animation !== 'none'
+                      ? el.settings.animation
+                      : 'fade-up',
+                    scroll_snap: el.settings?.scroll_snap || 'auto',
+                    snap_stop: el.settings?.snap_stop || 'always',
+                  },
+                }
+              })
+              apply({
+                ...layout,
+                elements: nextElements,
+                meta: {
+                  ...(layout.meta ?? {}),
+                  scroll_snap: 'mandatory',
+                  scroll_smooth: true,
+                  snap_height: '100dvh',
+                },
+              })
+            }}
           />
         )}
       </div>
@@ -719,8 +760,8 @@ export function PageBuilderPage() {
   )
 
   return (
-    <div className="builder-shell flex h-dvh max-h-dvh flex-col overflow-hidden bg-[#0a0a0b] text-zinc-100">
-      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-white/10 px-2 pt-[env(safe-area-inset-top)] sm:gap-3 sm:px-3">
+    <div className="builder-shell flex h-dvh max-h-dvh flex-col overflow-hidden bg-[#07070a] text-zinc-100">
+      <header className="builder-topbar flex h-12 shrink-0 items-center gap-2 border-b border-white/[0.07] px-2 pt-[env(safe-area-inset-top)] sm:gap-3 sm:px-3">
         <button type="button" className="builder-tool !h-10 !w-10 !px-0 shrink-0" title="К страницам" onClick={() => nav(adminUrl('/pages'))}>
           <ArrowLeft size={18} />
         </button>
@@ -813,7 +854,7 @@ export function PageBuilderPage() {
       </header>
 
       {(selectedId || selectedPart) && (
-        <div className="flex h-8 shrink-0 items-center gap-2 overflow-x-auto border-b border-white/10 bg-[#121214] px-3 text-xs text-zinc-400">
+        <div className="builder-breadcrumb flex h-8 shrink-0 items-center gap-2 overflow-x-auto border-b border-white/[0.06] px-3 text-xs text-zinc-400">
           <span className="shrink-0 text-zinc-500">Редактируете:</span>
           {selectionPath.map((el, i) => (
             <span key={el.id} className="flex shrink-0 items-center gap-2">
@@ -842,18 +883,18 @@ export function PageBuilderPage() {
       )}
 
       <div className="relative flex min-h-0 flex-1">
-        <aside className="hidden w-64 shrink-0 flex-col border-r border-white/10 bg-[#101012] lg:flex">
+        <aside className="builder-sidepanel builder-sidepanel--left hidden w-[17.5rem] shrink-0 flex-col border-r border-white/[0.06] lg:flex">
           {leftPanelBody}
         </aside>
 
         <main
           ref={canvasScrollRef}
-          className="admin-quiet-scroll min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-[#08080a] p-0 pb-[calc(4.25rem+env(safe-area-inset-bottom))] lg:p-4 lg:pb-4"
+          className="builder-canvas-scroll admin-quiet-scroll min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-0 pb-[calc(4.25rem+env(safe-area-inset-bottom))] lg:p-5 lg:pb-5"
         >
           {canvas}
         </main>
 
-        <aside className="admin-quiet-scroll hidden w-72 shrink-0 overflow-y-auto border-l border-white/10 bg-[#101012] p-4 lg:block">
+        <aside className="builder-sidepanel builder-sidepanel--right admin-quiet-scroll hidden w-[18.5rem] shrink-0 overflow-y-auto border-l border-white/[0.06] p-4 lg:block">
           {propsPanelBody}
         </aside>
 
@@ -1052,12 +1093,15 @@ function PageSettings({
   scheduledAt,
   isHome,
   siteName,
+  layout,
   onSlug,
   onSeoTitle,
   onSeoDescription,
   onOgImageId,
   onScheduledAt,
   onIsHome,
+  onLayoutMeta,
+  onEnableSnapPages,
 }: {
   slug: string
   seoTitle: string
@@ -1066,12 +1110,15 @@ function PageSettings({
   scheduledAt: string
   isHome: boolean
   siteName: string
+  layout: PageLayout
   onSlug: (v: string) => void
   onSeoTitle: (v: string) => void
   onSeoDescription: (v: string) => void
   onOgImageId: (v: string | number | null) => void
   onScheduledAt: (v: string) => void
   onIsHome: (v: boolean) => void
+  onLayoutMeta: (patch: Record<string, unknown>) => void
+  onEnableSnapPages: () => void
 }) {
   const titleLen = seoTitle.length
   const descLen = seoDescription.length
@@ -1084,9 +1131,56 @@ function PageSettings({
   const scheduleFuture = Boolean(
     scheduleDate && !Number.isNaN(scheduleDate.getTime()) && scheduleDate.getTime() > Date.now(),
   )
+  const scrollSnap = String(layout.meta?.scroll_snap || 'none')
+  const scrollSmooth = layout.meta?.scroll_smooth !== false
+  const snapHeight = String(layout.meta?.snap_height || '100dvh')
 
   return (
     <div className="space-y-4">
+      <div>
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">Скролл страницы</p>
+        <label className="mb-3 block space-y-1 text-xs text-zinc-400">
+          Перелистывание секций
+          <select
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm text-white"
+            value={scrollSnap}
+            onChange={(e) => onLayoutMeta({ scroll_snap: e.target.value })}
+          >
+            <option value="none">Обычный скролл</option>
+            <option value="proximity">Snap · мягкий</option>
+            <option value="mandatory">Snap · как страницы</option>
+          </select>
+        </label>
+        <label className="mb-3 flex items-center gap-2 text-sm text-zinc-300">
+          <input
+            type="checkbox"
+            checked={scrollSmooth}
+            onChange={(e) => onLayoutMeta({ scroll_smooth: e.target.checked })}
+          />
+          Плавный scroll-behavior
+        </label>
+        <label className="mb-3 block space-y-1 text-xs text-zinc-400">
+          Высота секции-страницы
+          <input
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm text-white"
+            value={snapHeight}
+            onChange={(e) => onLayoutMeta({ snap_height: e.target.value })}
+            placeholder="100dvh"
+          />
+          <span className="text-[11px] text-zinc-600">Для секций без своего min-height, когда включён snap</span>
+        </label>
+        <button
+          type="button"
+          className="builder-tool mb-4 w-full justify-start !px-3"
+          onClick={onEnableSnapPages}
+          title="Включить mandatory snap + 100dvh + fade-up на все секции"
+        >
+          Включить «страницы» для всех секций
+        </button>
+        <p className="mb-4 text-[11px] leading-4 text-zinc-600">
+          Колесо / свайп будет останавливаться на секциях. Анимацию появления задайте у каждой секции.
+        </p>
+      </div>
       <div>
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">URL и SEO</p>
         <label className="mb-3 block space-y-1 text-xs text-zinc-400">
@@ -1193,24 +1287,31 @@ function WidgetPalette({
 }) {
   return (
     <div>
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">{title}</p>
-      <div className="grid grid-cols-2 gap-2">
-        {items.map((w) => (
-          <button
-            key={w.type}
-            type="button"
-            draggable
-            title="Клик — добавить · drag — на колонку"
-            onClick={() => onAdd(w.type)}
-            onDragStart={(e) => {
-              e.dataTransfer.setData('application/x-builder-widget', w.type)
-              e.dataTransfer.effectAllowed = 'copy'
-            }}
-            className="cursor-grab rounded-lg border border-white/10 px-2 py-3 text-center text-[11px] text-zinc-400 active:cursor-grabbing hover:bg-white/5 hover:text-white"
-          >
-            {w.label}
-          </button>
-        ))}
+      <p className="builder-palette-label mb-2">{title}</p>
+      <div className="grid grid-cols-3 gap-2">
+        {items.map((w) => {
+          const Icon = widgetIcon(w.type, w.category)
+          const tone = widgetIconTone(w.category)
+          return (
+            <button
+              key={w.type}
+              type="button"
+              draggable
+              title={`${w.label} · клик — добавить · drag — на колонку`}
+              onClick={() => onAdd(w.type)}
+              onDragStart={(e) => {
+                e.dataTransfer.setData('application/x-builder-widget', w.type)
+                e.dataTransfer.effectAllowed = 'copy'
+              }}
+              className="builder-palette-tile cursor-grab active:cursor-grabbing"
+            >
+              <span className={clsx('builder-palette-tile__icon', tone)}>
+                <Icon size={18} strokeWidth={1.75} />
+              </span>
+              <span className="builder-palette-tile__label">{w.label}</span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )
@@ -1297,19 +1398,23 @@ function InsertSlot({
               <p className="px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-zinc-600">
                 {PALETTE_LABELS[cat] ?? cat}
               </p>
-              {items.map((w) => (
-                <button
-                  key={w.type}
-                  type="button"
-                  className="flex min-h-11 w-full items-center rounded-lg px-2 py-2 text-left text-sm text-zinc-300 hover:bg-white/10 hover:text-white lg:min-h-0 lg:rounded-md lg:px-1.5 lg:py-1 lg:text-[11px]"
-                  onClick={() => {
-                    onInsert('widget', parentId, index, w.type)
-                    setOpen(false)
-                  }}
-                >
-                  {w.label}
-                </button>
-              ))}
+              {items.map((w) => {
+                const Icon = widgetIcon(w.type, w.category)
+                return (
+                  <button
+                    key={w.type}
+                    type="button"
+                    className="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-zinc-300 hover:bg-white/10 hover:text-white lg:min-h-0 lg:rounded-md lg:px-1.5 lg:py-1 lg:text-[11px]"
+                    onClick={() => {
+                      onInsert('widget', parentId, index, w.type)
+                      setOpen(false)
+                    }}
+                  >
+                    <Icon size={14} className={clsx('shrink-0 opacity-90', widgetIconTone(w.category))} />
+                    <span className="truncate">{w.label}</span>
+                  </button>
+                )
+              })}
             </div>
           ))}
         </div>
@@ -1963,7 +2068,7 @@ function ElementSettings({
     return (
       <div className="space-y-4">
         <h3 className="font-heading text-sm font-semibold">Секция</h3>
-        <p className="text-[11px] text-zinc-500">Только эта секция</p>
+        <p className="text-[11px] text-zinc-500">Layout · атмосфера · анимация · responsive</p>
         <VisibilityControl hidden={hidden} onChange={(v) => commit({ hidden: v })} />
         <label className={fieldClass('paddingY')}>
           Отступ по вертикали
@@ -1972,6 +2077,47 @@ function ElementSettings({
         <label className={fieldClass('gap')}>
           Gap между колонками
           <input className="w-full" value={String(settings.gap ?? '1.5rem')} onChange={(e) => commit({ gap: e.target.value })} />
+        </label>
+        <label className={fieldClass('htmlId')}>
+          HTML id (якорь)
+          <input className="w-full" value={String(settings.htmlId ?? '')} onChange={(e) => commit({ htmlId: e.target.value })} placeholder="how-it-works" />
+        </label>
+        <label className={fieldClass('min_height')}>
+          Min-height
+          <input className="w-full" value={String(settings.min_height ?? '')} onChange={(e) => commit({ min_height: e.target.value })} placeholder="100dvh / 70vh" />
+        </label>
+        <label className={fieldClass('v_align')}>
+          Вертикаль контента
+          <select className="w-full" value={String(settings.v_align ?? 'start')} onChange={(e) => commit({ v_align: e.target.value })}>
+            <option value="start">Сверху</option>
+            <option value="center">По центру</option>
+            <option value="end">Снизу</option>
+          </select>
+        </label>
+        <label className={fieldClass('scroll_snap')}>
+          Snap этой секции
+          <select className="w-full" value={String(settings.scroll_snap ?? 'auto')} onChange={(e) => commit({ scroll_snap: e.target.value })}>
+            <option value="auto">Как у страницы</option>
+            <option value="start">Всегда · start</option>
+            <option value="center">Всегда · center</option>
+            <option value="end">Всегда · end</option>
+            <option value="off">Выкл (не стопорить)</option>
+          </select>
+        </label>
+        <label className={fieldClass('snap_stop')}>
+          Snap stop
+          <select className="w-full" value={String(settings.snap_stop ?? 'always')} onChange={(e) => commit({ snap_stop: e.target.value })}>
+            <option value="always">Always (как страница)</option>
+            <option value="normal">Normal</option>
+          </select>
+        </label>
+        <label className={fieldClass('content_max_width')}>
+          Max-width контента
+          <input className="w-full" value={String(settings.content_max_width ?? '')} onChange={(e) => commit({ content_max_width: e.target.value })} placeholder="72rem" />
+        </label>
+        <label className={clsx(fieldClass('full_bleed'), 'flex items-center gap-2')}>
+          <input type="checkbox" checked={settings.full_bleed === true} onChange={(e) => commit({ full_bleed: e.target.checked })} />
+          Full-bleed (без контейнера)
         </label>
         <div className={fieldClass('background')}>
           <ColorControl
@@ -1983,6 +2129,43 @@ function ElementSettings({
             emptyHint="прозрачный"
           />
         </div>
+        <div className={fieldClass('overlay')}>
+          <ColorControl
+            label="Оверлей"
+            value={String(settings.overlay ?? '')}
+            onChange={(v) => commit({ overlay: v })}
+            allowGradient
+            allowEmpty
+            emptyHint="нет"
+          />
+        </div>
+        <label className={fieldClass('overlay_opacity')}>
+          Прозрачность оверлея (0–1)
+          <input className="w-full" value={String(settings.overlay_opacity ?? '0.35')} onChange={(e) => commit({ overlay_opacity: e.target.value })} />
+        </label>
+        <label className={clsx(fieldClass('glow'), 'flex items-center gap-2')}>
+          <input type="checkbox" checked={settings.glow === true} onChange={(e) => commit({ glow: e.target.checked })} />
+          Glow / атмосфера (радиальные пятна)
+        </label>
+        <label className={fieldClass('animation')}>
+          Анимация появления
+          <select className="w-full" value={String(settings.animation ?? 'none')} onChange={(e) => commit({ animation: e.target.value })}>
+            <option value="none">Нет</option>
+            <option value="fade-up">Fade up</option>
+            <option value="fade">Fade</option>
+            <option value="slide-up">Slide up</option>
+            <option value="scale-in">Scale in</option>
+            <option value="blur-up">Blur up</option>
+          </select>
+        </label>
+        <label className={clsx(fieldClass('hide_on_mobile'), 'flex items-center gap-2')}>
+          <input type="checkbox" checked={settings.hide_on_mobile === true} onChange={(e) => commit({ hide_on_mobile: e.target.checked })} />
+          Скрыть на мобиле
+        </label>
+        <label className={clsx(fieldClass('hide_on_desktop'), 'flex items-center gap-2')}>
+          <input type="checkbox" checked={settings.hide_on_desktop === true} onChange={(e) => commit({ hide_on_desktop: e.target.checked })} />
+          Скрыть на десктопе
+        </label>
         <StyleFields
           styles={readStyles(rawSettings)}
           onChange={(patch) => commit({ styles: { ...readStyles(rawSettings), ...patch } })}
@@ -2004,6 +2187,14 @@ function ElementSettings({
           Ширина %
           <input className="w-full" type="number" min={10} max={100} value={Number(settings.width || 100)} onChange={(e) => commit({ width: Number(e.target.value) })} />
         </label>
+        <label className={clsx(fieldClass('hide_on_mobile'), 'flex items-center gap-2')}>
+          <input type="checkbox" checked={settings.hide_on_mobile === true} onChange={(e) => commit({ hide_on_mobile: e.target.checked })} />
+          Скрыть на мобиле
+        </label>
+        <label className={clsx(fieldClass('hide_on_desktop'), 'flex items-center gap-2')}>
+          <input type="checkbox" checked={settings.hide_on_desktop === true} onChange={(e) => commit({ hide_on_desktop: e.target.checked })} />
+          Скрыть на десктопе
+        </label>
         <StyleFields
           styles={readStyles(rawSettings)}
           onChange={(patch) => commit({ styles: { ...readStyles(rawSettings), ...patch } })}
@@ -2016,7 +2207,11 @@ function ElementSettings({
   }
 
   const widgetLabel = def?.label ?? element.widgetType ?? 'Виджет'
-  const partLabel = selectedPart ? (PART_LABELS[selectedPart] ?? selectedPart) : null
+  const partLabel = selectedPart
+    ? (PART_LABELS[selectedPart]
+      ?? allFields.find((f) => f.key === selectedPart)?.label
+      ?? selectedPart)
+    : null
 
   // Focused part inspector — only the selected object inside the widget.
   if (selectedPart) {
