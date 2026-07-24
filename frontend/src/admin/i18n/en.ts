@@ -413,6 +413,10 @@ export const resources: Record<string, string> = {
   automations: 'Automation',
   notifications: 'Notifications',
   newsletter: 'Newsletter',
+  'newsletter-subscribers': 'Subscribers',
+  'newsletter-campaigns': 'Campaigns',
+  comments: 'Comments',
+  analytics: 'Analytics',
   users: 'Users',
   products: 'Products',
 }

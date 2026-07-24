@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-07-24 — fix: platform modules holes — automation, forms, payments, analytics
+
+- EventDispatcher/Automation: subscribers no longer break form submit
+- Scheduler lazy tick only when plugin enabled
+- PermissionMiddleware: module DELETE exempt from content.delete
+- Forms: submission_id in form.submitted; update_submission by public_id
+- Payments: dispatch payment.completed; hide duplicate Orders nav
+- Contact widget routes to /forms/contact when Forms on
+- Newsletter fresh status; notifications opt-out defaults
+- FE: plugin gates, CSV Bearer download, NotificationsBell perm, AnalyticsBeacon
+- MCP zip marker check via Node EOCD (no spa.html false negative)
+
 ## 2026-07-24 — Platform modules: Forms, Scheduler, Automation, Notifications, Newsletter, Orders, Comments, Analytics
 
 - Scheduler job queue + CLI/HTTP/lazy tick

@@ -5,6 +5,7 @@ import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { registerModule } from '@/core/moduleRegistry'
 import type { PluginState } from '@/core/moduleRegistry'
 import { useHydratedForm } from '@/admin/hooks/useAdminFormGuards'
+import { usePluginEnabled } from '@/hooks/useApi'
 
 type MailConfig = {
   captcha_provider: string
@@ -220,22 +221,26 @@ export function ContactFormWidget({
   editMode?: boolean
 }) {
   const title = String(settings.title || 'Написать нам')
+  const formsOn = usePluginEnabled('forms')
   const [status, setStatus] = useState('')
   const [csrf, setCsrf] = useState('')
   const [config, setConfig] = useState<MailConfig | null>(null)
   const [pending, setPending] = useState(false)
+  const [startedAt] = useState(() => Date.now())
 
   useEffect(() => {
+    // Legacy mail path needs CSRF/captcha; Forms path uses its own anti-bot.
+    if (formsOn) return
     void api.get<{ data: { csrf: string } }>('/mail/csrf').then((r) => {
       setCsrf((r as { data?: { csrf?: string } })?.data?.csrf ?? '')
     }).catch(() => setCsrf(''))
     void api.get<{ data: MailConfig }>('/mail/config').then((r) => {
       setConfig((r as { data?: MailConfig })?.data ?? null)
     }).catch(() => setConfig(null))
-  }, [])
+  }, [formsOn])
 
   useEffect(() => {
-    if (!config) return
+    if (!config || formsOn) return
     if (config.captcha_provider === 'turnstile' && config.turnstile_site_key) {
       if (!document.getElementById('cf-turnstile-script')) {
         const s = document.createElement('script')
@@ -254,7 +259,7 @@ export function ContactFormWidget({
         document.body.appendChild(s)
       }
     }
-  }, [config])
+  }, [config, formsOn])
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -264,30 +269,49 @@ export function ContactFormWidget({
     setPending(true)
     setStatus('')
     try {
-      const body: Record<string, unknown> = {
-        name: String(fd.get('name') || ''),
-        email: String(fd.get('email') || ''),
-        message: String(fd.get('message') || ''),
-        subject: String(fd.get('subject') || ''),
-        csrf,
-        captcha_token: String(fd.get('cf-turnstile-response') || fd.get('smart-token') || ''),
+      const name = String(fd.get('name') || '')
+      const email = String(fd.get('email') || '')
+      const message = String(fd.get('message') || '')
+      const subject = String(fd.get('subject') || '')
+      if (formsOn) {
+        const res = await api.post<{ data?: { message?: string } }>('/forms/contact/submit', {
+          values: { name, email, message, subject },
+          page_url: typeof window !== 'undefined' ? window.location.href : '',
+          website: '',
+          _hp: '',
+          _started_at: startedAt,
+        })
+        const messageText = (res as { data?: { message?: string } })?.data?.message
+          || 'Спасибо! Сообщение отправлено.'
+        setStatus(messageText)
+        form.reset()
+      } else {
+        const body: Record<string, unknown> = {
+          name,
+          email,
+          message,
+          subject,
+          csrf,
+          captcha_token: String(fd.get('cf-turnstile-response') || fd.get('smart-token') || ''),
+        }
+        const res = await api.post<{ message?: string; data?: { message?: string } }>('/mail/contact', body)
+        const messageText = (res as { message?: string })?.message
+          || (res as { data?: { message?: string } })?.data?.message
+          || config?.success_message
+          || 'Спасибо! Сообщение отправлено.'
+        setStatus(messageText)
+        form.reset()
+        const c = await api.get<{ data: { csrf: string } }>('/mail/csrf')
+        setCsrf((c as { data?: { csrf?: string } })?.data?.csrf ?? '')
       }
-      const res = await api.post<{ message?: string; data?: { message?: string } }>('/mail/contact', body)
-      const message = (res as { message?: string })?.message
-        || (res as { data?: { message?: string } })?.data?.message
-        || config?.success_message
-        || 'Спасибо! Сообщение отправлено.'
-      setStatus(message)
-      form.reset()
-      // Обновить CSRF после успешной отправки
-      const c = await api.get<{ data: { csrf: string } }>('/mail/csrf')
-      setCsrf((c as { data?: { csrf?: string } })?.data?.csrf ?? '')
     } catch (err) {
       setStatus(err instanceof Error ? err.message : 'Не удалось отправить')
     } finally {
       setPending(false)
     }
   }
+
+  const submitDisabled = pending || (!formsOn && !csrf)
 
   return (
     <div className="mx-auto w-full max-w-lg">
@@ -296,21 +320,21 @@ export function ContactFormWidget({
         {/* Honeypot — скрыто от людей, ловит ботов */}
         <input name="website" className="hidden" tabIndex={-1} autoComplete="off" aria-hidden />
         <input name="hp_field" className="hidden" tabIndex={-1} autoComplete="off" aria-hidden />
-        <input type="hidden" name="csrf" value={csrf} />
+        {!formsOn ? <input type="hidden" name="csrf" value={csrf} /> : null}
         <input required name="name" placeholder="Имя" autoComplete="name" maxLength={120} className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2" />
         <input required type="email" name="email" placeholder="Email" autoComplete="email" maxLength={255} className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2" />
         <textarea required name="message" placeholder="Сообщение" rows={5} maxLength={5000} className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2" />
-        {config?.captcha_provider === 'turnstile' && config.turnstile_site_key && (
+        {!formsOn && config?.captcha_provider === 'turnstile' && config.turnstile_site_key && (
           <div className="cf-turnstile" data-sitekey={config.turnstile_site_key} />
         )}
-        {config?.captcha_provider === 'smartcaptcha' && config.smartcaptcha_site_key && (
+        {!formsOn && config?.captcha_provider === 'smartcaptcha' && config.smartcaptcha_site_key && (
           <div
             id="captcha-container"
             className="smart-captcha"
             data-sitekey={config.smartcaptcha_site_key}
           />
         )}
-        <button type="submit" disabled={pending || !csrf} className="button w-full sm:w-auto">
+        <button type="submit" disabled={submitDisabled} className="button w-full sm:w-auto">
           {pending ? 'Отправка…' : 'Отправить'}
         </button>
         {status && <p className="text-sm text-[var(--muted)]">{status}</p>}

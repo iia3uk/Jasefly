@@ -187,12 +187,12 @@ final class SchedulerModule extends AbstractModule
     public static function maybeLazyTick(Database $db): void
     {
         try {
-            $settings = [];
             $reg = \App\Core\Container::getInstance()->get(\App\Core\ModuleRegistry::class);
             $mod = $reg->get('scheduler');
-            if ($mod) {
-                $settings = array_merge($mod->settings(), $reg->state()->getSettings($mod));
+            if (!$mod || !$reg->state()->isEnabled($mod)) {
+                return;
             }
+            $settings = array_merge($mod->settings(), $reg->state()->getSettings($mod));
             $mins = (int) ($settings['lazy_tick_minutes'] ?? 5);
             (new SchedulerTick($db))->lazyTick($mins, 3, 2);
         } catch (\Throwable) {

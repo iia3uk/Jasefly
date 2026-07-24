@@ -79,7 +79,8 @@ final class NotificationService
         $pref = $this->db->one(
             'SELECT is_enabled,types FROM notification_preferences WHERE user_id=? AND channel=?', [$userId, $channel]
         );
-        if (!$pref) return false;
+        // No preference row → opt-out model (deliver until user disables the channel).
+        if (!$pref) return true;
         if (!(bool) $pref['is_enabled']) return false;
         $types = json_decode((string) ($pref['types'] ?? '[]'), true);
         return !is_array($types) || $types === [] || in_array($type, $types, true);

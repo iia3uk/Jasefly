@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { Button, GlassPanel } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
+import { usePluginEnabled } from '@/hooks/useApi'
 
 export type NotificationRow = {
   id: number; type: string; title: string; body?: string; action_url?: string
@@ -14,7 +15,12 @@ export function NotificationsPage() {
 }
 function NotificationsInner() {
   const qc = useQueryClient()
-  const query = useQuery({ queryKey: ['notifications'], queryFn: async () => unpack<NotificationRow[]>(await api.get('/admin/notifications')) })
+  const pluginOn = usePluginEnabled('notifications')
+  const query = useQuery({
+    queryKey: ['notifications'],
+    enabled: pluginOn,
+    queryFn: async () => unpack<NotificationRow[]>(await api.get('/admin/notifications')),
+  })
   const read = useMutation({ mutationFn: (id: number) => api.post(`/admin/notifications/${id}/read`, {}),
     onSuccess: async () => { await qc.invalidateQueries({ queryKey: ['notifications'] }); await qc.invalidateQueries({ queryKey: ['notifications-unread'] }) } })
   const all = useMutation({ mutationFn: () => api.post('/admin/notifications/read-all', {}),

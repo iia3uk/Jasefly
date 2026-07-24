@@ -18,7 +18,7 @@ use App\Services\PermissionService;
 final class AutomationModule extends AbstractModule
 {
     private const EVENTS = [
-        'form.submitted', 'form.submission.status_changed', 'order.created', 'comment.created',
+        'form.submitted', 'form.submission.status_changed', 'order.created', 'order.paid', 'comment.created',
         'subscriber.created', 'payment.completed', 'user.registered', 'content.published', 'webhook.received',
     ];
 
@@ -43,13 +43,23 @@ final class AutomationModule extends AbstractModule
             $events = Container::getInstance()->get(EventDispatcher::class);
             foreach (self::EVENTS as $event) {
                 $events->subscribe($event, function (mixed $payload) use ($db, $engine, $event): void {
-                    $context = is_array($payload) ? $payload : ['payload' => $payload];
-                    $context['_event'] = $event;
-                    $rows = $db->all("SELECT * FROM automations WHERE status='active' AND trigger_type=?", [$event]);
-                    foreach ($rows as $row) {
-                        $sourceId = $context['id'] ?? $context['submission_id'] ?? $context['public_id'] ?? null;
-                        $key = $sourceId === null ? null : hash('sha256', $event . ':' . $sourceId . ':' . $row['id']);
-                        $engine->run($row, $context, $key);
+                    try {
+                        if (!$db->inspector()->tableExists('automations')) {
+                            return;
+                        }
+                        $context = is_array($payload) ? $payload : ['payload' => $payload];
+                        $context['_event'] = $event;
+                        $rows = $db->all("SELECT * FROM automations WHERE status='active' AND trigger_type=?", [$event]);
+                        foreach ($rows as $row) {
+                            $sourceId = $context['id']
+                                ?? $context['submission_id']
+                                ?? $context['submission_public_id']
+                                ?? $context['public_id']
+                                ?? null;
+                            $key = $sourceId === null ? null : hash('sha256', $event . ':' . $sourceId . ':' . $row['id']);
+                            $engine->run($row, $context, $key);
+                        }
+                    } catch (\Throwable) {
                     }
                 });
             }

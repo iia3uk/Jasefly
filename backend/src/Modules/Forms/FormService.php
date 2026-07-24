@@ -197,7 +197,9 @@ final class FormService
         $this->dispatch('form.submitted', [
             'form_id' => (int) $form['id'],
             'form_slug' => $form['slug'],
+            'submission_id' => $subId,
             'submission_public_id' => $publicId,
+            'public_id' => $publicId,
             'values' => $values,
         ]);
 

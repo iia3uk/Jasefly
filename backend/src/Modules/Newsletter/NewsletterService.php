@@ -45,7 +45,8 @@ final class NewsletterService
             );
         }
         if ($token !== '') $this->sendConfirmation($email, $token);
-        return ['id' => $id, 'status' => $existing['status'] ?? 'pending'];
+        $fresh = $this->db->one('SELECT status FROM subscribers WHERE id=?', [$id]);
+        return ['id' => $id, 'status' => (string) ($fresh['status'] ?? 'pending')];
     }
 
     public function confirm(string $token): bool

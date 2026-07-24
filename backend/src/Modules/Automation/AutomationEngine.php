@@ -201,9 +201,25 @@ final class AutomationEngine
 
     private function updateSubmission(array $c, array $ctx): array
     {
-        $id = (int) ($c['submission_id'] ?? $this->conditions->value($ctx, 'submission.id') ?? $ctx['submission_id'] ?? 0);
         $status = (string) ($c['status'] ?? '');
-        if ($id < 1 || !in_array($status, ['new', 'in_progress', 'resolved', 'spam', 'archived'], true)) {
+        if (!in_array($status, ['new', 'in_progress', 'resolved', 'spam', 'archived'], true)) {
+            throw new \RuntimeException('Invalid submission update');
+        }
+        $id = (int) ($c['submission_id'] ?? $this->conditions->value($ctx, 'submission.id') ?? $ctx['submission_id'] ?? 0);
+        if ($id < 1) {
+            $publicId = (string) (
+                $c['submission_public_id']
+                ?? $this->conditions->value($ctx, 'submission.public_id')
+                ?? $ctx['submission_public_id']
+                ?? $ctx['public_id']
+                ?? ''
+            );
+            if ($publicId !== '') {
+                $row = $this->db->one('SELECT id FROM form_submissions WHERE public_id=?', [$publicId]);
+                $id = (int) ($row['id'] ?? 0);
+            }
+        }
+        if ($id < 1) {
             throw new \RuntimeException('Invalid submission update');
         }
         $this->db->run('UPDATE form_submissions SET status=? WHERE id=?', [$status, $id]);
