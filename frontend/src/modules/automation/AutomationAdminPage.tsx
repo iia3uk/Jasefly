@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { Button, GhostButton, GlassPanel } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
+import { usePluginEnabled } from '@/hooks/useApi'
 
 type Automation = {
   id: number; name: string; description?: string; status: string; trigger_type: string
@@ -19,11 +20,19 @@ export function AutomationAdminPage() {
 
 function AutomationEditor() {
   const qc = useQueryClient()
+  const pluginOn = usePluginEnabled('automation')
   const [selected, setSelected] = useState<number | null>(null)
   const [form, setForm] = useState(empty)
-  const list = useQuery({ queryKey: ['automations'], queryFn: async () => data<Automation[]>(await api.get('/admin/automations')) })
-  const runs = useQuery({ queryKey: ['automation-runs', selected], enabled: !!selected,
-    queryFn: async () => data<Run[]>(await api.get(`/admin/automations/${selected}/runs`)) })
+  const list = useQuery({
+    queryKey: ['automations'],
+    enabled: pluginOn,
+    queryFn: async () => data<Automation[]>(await api.get('/admin/automations')),
+  })
+  const runs = useQuery({
+    queryKey: ['automation-runs', selected],
+    enabled: pluginOn && !!selected,
+    queryFn: async () => data<Run[]>(await api.get(`/admin/automations/${selected}/runs`)),
+  })
   const current = list.data?.find((item) => item.id === selected)
   useEffect(() => {
     if (!current) return

@@ -370,6 +370,7 @@ final class PaymentService
         if ($resolvedOrderId && in_array($status, ['succeeded', 'paid'], true)) {
             $this->syncOrderStatus($resolvedOrderId, 'paid');
             $this->decrementProductStock($resolvedOrderId);
+            $this->dispatchPaymentCompleted($resolvedOrderId, $providerId, $externalId, $amount, $currency);
         } elseif ($resolvedOrderId && in_array($status, ['failed', 'canceled', 'cancelled'], true)) {
             $this->syncOrderStatus($resolvedOrderId, 'cancelled');
         }
@@ -444,6 +445,29 @@ final class PaymentService
             }
         }
         $this->db->run('UPDATE orders SET status = ? WHERE id = ?', [$status, $orderId]);
+    }
+
+    private function dispatchPaymentCompleted(
+        int $orderId,
+        string $providerId,
+        string $externalId,
+        mixed $amount,
+        mixed $currency,
+    ): void {
+        try {
+            $c = \App\Core\Container::getInstance();
+            if (!$c->has(\App\Core\EventDispatcher::class)) {
+                return;
+            }
+            $c->get(\App\Core\EventDispatcher::class)->dispatch('payment.completed', [
+                'order_id' => $orderId,
+                'provider' => $providerId,
+                'external_id' => $externalId,
+                'amount' => $amount,
+                'currency' => $currency,
+            ]);
+        } catch (\Throwable) {
+        }
     }
 
     private function resolveProviderId(?string $requested): string

@@ -7,6 +7,7 @@ import { Button, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { useAuth } from '@/context/AuthContext'
 import { adminUrl } from '@/admin/adminBasePath'
+import { usePluginEnabled } from '@/hooks/useApi'
 
 type FormField = {
   name: string
@@ -68,6 +69,7 @@ function FormsAdminInner() {
   const qc = useQueryClient()
   const { can } = useAuth()
   const canManage = can('forms.manage')
+  const pluginOn = usePluginEnabled('forms')
   const [editId, setEditId] = useState<number | 'new' | null>(null)
   const [useJson, setUseJson] = useState(false)
   const [fieldsJson, setFieldsJson] = useState('[]')
@@ -83,12 +85,13 @@ function FormsAdminInner() {
 
   const forms = useQuery({
     queryKey: ['admin', 'forms'],
+    enabled: pluginOn,
     queryFn: async () => asData<FormRow[]>(await api.get('/admin/forms')),
   })
 
   const detail = useQuery({
     queryKey: ['admin', 'forms', editId],
-    enabled: typeof editId === 'number',
+    enabled: pluginOn && typeof editId === 'number',
     queryFn: async () => asData<FormRow>(await api.get(`/admin/forms/${editId}`)),
   })
 

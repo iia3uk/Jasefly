@@ -111,10 +111,33 @@ final class PaymentsModule extends AbstractModule
 
     public function adminNav(): array
     {
-        return [
-            ['group' => 'Коммерция', 'path' => '/admin/orders', 'label' => 'Заказы', 'permission' => 'commerce.manage', 'icon' => 'shopping-cart'],
+        $nav = [
             ['group' => 'Коммерция', 'path' => '/admin/payments', 'label' => 'Платежи', 'permission' => 'commerce.manage', 'icon' => 'credit-card'],
         ];
+        // Orders module owns /admin/orders when enabled — avoid duplicate sidebar entries.
+        try {
+            /** @var ModuleRegistry $registry */
+            $registry = Container::getInstance()->get(ModuleRegistry::class);
+            $orders = $registry->get('orders');
+            if (!$orders || !$registry->state()->isEnabled($orders)) {
+                array_unshift($nav, [
+                    'group' => 'Коммерция',
+                    'path' => '/admin/orders',
+                    'label' => 'Заказы',
+                    'permission' => 'commerce.manage',
+                    'icon' => 'shopping-cart',
+                ]);
+            }
+        } catch (\Throwable) {
+            array_unshift($nav, [
+                'group' => 'Коммерция',
+                'path' => '/admin/orders',
+                'label' => 'Заказы',
+                'permission' => 'commerce.manage',
+                'icon' => 'shopping-cart',
+            ]);
+        }
+        return $nav;
     }
 
     public function settingsSchema(): array

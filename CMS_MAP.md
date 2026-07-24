@@ -64,7 +64,7 @@
 | Товары / оплата | `modules/products|payments/` ↔ `Modules/Products|Payments/` |
 | Заказы / корзины / возвраты | `modules/orders/` ↔ `Modules/Orders/` + адаптер в `Payments/PaymentService.php` |
 | Комментарии / отзывы / рейтинги | `modules/comments/` ↔ `Modules/Comments/` + `builder/widgets/comments.tsx` |
-| Аналитика событий / целей | `modules/analytics/` ↔ `Modules/Analytics/` + `modules/analytics/beacon.ts` |
+| Аналитика событий / целей | `modules/analytics/` ↔ `Modules/Analytics/` + `beacon.ts` / `AnalyticsBeacon.tsx` (в SiteLayout) |
 | Медиа | `modules/media/` ↔ `Modules/Media/`, `Controllers/MediaController.php` |
 | Auth / users / 2FA | `context/AuthContext.tsx`, `Modules/Users/`, `Controllers/AuthController.php` |
 | Миграции SQL | `backend/migrations/*.sql` (+ plugin migrations в `Modules/*/migrations/`) |

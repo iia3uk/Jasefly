@@ -49,9 +49,14 @@ final class EventDispatcher
     public function dispatch(string $event, mixed $payload = null): mixed
     {
         foreach ($this->subscribers[$event] ?? [] as $sub) {
-            $result = ($sub['handler'])($payload);
-            if ($result !== null) {
-                $payload = $result;
+            try {
+                $result = ($sub['handler'])($payload);
+                if ($result !== null) {
+                    $payload = $result;
+                }
+            } catch (\Throwable $e) {
+                // One broken subscriber must not abort the publisher (forms, payments, …).
+                @error_log('EventDispatcher[' . $event . ']: ' . $e->getMessage());
             }
         }
         return $payload;

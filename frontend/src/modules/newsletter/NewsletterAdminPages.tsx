@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { Button, GhostButton, GlassPanel } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
+import { usePluginEnabled } from '@/hooks/useApi'
 
 type Subscriber = { id: number; email: string; name?: string; status: string; source?: string; created_at: string }
 type Campaign = { id: number; name: string; subject: string; html: string; text_body?: string; list_id?: number; status: string; sent_count: number }
@@ -13,16 +14,27 @@ export function NewsletterSubscribersPage() {
 }
 function Subscribers() {
   const qc = useQueryClient()
+  const pluginOn = usePluginEnabled('newsletter')
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
-  const rows = useQuery({ queryKey: ['newsletter-subscribers'], queryFn: async () => unpack<Subscriber[]>(await api.get('/admin/newsletter/subscribers')) })
+  const [exporting, setExporting] = useState(false)
+  const rows = useQuery({
+    queryKey: ['newsletter-subscribers'],
+    enabled: pluginOn,
+    queryFn: async () => unpack<Subscriber[]>(await api.get('/admin/newsletter/subscribers')),
+  })
   const add = useMutation({ mutationFn: () => api.post('/admin/newsletter/subscribers', { email, name }),
     onSuccess: async () => { setEmail(''); setName(''); await qc.invalidateQueries({ queryKey: ['newsletter-subscribers'] }) } })
+  const exportCsv = async () => {
+    setExporting(true)
+    try { await api.download('/admin/newsletter/subscribers/export', 'subscribers.csv') }
+    finally { setExporting(false) }
+  }
   return <div className="space-y-4"><div><h1 className="font-heading text-2xl">Подписчики</h1><p className="text-sm text-zinc-400">База рассылки, double opt-in и статусы.</p></div>
     <GlassPanel className="flex flex-wrap gap-2 p-4"><input className="min-w-64 flex-1 rounded-lg border border-white/10 bg-black/20 p-2" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" />
       <input className="rounded-lg border border-white/10 bg-black/20 p-2" value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя" />
       <Button onClick={() => add.mutate()} disabled={!email || add.isPending}>Добавить</Button>
-      <a className="button px-3 py-2 text-sm" href="/api/v1/admin/newsletter/subscribers/export">CSV</a></GlassPanel>
+      <GhostButton onClick={() => void exportCsv()} disabled={exporting}>{exporting ? 'CSV…' : 'CSV'}</GhostButton></GlassPanel>
     <GlassPanel className="overflow-x-auto p-0"><table className="w-full text-left text-sm"><thead className="text-zinc-500"><tr><th className="p-3">Email</th><th>Имя</th><th>Статус</th><th>Источник</th><th>Дата</th></tr></thead>
       <tbody>{rows.data?.map((s) => <tr key={s.id} className="border-t border-white/10"><td className="p-3">{s.email}</td><td>{s.name || '—'}</td><td>{s.status}</td><td>{s.source || '—'}</td><td>{s.created_at}</td></tr>)}</tbody></table></GlassPanel>
   </div>
@@ -34,10 +46,15 @@ export function NewsletterCampaignsPage() {
 }
 function Campaigns() {
   const qc = useQueryClient()
+  const pluginOn = usePluginEnabled('newsletter')
   const [selected, setSelected] = useState<number | null>(null)
   const [form, setForm] = useState(blank)
   const [testEmail, setTestEmail] = useState('')
-  const rows = useQuery({ queryKey: ['newsletter-campaigns'], queryFn: async () => unpack<Campaign[]>(await api.get('/admin/newsletter/campaigns')) })
+  const rows = useQuery({
+    queryKey: ['newsletter-campaigns'],
+    enabled: pluginOn,
+    queryFn: async () => unpack<Campaign[]>(await api.get('/admin/newsletter/campaigns')),
+  })
   const save = useMutation({ mutationFn: () => selected
     ? api.put(`/admin/newsletter/campaigns/${selected}`, { ...form, list_id: form.list_id || null })
     : api.post('/admin/newsletter/campaigns', { ...form, list_id: form.list_id || null }),

@@ -413,6 +413,10 @@ export const resources: Record<string, string> = {
   automations: 'Автоматизация',
   notifications: 'Уведомления',
   newsletter: 'Рассылки',
+  'newsletter-subscribers': 'Подписчики',
+  'newsletter-campaigns': 'Кампании',
+  comments: 'Комментарии',
+  analytics: 'Аналитика',
   users: 'Пользователи',
   products: 'Товары',
 }

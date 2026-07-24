@@ -5,6 +5,7 @@ import { api } from '@/lib/api'
 import { Button, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { useAuth } from '@/context/AuthContext'
+import { usePluginEnabled } from '@/hooks/useApi'
 
 type JobRow = {
   id: number
@@ -57,22 +58,25 @@ function SchedulerInner() {
   const qc = useQueryClient()
   const { can } = useAuth()
   const canManage = can('scheduler.manage')
+  const pluginOn = usePluginEnabled('scheduler')
   const [status, setStatus] = useState('all')
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
   const stats = useQuery({
     queryKey: ['admin', 'scheduler', 'stats'],
+    enabled: pluginOn,
     queryFn: async () => asData<SchedulerStats>(await api.get('/admin/scheduler/stats')),
-    refetchInterval: 8000,
+    refetchInterval: pluginOn ? 8000 : false,
   })
 
   const jobs = useQuery({
     queryKey: ['admin', 'scheduler', 'jobs', status],
+    enabled: pluginOn,
     queryFn: async () => {
       const q = status === 'all' ? '' : `?status=${encodeURIComponent(status)}`
       return asData<JobRow[]>(await api.get(`/admin/scheduler/jobs${q}`))
     },
-    refetchInterval: 5000,
+    refetchInterval: pluginOn ? 5000 : false,
   })
 
   const tick = useMutation({

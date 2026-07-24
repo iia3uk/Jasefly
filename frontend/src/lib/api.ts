@@ -148,6 +148,41 @@ function unwrap<T>(payload: ApiEnvelope<T> | T): T {
   return payload as T
 }
 
+/** Authenticated binary download (CSV exports etc.) — bare <a href> cannot send Bearer. */
+async function downloadFile(path: string, fallbackName = 'export.csv'): Promise<void> {
+  const token = localStorage.getItem('access_token')
+  const headers: Record<string, string> = {}
+  if (token) headers.Authorization = `Bearer ${token}`
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'GET',
+    headers,
+    credentials: 'same-origin',
+  })
+  if (!response.ok) {
+    const details = await parseErrorPayload(response, 'GET', path)
+    throw new ApiRequestError(details)
+  }
+  const blob = await response.blob()
+  let filename = fallbackName
+  const cd = response.headers.get('Content-Disposition') || ''
+  const match = /filename\*?=(?:UTF-8''|")?([^\";]+)/i.exec(cd)
+  if (match?.[1]) {
+    try {
+      filename = decodeURIComponent(match[1].replace(/"/g, '').trim())
+    } catch {
+      filename = match[1].replace(/"/g, '').trim()
+    }
+  }
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
 export const api = {
   get: <T>(path: string, options?: RequestOptions) => request<T>(path, 'GET', undefined, options),
   post: <T>(path: string, body?: unknown, options?: RequestOptions) => request<T>(path, 'POST', body, options),
@@ -155,6 +190,7 @@ export const api = {
   delete: <T>(path: string, options?: RequestOptions) => request<T>(path, 'DELETE', undefined, options),
   upload: <T>(path: string, form: FormData, options?: RequestOptions) =>
     request<T>(path, 'POST', form, { ...options, isForm: true }),
+  download: downloadFile,
 }
 
 type IDLike = string | number

@@ -33,10 +33,22 @@ final class PermissionMiddleware
         }
 
         if ($r->method === 'DELETE' && str_contains($r->path, '/admin/')) {
-            // Media hard-delete is also allowed via media.manage / POST destroy
-            if (!str_contains($r->path, '/admin/media')) {
+            // Domain plugins own their DELETE with module perms — don't force content.delete.
+            $moduleDeleteExempt =
+                str_contains($r->path, '/admin/media')
+                || str_contains($r->path, '/admin/forms')
+                || str_contains($r->path, '/admin/form-submissions')
+                || str_contains($r->path, '/admin/orders')
+                || str_contains($r->path, '/admin/comments')
+                || str_contains($r->path, '/admin/automations')
+                || str_contains($r->path, '/admin/newsletter')
+                || str_contains($r->path, '/admin/notifications')
+                || str_contains($r->path, '/admin/scheduler');
+            if (!$moduleDeleteExempt) {
                 $this->permissions->require($user, 'content.delete');
-            } elseif (!$this->permissions->can($user, 'media.manage') && !$this->permissions->can($user, 'content.delete')) {
+            } elseif (str_contains($r->path, '/admin/media')
+                && !$this->permissions->can($user, 'media.manage')
+                && !$this->permissions->can($user, 'content.delete')) {
                 $this->permissions->require($user, 'media.manage');
             }
         }

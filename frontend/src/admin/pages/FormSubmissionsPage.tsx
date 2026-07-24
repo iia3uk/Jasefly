@@ -7,6 +7,7 @@ import { GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { useAuth } from '@/context/AuthContext'
 import { adminUrl } from '@/admin/adminBasePath'
+import { usePluginEnabled } from '@/hooks/useApi'
 
 type SubmissionRow = {
   id: number
@@ -56,6 +57,7 @@ function FormSubmissionsInner() {
   const qc = useQueryClient()
   const { can } = useAuth()
   const canManage = can('forms.submissions.manage')
+  const pluginOn = usePluginEnabled('forms')
   const [params, setParams] = useSearchParams()
   const formId = Number(params.get('form_id') || 0) || 0
   const [status, setStatus] = useState(params.get('status') || 'all')
@@ -71,6 +73,7 @@ function FormSubmissionsInner() {
 
   const submissions = useQuery({
     queryKey: ['admin', 'form-submissions', formId, status],
+    enabled: pluginOn,
     queryFn: async () => {
       const q = new URLSearchParams()
       if (formId > 0) q.set('form_id', String(formId))
@@ -78,12 +81,12 @@ function FormSubmissionsInner() {
       const qs = q.toString()
       return asData<SubmissionRow[]>(await api.get(`/admin/form-submissions${qs ? `?${qs}` : ''}`))
     },
-    refetchInterval: 8000,
+    refetchInterval: pluginOn ? 8000 : false,
   })
 
   const detail = useQuery({
     queryKey: ['admin', 'form-submissions', selectedId],
-    enabled: selectedId != null,
+    enabled: pluginOn && selectedId != null,
     queryFn: async () => asData<SubmissionDetail>(await api.get(`/admin/form-submissions/${selectedId}`)),
   })
 

@@ -17,6 +17,7 @@ import { SupportWidget } from '@/components/SupportWidget'
 import { TranslateAutoWarmup } from '@/components/TranslateAutoWarmup'
 import { SnapSectionRail } from '@/components/layout/SnapSectionRail'
 import { useCookieConsent } from '@/lib/cookieConsent'
+import { AnalyticsBeacon } from '@/modules/analytics/AnalyticsBeacon'
 
 function parseJson<T>(value: unknown, fallback: T): T {
   if (value == null) return fallback
@@ -348,6 +349,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       <TranslateWidget />
       <SupportWidget />
       <TranslateAutoWarmup />
+      <AnalyticsBeacon />
     </>
   )
 }

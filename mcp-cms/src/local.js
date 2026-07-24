@@ -65,6 +65,52 @@ function resolvePhpBin() {
   return fromEnv || 'php';
 }
 
+/**
+ * List zip entry names via local file EOCD/central directory (no shell).
+ * @param {string} zipPath
+ * @returns {string[]}
+ */
+function listZipEntryNames(zipPath) {
+  const fd = fs.openSync(zipPath, 'r');
+  try {
+    const size = fs.fstatSync(fd).size;
+    if (size < 22) throw new Error('ZIP too small');
+    const tailSize = Math.min(size, 65557 + 22);
+    const tail = Buffer.alloc(tailSize);
+    fs.readSync(fd, tail, 0, tailSize, size - tailSize);
+    let eocd = -1;
+    for (let i = tail.length - 22; i >= 0; i -= 1) {
+      if (tail.readUInt32LE(i) === 0x06054b50) {
+        eocd = i;
+        break;
+      }
+    }
+    if (eocd < 0) throw new Error('ZIP EOCD not found');
+    const cdSize = tail.readUInt32LE(eocd + 12);
+    const cdOffset = tail.readUInt32LE(eocd + 16);
+    const totalEntries = tail.readUInt16LE(eocd + 10);
+    if (cdOffset === 0xffffffff || cdSize === 0xffffffff) {
+      throw new Error('ZIP64 not supported for marker check');
+    }
+    const cd = Buffer.alloc(cdSize);
+    fs.readSync(fd, cd, 0, cdSize, cdOffset);
+    /** @type {string[]} */
+    const names = [];
+    let off = 0;
+    while (off + 46 <= cd.length && names.length < (totalEntries || 1_000_000)) {
+      if (cd.readUInt32LE(off) !== 0x02014b50) break;
+      const nameLen = cd.readUInt16LE(off + 28);
+      const extraLen = cd.readUInt16LE(off + 30);
+      const commentLen = cd.readUInt16LE(off + 32);
+      names.push(cd.subarray(off + 46, off + 46 + nameLen).toString('utf8'));
+      off += 46 + nameLen + extraLen + commentLen;
+    }
+    return names;
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
 /** Newest jasefly-cms-update-*.zip under release/ */
 export function findLatestUpdateZip() {
   const release = path.join(repoRoot(), 'release');
@@ -162,29 +208,27 @@ export function localTest() {
     return { ok: false, error: `ZIP пропал: ${zip}`, gate: readGate() };
   }
 
-  // List zip entries: prefer .NET ZipFile on Windows (tar -tf can return odd paths mid-write).
-  let listing = '';
-  const ps = run(
-    'powershell',
-    ['-NoProfile', '-Command', `Add-Type -AssemblyName System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::OpenRead('${zip.replace(/'/g, "''")}').Entries | ForEach-Object { $_.FullName }`],
-    { cwd: root, timeoutMs: 120000, fullOutput: true },
-  );
-  if (ps.ok && ps.stdout.trim()) {
-    listing = ps.stdout;
-  } else {
+  // Pure Node central-directory listing — no PowerShell/tar (shell listings were flaky / truncated).
+  let entryNames = [];
+  try {
+    entryNames = listZipEntryNames(zip);
+  } catch (e) {
     const tarList = run('tar', ['-tf', zip], { cwd: root, timeoutMs: 120000, fullOutput: true });
-    listing = tarList.ok ? tarList.stdout : '';
+    entryNames = tarList.ok
+      ? tarList.stdout.split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
+      : [];
     checks.push({
       name: 'zip_list',
-      ok: Boolean(listing),
-      detail: listing ? 'listed' : (ps.stderr || tarList.stderr || '').slice(0, 500),
+      ok: entryNames.length > 0,
+      detail: entryNames.length
+        ? 'tar fallback'
+        : ((e instanceof Error ? e.message : String(e)) + ' | ' + (tarList.stderr || '')).slice(0, 500),
     });
   }
 
   const need = ['spa.html', 'index.php', 'api/src/Bootstrap.php', 'api/public/index.php'];
   const norms = new Set(
-    listing
-      .split(/\r?\n/)
+    entryNames
       .map((line) => line.replace(/^\.\//, '').replace(/\\/g, '/').replace(/^\/+/, '').trim())
       .filter(Boolean),
   );
@@ -193,13 +237,14 @@ export function localTest() {
     for (const e of norms) {
       if (e === n || e.endsWith('/' + n)) return false;
     }
-    return !listing.replace(/\\/g, '/').includes(n);
+    return false;
   });
   checks.push({
     name: 'zip_markers',
     ok: miss.length === 0,
     missing: miss,
-    entries_sample: listing.split(/\r?\n/).filter(Boolean).slice(0, 15),
+    entries_sample: entryNames.slice(0, 15),
+    entries_total: entryNames.length,
   });
 
   if (miss.length) {
