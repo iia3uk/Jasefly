@@ -18,6 +18,8 @@ import { TranslateAutoWarmup } from '@/components/TranslateAutoWarmup'
 import { SnapSectionRail } from '@/components/layout/SnapSectionRail'
 import { useCookieConsent } from '@/lib/cookieConsent'
 import { AnalyticsBeacon } from '@/modules/analytics/AnalyticsBeacon'
+import { SiteBreadcrumbs } from '@/components/layout/SiteBreadcrumbs'
+import { useContactInfo } from '@/hooks/useApi'
 
 function parseJson<T>(value: unknown, fallback: T): T {
   if (value == null) return fallback
@@ -234,11 +236,15 @@ export function Header() {
 
 export function Footer() {
   const { site } = useSiteContext()
+  const { data: contact } = useContactInfo()
   const year = new Date().getFullYear()
   const copyright = (site?.footer?.copyright_text || '').replace('{year}', String(year))
   const columns = parseJson(site?.footer?.columns_json, [] as Array<{ title?: string; links?: Array<{ label: string; href: string }> }>)
   const footerNav = site?.footer_nav ?? []
   const social = site?.social ?? []
+  const email = (contact?.email || '').trim()
+  const phone = (contact?.phone || '').trim()
+  const address = [contact?.address, contact?.city, contact?.country].filter(Boolean).join(', ')
 
   const footerHref = (href: string) => {
     const h = (href || '').trim()
@@ -255,6 +261,13 @@ export function Footer() {
             {site?.footer?.tagline && (
               <p className="mt-3 max-w-sm text-sm leading-6 text-[var(--muted)]">{site.footer.tagline}</p>
             )}
+            {(email || phone || address) ? (
+              <address className="mt-4 space-y-1 text-sm not-italic leading-6 text-[var(--muted)]">
+                {email ? <div><a className="link-text" href={`mailto:${email}`}>{email}</a></div> : null}
+                {phone ? <div><a className="link-text" href={`tel:${phone.replace(/\s+/g, '')}`}>{phone}</a></div> : null}
+                {address ? <div>{address}</div> : null}
+              </address>
+            ) : null}
             {!!site?.footer?.show_social && (
               <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3">
                 {social.map((s) => (
@@ -331,6 +344,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       <AdminBar />
       <div style={token ? { paddingTop: 'var(--admin-bar-h, 36px)' } : undefined}>
         <Header />
+        <SiteBreadcrumbs />
         {/* Only this node scrolls when page snap is on (html/body overflow hidden). */}
         <div id="cms-snap-scroller" className="min-w-0">
           {customHtml ? (

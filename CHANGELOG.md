@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-07-24 — Fix: admin API was cached — contact messages mark-read looked frozen
+
+- Exclude /api/* from HTML Cache-Control max-age=300 on index.php
+- API responses: private no-store (htaccess + Response::json)
+- ContactMessagesPage: optimistic mark-read + refetchQueries
+
+## 2026-07-24 — SEO: Beget checklist — Last-Modified, cache, terms, breadcrumbs, analyzer prerender
+
+- Last-Modified + Cache-Control max-age=300 for HTML
+- Expand bot/analyzer UA (Beget) + SEO H1 fallback in SPA shell
+- HandheldFriendly / MobileOptimized meta
+- WebPage/Person/BreadcrumbList/ContactPoint JSON-LD
+- Site breadcrumbs UI + footer contacts when set
+- /terms page + footer/nav links
+
 ## 2026-07-24 — fix: platform modules holes — automation, forms, payments, analytics
 
 - EventDispatcher/Automation: subscribers no longer break form submit

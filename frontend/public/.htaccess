@@ -48,7 +48,7 @@ RewriteCond %{REQUEST_URI} !^/index\.php
 RewriteCond %{REQUEST_URI} !^/admin
 # Exclude static .html (Yandex/Google verification files at site root)
 RewriteCond %{REQUEST_URI} !\.(js|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|map|txt|xml|html)$ [NC]
-RewriteCond %{HTTP_USER_AGENT} (googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegrambot|discordbot|applebot|petalbot|semrushbot|ahrefsbot|mj12bot|dotbot|bytespider|gptbot|claudebot|google-inspectiontool|chrome-lighthouse) [NC]
+RewriteCond %{HTTP_USER_AGENT} (googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegrambot|discordbot|applebot|petalbot|semrushbot|ahrefsbot|mj12bot|dotbot|bytespider|gptbot|claudebot|google-inspectiontool|chrome-lighthouse|beget|site-?analyzer|screaming\ frog|serpstat|megaindex|crawler|spider|preview|httpclient|python-requests) [NC]
 RewriteRule ^(.*)$ prerender.php?path=/$1 [L,QSA]
 
 # Explicit prerender for testing: /projects?prerender=1
@@ -91,15 +91,17 @@ RewriteRule ^ index.php [L,QSA]
   SetEnvIf Request_URI "^/apple-touch-icon\.png$" BRAND_ASSET
   Header set Cache-Control "public, max-age=300, must-revalidate" env=BRAND_ASSET
 
+  # HTML shell only — /api/* goes to api/public/index.php; never cache API JSON.
+  SetEnvIf Request_URI "^/api/" IS_API
   <Files "index.php">
-    Header set Cache-Control "no-cache, must-revalidate"
+    Header set Cache-Control "public, max-age=300, must-revalidate" env=!IS_API
   </Files>
 
   <Files "spa.html">
-    Header set Cache-Control "no-cache, must-revalidate"
+    Header set Cache-Control "public, max-age=300, must-revalidate"
   </Files>
 
   <Files "prerender.php">
-    Header set Cache-Control "public, max-age=60, must-revalidate"
+    Header set Cache-Control "public, max-age=300, must-revalidate"
   </Files>
 </IfModule>

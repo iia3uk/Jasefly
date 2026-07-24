@@ -657,6 +657,19 @@ export function PrivacyPage() {
   )
 }
 
+export function TermsPage() {
+  const { data } = usePage('terms')
+  return (
+    <Section className="pt-10 sm:pt-14">
+      <Container className="max-w-3xl">
+        <SeoHead title={data?.seo_title || data?.title || 'Условия использования'} path="/terms" description={data?.seo_description} />
+        <h1 className="font-heading text-[2.1rem] font-semibold tracking-[-0.04em] sm:text-4xl">{data?.title || 'Условия использования'}</h1>
+        <div className="mt-6 sm:mt-8"><RichText html={data?.content} /></div>
+      </Container>
+    </Section>
+  )
+}
+
 export function NotFoundPage() {
   const { data } = useSite()
   const [q, setQ] = useState('')

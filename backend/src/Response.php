@@ -9,6 +9,9 @@ final class Response
     {
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
+        // API JSON is user-specific; never allow shared/proxy HTML-shell TTL to stick.
+        header('Cache-Control: private, no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
 
         if (is_array($data) && (array_key_exists('data', $data) || array_key_exists('error', $data))) {
             $payload = $data;

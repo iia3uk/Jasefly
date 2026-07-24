@@ -13,7 +13,7 @@ import { t } from '@/admin/i18n'
 /** Always treat these as system templates (even if plugin-gated out of the API list). */
 const ALWAYS_SYSTEM_SLUGS = new Set([
   ...Object.keys(SLUG_PLUGIN_GATES),
-  'privacy', 'not-found', 'admin-login', 'register', 'lazy-loader', 'maintenance',
+  'privacy', 'terms', 'not-found', 'admin-login', 'register', 'lazy-loader', 'maintenance',
   'payment', 'payment-success', 'payment-fail', 'offer', 'products', 'product-card', 'product-detail',
 ])
 

@@ -302,17 +302,26 @@ export function ContactMessagesPage() {
 
   const refreshLists = async () => {
     await Promise.all([
-      client.invalidateQueries({ queryKey: ['admin', 'contact-messages'] }),
+      client.refetchQueries({ queryKey: ['admin', 'contact-messages'] }),
       client.invalidateQueries({ queryKey: ['dashboard'] }),
     ])
   }
 
+  const patchReadLocal = (ids: Array<string | number>) => {
+    const set = new Set(ids.map(String))
+    client.setQueryData<ContactMessage[]>(['admin', 'contact-messages'], (prev) =>
+      (prev ?? []).map((m) => (set.has(String(m.id)) ? { ...m, is_read: 1 } : m)),
+    )
+  }
+
   const markRead = async (id: string | number) => {
     setBusyId(id)
+    patchReadLocal([id])
     try {
-      await api.post(`/admin/contact-messages/${id}/mark-read`)
+      await api.post(`/admin/contact-messages/${id}/mark-read`, {})
       await refreshLists()
     } catch (e) {
+      await refreshLists()
       window.alert(e instanceof Error ? e.message : t.markReadFail)
     } finally {
       setBusyId(null)
@@ -323,12 +332,14 @@ export function ContactMessagesPage() {
     const unread = data.filter((m) => Number(m.is_read ?? 0) === 0)
     if (!unread.length) return
     setBusyAll(true)
+    patchReadLocal(unread.map((m) => m.id))
     try {
       for (const m of unread) {
-        await api.post(`/admin/contact-messages/${m.id}/mark-read`)
+        await api.post(`/admin/contact-messages/${m.id}/mark-read`, {})
       }
       await refreshLists()
     } catch (e) {
+      await refreshLists()
       window.alert(e instanceof Error ? e.message : t.markReadFail)
     } finally {
       setBusyAll(false)
