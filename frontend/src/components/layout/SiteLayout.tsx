@@ -239,6 +239,12 @@ export function Footer() {
   const footerNav = site?.footer_nav ?? []
   const social = site?.social ?? []
 
+  const footerHref = (href: string) => {
+    const h = (href || '').trim()
+    const external = /^https?:\/\//i.test(h) || h.startsWith('mailto:') || h.startsWith('tel:')
+    return { href: h, external }
+  }
+
   return (
     <footer className="cms-snap-footer border-t border-white/[0.06] pt-12 pb-8 sm:pt-16 sm:pb-10">
       <Container>
@@ -263,11 +269,22 @@ export function Footer() {
             <div key={col.title}>
               <p className="text-sm font-medium">{col.title}</p>
               <div className="mt-4 space-y-2">
-                {col.links?.map((l) => (
-                  <Link key={l.href + l.label} to={l.href} className="link-text block text-sm text-[var(--muted)]">
-                    {l.label}
-                  </Link>
-                ))}
+                {col.links?.map((l) => {
+                  const { href, external } = footerHref(l.href)
+                  if (!href) return null
+                  if (external) {
+                    return (
+                      <a key={href + l.label} href={href} className="link-text block text-sm text-[var(--muted)]" target="_blank" rel="noreferrer">
+                        {l.label}
+                      </a>
+                    )
+                  }
+                  return (
+                    <Link key={href + l.label} to={href} className="link-text block text-sm text-[var(--muted)]">
+                      {l.label}
+                    </Link>
+                  )
+                })}
               </div>
             </div>
           ))}
@@ -275,11 +292,22 @@ export function Footer() {
             <div>
               <p className="text-sm font-medium">Навигация</p>
               <div className="mt-4 space-y-2">
-                {footerNav.map((n) => (
-                  <Link key={String(n.id)} to={n.href} className="link-text block text-sm text-[var(--muted)]">
-                    {n.label}
-                  </Link>
-                ))}
+                {footerNav.map((n) => {
+                  const { href, external } = footerHref(n.href)
+                  if (!href) return null
+                  if (external) {
+                    return (
+                      <a key={String(n.id)} href={href} className="link-text block text-sm text-[var(--muted)]" target="_blank" rel="noreferrer">
+                        {n.label}
+                      </a>
+                    )
+                  }
+                  return (
+                    <Link key={String(n.id)} to={href} className="link-text block text-sm text-[var(--muted)]">
+                      {n.label}
+                    </Link>
+                  )
+                })}
               </div>
             </div>
           )}
