@@ -28,6 +28,7 @@ const BlogPage = publicPage('BlogPage')
 const BlogPostPage = publicPage('BlogPostPage')
 const ContactPage = publicPage('ContactPage')
 const PrivacyPage = publicPage('PrivacyPage')
+const TermsPage = publicPage('TermsPage')
 const NotFoundPage = publicPage('NotFoundPage')
 
 function RequireAuth() {
@@ -157,6 +158,7 @@ export function AppRouter() {
           <Route path="/blog/:slug" element={<PluginOr404 plugin="blog"><BlogPostPage /></PluginOr404>} />
           <Route path="/contact" element={<CmsOr slug="contact" path="/contact"><ContactPage /></CmsOr>} />
           <Route path="/privacy" element={<CmsOr slug="privacy" path="/privacy"><PrivacyPage /></CmsOr>} />
+          <Route path="/terms" element={<CmsOr slug="terms" path="/terms"><TermsPage /></CmsOr>} />
           <Route path="/:slug" element={<CmsSlugPage />} />
           <Route path="*" element={<CmsOr slug="not-found" path="/not-found"><NotFoundPage /></CmsOr>} />
         </Route>

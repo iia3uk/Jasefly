@@ -21,6 +21,11 @@ final class PrerenderService
         'telegrambot', 'discordbot', 'applebot', 'petalbot', 'semrushbot',
         'ahrefsbot', 'mj12bot', 'dotbot', 'bytespider', 'gptbot', 'claudebot',
         'storebot-google', 'google-inspectiontool', 'chrome-lighthouse',
+        // Site analyzers / hosting checkers (Beget etc.) — need HTML snapshot, not empty SPA shell.
+        'beget', 'site-analyzer', 'siteanalyzer', 'screaming frog', 'serpstat',
+        'megaindex', 'majestic', 'rogerbot', 'embedly', 'quora link preview',
+        'showyoubot', 'outbrain', 'pinterest', 'slackbot', 'vkshare', 'w3c_validator',
+        'validator.w3.org', 'preview', 'crawler', 'spider', 'httpclient', 'python-requests',
     ];
 
     public function __construct(
@@ -127,8 +132,11 @@ final class PrerenderService
         $meta[] = '<meta name="twitter:card" content="summary_large_image">';
         $meta[] = '<meta name="twitter:title" content="' . $ogTitleEsc . '">';
         $meta[] = '<meta name="twitter:description" content="' . $ogDescEsc . '">';
+        $meta[] = '<meta name="HandheldFriendly" content="true">';
+        $meta[] = '<meta name="MobileOptimized" content="width">';
         $meta[] = '<meta name="jasefly-spa-shell" content="1">';
-        $jsonLd = $this->seoJsonLdTag($seo, $site, $base, $title, $desc);
+        $updatedAt = $this->pageUpdatedAt($path, is_array($page) ? $page : []);
+        $jsonLd = $this->seoJsonLdTag($seo, $site, $base, $title, $desc, $path, $updatedAt);
         if ($jsonLd !== '') {
             $meta[] = $jsonLd;
         }
@@ -138,9 +146,16 @@ final class PrerenderService
         $html = preg_replace('/<meta\s+name=["\']description["\'][^>]*>\s*/i', '', $html) ?? $html;
         $html = preg_replace('/<meta\s+property=["\']og:[^"\']+["\'][^>]*>\s*/i', '', $html) ?? $html;
         $html = preg_replace('/<meta\s+name=["\']twitter:[^"\']+["\'][^>]*>\s*/i', '', $html) ?? $html;
+        $html = preg_replace('/<meta\s+name=["\']HandheldFriendly["\'][^>]*>\s*/i', '', $html) ?? $html;
+        $html = preg_replace('/<meta\s+name=["\']MobileOptimized["\'][^>]*>\s*/i', '', $html) ?? $html;
         $html = preg_replace('/<link\s+rel=["\']canonical["\'][^>]*>\s*/i', '', $html) ?? $html;
         $html = preg_replace(
             '/<script\s+type=["\']application\/ld\+json["\']\s+data-jasefly-seo=["\']1["\'][^>]*>.*?<\/script>\s*/is',
+            '',
+            $html
+        ) ?? $html;
+        $html = preg_replace(
+            '/<!--jasefly-seo-fallback-->.*?<!--\/jasefly-seo-fallback-->\s*/is',
             '',
             $html
         ) ?? $html;
@@ -149,7 +164,30 @@ final class PrerenderService
             $html = preg_replace('/<\/head>/i', $block . '</head>', $html, 1) ?? $html;
         }
 
+        // Crawlable H1 + text + internal links for non-JS analyzers (Beget etc.).
+        $fallback = $this->spaSeoFallbackHtml($title, $desc, $path);
+        if ($fallback !== '' && preg_match('/<div\s+id=["\']root["\'][^>]*>/i', $html)) {
+            $html = preg_replace(
+                '/(<div\s+id=["\']root["\'][^>]*>)/i',
+                $fallback . '$1',
+                $html,
+                1
+            ) ?? $html;
+        }
+
         return $html;
+    }
+
+    /** HTTP Last-Modified timestamp for the resolved path (unix seconds). */
+    public function lastModifiedUnix(string $path): ?int
+    {
+        $path = $this->normalizePath($path);
+        $ts = $this->pageUpdatedAt($path, []);
+        if ($ts === null) {
+            return null;
+        }
+        $unix = strtotime($ts);
+        return $unix !== false ? $unix : null;
     }
 
     public function cacheDir(): string
@@ -1008,7 +1046,34 @@ final class PrerenderService
         }
         $siteNameEsc = $this->e($siteNameRaw);
 
-        $jsonLd = $this->seoJsonLdTag($seo, $site, $base, $title, $metaDesc);
+        $updatedAt = $this->pageUpdatedAt($path, []);
+        $jsonLd = $this->seoJsonLdTag($seo, $site, $base, $title, $metaDesc, $path, $updatedAt);
+        $crumbs = $this->breadcrumbNavHtml($path, $title);
+        $contact = $this->db->one('SELECT email, phone, address, city, country FROM contact_info LIMIT 1') ?: [];
+        $contactBits = [];
+        if (!empty($contact['email'])) {
+            $contactBits[] = '<a href="mailto:' . $this->e((string) $contact['email']) . '">'
+                . $this->e((string) $contact['email']) . '</a>';
+        }
+        if (!empty($contact['phone'])) {
+            $tel = preg_replace('/\s+/', '', (string) $contact['phone']) ?? '';
+            $contactBits[] = '<a href="tel:' . $this->e($tel) . '">' . $this->e((string) $contact['phone']) . '</a>';
+        }
+        $addr = trim(implode(', ', array_filter([
+            (string) ($contact['address'] ?? ''),
+            (string) ($contact['city'] ?? ''),
+            (string) ($contact['country'] ?? ''),
+        ])));
+        if ($addr !== '') {
+            $contactBits[] = $this->e($addr);
+        }
+        $contactHtml = $contactBits !== []
+            ? '<p>' . implode(' · ', $contactBits) . '</p>'
+            : '';
+        $dateHtml = $updatedAt
+            ? '<p><time datetime="' . $this->e(substr($updatedAt, 0, 10)) . '">Обновлено: '
+                . $this->e(substr($updatedAt, 0, 10)) . '</time></p>'
+            : '';
 
         return <<<HTML
 <!DOCTYPE html>
@@ -1016,6 +1081,8 @@ final class PrerenderService
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="HandheldFriendly" content="true">
+<meta name="MobileOptimized" content="width">
 <title>{$titleEsc}</title>
 <meta name="description" content="{$descEsc}">
 <meta name="robots" content="index,follow">
@@ -1033,15 +1100,32 @@ final class PrerenderService
 <style>
 body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem;line-height:1.55;color:#111}
 nav{margin-bottom:1.5rem} nav a{margin-right:.75rem}
+ol.breadcrumbs{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:.35rem;font-size:.9rem;color:#555}
+ol.breadcrumbs li:not(:last-child)::after{content:"/";margin-left:.35rem;color:#999}
 a{color:#0b57d0} h1{font-size:1.75rem} h2{font-size:1.25rem;margin-top:1.5rem}
+footer{margin-top:2rem;padding-top:1rem;border-top:1px solid #ddd;font-size:.9rem;color:#444}
 </style>
 </head>
 <body data-prerender="1" data-prerender-status="{$statusAttr}">
-<header><nav aria-label="Основная навигация">{$navHtml}</nav></header>
+<header>
+<nav aria-label="Основная навигация">{$navHtml}</nav>
+{$crumbs}
+</header>
 <main>
 {$body}
+{$dateHtml}
 </main>
-<footer><p><a href="{$canonEsc}">Открыть интерактивную версию сайта</a></p></footer>
+<footer>
+{$contactHtml}
+<p>
+<a href="/privacy">Конфиденциальность</a> ·
+<a href="/terms">Условия использования</a> ·
+<a href="/contact">Контакты</a> ·
+<a href="/about">О проекте</a> ·
+<a href="/docs">Документация</a>
+</p>
+<p><a href="{$canonEsc}">Открыть интерактивную версию сайта</a></p>
+</footer>
 </body>
 </html>
 HTML;
@@ -1121,7 +1205,7 @@ HTML;
     }
 
     /**
-     * Organization + WebSite JSON-LD with optional areaServed from seo_settings.target_regions.
+     * Organization + WebSite (+ WebPage / Breadcrumb / ContactPoint) JSON-LD.
      *
      * @param array<string, mixed> $seo
      * @param array<string, mixed> $site
@@ -1132,6 +1216,8 @@ HTML;
         string $baseUrl,
         string $title,
         string $description,
+        string $path = '/',
+        ?string $updatedAt = null,
     ): string {
         $name = trim((string) ($site['site_name'] ?? ''));
         if ($name === '') {
@@ -1182,16 +1268,176 @@ HTML;
         }
         $organization['alternateName'] = 'Jasefly';
 
-        $graph = [
-            '@context' => 'https://schema.org',
-            '@graph' => [$organization, $website],
+        $contact = $this->db->one('SELECT email, phone, address, city, country FROM contact_info LIMIT 1') ?: [];
+        $contactPoint = [];
+        if (!empty($contact['email']) && filter_var((string) $contact['email'], FILTER_VALIDATE_EMAIL)) {
+            $contactPoint['email'] = (string) $contact['email'];
+        }
+        if (!empty($contact['phone'])) {
+            $contactPoint['telephone'] = (string) $contact['phone'];
+        }
+        if ($contactPoint !== []) {
+            $contactPoint['@type'] = 'ContactPoint';
+            $contactPoint['contactType'] = 'customer support';
+            $contactPoint['availableLanguage'] = ['ru', 'en'];
+            $organization['contactPoint'] = $contactPoint;
+        }
+        $addrLine = trim(implode(', ', array_filter([
+            (string) ($contact['address'] ?? ''),
+            (string) ($contact['city'] ?? ''),
+            (string) ($contact['country'] ?? ''),
+        ])));
+        if ($addrLine !== '') {
+            $organization['address'] = [
+                '@type' => 'PostalAddress',
+                'streetAddress' => (string) ($contact['address'] ?? $addrLine),
+                'addressLocality' => (string) ($contact['city'] ?? ''),
+                'addressCountry' => (string) ($contact['country'] ?? ''),
+            ];
+        }
+
+        $profile = $this->db->one('SELECT name, job_title FROM profile LIMIT 1') ?: [];
+        $authorName = trim((string) ($profile['job_title'] ?? $profile['name'] ?? 'IIA3UK'));
+        if ($authorName === '') {
+            $authorName = 'IIA3UK';
+        }
+        $person = [
+            '@type' => 'Person',
+            '@id' => $url . '/#author',
+            'name' => $authorName,
+            'url' => $url . '/about',
         ];
-        $json = json_encode($graph, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        $pageUrl = $url . ($path === '/' ? '/' : $path);
+        $webPage = [
+            '@type' => 'WebPage',
+            '@id' => $pageUrl . '#webpage',
+            'url' => $pageUrl,
+            'name' => $title !== '' ? $title : $name,
+            'isPartOf' => ['@id' => $url . '/#website'],
+            'about' => ['@id' => $url . '/#organization'],
+            'author' => ['@id' => $url . '/#author'],
+        ];
+        if ($pageDesc !== '') {
+            $webPage['description'] = $pageDesc;
+        }
+        if ($updatedAt) {
+            $iso = date('c', strtotime($updatedAt) ?: time());
+            $webPage['dateModified'] = $iso;
+            if (!isset($webPage['datePublished'])) {
+                $webPage['datePublished'] = $iso;
+            }
+        }
+
+        $graph = [$organization, $website, $person, $webPage];
+        $crumbs = $this->breadcrumbListNodes($url, $path, $title);
+        if ($crumbs !== null) {
+            $graph[] = $crumbs;
+        }
+
+        $payload = [
+            '@context' => 'https://schema.org',
+            '@graph' => $graph,
+        ];
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if (!is_string($json) || $json === '') {
             return '';
         }
 
         return '<script type="application/ld+json" data-jasefly-seo="1">' . $json . '</script>';
+    }
+
+    /** @param array<string, mixed> $page */
+    private function pageUpdatedAt(string $path, array $page): ?string
+    {
+        foreach (['updated_at', 'published_at', 'created_at'] as $key) {
+            $v = trim((string) ($page[$key] ?? ''));
+            if ($v !== '') {
+                return $v;
+            }
+        }
+        try {
+            if ($path === '/') {
+                $row = $this->db->one("SELECT updated_at FROM pages WHERE is_home=1 LIMIT 1");
+            } else {
+                $slug = trim($path, '/');
+                $row = $this->db->one('SELECT updated_at FROM pages WHERE slug=? LIMIT 1', [$slug]);
+            }
+            $v = trim((string) ($row['updated_at'] ?? ''));
+            return $v !== '' ? $v : null;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function spaSeoFallbackHtml(string $title, string $desc, string $path): string
+    {
+        $h1 = $title !== '' ? $title : 'Jasefly CMS';
+        $p = $desc !== '' ? $desc : 'Модульная CMS на PHP и MySQL с Page Builder и MCP.';
+        $links = [
+            ['/', 'Главная'],
+            ['/features', 'Возможности'],
+            ['/docs', 'Документация'],
+            ['/blog', 'Блог'],
+            ['/about', 'О проекте'],
+            ['/contact', 'Контакты'],
+            ['/privacy', 'Конфиденциальность'],
+            ['/terms', 'Условия использования'],
+        ];
+        $nav = '';
+        foreach ($links as [$href, $label]) {
+            $nav .= '<li><a href="' . $this->e($href) . '">' . $this->e($label) . '</a></li>';
+        }
+        $crumbs = $this->breadcrumbNavHtml($path, $h1);
+        return '<!--jasefly-seo-fallback-->'
+            . '<section id="jasefly-seo-fallback" aria-label="Содержание страницы для поисковых систем" '
+            . 'style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;'
+            . 'clip:rect(0,0,0,0);white-space:nowrap;border:0">'
+            . $crumbs
+            . '<h1>' . $this->e($h1) . '</h1>'
+            . '<p>' . $this->e($p) . '</p>'
+            . '<nav aria-label="Разделы сайта"><ul>' . $nav . '</ul></nav>'
+            . '</section><!--/jasefly-seo-fallback-->';
+    }
+
+    private function breadcrumbNavHtml(string $path, string $title): string
+    {
+        if ($path === '/' || $path === '') {
+            return '';
+        }
+        $label = $title !== '' ? $title : trim($path, '/');
+        return '<nav aria-label="Хлебные крошки"><ol class="breadcrumbs">'
+            . '<li><a href="/">Главная</a></li>'
+            . '<li aria-current="page">' . $this->e($label) . '</li>'
+            . '</ol></nav>';
+    }
+
+    /** @return array<string, mixed>|null */
+    private function breadcrumbListNodes(string $baseUrl, string $path, string $title): ?array
+    {
+        if ($path === '/' || $path === '') {
+            return null;
+        }
+        $pageUrl = $baseUrl . $path;
+        $label = $title !== '' ? $title : trim($path, '/');
+        return [
+            '@type' => 'BreadcrumbList',
+            '@id' => $pageUrl . '#breadcrumb',
+            'itemListElement' => [
+                [
+                    '@type' => 'ListItem',
+                    'position' => 1,
+                    'name' => 'Главная',
+                    'item' => $baseUrl . '/',
+                ],
+                [
+                    '@type' => 'ListItem',
+                    'position' => 2,
+                    'name' => $label,
+                    'item' => $pageUrl,
+                ],
+            ],
+        ];
     }
 
     private function rich(string $html): string

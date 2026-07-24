@@ -15,10 +15,10 @@ type MailConfig = {
 }
 
 const PRESETS: Record<string, { host: string; port: number; encryption: string }> = {
+  beget: { host: 'smtp.beget.com', port: 465, encryption: 'ssl' },
   mailru: { host: 'smtp.mail.ru', port: 465, encryption: 'ssl' },
   yandex: { host: 'smtp.yandex.ru', port: 465, encryption: 'ssl' },
   gmail: { host: 'smtp.gmail.com', port: 587, encryption: 'tls' },
-  beget: { host: 'smtp.beget.com', port: 465, encryption: 'ssl' },
 }
 
 export function MailSettingsPage() {

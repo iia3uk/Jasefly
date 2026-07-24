@@ -258,6 +258,8 @@ function publicApiHtaccess() {
     '  Header always set X-Frame-Options "DENY"',
     '  Header always set Referrer-Policy "strict-origin-when-cross-origin"',
     '  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"',
+    // Authenticated JSON must never be publicly cached (Beget/proxy + admin lists).
+    '  Header always set Cache-Control "private, no-store, no-cache, must-revalidate"',
     '</IfModule>',
     '',
   ].join('\n');
@@ -346,7 +348,7 @@ function rootHtaccess() {
     'RewriteCond %{REQUEST_URI} !^/admin',
     // Exclude static .html (Yandex/Google webmaster verification at site root)
     'RewriteCond %{REQUEST_URI} !\\.(js|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|map|txt|xml|html)$ [NC]',
-    'RewriteCond %{HTTP_USER_AGENT} (googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegrambot|discordbot|applebot|petalbot|semrushbot|ahrefsbot|mj12bot|dotbot|bytespider|gptbot|claudebot|google-inspectiontool|chrome-lighthouse) [NC]',
+    'RewriteCond %{HTTP_USER_AGENT} (googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegrambot|discordbot|applebot|petalbot|semrushbot|ahrefsbot|mj12bot|dotbot|bytespider|gptbot|claudebot|google-inspectiontool|chrome-lighthouse|beget|site-?analyzer|screaming\\ frog|serpstat|megaindex|crawler|spider|preview|httpclient|python-requests) [NC]',
     'RewriteRule ^(.*)$ prerender.php?path=/$1 [L,QSA]',
     '',
     'RewriteCond %{QUERY_STRING} (^|&)(_escaped_fragment_|prerender=1)(&|$) [NC]',
@@ -382,14 +384,17 @@ function rootHtaccess() {
     '  SetEnvIf Request_URI "^/assets/" IMMUTABLE_ASSET',
     '  Header set Cache-Control "public, max-age=31536000, immutable" env=IMMUTABLE_ASSET',
     '',
+    // HTML shell only. /api/* rewrites to api/public/index.php — must NOT inherit
+    // public max-age (stale admin lists: contact-messages mark-read looked "frozen").
+    '  SetEnvIf Request_URI "^/api/" IS_API',
     '  <Files "index.php">',
-    '    Header set Cache-Control "no-cache, must-revalidate"',
+    '    Header set Cache-Control "public, max-age=300, must-revalidate" env=!IS_API',
     '  </Files>',
     '  <Files "spa.html">',
-    '    Header set Cache-Control "no-cache, must-revalidate"',
+    '    Header set Cache-Control "public, max-age=300, must-revalidate"',
     '  </Files>',
     '  <Files "prerender.php">',
-    '    Header set Cache-Control "public, max-age=60, must-revalidate"',
+    '    Header set Cache-Control "public, max-age=300, must-revalidate"',
     '  </Files>',
     '</IfModule>',
     '',
@@ -859,6 +864,19 @@ try {
     $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
     $svc = new PrerenderService($db, $app);
 
+    $sendCacheHeaders = static function (PrerenderService $svc, string $path): void {
+        header('Cache-Control: public, max-age=300, must-revalidate');
+        $lm = $svc->lastModifiedUnix($path);
+        if ($lm !== null) {
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $lm) . ' GMT');
+            $ims = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? null;
+            if (is_string($ims) && $ims !== '' && strtotime($ims) !== false && strtotime($ims) >= $lm) {
+                http_response_code(304);
+                exit;
+            }
+        }
+    };
+
     if ($force || PrerenderService::isBot($ua)) {
         try {
             $result = $svc->render($path);
@@ -868,6 +886,7 @@ try {
             }
             http_response_code((int) ($result['status'] ?? 200));
             header('Content-Type: text/html; charset=utf-8');
+            $sendCacheHeaders($svc, $path);
             header('X-Prerender: ' . (!empty($result['cached']) ? 'cache' : 'fresh'));
             header('X-Robots-Tag: all');
             echo (string) ($result['html'] ?? '');
@@ -892,7 +911,7 @@ try {
     }
     $html = (string) file_get_contents($spa);
     header('Content-Type: text/html; charset=utf-8');
-    header('Cache-Control: no-cache, no-store, must-revalidate');
+    $sendCacheHeaders($svc, $path);
     header('X-Jasefly-Shell: enriched');
     echo $svc->enrichSpaHtml($html, $path);
     exit;

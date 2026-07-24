@@ -3,7 +3,7 @@ const STORAGE_KEY = 'jasefly_admin_base'
 
 const RESERVED_PUBLIC = new Set([
   'api', 'assets', 'static', 'media', 'register', 'login', 'logout',
-  'about', 'projects', 'services', 'products', 'blog', 'contact', 'privacy',
+  'about', 'projects', 'services', 'products', 'blog', 'contact', 'privacy', 'terms',
   'search', 'sitemap', 'robots', 'maintenance', 'not-found',
 ])
 
