@@ -109,7 +109,12 @@ final class PrerenderService
         if ($canonical !== '') {
             $meta[] = '<link rel="canonical" href="' . $canonEsc . '">';
         }
+        $siteName = trim((string) ($site['site_name'] ?? ''));
+        if ($siteName === '') {
+            $siteName = 'Jasefly';
+        }
         $meta[] = '<meta property="og:type" content="website">';
+        $meta[] = '<meta property="og:site_name" content="' . $this->e($siteName) . '">';
         $meta[] = '<meta property="og:title" content="' . $ogTitleEsc . '">';
         $meta[] = '<meta property="og:description" content="' . $ogDescEsc . '">';
         if ($canonical !== '') {
@@ -117,6 +122,7 @@ final class PrerenderService
         }
         if (is_string($ogImage) && $ogImage !== '') {
             $meta[] = '<meta property="og:image" content="' . $this->e($ogImage) . '">';
+            $meta[] = '<meta name="twitter:image" content="' . $this->e($ogImage) . '">';
         }
         $meta[] = '<meta name="twitter:card" content="summary_large_image">';
         $meta[] = '<meta name="twitter:title" content="' . $ogTitleEsc . '">';
@@ -695,13 +701,21 @@ final class PrerenderService
             $type = (string) ($el['widgetType'] ?? $el['type'] ?? '');
             $settings = is_array($el['settings'] ?? null) ? $el['settings'] : [];
 
-            if ($type === 'hero') {
-                $headline = trim((string) ($settings['headline'] ?? ''));
-                $sub = trim((string) ($settings['subheadline'] ?? ''));
-                if ($headline !== '') {
-                    $chunks[] = '<h1>' . $this->e($headline) . '</h1>';
+            if ($type === 'hero' || $type === 'hero-block') {
+                // Classic portfolio hero uses headline/subheadline; landing hero-block uses title_1/title_2/body.
+                $headline = trim((string) ($settings['headline'] ?? $settings['title_1'] ?? ''));
+                $title2 = trim((string) ($settings['title_2'] ?? ''));
+                $sub = trim((string) ($settings['subheadline'] ?? $settings['body'] ?? ''));
+                if ($headline !== '' || $title2 !== '') {
+                    $h1 = $headline;
+                    if ($title2 !== '') {
+                        $h1 = $h1 !== '' ? ($h1 . ' ' . $title2) : $title2;
+                    }
+                    if (!$this->chunksHaveTag($chunks, 'h1')) {
+                        $chunks[] = '<h1>' . $this->e($h1) . '</h1>';
+                    }
                     if ($desc === '') {
-                        $desc = $this->plain($sub !== '' ? $sub : $headline, 160);
+                        $desc = $this->plain($sub !== '' ? $sub : $h1, 160);
                     }
                 }
                 if ($sub !== '') {
@@ -712,6 +726,8 @@ final class PrerenderService
                     [
                         ['primary_cta_label', 'primary_cta_href'],
                         ['secondary_cta_label', 'secondary_cta_href'],
+                        ['cta1_label', 'cta1_href'],
+                        ['cta2_label', 'cta2_href'],
                     ] as [$lk, $hk]
                 ) {
                     $label = trim((string) ($settings[$lk] ?? ''));
@@ -722,6 +738,80 @@ final class PrerenderService
                 }
                 if ($ctaBits !== []) {
                     $chunks[] = '<p>' . implode(' · ', $ctaBits) . '</p>';
+                }
+            } elseif (in_array($type, ['showcase-block', 'compare-block', 'cta-block'], true)) {
+                $title = trim((string) ($settings['title'] ?? ''));
+                $body = trim((string) ($settings['body'] ?? $settings['subtitle'] ?? ''));
+                if ($title !== '') {
+                    $chunks[] = '<h2>' . $this->e($title) . '</h2>';
+                }
+                if ($body !== '') {
+                    $chunks[] = '<p>' . $this->e($body) . '</p>';
+                }
+                $points = trim((string) ($settings['points'] ?? ''));
+                if ($points !== '') {
+                    $lines = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $points) ?: [])));
+                    if ($lines !== []) {
+                        $chunks[] = '<ul>';
+                        foreach ($lines as $line) {
+                            $chunks[] = '<li>' . $this->e($line) . '</li>';
+                        }
+                        $chunks[] = '</ul>';
+                    }
+                }
+                if ($type === 'compare-block') {
+                    $leftTitle = trim((string) ($settings['left_title'] ?? ''));
+                    $rightTitle = trim((string) ($settings['right_title'] ?? ''));
+                    $leftItems = trim((string) ($settings['left_items'] ?? ''));
+                    $rightItems = trim((string) ($settings['right_items'] ?? ''));
+                    if ($leftTitle !== '' || $leftItems !== '') {
+                        if ($leftTitle !== '') {
+                            $chunks[] = '<h3>' . $this->e($leftTitle) . '</h3>';
+                        }
+                        foreach (array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $leftItems) ?: [])) as $line) {
+                            $chunks[] = '<p>' . $this->e($line) . '</p>';
+                        }
+                    }
+                    if ($rightTitle !== '' || $rightItems !== '') {
+                        if ($rightTitle !== '') {
+                            $chunks[] = '<h3>' . $this->e($rightTitle) . '</h3>';
+                        }
+                        foreach (array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $rightItems) ?: [])) as $line) {
+                            $chunks[] = '<p>' . $this->e($line) . '</p>';
+                        }
+                    }
+                }
+                if ($type === 'cta-block') {
+                    $ctaBits = [];
+                    foreach ([['cta1_label', 'cta1_href'], ['cta2_label', 'cta2_href']] as [$lk, $hk]) {
+                        $label = trim((string) ($settings[$lk] ?? ''));
+                        $href = trim((string) ($settings[$hk] ?? ''));
+                        if ($label !== '') {
+                            $ctaBits[] = '<a href="' . $this->e($href !== '' ? $href : '#') . '">' . $this->e($label) . '</a>';
+                        }
+                    }
+                    if ($ctaBits !== []) {
+                        $chunks[] = '<p>' . implode(' · ', $ctaBits) . '</p>';
+                    }
+                }
+            } elseif ($type === 'steps-row') {
+                $items = is_array($settings['items'] ?? null) ? $settings['items'] : [];
+                if ($items !== []) {
+                    $chunks[] = '<ol>';
+                    foreach ($items as $item) {
+                        if (!is_array($item)) {
+                            continue;
+                        }
+                        $it = trim((string) ($item['title'] ?? ''));
+                        $text = trim((string) ($item['text'] ?? ''));
+                        if ($it === '' && $text === '') {
+                            continue;
+                        }
+                        $chunks[] = '<li><strong>' . $this->e($it !== '' ? $it : '—') . '</strong>'
+                            . ($text !== '' ? ' — ' . $this->e($text) : '')
+                            . '</li>';
+                    }
+                    $chunks[] = '</ol>';
                 }
             } elseif ($type === 'heading' && !empty($settings['text'])) {
                 $tag = in_array(($settings['tag'] ?? 'h2'), ['h1', 'h2', 'h3', 'h4'], true) ? $settings['tag'] : 'h2';
@@ -908,10 +998,16 @@ final class PrerenderService
             }
         }
         $ogImageTag = $ogImage
-            ? '<meta property="og:image" content="' . $this->e($ogImage) . '">'
+            ? '<meta property="og:image" content="' . $this->e($ogImage) . '">' . "\n"
+              . '<meta name="twitter:image" content="' . $this->e($ogImage) . '">'
             : '';
-
         $site = $this->db->one('SELECT * FROM site_settings LIMIT 1') ?: [];
+        $siteNameRaw = trim((string) ($site['site_name'] ?? ''));
+        if ($siteNameRaw === '') {
+            $siteNameRaw = 'Jasefly';
+        }
+        $siteNameEsc = $this->e($siteNameRaw);
+
         $jsonLd = $this->seoJsonLdTag($seo, $site, $base, $title, $metaDesc);
 
         return <<<HTML
@@ -925,6 +1021,7 @@ final class PrerenderService
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="{$canonEsc}">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="{$siteNameEsc}">
 <meta property="og:title" content="{$ogTitle}">
 <meta property="og:description" content="{$ogDesc}">
 <meta property="og:url" content="{$canonEsc}">
@@ -940,7 +1037,7 @@ a{color:#0b57d0} h1{font-size:1.75rem} h2{font-size:1.25rem;margin-top:1.5rem}
 </style>
 </head>
 <body data-prerender="1" data-prerender-status="{$statusAttr}">
-<header><nav>{$navHtml}</nav></header>
+<header><nav aria-label="Основная навигация">{$navHtml}</nav></header>
 <main>
 {$body}
 </main>
@@ -1070,10 +1167,7 @@ HTML;
             'url' => $url . '/',
             'publisher' => ['@id' => $url . '/#organization'],
         ];
-        $pageTitle = trim($title);
-        if ($pageTitle !== '') {
-            $website['name'] = $pageTitle;
-        }
+        // Keep WebSite.name as the product/site name — do not overwrite with page <title>.
         $pageDesc = trim($description);
         if ($pageDesc !== '') {
             $website['description'] = $pageDesc;
@@ -1081,6 +1175,12 @@ HTML;
         if ($areaServed !== []) {
             $website['areaServed'] = $areaServed;
         }
+
+        $logoUrl = $this->mediaPublicUrl($site['logo_media_id'] ?? null);
+        if ($logoUrl) {
+            $organization['logo'] = $logoUrl;
+        }
+        $organization['alternateName'] = 'Jasefly';
 
         $graph = [
             '@context' => 'https://schema.org',
