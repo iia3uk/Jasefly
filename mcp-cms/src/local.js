@@ -160,33 +160,39 @@ export function localTest() {
     return { ok: false, error: `ZIP пропал: ${zip}`, gate: readGate() };
   }
 
-  // List zip entries via tar (Windows) or powershell
+  // List zip entries: prefer .NET ZipFile on Windows (tar -tf can return odd paths mid-write).
   let listing = '';
-  const tarList = run('tar', ['-tf', zip], { cwd: root, timeoutMs: 120000 });
-  if (tarList.ok) {
-    listing = tarList.stdout;
+  const ps = run(
+    'powershell',
+    ['-NoProfile', '-Command', `Add-Type -AssemblyName System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::OpenRead('${zip.replace(/'/g, "''")}').Entries | ForEach-Object { $_.FullName }`],
+    { cwd: root, timeoutMs: 120000 },
+  );
+  if (ps.ok && ps.stdout.trim()) {
+    listing = ps.stdout;
   } else {
-    const ps = run(
-      'powershell',
-      ['-NoProfile', '-Command', `Add-Type -AssemblyName System.IO.Compression.FileSystem; [IO.Compression.ZipFile]::OpenRead('${zip.replace(/'/g, "''")}').Entries | ForEach-Object { $_.FullName }`],
-      { cwd: root, timeoutMs: 120000 },
-    );
-    listing = ps.ok ? ps.stdout : '';
-    checks.push({ name: 'zip_list', ok: ps.ok || tarList.ok, detail: listing ? 'listed' : (ps.stderr || tarList.stderr).slice(0, 500) });
+    const tarList = run('tar', ['-tf', zip], { cwd: root, timeoutMs: 120000 });
+    listing = tarList.ok ? tarList.stdout : '';
+    checks.push({
+      name: 'zip_list',
+      ok: Boolean(listing),
+      detail: listing ? 'listed' : (ps.stderr || tarList.stderr || '').slice(0, 500),
+    });
   }
 
   const need = ['spa.html', 'index.php', 'api/src/Bootstrap.php', 'api/public/index.php'];
-  const missing = need.filter((n) => {
-    const re = new RegExp(`(^|[\\\\/])${n.replace(/\./g, '\\.')}$`, 'im');
-    // tar may list as ./index.html or index.html
-    return !listing.split(/\r?\n/).some((line) => {
-      const norm = line.replace(/^\.\//, '').replace(/\\/g, '/');
-      return norm === n || norm.endsWith('/' + n);
-    }) && !listing.includes(n);
+  const norms = new Set(
+    listing
+      .split(/\r?\n/)
+      .map((line) => line.replace(/^\.\//, '').replace(/\\/g, '/').replace(/^\/+/, '').trim())
+      .filter(Boolean),
+  );
+  const miss = need.filter((n) => {
+    if (norms.has(n)) return false;
+    for (const e of norms) {
+      if (e === n || e.endsWith('/' + n)) return false;
+    }
+    return !listing.replace(/\\/g, '/').includes(n);
   });
-  // simpler includes check
-  const missing2 = need.filter((n) => !listing.replace(/\\/g, '/').includes(n));
-  const miss = missing2;
   checks.push({
     name: 'zip_markers',
     ok: miss.length === 0,
