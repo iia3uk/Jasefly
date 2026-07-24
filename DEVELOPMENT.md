@@ -9,15 +9,17 @@
 | `src/Modules/` | Feature modules (Payments, Products, Mail, Translate, …) |
 | `migrations/` | Schema + clean/demo seed PHP |
 | `install.php` | First-time installer |
-| `migrate.php` | Incremental migrations for updates |
+| `migrate.php` | Incremental migrations for updates (includes plugin `modulesDir`) |
+| `bin/scheduler.php` | CLI job tick for shared-hosting cron |
+| `tests/run.php` | Lightweight PHP tests (no PHPUnit) |
 | `config/app.php` | Defaults; secrets via `config.local.php` / `.env` |
 
-Autoload is custom (no Composer). Register modules in the module registry / bootstrap.
+Autoload is custom (no Composer). Modules auto-discovered under `src/Modules/*/`.
 
 ### Migrations
 
 - `001_schema.sql` — base schema (install only)
-- `002_enterprise.sql` … `018_*.sql` — incremental (MigrationService)
+- `002_enterprise.sql` … `019_*.sql` — incremental (MigrationService)
 - Plugin SQL: `src/Modules/*/migrations/*.sql` as `plugin:Name:file.sql`
 - `clean_base_seed.php` — neutral site after install without demo
 - `demo_content.php` — optional `[DEMO]` content

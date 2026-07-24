@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-07-24 — Stop admin /projects 404 when Projects plugin is off
+
+- Gate content-health and admin project fetches until plugins hydrate
+- usePluginEnabled / isPluginEnabledReady — no fail-open API spam
+- Dashboard and BlogEdit skip projects when plugin disabled
+
+## 2026-07-24 — Contact messages: mark as read + admin UI polish
+
+- ContactMessagesPage: mark read / mark all / delete actions
+- Unread styling and correct page subtitle
+- Dashboard unread badge and count cards polish
+
 ## 2026-07-24 — Footer tip link (CloudTips) + external footer links
 
 - Footer supports external https links (CloudTips, GitHub)

@@ -28,6 +28,9 @@
 | Переводчик фейки / синк контента | `TranslateCache::purgeInvalid` + `TranslateSync` (resource.afterSave) + админка «Очистить фейки» |
 | Google / LibreTranslate / MyMemory / DeepL | `TranslateService` + настройки плагина `provider` (default google) |
 | Тикеты / live chat / FAQ-бот | `modules/support/` ↔ `Modules/Support/` + `SupportWidget.tsx` |
+| Формы / заявки / виджет form | `modules/forms/` ↔ `Modules/Forms/` + `builder/widgets/forms.tsx` |
+| Планировщик / cron jobs | `modules/scheduler/` ↔ `Modules/Scheduler/` + `admin/pages/SchedulerPage.tsx` |
+| Автоматизации / уведомления / рассылки | `modules/{automation,notifications,newsletter}/` ↔ `Modules/{Automation,Notifications,Newsletter}/` |
 | Jasefly Lab / эксперименты | `modules/lab/` ↔ `Modules/Lab/` + `/lab/:slug` (вне SiteLayout); entries: `starter`, `reference` |
 | FAQ клик в чате | `POST /support/faq/{id}/ask` + чипы в `SupportWidget` |
 | Support poll 429 | `SoftRateLimit` на GET messages + backoff в `SupportWidget`; DDoS skip `/support/` |
@@ -47,9 +50,11 @@
 | Публичный поиск / 404 | `GET /search` → `SearchService::publicSearch`; `NotFoundPage` |
 | Ручные 301/302 редиректы | `admin/pages/RedirectsPage.tsx` + `PathRedirectService` + `SeoModule` routes |
 | Telegram с контакт-формы | `Modules/Mail/ContactFormService.php` + `TelegramNotifier.php` + `/admin/mail` |
+| Сообщения / mark-read | `UtilityPages.tsx` → `ContactMessagesPage` + `POST /admin/contact-messages/{id}/mark-read` |
 | Отложенная публикация страниц | `PageScheduleService` (lazy publish) + `scheduled_at` в билдере |
 | Плагины вкл/выкл, гейты UI | `frontend/src/core/pluginGates.ts`, `components/RequirePlugin.tsx`, `admin/pages/PluginsPage.tsx` |
 | `/api/v1/projects` 404 при выкл. Portfolio | public GET в `ContentModule`; FE гейт `useProjects` + `HomePage` (не звать без portfolio) |
+| `/admin/projects` 404 в консоли | плагин Projects выкл.; не звать до гидрации — `usePluginEnabled` / `isPluginEnabledReady` + `contentHealth` |
 | Билдер-страницы без Portfolio (about/contact/cta) | `pluginGates` + `widgetRequiredPlugin` (`cta-banner`/`blog-list`/`contact-form` ≠ portfolio) |
 | Админ-роуты / CRUD экраны | `admin/adminRoutes.tsx`, `core/moduleRegistry.ts`, `admin/pages/*` |
 | Публичные роуты | `frontend/src/routes/AppRouter.tsx`, `pages/PublicPages.tsx` |
@@ -57,6 +62,9 @@
 | Тема / site settings / nav | `modules/site/`, `context/SiteContext.tsx`, backend `Modules/System`, `Modules/Content` |
 | Проекты / блог / услуги | `modules/projects|blog|services/` ↔ `backend/src/Modules/{Projects,Blog,Content}/` |
 | Товары / оплата | `modules/products|payments/` ↔ `Modules/Products|Payments/` |
+| Заказы / корзины / возвраты | `modules/orders/` ↔ `Modules/Orders/` + адаптер в `Payments/PaymentService.php` |
+| Комментарии / отзывы / рейтинги | `modules/comments/` ↔ `Modules/Comments/` + `builder/widgets/comments.tsx` |
+| Аналитика событий / целей | `modules/analytics/` ↔ `Modules/Analytics/` + `modules/analytics/beacon.ts` |
 | Медиа | `modules/media/` ↔ `Modules/Media/`, `Controllers/MediaController.php` |
 | Auth / users / 2FA | `context/AuthContext.tsx`, `Modules/Users/`, `Controllers/AuthController.php` |
 | Миграции SQL | `backend/migrations/*.sql` (+ plugin migrations в `Modules/*/migrations/`) |
@@ -113,6 +121,9 @@ portfolio/
 | `image-gallery` `faq` `logos-strip` `pricing-table` `features-grid` `video-embed` `content-tabs` `hero-block` `compare-block` `showcase-block` `cta-block` `stat-row` | `widgets/landing.tsx` + `structure.tsx` + `blocks.tsx` |
 | `payment-checkout` `payment-methods` `seller-info` `offer-document` | `widgets/commerce.tsx` |
 | `auth-login` `auth-register` | `widgets/auth.tsx` |
+| `form` | `widgets/forms.tsx` (plugin forms) |
+| `newsletter-signup` | `widgets/newsletter.tsx` (plugin newsletter) |
+| `comments` `reviews` `rating-summary` `review-form` | `widgets/comments.tsx` (plugin comments) |
 
 Видео-URL логика: `builder/lib/videoEmbed.ts`.
 
@@ -135,6 +146,12 @@ portfolio/
 | `registration/` | `Registration/` | публичная регистрация |
 | `translate/` | `Translate/` | оверлей-переводчик сайта |
 | `support/` | `Support/` | тикеты / live chat / FAQ-бот |
+| `automation/` | `Automation/` | сценарии событий и действий |
+| `notifications/` | `Notifications/` | inbox и внешняя доставка уведомлений |
+| `newsletter/` | `Newsletter/` | подписчики и email-кампании |
+| `orders/` | `Orders/` | корзины, заказы, статусы и возвраты |
+| `comments/` | `Comments/` | комментарии, отзывы и модерация |
+| `analytics/` | `Analytics/` | события, цели, агрегация и retention |
 | `mail/` `webhooks/` `ddos/` `system/` | одноимённые | интеграции |
 
 Новый модуль: `backend/docs/MODULES.md` + зеркало в `frontend/src/modules/{name}/`.

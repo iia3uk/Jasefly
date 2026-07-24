@@ -36,6 +36,15 @@
 - **A07 Auth Failures** — сильные пароли + 2FA; refresh token rotation/revocation.
 - **A08 Data Integrity** — не доверять клиентским расширениям файлов; проверять MIME.
 - **A09 Logging/Monitoring** — activity log + `storage/logs`; не логировать пароли/токены.
-- **A10 SSRF** — не проксировать произвольные URL из user input без allowlist.
+- **A10 SSRF** — не проксировать произвольные URL из user input without allowlist; Forms/Automation webhook handlers reject private hosts.
+
+### Platform modules
+
+- Forms: honeypot, timing, IP/UA HMAC hashes, backend validation, CSV formula escape (`=+-@`).
+- Scheduler: token-gated HTTP tick; job payload secrets masked in admin.
+- Automation: no `eval`, recursion/max-steps guards, webhook SSRF checks.
+- Newsletter: HMAC unsubscribe/confirm tokens; double opt-in.
+- Analytics: hashed visitor/session by default; no raw IP storage unless explicitly configured.
+- Orders: server-side totals; public_id for non-enumerable public refs.
 
 Подробности деплоя: `release/DEPLOYMENT-RU.md` рядом с ZIP после `build-hosting` (секция «Безопасность»).

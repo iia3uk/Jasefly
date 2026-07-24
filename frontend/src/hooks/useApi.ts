@@ -1,9 +1,29 @@
+import { useSyncExternalStore } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, endpoints } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 import { siteHasPlugin } from '@/core/pluginGates'
+import {
+  arePluginsHydrated,
+  isPluginEnabledReady,
+  subscribePluginState,
+} from '@/core/moduleRegistry'
 
 export const useSite = () => useQuery({ queryKey: ['site'], queryFn: endpoints.site })
+
+/** True after /site or /admin/plugins has hydrated the enable map. */
+export function usePluginsHydrated(): boolean {
+  return useSyncExternalStore(subscribePluginState, arePluginsHydrated, () => false)
+}
+
+/** Strict plugin gate for admin API/UI — false until hydrated (no fail-open). */
+export function usePluginEnabled(name: string): boolean {
+  return useSyncExternalStore(
+    subscribePluginState,
+    () => isPluginEnabledReady(name),
+    () => false,
+  )
+}
 
 /** Wait for /site.enabled_plugins, then gate portfolio-owned public fetches. */
 function usePortfolioFetchEnabled(extra = true): boolean {

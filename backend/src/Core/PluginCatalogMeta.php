@@ -100,6 +100,18 @@ final class PluginCatalogMeta
                 'requires' => ['products'],
                 'suggests' => ['mail'],
             ],
+            'orders' => [
+                'requires' => ['products'],
+                'suggests' => ['payments'],
+            ],
+            'comments' => [
+                'requires' => ['system'],
+                'suggests' => ['orders'],
+            ],
+            'analytics' => [
+                'requires' => ['system'],
+                'suggests' => ['scheduler'],
+            ],
             'mail' => [
                 'requires' => ['system'],
                 'suggests' => [],
@@ -123,6 +135,26 @@ final class PluginCatalogMeta
             'lab' => [
                 'requires' => ['system'],
                 'suggests' => [],
+            ],
+            'scheduler' => [
+                'requires' => ['system'],
+                'suggests' => [],
+            ],
+            'forms' => [
+                'requires' => ['system'],
+                'suggests' => ['mail'],
+            ],
+            'notifications' => [
+                'requires' => ['system'],
+                'suggests' => ['mail'],
+            ],
+            'automation' => [
+                'requires' => ['scheduler'],
+                'suggests' => ['forms', 'notifications', 'mail'],
+            ],
+            'newsletter' => [
+                'requires' => ['scheduler'],
+                'suggests' => ['mail', 'forms'],
             ],
         ];
     }
@@ -265,6 +297,21 @@ final class PluginCatalogMeta
                     . "• Иконки способов оплаты, продавец\n\n"
                     . "Работает вместе с Products для покупки с витрины.",
             ],
+            'orders' => [
+                'category' => 'commerce',
+                'description' => 'Заказы, корзины, статусы, возвраты и экспорт.',
+                'long_description' => "Полный контур заказов поверх каталога Products.\n\n• Корзины и серверный расчёт итогов\n• История статусов, заметки и возвраты\n• Интеграция с Payments без дублирования orders",
+            ],
+            'comments' => [
+                'category' => 'comms',
+                'description' => 'Комментарии и отзывы с модерацией и рейтингами.',
+                'long_description' => "Обсуждения и оценки для страниц, постов, проектов и товаров.\n\n• Очередь модерации\n• Проверенная покупка\n• Виджеты комментариев и отзывов",
+            ],
+            'analytics' => [
+                'category' => 'other',
+                'description' => 'Приватная аналитика событий и целей без хранения IP.',
+                'long_description' => "Встроенная аналитика CMS.\n\n• События, сессии, страницы и цели\n• HMAC-хеши посетителей вместо raw IP\n• Агрегация и retention через Scheduler",
+            ],
             'mail' => [
                 'category' => 'comms',
                 'description' => 'Почта и форма контактов: SMTP, капча, уведомления.',
@@ -323,6 +370,42 @@ final class PluginCatalogMeta
                     . "• Черновики, публикация, noindex, soft delete\n"
                     . "• CSS Modules и корневой класс jasefly-lab-{entry}\n\n"
                     . "Не меняет Page Builder, обычные страницы и глобальную тему.",
+            ],
+            'scheduler' => [
+                'category' => 'core',
+                'description' => 'Планировщик задач: очередь, cron tick, retry/cancel.',
+                'long_description' => "Фоновые задачи CMS без отдельного worker-сервиса.\n\n"
+                    . "• Очередь scheduled_jobs + попытки job_attempts\n"
+                    . "• CLI: php backend/bin/scheduler.php run\n"
+                    . "• HTTP tick по токену или lazy tick при входе в админку\n"
+                    . "• Inbox в админке: статус cron, retry, cancel\n\n"
+                    . "Базовый системный модуль для отложенных операций.",
+            ],
+            'forms' => [
+                'category' => 'comms',
+                'description' => 'Конструктор форм: поля, заявки, виджет form в билдере.',
+                'long_description' => "Универсальные формы поверх ядра CMS.\n\n"
+                    . "• CRUD форм и полей в админке\n"
+                    . "• Inbox заявок со статусами\n"
+                    . "• Виджет «Форма» (plugin forms) — GET/POST /forms/{slug}\n"
+                    . "• Honeypot, timing, rate limit\n"
+                    . "• Legacy contact-form (mail) остаётся отдельно\n\n"
+                    . "Рекомендуется вместе с «Почта» для email-экшенов.",
+            ],
+            'notifications' => [
+                'category' => 'comms',
+                'description' => 'Внутренние уведомления админки с email и Telegram-доставкой.',
+                'long_description' => "Центр уведомлений CMS.\n\n• Колокольчик и inbox\n• Пользовательские и общие сообщения\n• Email / Telegram по настройкам",
+            ],
+            'automation' => [
+                'category' => 'integrations',
+                'description' => 'Сценарии по событиям CMS: условия, действия, ветвления и задержки.',
+                'long_description' => "No-code автоматизация событий.\n\n• Триггеры форм, заказов и контента\n• Webhook, email, Telegram и уведомления\n• Очередь задержек через Scheduler",
+            ],
+            'newsletter' => [
+                'category' => 'comms',
+                'description' => 'Подписчики, double opt-in, списки и email-кампании.',
+                'long_description' => "Email-рассылки для сайта.\n\n• Double opt-in и отписка\n• Импорт / экспорт CSV\n• Пакетная отправка через Scheduler",
             ],
         ];
     }

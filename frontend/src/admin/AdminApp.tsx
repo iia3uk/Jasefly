@@ -4,7 +4,7 @@ import {
   FileText, FolderKanban, Image, LayoutDashboard, LogOut, Settings, Users, BriefcaseBusiness,
   GraduationCap, Wrench, MessageSquare, MessageCircle, HelpCircle, PanelTop, Mail, Palette, Database, KeyRound, Globe,
   Menu, Trash2, Activity, HeartPulse, X, Layers, ExternalLink, PanelLeftClose, PanelLeft, Pin, PinOff, Keyboard,
-  LayoutTemplate, Webhook, ShoppingCart, CreditCard, Shield, RefreshCw, type LucideIcon,
+  LayoutTemplate, Webhook, ShoppingCart, CreditCard, Shield, RefreshCw, Bell, Workflow, Send, type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { Button, Container } from '@/components/ui'
@@ -23,6 +23,7 @@ import { findHubByPath, isHubNavActive, resolveHubPin } from '@/admin/adminHubs'
 import { AdminHubTabs } from '@/admin/components/AdminHubTabs'
 import { adminUrl, getAdminBase, isAdminPathname, toCanonicalAdminPath } from '@/admin/adminBasePath'
 import { api, endpoints } from '@/lib/api'
+import { NotificationsBell } from '@/modules/notifications/NotificationsBell'
 
 // Icon registry — maps manifest icon keys to lucide components.
 // Plugins reference icons by string key so manifests stay serializable.
@@ -56,6 +57,9 @@ const iconRegistry: Record<string, LucideIcon> = {
   'credit-card': CreditCard,
   shield: Shield,
   'refresh-cw': RefreshCw,
+  bell: Bell,
+  workflow: Workflow,
+  send: Send,
 }
 
 // Fallback icon map for legacy hardcoded paths (kept until all routes
@@ -445,6 +449,7 @@ export function AdminShell() {
               <span className="hidden sm:inline">{t.viewSite}</span>
             </a>
             <GlobalSearch />
+            <NotificationsBell />
           </div>
         </header>
         <MigrationBanner />

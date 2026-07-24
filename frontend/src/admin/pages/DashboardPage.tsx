@@ -1,17 +1,17 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import clsx from 'clsx'
 import {
   Activity, AlertTriangle, BriefcaseBusiness, Bot, FileText, FolderKanban, GraduationCap, Image, LayoutTemplate,
   Mail, MessageSquare, Package, Trash2, Users, Wrench, type LucideIcon,
 } from 'lucide-react'
 import { endpoints } from '@/lib/api'
-import { useDashboard } from '@/hooks/useApi'
+import { useDashboard, usePluginEnabled, usePluginsHydrated } from '@/hooks/useApi'
 import { GlassPanel, Skeleton } from '@/components/ui'
 import { t, dashboardCounts } from '@/admin/i18n'
 import { PROJECT_STATUS_LABELS, projectStatusTone } from '@/modules/projects/projectStatus'
 import { fetchContentHealth, type HealthKind } from '@/admin/lib/contentHealth'
 import { adminUrl } from '@/admin/adminBasePath'
-import { isPluginEnabled } from '@/core/moduleRegistry'
 
 const COUNT_META: Record<string, { href: string; icon: LucideIcon }> = {
   projects: { href: adminUrl('/projects'), icon: FolderKanban },
@@ -119,8 +119,17 @@ const HEALTH_COUNT_LABEL: Record<HealthKind, string> = {
 
 export function DashboardPage() {
   const { data, isLoading } = useDashboard()
+  const pluginsReady = usePluginsHydrated()
+  const projectsOn = usePluginEnabled('projects')
+  const blogOn = usePluginEnabled('blog')
+  const portfolioOn = usePluginEnabled('portfolio')
+  const productsOn = usePluginEnabled('products')
   const lifecycleTotal = Object.values(data?.project_lifecycle ?? {}).reduce((a, b) => a + b, 0)
-  const health = useQuery({ queryKey: ['content-health'], queryFn: fetchContentHealth })
+  const health = useQuery({
+    queryKey: ['content-health'],
+    queryFn: fetchContentHealth,
+    enabled: pluginsReady,
+  })
   const mcpActivity = useQuery({
     queryKey: ['activity', 'mcp', 'dashboard'],
     queryFn: () => endpoints.activity({ source: 'mcp', limit: 8 }),
@@ -135,8 +144,10 @@ export function DashboardPage() {
         </div>
         {(data?.unread_messages ?? 0) > 0 && (
           <Link
-            to={adminUrl('/messages')} className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-1.5 text-sm text-amber-100"
+            to={adminUrl('/messages')}
+            className="inline-flex items-center gap-2 rounded-full border border-amber-400/35 bg-amber-500/10 px-3.5 py-1.5 text-sm font-medium text-amber-100 transition hover:border-amber-300/50 hover:bg-amber-500/15"
           >
+            <span className="size-1.5 rounded-full bg-amber-300" aria-hidden />
             {t.unreadMessages}: {data?.unread_messages}
           </Link>
         )}
@@ -164,12 +175,12 @@ export function DashboardPage() {
                 <span className="rounded border border-white/10 px-2 py-1 text-zinc-300">
                   {health.data?.mediaAltGaps ?? 0} без alt
                 </span>
-                {isPluginEnabled('projects') ? (
+                {projectsOn ? (
                   <span className="rounded border border-white/10 px-2 py-1 text-zinc-300">
                     {health.data?.projectGaps ?? 0} {t.contentHealthProjects}
                   </span>
                 ) : null}
-                {isPluginEnabled('blog') ? (
+                {blogOn ? (
                   <span className="rounded border border-white/10 px-2 py-1 text-zinc-300">
                     {health.data?.blogGaps ?? 0} {t.contentHealthPosts}
                   </span>
@@ -241,7 +252,7 @@ export function DashboardPage() {
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          ...(isPluginEnabled('projects')
+          ...(projectsOn
             ? [{ label: t.weekProjects, value: data?.recent?.projects_7d, href: adminUrl('/projects') }]
             : []),
           { label: t.weekPosts, value: data?.recent?.posts_7d, href: adminUrl('/blog') },
@@ -264,10 +275,10 @@ export function DashboardPage() {
           ? Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="h-28" />)
           : COUNT_ORDER.filter((name) => {
               if (name === 'projects' || name === 'services' || name === 'testimonials' || name === 'experience' || name === 'education' || name === 'skills') {
-                return isPluginEnabled('portfolio') || isPluginEnabled('projects')
+                return portfolioOn || projectsOn
               }
-              if (name === 'products') return isPluginEnabled('products')
-              if (name === 'blog_posts') return isPluginEnabled('blog')
+              if (name === 'products') return productsOn
+              if (name === 'blog_posts') return blogOn
               return true
             }).map((name) => {
               const count = data?.counts?.[name] ?? 0
@@ -278,14 +289,14 @@ export function DashboardPage() {
               const href = meta?.href
               const unread = name === 'contact_messages' ? (data?.unread_messages ?? 0) : 0
               const body = (
-                <GlassPanel className="relative p-5">
+                <GlassPanel className={clsx('relative flex h-full min-h-[7.25rem] flex-col p-5', unread > 0 && 'border-amber-400/20')}>
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm text-zinc-500">{label}</p>
-                    <Icon size={16} className="shrink-0 text-zinc-600" aria-hidden />
+                    <Icon size={16} className={clsx('shrink-0', unread > 0 ? 'text-amber-300/80' : 'text-zinc-600')} aria-hidden />
                   </div>
-                  <p className="mt-2 font-heading text-3xl">{count}</p>
+                  <p className="mt-2 font-heading text-3xl tracking-tight">{count}</p>
                   {unread > 0 && (
-                    <p className="mt-1 text-xs text-amber-300/90">{t.unreadShort}: {unread}</p>
+                    <p className="mt-auto pt-2 text-xs font-medium text-amber-300/90">{t.unreadShort}: {unread}</p>
                   )}
                 </GlassPanel>
               )
@@ -298,7 +309,7 @@ export function DashboardPage() {
       </div>
 
       <div className="mt-8 grid gap-4 lg:grid-cols-3">
-        {isPluginEnabled('projects') ? (
+        {projectsOn ? (
           <StatusBars title={t.publishProjects} href={adminUrl('/projects')} data={data?.publish?.projects} />
         ) : null}
         <StatusBars title={t.publishPosts} href={adminUrl('/blog')} data={data?.publish?.posts} />
@@ -306,7 +317,7 @@ export function DashboardPage() {
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        {isPluginEnabled('projects') ? (
+        {projectsOn ? (
           <GlassPanel className="p-5">
             <div className="flex items-center justify-between gap-2">
               <h2 className="font-heading text-lg">{t.projectLifecycle}</h2>
@@ -340,7 +351,7 @@ export function DashboardPage() {
           <h2 className="font-heading text-lg">{t.drafts}</h2>
           <div className="mt-4 grid grid-cols-3 gap-3">
             {[
-              ...(isPluginEnabled('projects')
+              ...(projectsOn
                 ? [{ label: t.projects, value: data?.drafts?.projects, href: adminUrl('/projects'), icon: FolderKanban }]
                 : []),
               { label: t.posts, value: data?.drafts?.posts, href: adminUrl('/blog'), icon: FileText },

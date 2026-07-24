@@ -1,20 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Download, FolderPlus, Trash2, Upload, RefreshCw } from 'lucide-react'
+import { CheckCheck, Download, FolderPlus, MailOpen, Trash2, Upload, RefreshCw } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { api, endpoints, mediaUrl } from '@/lib/api'
 import { copyToClipboard } from '@/lib/clipboard'
 import { useAdminList } from '@/hooks/useApi'
 import type { ContactMessage, ID, MediaAsset, MediaFolder } from '@/types'
-import { Button, GlassPanel, Skeleton } from '@/components/ui'
+import { Button, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { PageContext } from '@/admin/components/PageContext'
 import { t } from '@/admin/i18n'
+import clsx from 'clsx'
 
-function Header({ title, contextKey }: { title: string; contextKey: string }) {
+function Header({ title, contextKey, subtitle }: { title: string; contextKey: string; subtitle?: string }) {
   return (
     <div className="mb-8">
-      <h1 className="font-heading text-3xl">{title}</h1>
-      <p className="mt-1 text-sm text-zinc-500">{t.manageWorkspace}</p>
+      <h1 className="font-heading text-3xl tracking-tight">{title}</h1>
+      <p className="mt-1 text-sm text-zinc-500">{subtitle || t.manageWorkspace}</p>
       <PageContext contextKey={contextKey} className="mt-4" />
     </div>
   )
@@ -292,23 +293,141 @@ export function MediaLibraryPage() {
 }
 
 export function ContactMessagesPage() {
+  const client = useQueryClient()
   const { data = [], isLoading } = useAdminList<ContactMessage>('contact-messages')
+  const [busyId, setBusyId] = useState<string | number | null>(null)
+  const [busyAll, setBusyAll] = useState(false)
+
+  const unreadCount = data.filter((m) => Number(m.is_read ?? 0) === 0).length
+
+  const refreshLists = async () => {
+    await Promise.all([
+      client.invalidateQueries({ queryKey: ['admin', 'contact-messages'] }),
+      client.invalidateQueries({ queryKey: ['dashboard'] }),
+    ])
+  }
+
+  const markRead = async (id: string | number) => {
+    setBusyId(id)
+    try {
+      await api.post(`/admin/contact-messages/${id}/mark-read`)
+      await refreshLists()
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : t.markReadFail)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const markAllRead = async () => {
+    const unread = data.filter((m) => Number(m.is_read ?? 0) === 0)
+    if (!unread.length) return
+    setBusyAll(true)
+    try {
+      for (const m of unread) {
+        await api.post(`/admin/contact-messages/${m.id}/mark-read`)
+      }
+      await refreshLists()
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : t.markReadFail)
+    } finally {
+      setBusyAll(false)
+    }
+  }
+
+  const remove = async (id: string | number) => {
+    if (!window.confirm(t.deleteMessageConfirm)) return
+    setBusyId(id)
+    try {
+      await api.delete(`/admin/contact-messages/${id}`)
+      await refreshLists()
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : t.deleteFail)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   return (
     <>
-      <Header title={t.contactMessages} contextKey="contact-messages" />
+      <Header title={t.contactMessages} contextKey="contact-messages" subtitle={t.contactMessagesHint} />
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          {unreadCount > 0 ? (
+            <span className="inline-flex items-center rounded-full border border-amber-400/35 bg-amber-500/10 px-3 py-1 text-amber-100">
+              {t.unreadMessages}: {unreadCount}
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-zinc-400">
+              {t.allRead}
+            </span>
+          )}
+          <span className="text-zinc-600">{data.length} {t.totalShort}</span>
+        </div>
+        {unreadCount > 0 ? (
+          <GhostButton type="button" disabled={busyAll} onClick={() => void markAllRead()}>
+            <CheckCheck size={16} />
+            {busyAll ? t.markingRead : t.markAllRead}
+          </GhostButton>
+        ) : null}
+      </div>
       <div className="space-y-3">
-        {isLoading ? <Skeleton className="h-64" /> : data.map(msg => (
-          <GlassPanel className="p-5" key={String(msg.id)}>
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <b>{msg.name}</b>
-                <p className="text-sm text-zinc-500">{msg.email}</p>
-              </div>
-              <span className="text-xs text-zinc-500">{msg.created_at}</span>
-            </div>
-            <p className="mt-3 text-sm text-zinc-300">{msg.message}</p>
-          </GlassPanel>
-        ))}
+        {isLoading ? (
+          <Skeleton className="h-64" />
+        ) : data.length ? (
+          data.map((msg) => {
+            const unread = Number(msg.is_read ?? 0) === 0
+            const busy = busyId === msg.id
+            return (
+              <GlassPanel
+                key={String(msg.id)}
+                className={clsx(
+                  'p-5 transition',
+                  unread
+                    ? 'border-amber-400/25 bg-amber-500/[0.04] shadow-[inset_3px_0_0_0_rgb(251_191_36_/_0.55)]'
+                    : 'opacity-90',
+                )}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <b className="truncate text-[color:var(--text)]">{msg.name}</b>
+                      {unread ? (
+                        <span className="rounded-full border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200">
+                          {t.unreadShort}
+                        </span>
+                      ) : (
+                        <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-zinc-500">
+                          {t.readShort}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 truncate text-sm text-zinc-500">{msg.email}</p>
+                    {msg.subject ? (
+                      <p className="mt-1 text-sm font-medium text-zinc-300">{msg.subject}</p>
+                    ) : null}
+                  </div>
+                  <span className="shrink-0 text-xs tabular-nums text-zinc-500">{msg.created_at}</span>
+                </div>
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-300">{msg.message}</p>
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-white/[0.06] pt-4">
+                  {unread ? (
+                    <Button type="button" disabled={busy} onClick={() => void markRead(msg.id)}>
+                      <MailOpen size={15} />
+                      {busy ? t.markingRead : t.markRead}
+                    </Button>
+                  ) : null}
+                  <GhostButton type="button" disabled={busy} onClick={() => void remove(msg.id)}>
+                    <Trash2 size={15} />
+                    {t.deleteMessage}
+                  </GhostButton>
+                </div>
+              </GlassPanel>
+            )
+          })
+        ) : (
+          <GlassPanel className="p-10 text-center text-sm text-zinc-500">{t.noMessages}</GlassPanel>
+        )}
       </div>
     </>
   )
