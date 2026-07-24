@@ -428,6 +428,14 @@ final class AdminController
             );
         }
 
+        // Shared-hosting lazy scheduler tick (no-op if Scheduler plugin off / recently ran).
+        try {
+            if (class_exists(\App\Modules\Scheduler\SchedulerModule::class)) {
+                \App\Modules\Scheduler\SchedulerModule::maybeLazyTick($this->db);
+            }
+        } catch (\Throwable) {
+        }
+
         Response::json([
             'data' => [
                 'counts' => $counts,

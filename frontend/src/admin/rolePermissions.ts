@@ -27,6 +27,31 @@ const ADMIN_PERMS = [
   'lab.delete',
   'lab.publish',
   'lab.preview',
+  'forms.view',
+  'forms.manage',
+  'forms.submissions.view',
+  'forms.submissions.manage',
+  'forms.export',
+  'scheduler.view',
+  'scheduler.manage',
+  'automations.view',
+  'automations.manage',
+  'automations.run',
+  'notifications.view',
+  'notifications.manage',
+  'newsletter.view',
+  'newsletter.manage',
+  'newsletter.send',
+  'newsletter.subscribers.manage',
+  'orders.view',
+  'orders.manage',
+  'orders.refund',
+  'orders.export',
+  'comments.view',
+  'comments.moderate',
+  'comments.manage',
+  'analytics.view',
+  'analytics.manage',
 ] as const
 
 const EDITOR_PERMS = [
@@ -38,6 +63,7 @@ const EDITOR_PERMS = [
   'media.manage',
   'lab.view',
   'lab.preview',
+  'comments.view',
 ] as const
 
 /** '*' = all permissions (super_admin). */
@@ -80,10 +106,18 @@ export function permissionForAdminSegment(segment: string): string | null {
   mail: 'settings.manage',
   translate: 'settings.manage',
   media: 'media.manage',
-    orders: 'commerce.manage',
+    orders: 'orders.view',
     webhooks: 'integrations.manage',
     support: 'support.agent',
     lab: 'lab.view',
+    forms: 'forms.view',
+    'form-submissions': 'forms.submissions.view',
+    scheduler: 'scheduler.view',
+    automations: 'automations.view',
+    notifications: 'notifications.view',
+    newsletter: 'newsletter.view',
+    comments: 'comments.view',
+    analytics: 'analytics.view',
   }
   return map[segment] ?? null
 }

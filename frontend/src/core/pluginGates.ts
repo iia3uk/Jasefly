@@ -10,6 +10,7 @@ export const PATH_PLUGIN_GATES: Array<{ prefix: string; plugin: string }> = [
   { prefix: '/products', plugin: 'products' },
   { prefix: '/register', plugin: 'registration' },
   { prefix: '/checkout', plugin: 'payments' },
+  { prefix: '/orders', plugin: 'orders' },
   { prefix: '/pay', plugin: 'payments' },
   { prefix: '/lab', plugin: 'lab' },
 ]

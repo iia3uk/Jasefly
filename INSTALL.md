@@ -184,6 +184,18 @@ node scripts/build-hosting.js --mode=update --domain=https://YOUR_DOMAIN --yes
 
 Пакет **не** затирает `config.local.php`, uploads, backups и логи. Перед применением проверяются манифест, совместимость и changelog.
 
+### Планировщик (Scheduler)
+
+Нужен для Automation / Newsletter / retries. На shared-хостинге добавьте cron каждые 5 минут:
+
+```bash
+php /path/to/api/bin/scheduler.php run --limit=20
+```
+
+Либо HTTP tick: `POST /api/v1/system/scheduler/tick` с заголовком `X-Scheduler-Token` (токен в настройках плагина «Планировщик»). Пока cron не настроен, админ-дашборд делает lazy tick.
+
+Документация модулей: `docs/SCHEDULER.md`, `docs/FORMS.md` и соседние файлы.
+
 ---
 
 ## 7. MCP (AI-агенты)

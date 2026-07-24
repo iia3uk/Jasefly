@@ -34,7 +34,16 @@ final class PaymentsModule extends AbstractModule
         $webhookRate = new \App\Middleware\RateLimitMiddleware($db, 60, 60);
         $checkoutRate = new \App\Middleware\RateLimitMiddleware($db, 20, 60);
 
-        foreach (['orders', 'payments'] as $resource) {
+        $resources = ['payments'];
+        try {
+            $orders = $db->one("SELECT is_enabled FROM modules WHERE name='orders' LIMIT 1");
+            if ((int) ($orders['is_enabled'] ?? 0) !== 1) {
+                array_unshift($resources, 'orders');
+            }
+        } catch (\Throwable) {
+            array_unshift($resources, 'orders');
+        }
+        foreach ($resources as $resource) {
             $base = $p("/admin/$resource");
             $router->get($base, fn(Request $r) => $admin->index($r, $resource), $protected);
             $router->post($base, fn(Request $r) => $admin->create($r, $resource), $protected);

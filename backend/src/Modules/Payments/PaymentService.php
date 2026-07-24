@@ -198,8 +198,35 @@ final class PaymentService
         }
 
         $orderNumber = 'ORD-' . strtoupper(bin2hex(random_bytes(4))) . '-' . date('ymd');
+        $orderId = 0;
+        if ($this->ordersModuleEnabled() && class_exists(\App\Modules\Orders\OrdersService::class)) {
+            try {
+                $order = (new \App\Modules\Orders\OrdersService($this->db))->createOrderFromCheckout([
+                    'number' => $orderNumber,
+                    'email' => $email,
+                    'name' => $name,
+                    'currency' => $currency,
+                    'items' => $items,
+                    'source' => 'payments',
+                    'metadata' => [
+                        'item_type' => $catalogItem['type'] ?? null,
+                        'item_id' => $catalogItem['id'] ?? null,
+                        'offer_accepted' => $acceptOffer || $catalogItem,
+                    ],
+                ]);
+                $orderId = (int) ($order['id'] ?? 0);
+            } catch (\Throwable) {
+                // Orders is an optional adapter; legacy checkout must keep working.
+                $orderId = 0;
+            }
+        }
         $hasItemCols = $this->ordersHaveItemColumns();
-        if ($hasItemCols) {
+        if ($orderId > 0 && $hasItemCols) {
+            $this->db->run(
+                'UPDATE orders SET item_type=?,item_id=?,offer_accepted=? WHERE id=?',
+                [$catalogItem['type'] ?? null, $catalogItem['id'] ?? null, $acceptOffer || $catalogItem ? 1 : 0, $orderId],
+            );
+        } elseif ($orderId === 0 && $hasItemCols) {
             $this->db->run(
                 'INSERT INTO orders (number, customer_email, customer_name, amount, currency, status, items, item_type, item_id, offer_accepted)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -216,7 +243,8 @@ final class PaymentService
                     $acceptOffer || $catalogItem ? 1 : 0,
                 ],
             );
-        } else {
+            $orderId = (int) $this->db->id();
+        } elseif ($orderId === 0) {
             $this->db->run(
                 'INSERT INTO orders (number, customer_email, customer_name, amount, currency, status, items)
                  VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -230,8 +258,8 @@ final class PaymentService
                     json_encode($items, JSON_UNESCAPED_UNICODE),
                 ],
             );
+            $orderId = (int) $this->db->id();
         }
-        $orderId = $this->db->id();
 
         $this->db->run(
             'INSERT INTO payments (provider, external_id, order_id, amount, currency, status, raw_payload)
@@ -340,10 +368,10 @@ final class PaymentService
 
         $resolvedOrderId = $orderId ?? (isset($existing['order_id']) ? (int) $existing['order_id'] : null);
         if ($resolvedOrderId && in_array($status, ['succeeded', 'paid'], true)) {
-            $this->db->run('UPDATE orders SET status = ? WHERE id = ?', ['paid', $resolvedOrderId]);
+            $this->syncOrderStatus($resolvedOrderId, 'paid');
             $this->decrementProductStock($resolvedOrderId);
         } elseif ($resolvedOrderId && in_array($status, ['failed', 'canceled', 'cancelled'], true)) {
-            $this->db->run('UPDATE orders SET status = ? WHERE id = ?', ['cancelled', $resolvedOrderId]);
+            $this->syncOrderStatus($resolvedOrderId, 'cancelled');
         }
 
         $activity = new \App\Services\ActivityLogService($this->db);
@@ -391,6 +419,31 @@ final class PaymentService
         } catch (\Throwable) {
             // stock is best-effort
         }
+    }
+
+    private function ordersModuleEnabled(): bool
+    {
+        try {
+            $row = $this->db->one("SELECT is_enabled FROM modules WHERE name='orders' LIMIT 1");
+            return (int) ($row['is_enabled'] ?? 0) === 1;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    private function syncOrderStatus(int $orderId, string $status): void
+    {
+        if ($this->ordersModuleEnabled() && class_exists(\App\Modules\Orders\OrdersService::class)) {
+            try {
+                (new \App\Modules\Orders\OrdersService($this->db))->transitionStatus($orderId, $status, null, 'Payment webhook');
+                return;
+            } catch (\InvalidArgumentException) {
+                // A late/duplicate webhook must not move a fulfilled order backwards.
+                return;
+            } catch (\Throwable) {
+            }
+        }
+        $this->db->run('UPDATE orders SET status = ? WHERE id = ?', [$status, $orderId]);
     }
 
     private function resolveProviderId(?string $requested): string

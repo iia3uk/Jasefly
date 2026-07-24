@@ -60,6 +60,21 @@ modules/projects/
 
 Shared UI lives in `shared/ui` and `shared/admin`.
 
+## Platform system modules
+
+| Module | Role | Docs |
+| --- | --- | --- |
+| `Scheduler` | Job queue + HTTP/CLI tick (shared hosting) | `docs/SCHEDULER.md` |
+| `Forms` | Form engine, submissions, builder `form` | `docs/FORMS.md` |
+| `Automation` | Event → conditions → actions | `docs/AUTOMATION.md` |
+| `Notifications` | In-app / email / telegram deliveries | `docs/NOTIFICATIONS.md` |
+| `Newsletter` | Subscribers, campaigns, double opt-in | `docs/NEWSLETTER.md` |
+| `Orders` | Carts / order lifecycle (bridges Payments) | `docs/ORDERS.md` |
+| `Comments` | Comments, reviews, moderation | `docs/COMMENTS.md` |
+| `Analytics` | First-party events + admin overview | `docs/ANALYTICS.md` |
+
+Plugin SQL migrations live in `Modules/{Name}/migrations/`. CLI: `php migrate.php` (passes `modulesDir`).
+
 ## Future content types
 
 Use soft-delete + slug columns on new tables. Follow `ProjectsModule` / `BlogModule` as templates. No schema redesign required for unrelated modules.

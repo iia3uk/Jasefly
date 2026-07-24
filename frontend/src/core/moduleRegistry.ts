@@ -83,7 +83,8 @@ const PLUGIN_ALIASES: Record<string, string[]> = {
 const KNOWN_PLUGINS = [
   'system', 'users', 'content', 'site', 'media', 'portfolio', 'projects', 'blog',
   'services', 'seo', 'template', 'products', 'payments', 'mail', 'registration',
-  'ddos', 'webhooks', 'translate', 'support', 'lab',
+  'ddos', 'webhooks', 'translate', 'support', 'lab', 'scheduler', 'forms',
+  'automation', 'notifications', 'newsletter', 'orders', 'comments', 'analytics',
 ]
 
 /** Subscribers notified whenever plugin enable/disable state changes
@@ -150,11 +151,19 @@ export function setPluginEnabled(name: string, enabled: boolean): void {
   notifyPluginStateListeners()
 }
 
-/** True when the plugin is on (or state not hydrated yet — fail-open for admin boot). */
+/** True when the plugin is on (or state not hydrated yet — fail-open for admin boot UI). */
 export function isPluginEnabled(name: string): boolean {
   if (!pluginsHydrated) return true
   const aliases = PLUGIN_ALIASES[name] ?? [name]
   return aliases.every((a) => !runtimeDisabled.has(a))
+}
+
+/**
+ * Strict gate for API calls: false until /site or /admin/plugins hydrates.
+ * Prevents fail-open spam like GET /admin/projects → 404 when Projects is off.
+ */
+export function isPluginEnabledReady(name: string): boolean {
+  return pluginsHydrated && isPluginEnabled(name)
 }
 
 export function arePluginsHydrated(): boolean {
@@ -173,12 +182,15 @@ export function getAllModules(): ModuleManifest[] {
 /** Sidebar groups by plugin label (enabled modules only, registration order). */
 export function getAdminNavGrouped(): Record<string, ModuleManifest['adminNav']> {
   const grouped: Record<string, NonNullable<ModuleManifest['adminNav']>> = {}
+  const seenPaths = new Set<string>()
   for (const mod of getModules()) {
     const items = mod.adminNav ?? []
     if (items.length === 0) continue
     const section = mod.label || mod.name
     grouped[section] ??= []
     for (const item of items) {
+      if (seenPaths.has(item.path)) continue
+      seenPaths.add(item.path)
       grouped[section]!.push(item)
     }
   }

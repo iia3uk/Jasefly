@@ -12,14 +12,19 @@ This repository is a **reusable modular CMS**. Sites are content + configuration
 │  REST API /api/v1 (versioned)               │
 ├─────────────────────────────────────────────┤
 │  Module packages (PHP)                      │
-│  System · Content · Projects · Blog · Media │
+│  System · Content · Forms · Scheduler · …   │
+│  Automation · Notifications · Newsletter    │
+│  Orders · Comments · Analytics · Commerce   │
 ├─────────────────────────────────────────────┤
 │  Core                                       │
 │  Router · DB · JWT · ModuleRegistry · CRUD  │
+│  EventDispatcher · JobHandlerRegistry       │
 ├─────────────────────────────────────────────┤
 │  MySQL (normalized, FK, soft-delete ready)  │
 └─────────────────────────────────────────────┘
 ```
+
+Platform modules docs: `docs/FORMS.md`, `SCHEDULER.md`, `AUTOMATION.md`, `NOTIFICATIONS.md`, `NEWSLETTER.md`, `ORDERS.md`, `COMMENTS.md`, `ANALYTICS.md`.
 
 ## Backend modules
 

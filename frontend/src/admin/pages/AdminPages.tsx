@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowDown, ArrowUp, Copy, ExternalLink, GripVertical, Plus, Trash2 } from 'lucide-react'
 import { endpoints } from '@/lib/api'
-import { useAdminItem, useAdminList, useAdminSingleton, useCrud, useSingletonSave } from '@/hooks/useApi'
+import { useAdminItem, useAdminList, useAdminSingleton, useCrud, usePluginEnabled, useSingletonSave } from '@/hooks/useApi'
 import type { BlogPost, ID, Profile, Project } from '@/types'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { RichTextEditor } from '@/admin/components/RichTextEditor'
@@ -11,7 +11,7 @@ import { MediaPicker } from '@/admin/components/MediaPicker'
 import { GalleryPicker } from '@/admin/components/GalleryPicker'
 import { IconPicker } from '@/admin/components/IconPicker'
 import { BlueprintForm } from '@/admin/components/BlueprintForm'
-import { getBlueprints, isPluginEnabled } from '@/core/moduleRegistry'
+import { getBlueprints } from '@/core/moduleRegistry'
 import { AppIcon } from '@/shared/icons'
 import { AdminSplitLayout, adminFormFullClass, adminFormGridClass } from '@/admin/components/AdminSplitLayout'
 import { PageContext } from '@/admin/components/PageContext'
@@ -709,7 +709,8 @@ function ProjectLinkedPosts({ projectId }: { projectId: unknown }) {
 export function BlogEditPage() {
   const { id = 'new' } = useAdminRouteParams()
   const { data } = useAdminItem<BlogPost>('blog', id)
-  const { data: projects = [] } = useAdminList<Project>('projects', isPluginEnabled('projects'))
+  const projectsOn = usePluginEnabled('projects')
+  const { data: projects = [] } = useAdminList<Project>('projects', projectsOn)
   const crud = useCrud('blog')
   const nav = useNavigate()
   const { form, setForm, baseline, setBaseline } = useHydratedForm<Data>(data as Data | undefined, String(id))
@@ -760,7 +761,7 @@ export function BlogEditPage() {
           <GlassPanel className={adminFormGridClass}>
             <Text label={fieldLabel('title')} value={form.title} onChange={v => set('title', v)} />
             <Text label={fieldLabel('slug')} value={form.slug} onChange={v => set('slug', v)} />
-            {isPluginEnabled('projects') ? (
+            {projectsOn ? (
               <Select
                 label={fieldLabel('project_id')}
                 value={form.project_id ?? ''}

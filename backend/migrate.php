@@ -28,7 +28,8 @@ use App\Services\MigrationService;
 $svc = new MigrationService(
     $db,
     "$root/migrations",
-    (string) ($app['storage'] ?? "$root/storage")
+    (string) ($app['storage'] ?? "$root/storage"),
+    "$root/src/Modules"
 );
 
 if (PHP_SAPI !== 'cli') {
