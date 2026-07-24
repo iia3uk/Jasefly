@@ -3,6 +3,15 @@ DirectoryIndex index.php
 RewriteEngine On
 RewriteBase /
 
+# Canonical host: strip www in one hop
+RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+
+# Force HTTPS (single hop). Skip if proxy already terminated TLS.
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
 # Pass Authorization header through to PHP (required for JWT on CGI/FastCGI/Beget)
 RewriteCond %{HTTP:Authorization} .
 RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -56,19 +65,21 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/api/
 RewriteRule ^ index.php [L,QSA]
 
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json application/xml image/svg+xml
+</IfModule>
+
 <IfModule mod_headers.c>
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://www.google-analytics.com https://www.googletagmanager.com; media-src 'self' blob: data:; worker-src 'self' blob:"
 
-  <Files "index.php">
-    Header set Cache-Control "no-cache, no-store, must-revalidate"
-    Header set Pragma "no-cache"
-    Header set Expires "0"
-  </Files>
-
-  <Files "spa.html">
-    Header set Cache-Control "no-cache, no-store, must-revalidate"
-  </Files>
+  <FilesMatch "\.(?:js|css|woff2|woff|ttf|png|jpe?g|gif|webp|svg|ico|map)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
 
   # Hashed Vite bundles may be cached forever
   SetEnvIf Request_URI "^/assets/" IMMUTABLE_ASSET
@@ -79,4 +90,16 @@ RewriteRule ^ index.php [L,QSA]
   SetEnvIf Request_URI "^/favicon(-jasefly)?\.(svg|ico|png)$" BRAND_ASSET
   SetEnvIf Request_URI "^/apple-touch-icon\.png$" BRAND_ASSET
   Header set Cache-Control "public, max-age=300, must-revalidate" env=BRAND_ASSET
+
+  <Files "index.php">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </Files>
+
+  <Files "spa.html">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </Files>
+
+  <Files "prerender.php">
+    Header set Cache-Control "public, max-age=60, must-revalidate"
+  </Files>
 </IfModule>
