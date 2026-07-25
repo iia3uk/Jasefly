@@ -1,0 +1,97 @@
+name: Platform SDK
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: PHP unit tests
+        run: php backend/tests/run.php
+
+      - name: SDK API diff
+        run: php backend/bin/sdk.php api-diff
+
+      - name: Certify demo-kit
+        run: php backend/bin/sdk.php certify modules-src/demo-kit
+
+      - name: Certify forms-sdk-reference
+        run: php backend/bin/sdk.php certify modules-src/forms-sdk-reference
+
+      - name: Frontend typecheck and build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build demo-kit package
+        run: node scripts/build-module.js demo-kit --yes
+
+      - name: Build forms-sdk-reference package
+        run: node scripts/build-module.js forms-sdk-reference --yes
+
+  lifecycle:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: jasefly_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          extensions: pdo_mysql
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure test database
+        run: |
+          cat > backend/config/database.local.php <<'PHP'
+          <?php
+          return [
+              'host' => '127.0.0.1',
+              'port' => 3306,
+              'database' => 'jasefly_test',
+              'username' => 'root',
+              'password' => 'root',
+              'charset' => 'utf8mb4',
+          ];
+          PHP
+
+      - name: Run core migrations
+        run: php backend/migrate.php || true
+
+      - name: Lifecycle certification (DB)
+        env:
+          JASEFLY_LIFECYCLE_DB: '1'
+        run: php backend/bin/certify-lifecycle.php
