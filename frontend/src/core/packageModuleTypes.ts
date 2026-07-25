@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import type { WidgetDefinition } from '@/builder/types'
 import type { AdminScreen, PublicRouteDef } from '@/core/pluginTypes'
 
