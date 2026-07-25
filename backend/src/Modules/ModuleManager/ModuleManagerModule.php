@@ -316,13 +316,14 @@ final class ModuleManagerModule extends AbstractModule
     {
         $out = [];
         foreach ($repo->listAll() as $row) {
-            $out[] = $this->presentModule($row);
+            $slug = (string) ($row['slug'] ?? '');
+            $out[] = $this->presentModule($row, $slug !== '' && $repo->hasRollbackSnapshot($slug));
         }
         return $out;
     }
 
     /** @param array<string, mixed> $row */
-    private function presentModule(array $row): array
+    private function presentModule(array $row, bool $rollbackAvailable = false): array
     {
         $manifest = null;
         if (!empty($row['manifest_json']) && is_string($row['manifest_json'])) {
@@ -348,6 +349,7 @@ final class ModuleManagerModule extends AbstractModule
             'signature_status' => $row['signature_status'] ?? '',
             'health_status' => $row['health_status'] ?? '',
             'last_error' => $row['last_error'] ?? null,
+            'rollback_available' => $rollbackAvailable,
             'data_retention' => $row['data_retention'] ?? '',
             'package_checksum' => $row['package_checksum'] ?? null,
             'enabled_at' => $row['enabled_at'] ?? null,

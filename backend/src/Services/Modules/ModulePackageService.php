@@ -348,7 +348,9 @@ final class ModulePackageService
             }
         }
         if ($backupPath === null || !is_file($backupPath)) {
-            throw new \RuntimeException('No rollback snapshot available');
+            throw new \RuntimeException(
+                'Нет снимка для отката. Rollback доступен только после успешного обновления (update) модуля, не после первой установки.',
+            );
         }
 
         $fromVersion = (string) ($row['installed_version'] ?? '0.0.0');
