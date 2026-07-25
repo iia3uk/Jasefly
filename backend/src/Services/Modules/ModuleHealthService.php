@@ -81,8 +81,19 @@ final class ModuleHealthService
                 $before = get_declared_classes();
                 require_once $entryPath;
                 $new = array_diff(get_declared_classes(), $before);
-                if ($new === []) {
-                    $issues[] = 'Entrypoint did not declare a class';
+                $expectedNs = 'App\\PackageModules\\' . $manifest->studlySlug() . '\\';
+                // Class may already be loaded (enabled module / prior health) — require_once is a no-op.
+                $found = $new !== [];
+                if (!$found) {
+                    foreach (get_declared_classes() as $class) {
+                        if (str_starts_with($class, $expectedNs)) {
+                            $found = true;
+                            break;
+                        }
+                    }
+                }
+                if (!$found) {
+                    $issues[] = 'Entrypoint did not declare a class under ' . $expectedNs;
                 }
             } catch (\Throwable $e) {
                 $issues[] = 'Entrypoint not loadable: ' . $e->getMessage();
