@@ -29,4 +29,20 @@ final class DatabaseAdapter implements PlatformDatabaseInterface
     {
         return (int) $this->db->id();
     }
+
+    public function transaction(callable $callback): mixed
+    {
+        $pdo = $this->db->pdo();
+        $pdo->beginTransaction();
+        try {
+            $result = $callback();
+            $pdo->commit();
+            return $result;
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
 }

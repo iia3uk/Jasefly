@@ -6,6 +6,7 @@ namespace App\Services\Modules;
 use App\Core\Modules\ModuleHookInterface as CoreModuleHookInterface;
 use App\Core\Modules\ModuleInstallContext;
 use App\Platform\Package\ModuleHookInterface as PlatformModuleHookInterface;
+use App\Platform\Package\PlatformInstallContext;
 
 /**
  * Executes install/update lifecycle hooks declared in module.json.
@@ -80,7 +81,11 @@ final class ModuleHookRunner
             throw new \RuntimeException('Hook class must implement ModuleHookInterface');
         }
 
-        $instance->run($context);
+        if ($instance instanceof PlatformModuleHookInterface) {
+            $instance->run(PlatformInstallContext::fromCore($context));
+        } else {
+            $instance->run($context);
+        }
         return $context->logs();
     }
 

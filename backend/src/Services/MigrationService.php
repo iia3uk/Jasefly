@@ -40,6 +40,7 @@ final class MigrationService
         '019_seo_target_regions.sql',
         '020_installed_modules.sql',
         '021_platform_sdk.sql',
+        '022_platform_capabilities_ext.sql',
     ];
 
     private SqlTranspiler $transpiler;

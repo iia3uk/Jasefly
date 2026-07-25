@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Platform;
 
-use App\Core\Modules\ModuleManifest;
 use App\Platform\Attributes\DeprecatedApi;
 use App\Platform\Capabilities\CapabilityRegistry;
 use App\Platform\Capabilities\ServiceRegistry;
@@ -29,10 +28,13 @@ use App\Platform\Contracts\PlatformStorageInterface;
 use App\Platform\Contracts\PlatformTranslationsInterface;
 use App\Platform\Contracts\PlatformUsersInterface;
 use App\Platform\Manifest\FeatureFlags;
+use App\Platform\Manifest\PlatformModuleManifestInterface;
 
 /**
  * Official Platform SDK entry for package modules (SDK v2 surface).
  * SDK v1 modules receive the same object via CompatibilityLayer aliases.
+ *
+ * No method returns App\Core\* types.
  */
 final class PlatformContext
 {
@@ -42,7 +44,7 @@ final class PlatformContext
     public function __construct(
         private string $moduleSlug,
         private int $moduleSdkVersion,
-        private ModuleManifest $manifest,
+        private PlatformModuleManifestInterface $manifest,
         private PlatformDatabaseInterface $database,
         private PlatformStorageInterface $storage,
         private PlatformEventsInterface $events,
@@ -72,7 +74,7 @@ final class PlatformContext
         return $this->moduleSlug;
     }
 
-    public function manifest(): ModuleManifest
+    public function manifest(): PlatformModuleManifestInterface
     {
         return $this->manifest;
     }
@@ -200,9 +202,23 @@ final class PlatformContext
         return $this->features->enabled($flag);
     }
 
+    /**
+     * Resolve a public platform service by catalog ID.
+     * Unknown / internal IDs throw. Prefer typed accessors (mail(), database(), …).
+     */
     public function service(string $id): object
     {
         return $this->services->require($id);
+    }
+
+    /**
+     * @template T of object
+     * @param class-string<T> $contractFqcn
+     * @return T
+     */
+    public function serviceAs(string $id, string $contractFqcn): object
+    {
+        return $this->services->requireAs($id, $contractFqcn);
     }
 
     /**
