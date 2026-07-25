@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\PackageModules\DemoKit;
 
+use App\Platform\Contracts\PlatformRequestInterface;
 use App\Platform\Package\AbstractPackageModule;
 use App\Platform\Package\PlatformResponse;
 use App\Platform\PlatformContext;
@@ -50,8 +51,8 @@ final class DemoKitModule extends AbstractPackageModule
         $perms = $ctx->permissions();
         $protected = [$http->authMiddleware(), $http->permissionMiddleware()];
 
-        $http->get('/admin/demo-kit/ping', static function ($r) use ($perms) {
-            $perms->require($r->user ?? [], 'demo-kit.view');
+        $http->get('/admin/demo-kit/ping', static function (PlatformRequestInterface $r) use ($perms) {
+            $perms->require($r->user() ?? [], 'demo-kit.view');
             PlatformResponse::json(['data' => [
                 'ok' => true,
                 'module' => 'demo-kit',

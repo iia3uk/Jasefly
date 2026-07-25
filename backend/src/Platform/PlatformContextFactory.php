@@ -30,11 +30,13 @@ use App\Platform\Capabilities\CapabilityRegistry;
 use App\Platform\Capabilities\ServiceRegistry;
 use App\Platform\Compatibility\CompatibilityLayer;
 use App\Platform\Manifest\FeatureFlags;
+use App\Platform\Manifest\PlatformModuleManifest;
 use App\Router;
 use App\Services\Modules\ModuleHealthService;
 use App\Services\Modules\ModuleMigrationService;
 use App\Services\Modules\ModuleRegistryRepository;
 
+/** @internal Host factory — not for package import */
 final class PlatformContextFactory
 {
     private CapabilityRegistry $capabilities;
@@ -82,29 +84,49 @@ final class PlatformContextFactory
             new ModuleMigrationService($this->db),
             $this->app,
         );
+        $publicManifest = PlatformModuleManifest::fromCore($manifest);
+
+        $dbAdapter = new DatabaseAdapter($this->db);
+        $settings = new SettingsAdapter($this->db, $slug);
+        $cache = new CacheAdapter($slug);
+        $health = new HealthAdapter($healthSvc, $slug);
+
+        // Per-module scoped services override shared defaults
+        $this->services->set('db', $dbAdapter);
+        $this->services->set('database', $dbAdapter);
+        $this->services->set('settings', $settings);
+        $this->services->set('cache', $cache);
+        $this->services->set('health', $health);
+        $this->services->set('storage', new StorageAdapter($this->paths, $slug));
+        $this->services->set('events', new EventsAdapter($this->events, $this->db, $slug));
+        $this->services->set('scheduler', $scheduler);
+        $this->services->set('http', new HttpAdapter($this->router, $prefix, $this->app, $this->db));
+        $this->services->set('builder', new BuilderAdapter($slug));
+        $this->services->set('logger', new LoggerAdapter($slug));
+        $this->services->set('assets', new AssetsAdapter($this->paths, $slug));
 
         $ctx = new PlatformContext(
             $slug,
             $sdkVer,
-            $manifest,
-            new DatabaseAdapter($this->db),
+            $publicManifest,
+            $dbAdapter,
             new StorageAdapter($this->paths, $slug),
             new EventsAdapter($this->events, $this->db, $slug),
             $scheduler,
             new MailAdapter($this->db, $this->app),
             new NotificationsAdapter($this->db),
-            new SettingsAdapter($this->db),
+            $settings,
             new PermissionsAdapter($this->db),
             new UsersAdapter($this->db),
             new MediaAdapter($this->db),
             new BuilderAdapter($slug),
             new HttpAdapter($this->router, $prefix, $this->app, $this->db),
-            new CacheAdapter(),
+            $cache,
             new LoggerAdapter($slug),
             new ConfigAdapter($this->app),
             new TranslationsAdapter(),
             new AssetsAdapter($this->paths, $slug),
-            new HealthAdapter($healthSvc),
+            $health,
             new ContentAdapter($this->db),
             $this->capabilities,
             $this->services,
@@ -119,6 +141,7 @@ final class PlatformContextFactory
         $this->services->set('capabilities', $this->capabilities);
         $this->services->set('features', $this->features);
         $this->services->set('db', new DatabaseAdapter($this->db));
+        $this->services->set('database', new DatabaseAdapter($this->db));
         $this->services->set('settings', new SettingsAdapter($this->db));
         $this->services->set('mail', new MailAdapter($this->db, $this->app));
         $this->services->set('notifications', new NotificationsAdapter($this->db));
@@ -129,5 +152,6 @@ final class PlatformContextFactory
         $this->services->set('cache', new CacheAdapter());
         $this->services->set('config', new ConfigAdapter($this->app));
         $this->services->set('translations', new TranslationsAdapter());
+        $this->services->set('health', new HealthAdapter());
     }
 }
