@@ -8,17 +8,35 @@ import type { AdminScreen } from '@/core/pluginTypes'
 import { useAuth } from '@/context/AuthContext'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { permissionForAdminSegment } from '@/admin/rolePermissions'
+import { PackageErrorBoundary } from '@/platform/PackageErrorBoundary'
 
 import { LazyLoaderFallback } from '@/builder/public/CmsPages'
 import { stripAdminBase } from '@/admin/adminBasePath'
 
 function resolveScreenElement(screen: AdminScreen): ReactElement {
-  if (screen.element) return screen.element
+  const slug = screen.path.split('/')[0] ?? 'module'
+  if (screen.element) {
+    return (
+      <PackageErrorBoundary slug={slug} label={screen.label}>
+        {screen.element}
+      </PackageErrorBoundary>
+    )
+  }
   let Comp: ComponentType | null = null
   if (screen.Component) Comp = screen.Component
   else if (screen.lazy) Comp = lazy(screen.lazy)
-  if (!Comp) return <div className="p-10 text-sm text-red-400">Admin screen missing component: {screen.label}</div>
-  return <Comp />
+  if (!Comp) {
+    return (
+      <div className="p-10 text-sm text-red-400">
+        Admin screen missing component: {screen.label}
+      </div>
+    )
+  }
+  return (
+    <PackageErrorBoundary slug={slug} label={screen.label}>
+      <Comp />
+    </PackageErrorBoundary>
+  )
 }
 
 /**

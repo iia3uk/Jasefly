@@ -131,6 +131,14 @@ export function registerModule(manifest: ModuleManifest): void {
   manifests.push(manifest)
 }
 
+/** Remove a module manifest (e.g. when unloading a package module). */
+export function unregisterModule(name: string): void {
+  const idx = manifests.findIndex((m) => m.name === name)
+  if (idx < 0) return
+  manifests.splice(idx, 1)
+  notifyPluginStateListeners()
+}
+
 /** Apply plugin states fetched from the backend (toggles runtime visibility). */
 export function setPluginStates(states: PluginState[]): void {
   const enabled = expandEnabled(states.filter((s) => s.is_enabled).map((s) => s.name))

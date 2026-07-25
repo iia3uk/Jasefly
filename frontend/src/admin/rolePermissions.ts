@@ -32,6 +32,11 @@ const ADMIN_PERMS = [
   'forms.submissions.view',
   'forms.submissions.manage',
   'forms.export',
+  'forms-ref.view',
+  'forms-ref.manage',
+  'forms-ref.submissions.view',
+  'forms-ref.submissions.manage',
+  'forms-ref.export',
   'scheduler.view',
   'scheduler.manage',
   'automations.view',
@@ -63,6 +68,7 @@ const EDITOR_PERMS = [
   'media.manage',
   'lab.view',
   'lab.preview',
+  'forms-ref.view',
   'comments.view',
 ] as const
 
@@ -79,6 +85,11 @@ export function roleCan(role: string | null | undefined, permission: string): bo
   if (!perms) return false
   if (perms === '*') return true
   return perms.includes(permission)
+}
+
+/** Dynamic package-module permission pattern (slug.view, slug.manage, …). */
+export function allowPackagePermission(perm: string): boolean {
+  return /^[a-z0-9-]+\.(view|manage|export|submissions\.(view|manage))$/.test(perm)
 }
 
 export function isSuperAdminRole(role: string | null | undefined): boolean {
@@ -112,6 +123,9 @@ export function permissionForAdminSegment(segment: string): string | null {
     lab: 'lab.view',
     forms: 'forms.view',
     'form-submissions': 'forms.submissions.view',
+    'forms-sdk-reference': 'forms-ref.view',
+    'forms-ref': 'forms-ref.view',
+    'forms-ref-submissions': 'forms-ref.submissions.view',
     scheduler: 'scheduler.view',
     modules: 'modules.view',
     'demo-kit': 'demo-kit.view',

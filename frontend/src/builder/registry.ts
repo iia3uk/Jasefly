@@ -44,6 +44,10 @@ export function getWidget(type: string): WidgetDefinition | undefined {
   return widgets.get(type)
 }
 
+export function unregisterWidget(type: string): void {
+  widgets.delete(type)
+}
+
 export function listWidgets(category?: WidgetDefinition['category']): WidgetDefinition[] {
   const all = [...widgets.values()].filter((w) => {
     const plugin = widgetRequiredPlugin(w)

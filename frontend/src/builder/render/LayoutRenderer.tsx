@@ -51,6 +51,17 @@ function HiddenBadge() {
   )
 }
 
+function isPackagePlugin(name: string | null | undefined): boolean {
+  if (!name) return false
+  return name.includes('-') || name === 'forms-sdk-reference'
+}
+
+function isPackageWidgetType(widgetType: string | undefined, plugin: string | null | undefined): boolean {
+  if (!widgetType) return false
+  if (widgetType.includes('.')) return true
+  return isPackagePlugin(plugin)
+}
+
 function WidgetNode({
   el,
   editMode,
@@ -69,11 +80,13 @@ function WidgetNode({
   onPatchSettings?: (id: string, patch: Record<string, unknown>) => void
 }) {
   const { site } = useSiteContext()
-  const def = el.widgetType ? getWidget(el.widgetType) : undefined
+  const widgetType = el.widgetType ?? ''
+  const def = widgetType ? getWidget(widgetType) : undefined
   const selected = selectedId === el.id
   const hidden = isBuilderHidden(el)
   const styleCss = stylesToCss(readStyles(el.settings))
-  const requiredPlugin = def ? widgetRequiredPlugin(def) : null
+  const inferredPlugin = widgetType.includes('.') ? widgetType.split('.')[0] : null
+  const requiredPlugin = def ? widgetRequiredPlugin(def) : inferredPlugin
   const pluginOff = Boolean(
     requiredPlugin
     && !(
@@ -82,8 +95,14 @@ function WidgetNode({
         : isPluginEnabled(requiredPlugin)
     ),
   )
+  const isPackage = isPackageWidgetType(widgetType, def?.plugin ?? requiredPlugin)
+  const packageUnavailable = Boolean(widgetType && isPackage && (!def || pluginOff))
 
-  const body = def && pluginOff ? (
+  const body = packageUnavailable ? (
+    <div className="rounded-lg border border-dashed border-amber-500/40 bg-amber-500/[0.04] p-4 text-sm text-amber-100/90">
+      Виджет модуля отключён: {widgetType}
+    </div>
+  ) : def && pluginOff ? (
     editMode ? (
       <div className="rounded-lg border border-dashed border-amber-500/35 bg-amber-500/5 px-4 py-6 text-center text-sm text-amber-100/90">
         Виджет «{def.label}» скрыт на сайте — плагин «{requiredPlugin}» выключен
@@ -106,18 +125,11 @@ function WidgetNode({
     </BuilderEditProvider>
   ) : (
     <div className="rounded-lg border border-dashed border-amber-500/40 bg-amber-500/[0.04] p-4 text-sm text-amber-100/90">
-      {el.widgetType && el.widgetType.includes('.') ? (
-        <>
-          Модуль «{el.widgetType.split('.')[0]}» отключён или не установлен.
-          <div className="mt-1 text-xs text-amber-200/70">Виджет «{el.widgetType}» временно недоступен</div>
-        </>
-      ) : (
-        <>Неизвестный виджет: {el.widgetType}</>
-      )}
+      Неизвестный виджет: {widgetType}
     </div>
   )
 
-  if (!editMode && pluginOff) {
+  if (!editMode && pluginOff && !packageUnavailable) {
     return null
   }
 

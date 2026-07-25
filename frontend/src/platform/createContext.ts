@@ -1,9 +1,10 @@
-import { createElement, useEffect, useState } from 'react'
+import { createElement, Fragment, useEffect, useState } from 'react'
 import { registerModule, setPluginEnabled } from '@/core/moduleRegistry'
-import { registerWidget, getWidget } from '@/builder/registry'
+import { registerWidget, unregisterWidget } from '@/builder/registry'
 import type { AdminScreen, PublicRouteDef } from '@/core/pluginTypes'
 import type { WidgetDefinition } from '@/builder/types'
-import type { PlatformFrontendContext } from '@/platform/types'
+import type { PlatformAdminScreen, PlatformFrontendContext, PlatformWidgetDefinition } from '@/platform/types'
+import { PackageErrorBoundary } from '@/platform/PackageErrorBoundary'
 import {
   platformRegistry,
   trackUnregister,
@@ -74,11 +75,45 @@ function PackagePlaceholderPage({ title, slug }: { title: string; slug: string }
   )
 }
 
-function ensureAdminScreen(screen: AdminScreen, slug: string): AdminScreen {
-  if (screen.element || screen.Component || screen.lazy) return screen
+function wrapWidgetRender(widget: PlatformWidgetDefinition, slug: string): WidgetDefinition['Render'] {
+  const Inner = widget.Render
+  return (props) =>
+    createElement(
+      PackageErrorBoundary,
+      { slug, label: widget.label },
+      createElement(Inner, props),
+    )
+}
+
+function wrapAdminScreen(screen: PlatformAdminScreen, slug: string): AdminScreen {
+  const boundaryProps = { slug, label: screen.label || slug }
+
+  if (screen.element) {
+    return {
+      ...screen,
+      element: createElement(PackageErrorBoundary, boundaryProps, screen.element),
+    }
+  }
+
+  if (screen.Component) {
+    const Inner = screen.Component
+    return {
+      ...screen,
+      Component: () =>
+        createElement(PackageErrorBoundary, boundaryProps, createElement(Inner)),
+    }
+  }
+
+  if (screen.lazy) return screen as AdminScreen
+
   return {
     ...screen,
-    Component: () => createElement(PackagePlaceholderPage, { title: screen.label || slug, slug }),
+    Component: () =>
+      createElement(
+        PackageErrorBoundary,
+        boundaryProps,
+        createElement(PackagePlaceholderPage, { title: screen.label || slug, slug }),
+      ),
   }
 }
 
@@ -107,9 +142,10 @@ export function createPlatformFrontendContext(slug: string, version: string, sdk
     version,
     sdkVersion,
     feature: (flag) => FEATURES[flag] ?? false,
+    ui: { createElement, useState, useEffect, Fragment },
     admin: {
       registerPage: (screen) => {
-        adminScreens.push(ensureAdminScreen(screen, slug))
+        adminScreens.push(wrapAdminScreen(screen, slug))
         flush()
       },
       registerNavItem: (item) => {
@@ -117,11 +153,20 @@ export function createPlatformFrontendContext(slug: string, version: string, sdk
         flush()
       },
       registerSettingsSection: (screen) => {
-        adminScreens.push(ensureAdminScreen(screen, slug))
+        adminScreens.push(wrapAdminScreen(screen, slug))
         flush()
       },
       registerDashboardCard: (card) => {
-        platformRegistry.dashboardCards.push({ ...card, slug })
+        platformRegistry.dashboardCards.push({
+          ...card,
+          slug,
+          render: () =>
+            createElement(
+              PackageErrorBoundary,
+              { slug, label: card.label },
+              card.render(),
+            ),
+        })
       },
       registerTopBarButton: (btn) => {
         platformRegistry.topBarButtons.push({ ...btn, slug })
@@ -131,9 +176,10 @@ export function createPlatformFrontendContext(slug: string, version: string, sdk
       },
     },
     builder: {
-      registerWidget: (widget: WidgetDefinition) => {
+      registerWidget: (widget: PlatformWidgetDefinition) => {
         const namespaced = widget.type.includes('.') ? widget.type : `${slug}.${widget.type}`
-        registerWidget({ ...widget, type: namespaced, plugin: slug })
+        const Render = wrapWidgetRender(widget, slug)
+        registerWidget({ ...widget, type: namespaced, plugin: slug, Render })
         blocks.push({
           type: namespaced,
           label: widget.label,
@@ -141,12 +187,9 @@ export function createPlatformFrontendContext(slug: string, version: string, sdk
           icon: widget.icon,
           defaultSettings: widget.defaultSettings,
           settingsFields: widget.settingsFields,
-          Render: widget.Render,
+          Render,
         })
-        trackUnregister(slug, () => {
-          /* widget registry has no delete — gated by plugin enable */
-          void getWidget(namespaced)
-        })
+        trackUnregister(slug, () => unregisterWidget(namespaced))
         flush()
       },
       registerPropertyEditor: (type, editor) => {
