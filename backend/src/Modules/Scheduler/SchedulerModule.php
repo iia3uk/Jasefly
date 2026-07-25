@@ -36,6 +36,20 @@ final class SchedulerModule extends AbstractModule
         JobHandlerRegistry::register('scheduler.noop', static function (array $payload): void {
             // health / test job
         });
+        JobHandlerRegistry::register('platform.event.dispatch', static function (array $payload): void {
+            $event = (string) ($payload['_platform_event'] ?? '');
+            if ($event === '') {
+                return;
+            }
+            try {
+                $events = \App\Core\Container::getInstance()->get(\App\Core\EventDispatcher::class);
+                if ($events instanceof \App\Core\EventDispatcher) {
+                    $events->dispatch($event, $payload);
+                }
+            } catch (\Throwable) {
+                // dispatcher may be unavailable in CLI-only runners
+            }
+        });
         JobHandlerRegistry::register('scheduler.cleanup', static function (array $payload) use ($db): void {
             $days = max(1, (int) ($payload['days'] ?? 30));
             $db->run(

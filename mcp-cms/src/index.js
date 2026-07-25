@@ -1069,6 +1069,47 @@ server.tool(
   },
 );
 
+server.tool(
+  'cms_module_compatibility',
+  'Compatibility Report (SDK score, forbidden imports, capabilities) для установленного модуля.',
+  { slug: z.string().min(1) },
+  async ({ slug }) => {
+    try {
+      return ok((await getClient().get(`/admin/modules/${slug}/compatibility`))?.data);
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool('cms_sdk_report', 'Отчёт Platform SDK (версии, публичные API).', {}, async () => {
+  try {
+    return ok((await getClient().get('/admin/platform/sdk'))?.data);
+  } catch (e) {
+    return fail(e);
+  }
+});
+
+server.tool('cms_capability_report', 'Capability Registry: возможности платформы и провайдеры.', {}, async () => {
+  try {
+    return ok((await getClient().get('/admin/platform/capabilities'))?.data);
+  } catch (e) {
+    return fail(e);
+  }
+});
+
+server.tool('cms_export_sdk', 'Экспорт platform.manifest.json (локально через bin/sdk.php export-sdk).', {}, async () => {
+  try {
+    const { spawnSync } = await import('node:child_process');
+    const php = path.join(repoRoot(), 'backend', 'bin', 'sdk.php');
+    const r = spawnSync('php', [php, 'export-sdk'], { cwd: repoRoot(), encoding: 'utf8' });
+    if (r.status !== 0) throw new Error(r.stderr || r.stdout || 'export-sdk failed');
+    return ok({ message: r.stdout?.trim() || 'exported' });
+  } catch (e) {
+    return fail(e);
+  }
+});
+
 server.tool('cms_module_operations', 'Журнал операций Module Package Manager.', {}, async () => {
   try {
     return ok((await getClient().get('/admin/module-operations'))?.data ?? []);

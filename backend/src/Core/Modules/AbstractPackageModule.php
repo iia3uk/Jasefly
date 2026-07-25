@@ -5,14 +5,17 @@ namespace App\Core\Modules;
 
 use App\Core\AbstractModule;
 use App\Database;
+use App\Platform\PlatformContext;
 use App\Router;
 
 /**
  * Base class for installable package modules (App\PackageModules\*).
+ * Prefer bootPlatform(PlatformContext) — do not import App\Core or App\Modules services.
  */
 abstract class AbstractPackageModule extends AbstractModule implements InstallableModuleInterface
 {
     protected ?ModuleManifest $packageManifest = null;
+    protected ?PlatformContext $platform = null;
 
     public function setPackageManifest(ModuleManifest $manifest): void
     {
@@ -29,7 +32,7 @@ abstract class AbstractPackageModule extends AbstractModule implements Installab
 
     public function register(ModuleContext $context): void
     {
-        // default: routes via registerRoutes
+        // legacy — prefer bootPlatform
     }
 
     public function bootWithContext(ModuleContext $context): void
@@ -37,8 +40,21 @@ abstract class AbstractPackageModule extends AbstractModule implements Installab
         $this->boot($context->db, $context->app);
     }
 
+    public function bootPlatform(PlatformContext $ctx): void
+    {
+        $this->platform = $ctx;
+    }
+
+    protected function platform(): PlatformContext
+    {
+        if ($this->platform === null) {
+            throw new \RuntimeException('PlatformContext not available — wait for bootPlatform()');
+        }
+        return $this->platform;
+    }
+
     public function registerRoutes(Router $router, Database $db, array $app, string $apiPrefix): void
     {
-        // override in package
+        // Prefer registering routes inside bootPlatform via $ctx->http()
     }
 }

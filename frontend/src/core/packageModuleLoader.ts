@@ -4,6 +4,8 @@ import { registerWidget } from '@/builder/registry'
 import type { JaseflyFrontendModule, ModuleFrontendContext, RuntimeModuleAsset } from '@/core/packageModuleTypes'
 import type { AdminScreen, PublicRouteDef } from '@/core/pluginTypes'
 import type { WidgetDefinition } from '@/builder/types'
+import { createPlatformFrontendContext } from '@/platform/createContext'
+import { getPlatformDashboardCards, unregisterPlatformModule } from '@/platform/registry'
 
 const loaded = new Set<string>()
 const dashboardCards: Array<{ id: string; label: string; render: () => unknown }> = []
@@ -237,12 +239,29 @@ async function loadOne(asset: RuntimeModuleAsset): Promise<void> {
       console.warn('[packageModuleLoader] invalid module export', slug)
       return
     }
-    const ctx = createContext(slug, asset.version || pack.version || '0.0.0')
-    await pack.register(ctx)
+    const version = asset.version || pack.version || '0.0.0'
+    const legacy = createContext(slug, version)
+    const platform = createPlatformFrontendContext(slug, version, 1)
+    // Hybrid context: Platform SDK (admin/builder/public) + legacy register* helpers
+    const hybrid = {
+      ...platform,
+      ...legacy,
+      slug,
+      version,
+    }
+    await pack.register(hybrid as unknown as ModuleFrontendContext)
     loaded.add(slug)
   } catch (e) {
     console.error('[packageModuleLoader] failed', slug, e)
   }
+}
+
+/** Tear down FE extensions for a disabled package module. */
+export function unloadPackageModule(slug: string): void {
+  if (!slug) return
+  unregisterPlatformModule(slug)
+  setPluginEnabled(slug, false)
+  loaded.delete(slug)
 }
 
 /** Load enabled package frontend modules (no Node on server). */
@@ -252,6 +271,10 @@ export async function loadPackageModules(): Promise<void> {
     if (!res.ok) return
     const json = (await res.json()) as { data?: RuntimeModuleAsset[] }
     const list = Array.isArray(json.data) ? json.data : []
+    const enabled = new Set(list.filter((i) => i.status === 'enabled').map((i) => i.slug))
+    for (const slug of [...loaded]) {
+      if (!enabled.has(slug)) unloadPackageModule(slug)
+    }
     for (const item of list) {
       await loadOne(item)
     }
@@ -261,5 +284,5 @@ export async function loadPackageModules(): Promise<void> {
 }
 
 export function getPackageDashboardCards() {
-  return dashboardCards
+  return [...dashboardCards, ...getPlatformDashboardCards()]
 }

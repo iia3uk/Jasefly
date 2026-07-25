@@ -40,11 +40,28 @@
     "jasefly": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["min_version", "api_version"],
+      "required": ["min_version", "api_version", "sdk_version"],
       "properties": {
         "min_version": { "type": "string", "minLength": 1 },
         "max_version": { "type": ["string", "null"] },
-        "api_version": { "type": "integer", "minimum": 1, "maximum": 1 }
+        "api_version": { "type": "integer", "minimum": 1, "maximum": 1 },
+        "sdk_version": { "type": "integer", "minimum": 1, "maximum": 2 }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requires": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "maxItems": 64
+        },
+        "provides": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "maxItems": 64
+        }
       }
     },
     "php": {

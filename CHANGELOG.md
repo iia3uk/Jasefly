@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-07-25 — Fix package admin screens without Component
+
+- Platform FE registerPage/registerSettingsSection attach PlaceholderPage when Component/lazy/element missing
+- registerModule upserts so package nav/screens stay in sync
+
+## 2026-07-25 — Fix RR6: package public routes must be Route elements
+
+- Replace PackagePublicRoutes wrapper with usePackagePublicRouteElements() so children of Routes are only <Route>
+
+## 2026-07-25 — Register migration 021_platform_sdk in MigrationService
+
+- Add 021_platform_sdk.sql to MigrationService::FILES so platform_capabilities tables apply on hosting
+
+## 2026-07-25 — Platform SDK + Compatibility Layer
+
+- App\Platform SDK: PlatformContext, adapters, capabilities, Compatibility Layer v1/v2
+- Static analyzer + CompatibilityChecker + bin/sdk.php + build-module gate
+- FE platform SDK, PackagePublicRoutes, unregister on module disable
+- MCP cms_sdk_report / cms_capability_report / cms_module_compatibility / cms_export_sdk
+- demo-kit on SDK v1; docs/platform/*; migration 021_platform_sdk.sql
+
+
+## 2026-07-25 — feat(platform): Platform SDK + Compatibility Layer
+
+- Public `App\Platform\*` SDK (PlatformContext, adapters, capabilities, SDK v1/v2)
+- Static analyzer + CompatibilityChecker + CLI `backend/bin/sdk.php`
+- FE `frontend/src/platform` + public route mounting; build-module SDK gate
+- MCP: `cms_sdk_report`, `cms_capability_report`, `cms_module_compatibility`, `cms_export_sdk`
+- Docs under `docs/platform/*`; demo-kit on SDK v1; migration `021_platform_sdk.sql`
+
 ## 2026-07-25 — feat(demo-kit): admin page shows live ping response
 
 - Package module placeholder page calls GET /admin/{slug}/ping and renders JSON

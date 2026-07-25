@@ -79,6 +79,45 @@ final class ModuleManifest
         return is_array($j) ? (int) ($j['api_version'] ?? 0) : 0;
     }
 
+    /** Platform SDK generation required by this package (default 1). */
+    public function sdkVersion(): int
+    {
+        $j = $this->data['jasefly'] ?? [];
+        if (!is_array($j)) {
+            return 1;
+        }
+        $v = (int) ($j['sdk_version'] ?? 1);
+        return $v > 0 ? $v : 1;
+    }
+
+    /** @return list<string> */
+    public function requiredCapabilities(): array
+    {
+        $c = $this->data['capabilities'] ?? [];
+        if (!is_array($c)) {
+            return [];
+        }
+        $req = $c['requires'] ?? [];
+        if (!is_array($req)) {
+            return [];
+        }
+        return array_values(array_map('strval', $req));
+    }
+
+    /** @return list<string> */
+    public function providedCapabilities(): array
+    {
+        $c = $this->data['capabilities'] ?? [];
+        if (!is_array($c)) {
+            return [];
+        }
+        $p = $c['provides'] ?? [];
+        if (!is_array($p)) {
+            return [];
+        }
+        return array_values(array_map('strval', $p));
+    }
+
     public function minJaseflyVersion(): string
     {
         $j = $this->data['jasefly'] ?? [];

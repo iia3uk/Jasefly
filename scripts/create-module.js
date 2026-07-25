@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Scaffold modules-src/{slug}/ skeleton */
+/** Scaffold modules-src/{slug}/ skeleton (Platform SDK) */
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -29,9 +29,13 @@ const files = {
     description: `${studly} module`,
     author: { name: 'Jasefly CMS', url: 'https://jasefly.com' },
     license: 'proprietary',
-    jasefly: { min_version: '1.0.0', api_version: 1 },
+    jasefly: { min_version: '1.0.0', api_version: 1, sdk_version: 1 },
     php: { min_version: '8.1', extensions: [] },
     dependencies: { required: { system: '>=1.0.0' }, optional: {}, conflicts: {} },
+    capabilities: {
+      requires: ['http.client', 'permissions.check'],
+      provides: [],
+    },
     entrypoints: {
       backend: `backend/${studly}Module.php`,
       frontend_manifest: 'frontend-dist/manifest.json',
@@ -45,14 +49,9 @@ declare(strict_types=1);
 
 namespace App\\PackageModules\\${studly};
 
-use App\\Core\\Modules\\AbstractPackageModule;
-use App\\Database;
-use App\\Middleware\\AuthMiddleware;
-use App\\Middleware\\PermissionMiddleware;
-use App\\Request;
-use App\\Response;
-use App\\Router;
-use App\\Services\\PermissionService;
+use App\\Platform\\Package\\AbstractPackageModule;
+use App\\Platform\\Package\\PlatformResponse;
+use App\\Platform\\PlatformContext;
 
 final class ${studly}Module extends AbstractPackageModule
 {
@@ -70,12 +69,15 @@ final class ${studly}Module extends AbstractPackageModule
         ]];
     }
 
-    public function registerRoutes(Router $router, Database $db, array $app, string $apiPrefix): void
+    public function bootPlatform(PlatformContext $ctx): void
     {
-        $p = fn(string $path) => rtrim($apiPrefix, '/') . $path;
-        $protected = [new AuthMiddleware($app['jwt_secret']), new PermissionMiddleware(new PermissionService($db))];
-        $router->get($p('/admin/${slug}/ping'), function (Request $r) {
-            Response::json(['data' => ['ok' => true, 'module' => '${slug}']]);
+        parent::bootPlatform($ctx);
+        $http = $ctx->http();
+        $perms = $ctx->permissions();
+        $protected = [$http->authMiddleware(), $http->permissionMiddleware()];
+        $http->get('/admin/${slug}/ping', static function ($r) use ($perms) {
+            $perms->require($r->user ?? [], '${slug}.view');
+            PlatformResponse::json(['data' => ['ok' => true, 'module' => '${slug}']]);
         }, $protected);
     }
 }
@@ -90,23 +92,33 @@ final class ${studly}Module extends AbstractPackageModule
   'frontend-dist/index.js': `export default {
   slug: '${slug}',
   version: '1.0.0',
+  sdkVersion: 1,
   async register(ctx) {
-    console.info('[${slug}] frontend module registered', ctx.slug);
+    if (ctx.admin?.registerNavItem) {
+      ctx.admin.registerNavItem({
+        group: 'Модули',
+        path: '/admin/${slug}',
+        label: '${studly}',
+        permission: '${slug}.view',
+      })
+      ctx.admin.registerPage({
+        path: '${slug}',
+        label: '${studly}',
+        group: 'Модули',
+        permission: '${slug}.view',
+      })
+    }
   },
 };
 `,
-  'frontend/src/index.ts': `import type { JaseflyFrontendModule } from '@/core/packageModuleTypes'
+  'README.md': `# ${studly}
 
-const mod: JaseflyFrontendModule = {
-  slug: '${slug}',
-  version: '1.0.0',
-  async register(ctx) {
-    console.info('[${slug}] register', ctx.version)
-  },
-}
-export default mod
+Scaffolded with Platform SDK (\`node scripts/create-module.js ${slug}\`).
+
+Docs: \`docs/platform/MODULE-DEVELOPMENT.md\`
+
+Build: \`node scripts/validate-module.js ${slug} && node scripts/build-module.js ${slug} --yes\`
 `,
-  'README.md': `# ${studly}\n\nScaffolded with \`node scripts/create-module.js ${slug}\`.\n\nBuild: \`node scripts/build-module.js ${slug} --yes\`\n`,
 }
 
 for (const [rel, content] of Object.entries(files)) {

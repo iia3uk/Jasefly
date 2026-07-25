@@ -11,6 +11,7 @@ import {
   Upload,
 } from 'lucide-react'
 import { api } from '@/lib/api'
+import { loadPackageModules, unloadPackageModule } from '@/core/packageModuleLoader'
 import { Button, GhostButton, GlassPanel, Skeleton } from '@/shared/ui'
 import { PageContext } from '@/admin/components/PageContext'
 import { adminUrl } from '@/admin/adminBasePath'
@@ -304,9 +305,10 @@ export function ModulesPage() {
                         type="button"
                         disabled={!!busy}
                         onClick={() =>
-                          void run(`en-${m.slug}`, () =>
-                            api.post(`/admin/modules/${m.slug}/enable`, {}).then(() => undefined),
-                          )
+                          void run(`en-${m.slug}`, async () => {
+                            await api.post(`/admin/modules/${m.slug}/enable`, {})
+                            await loadPackageModules()
+                          })
                         }
                       >
                         Включить
@@ -316,9 +318,10 @@ export function ModulesPage() {
                         type="button"
                         disabled={!!busy}
                         onClick={() =>
-                          void run(`dis-${m.slug}`, () =>
-                            api.post(`/admin/modules/${m.slug}/disable`, {}).then(() => undefined),
-                          )
+                          void run(`dis-${m.slug}`, async () => {
+                            await api.post(`/admin/modules/${m.slug}/disable`, {})
+                            unloadPackageModule(m.slug)
+                          })
                         }
                       >
                         Отключить
@@ -331,6 +334,38 @@ export function ModulesPage() {
                     >
                       <CheckCircle2 size={15} />
                       {busy === `health-${m.slug}` ? 'Проверка…' : 'Проверка'}
+                    </GhostButton>
+                    <GhostButton
+                      type="button"
+                      disabled={!!busy}
+                      onClick={() =>
+                        void run(`compat-${m.slug}`, async () => {
+                          const res = await api.get<{
+                            data: {
+                              score?: number
+                              ok?: boolean
+                              errors?: string[]
+                              warnings?: string[]
+                              recommendations?: string[]
+                            }
+                          }>(`/admin/modules/${m.slug}/compatibility`)
+                          const d = res.data ?? {}
+                          setHealthReport({
+                            slug: m.slug,
+                            status: d.ok ? `compat:${d.score ?? 0}` : `compat-fail:${d.score ?? 0}`,
+                            issues: Array.isArray(d.errors) ? d.errors : [],
+                            warnings: [
+                              ...(Array.isArray(d.warnings) ? d.warnings : []),
+                              ...(Array.isArray(d.recommendations)
+                                ? d.recommendations.map((x) => `→ ${x}`)
+                                : []),
+                            ],
+                          })
+                          setNotice(`Compatibility ${m.slug}: score ${d.score ?? '—'}`)
+                        })
+                      }
+                    >
+                      Compat
                     </GhostButton>
                     <GhostButton
                       type="button"

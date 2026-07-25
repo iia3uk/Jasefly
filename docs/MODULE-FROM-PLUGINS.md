@@ -39,7 +39,7 @@ node scripts/build-module.js my-feature --yes
 Админка: **Модули** → Загрузить → Установить → Включить.  
 CLI: `php backend/bin/modules.php install path/to.zip`
 
-Подробности: [MODULE-DEVELOPMENT.md](MODULE-DEVELOPMENT.md), [MODULE-PACKAGES.md](MODULE-PACKAGES.md), [MODULE-MANIFEST.md](MODULE-MANIFEST.md).
+Подробности: [platform/MODULE-DEVELOPMENT.md](platform/MODULE-DEVELOPMENT.md), [platform/PLATFORM-SDK.md](platform/PLATFORM-SDK.md), [MODULE-PACKAGES.md](MODULE-PACKAGES.md), [MODULE-MANIFEST.md](MODULE-MANIFEST.md).
 
 ---
 
