@@ -1,0 +1,13 @@
+{
+    "files": {
+        "README.md": "sha256:f86d37ca9720ddf5d32acdfaa6b66083da87b31b95faabd76bf0eca166038a11",
+        "backend/DemoKitModule.php": "sha256:9e91c771f8af95235c48e94c70a513ccf0f9665aeeb7fd46bbed453082516ef5",
+        "frontend-dist/index.js": "sha256:ccc4aed2184cca8da9ee8f91c3e5f2ad927e6a0c69dfaedf7b667d1956ebf9bd",
+        "frontend-dist/manifest.json": "sha256:023d174dd6a8eaed6aa45b485cf168cf9884dd281238fecdfdc71cf45f72d5c9",
+        "frontend/src/DemoAdminPage.tsx": "sha256:5e0153f6f222aed8aae003db6fa1e954fae2048c273a8705bbd12e27f7836afa",
+        "frontend/src/index.ts": "sha256:38bd966415b1091c60761b4712c0b70cc1a50da81be76653e36ae7c2aaab28c3",
+        "hooks/PostInstallHook.php": "sha256:6cc7d9d159e206406b56711381e9c25347597784c5b9901b057ad52da2b9422d",
+        "migrations/001_demo_kit.sql": "sha256:763744ff7d8f5ccb1a0bc4289848f0937d808ca4cbc68feec3bad71d7b409f92",
+        "module.json": "sha256:4822d210a162aed3a2bf975155f06d4e20ad024c23077937ed267c1262f1ec08"
+    }
+}

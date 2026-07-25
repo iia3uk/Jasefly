@@ -77,6 +77,9 @@ if (is_file($condFile)) {
     ], $ctx) === false, 'automation condition less_than false');
 }
 
+// —— Module package validator (no DB) ——
+require_once "$root/tests/ModulePackageValidatorTest.php";
+
 echo str_repeat('-', 40) . "\n";
 echo "Passed: $passed  Failed: $failed\n";
 exit($failed > 0 ? 1 : 0);

@@ -113,6 +113,7 @@ export function permissionForAdminSegment(segment: string): string | null {
     forms: 'forms.view',
     'form-submissions': 'forms.submissions.view',
     scheduler: 'scheduler.view',
+    modules: 'modules.view',
     automations: 'automations.view',
     notifications: 'notifications.view',
     newsletter: 'newsletter.view',

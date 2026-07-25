@@ -963,6 +963,174 @@ server.tool(
   },
 );
 
+// ─── Module Package Manager ─────────────────────────────────────────────────
+
+server.tool('cms_modules_list', 'Список установленных package-модулей (installed_modules).', {}, async () => {
+  try {
+    return ok((await getClient().get('/admin/modules'))?.data ?? []);
+  } catch (e) {
+    return fail(e);
+  }
+});
+
+server.tool(
+  'cms_module_inspect',
+  'Загрузить ZIP модуля в staging uploads и вернуть inspect plan (без установки).',
+  { zip_path: z.string().min(1) },
+  async ({ zip_path }) => {
+    try {
+      const cms = getClient();
+      const up = await cms.uploadModuleZip(zip_path);
+      const packageId = up?.data?.package_id ?? up?.package_id;
+      if (!packageId) throw new Error('package_id missing from upload');
+      const plan = await cms.post('/admin/modules/inspect', { package_id: packageId });
+      return ok({ package_id: packageId, plan: plan?.data ?? plan });
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool(
+  'cms_module_install',
+  'Установить модуль из уже загруженного package_id. Требует confirm=true.',
+  {
+    package_id: z.string().min(1),
+    slug: z.string().min(1),
+    confirm: z.boolean(),
+    content_mode: z.enum(['merge', 'skip', 'replace']).optional(),
+  },
+  async ({ package_id, slug, confirm, content_mode }) => {
+    if (!confirm) return fail(new Error('confirm=true required'));
+    try {
+      const res = await getClient().post(`/admin/modules/${slug}/install`, {
+        package_id,
+        content_mode: content_mode || 'merge',
+      });
+      return ok(res?.data ?? res);
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool(
+  'cms_module_update',
+  'Обновить модуль из package_id. Требует confirm=true.',
+  { package_id: z.string().min(1), slug: z.string().min(1), confirm: z.boolean() },
+  async ({ package_id, slug, confirm }) => {
+    if (!confirm) return fail(new Error('confirm=true required'));
+    try {
+      return ok((await getClient().post(`/admin/modules/${slug}/update`, { package_id }))?.data);
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool(
+  'cms_module_enable',
+  'Включить установленный модуль.',
+  { slug: z.string().min(1), confirm: z.boolean() },
+  async ({ slug, confirm }) => {
+    if (!confirm) return fail(new Error('confirm=true required'));
+    try {
+      return ok((await getClient().post(`/admin/modules/${slug}/enable`, {}))?.data);
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool(
+  'cms_module_disable',
+  'Отключить модуль без удаления файлов/данных.',
+  { slug: z.string().min(1), confirm: z.boolean() },
+  async ({ slug, confirm }) => {
+    if (!confirm) return fail(new Error('confirm=true required'));
+    try {
+      return ok((await getClient().post(`/admin/modules/${slug}/disable`, {}))?.data);
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool(
+  'cms_module_health',
+  'Health-check установленного модуля.',
+  { slug: z.string().min(1) },
+  async ({ slug }) => {
+    try {
+      return ok((await getClient().get(`/admin/modules/${slug}/health`))?.data);
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool('cms_module_operations', 'Журнал операций Module Package Manager.', {}, async () => {
+  try {
+    return ok((await getClient().get('/admin/module-operations'))?.data ?? []);
+  } catch (e) {
+    return fail(e);
+  }
+});
+
+server.tool(
+  'cms_module_rollback',
+  'Rollback последнего update модуля (если есть snapshot). Требует confirm=true.',
+  { slug: z.string().min(1), confirm: z.boolean() },
+  async ({ slug, confirm }) => {
+    if (!confirm) return fail(new Error('confirm=true required'));
+    try {
+      return ok((await getClient().post(`/admin/modules/${slug}/rollback`, {}))?.data);
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool(
+  'cms_module_release',
+  'Собрать module ZIP локально (scripts/build-module.js). Не деплоит Core. Опционально upload+inspect.',
+  {
+    module: z.string().min(1),
+    version: z.string().optional(),
+    upload: z.boolean().optional(),
+  },
+  async ({ module, version, upload }) => {
+    try {
+      const { spawnSync } = await import('node:child_process');
+      const args = [path.join(repoRoot(), 'scripts/build-module.js'), module, '--yes'];
+      if (version) args.push(`--version=${version}`);
+      const r = spawnSync(process.execPath, args, { cwd: repoRoot(), encoding: 'utf8' });
+      if (r.status !== 0) {
+        throw new Error(r.stderr || r.stdout || 'build-module failed');
+      }
+      const outDir = path.join(repoRoot(), 'release', 'modules');
+      const zips = fs.existsSync(outDir)
+        ? fs.readdirSync(outDir).filter((f) => f.startsWith(`jasefly-module-${module}-`) && f.endsWith('.zip'))
+        : [];
+      zips.sort();
+      const zipPath = zips.length ? path.join(outDir, zips[zips.length - 1]) : null;
+      let remote = null;
+      if (upload && zipPath) {
+        const cms = getClient();
+        const up = await cms.uploadModuleZip(zipPath);
+        const packageId = up?.data?.package_id ?? up?.package_id;
+        const plan = packageId
+          ? await cms.post('/admin/modules/inspect', { package_id: packageId })
+          : null;
+        remote = { package_id: packageId, plan: plan?.data ?? plan };
+      }
+      return ok({ built: zipPath, stdout: r.stdout, remote });
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);

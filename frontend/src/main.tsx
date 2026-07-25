@@ -36,6 +36,10 @@ import '@/modules/notifications'
 import '@/modules/newsletter'
 import '@/modules/comments'
 import '@/modules/analytics'
+import '@/modules/module-manager'
+import { loadPackageModules } from '@/core/packageModuleLoader'
+
+void loadPackageModules()
 
 /** After deploy, stale hashed chunks/CSS can 404 — soft-reload once. */
 window.addEventListener('vite:preloadError', (event) => {

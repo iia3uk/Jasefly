@@ -73,7 +73,8 @@ final class SystemModule extends AbstractModule
 
         $router->get($p('/docs'), fn() => Response::json(['data' => require dirname(__DIR__, 3) . '/docs/openapi.php']));
 
-        $router->get($p('/admin/modules'), function () {
+        // Legacy catalog endpoint (installed package manager owns GET /admin/modules).
+        $router->get($p('/admin/module-catalog'), function () {
             /** @var ModuleRegistry $registry */
             $registry = Container::getInstance()->get(ModuleRegistry::class);
             Response::json(['data' => $registry->catalog()]);

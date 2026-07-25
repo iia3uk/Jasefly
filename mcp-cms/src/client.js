@@ -249,6 +249,28 @@ export class CmsClient {
       throw e;
     }
   }
+
+  /** Upload module package ZIP to Module Package Manager. */
+  async uploadModuleZip(zipPath) {
+    await this.ensureAuth();
+    const abs = path.resolve(zipPath);
+    if (!fs.existsSync(abs)) {
+      throw new Error(`Module ZIP не найден: ${abs}`);
+    }
+    const buf = fs.readFileSync(abs);
+    const form = new FormData();
+    form.append('package', new Blob([buf], { type: 'application/zip' }), path.basename(abs));
+    try {
+      return await this.raw('POST', '/admin/modules/upload', undefined, { form });
+    } catch (e) {
+      // @ts-expect-error
+      if (e?.status === 401 && !this.mcpToken) {
+        await this.refresh();
+        return await this.raw('POST', '/admin/modules/upload', undefined, { form, bypassCache: true });
+      }
+      throw e;
+    }
+  }
 }
 
 /** @type {CmsClient | null} */

@@ -38,6 +38,7 @@ final class MigrationService
         '017_admin_base_path.sql',
         '018_harden_role_permissions.sql',
         '019_seo_target_regions.sql',
+        '020_installed_modules.sql',
     ];
 
     private SqlTranspiler $transpiler;

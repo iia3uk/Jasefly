@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-07-25 — feat: Module Package Manager (installable ZIP modules)
+
+- Package format module.json + checksums, validator, optional ed25519 signatures
+- Tables installed_modules / module_operations / module_migrations / module_files
+- ModulePackageService pipeline: upload → inspect → install/update/rollback/uninstall
+- Runtime loader for prebuilt frontend assets (no Node on hosting)
+- Admin `/admin/modules`, CLI `backend/bin/modules.php`, MCP `cms_module_*`
+- Demo package source `modules-src/demo-kit/` + `scripts/build-module.js`
+
 ## 2026-07-24 — Fix: admin API was cached — contact messages mark-read looked frozen
 
 - Exclude /api/* from HTML Cache-Control max-age=300 on index.php

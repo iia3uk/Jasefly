@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jasefly.com/schemas/module.manifest.v1.json",
+  "title": "Jasefly Module Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "type",
+    "name",
+    "slug",
+    "version",
+    "jasefly",
+    "entrypoints"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "type": { "type": "string", "const": "jasefly-module" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{1,62}[a-z0-9]$",
+      "maxLength": 64
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+([-+][A-Za-z0-9.-]+)?$"
+    },
+    "description": { "type": "string", "maxLength": 2000 },
+    "author": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "maxLength": 160 },
+        "url": { "type": "string", "maxLength": 500 }
+      }
+    },
+    "license": { "type": "string", "maxLength": 120 },
+    "homepage": { "type": "string", "maxLength": 500 },
+    "jasefly": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min_version", "api_version"],
+      "properties": {
+        "min_version": { "type": "string", "minLength": 1 },
+        "max_version": { "type": ["string", "null"] },
+        "api_version": { "type": "integer", "minimum": 1, "maximum": 1 }
+      }
+    },
+    "php": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_version": { "type": "string" },
+        "extensions": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "maxItems": 40
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "maxLength": 80 }
+        },
+        "optional": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "maxLength": 80 }
+        },
+        "conflicts": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "maxLength": 80 }
+        }
+      }
+    },
+    "entrypoints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backend"],
+      "properties": {
+        "backend": {
+          "type": "string",
+          "pattern": "^backend/[A-Za-z0-9_./-]+\\.php$"
+        },
+        "frontend_manifest": {
+          "type": "string",
+          "pattern": "^frontend-dist/manifest\\.json$"
+        }
+      }
+    },
+    "migrations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string", "const": "migrations" },
+        "namespace": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,62}$" },
+        "uninstall_path": { "type": "string", "const": "migrations/uninstall" }
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_.]{1,78}$"
+      },
+      "maxItems": 100
+    },
+    "provides": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "install": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preserve_data_on_uninstall": { "type": "boolean" },
+        "allow_downgrade": { "type": "boolean" }
+      }
+    },
+    "hooks": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^hooks/[A-Za-z0-9_./-]+\\.php$"
+      }
+    }
+  }
+}
