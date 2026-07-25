@@ -3,6 +3,7 @@ import { Route } from 'react-router-dom'
 import { getPlatformPublicRoutes } from '@/platform/registry'
 import { subscribePluginState } from '@/core/moduleRegistry'
 import { LazyLoaderFallback } from '@/builder/public/CmsPages'
+import { PackageErrorBoundary } from '@/platform/PackageErrorBoundary'
 
 /**
  * Package public routes as plain <Route> elements.
@@ -18,7 +19,9 @@ export function usePackagePublicRouteElements(): ReactElement[] {
       path={route.path}
       element={
         <Suspense fallback={<LazyLoaderFallback />}>
-          <LazyPage loader={route.lazy} />
+          <PackageErrorBoundary slug={route.path.split('/').filter(Boolean)[0]} label={route.label}>
+            <LazyPage loader={route.lazy} />
+          </PackageErrorBoundary>
         </Suspense>
       }
     />

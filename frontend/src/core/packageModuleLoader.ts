@@ -1,5 +1,5 @@
 import { createElement, useEffect, useState, type ReactElement } from 'react'
-import { registerModule, setPluginEnabled } from '@/core/moduleRegistry'
+import { registerModule, setPluginEnabled, unregisterModule } from '@/core/moduleRegistry'
 import { registerWidget } from '@/builder/registry'
 import type { JaseflyFrontendModule, ModuleFrontendContext, RuntimeModuleAsset } from '@/core/packageModuleTypes'
 import type { AdminScreen, PublicRouteDef } from '@/core/pluginTypes'
@@ -8,6 +8,7 @@ import { createPlatformFrontendContext } from '@/platform/createContext'
 import { getPlatformDashboardCards, unregisterPlatformModule } from '@/platform/registry'
 
 const loaded = new Set<string>()
+const packUnregisterFns = new Map<string, () => void | Promise<void>>()
 const dashboardCards: Array<{ id: string; label: string; render: () => unknown }> = []
 
 type LegacyFrontendExport = {
@@ -183,17 +184,28 @@ function normalizePack(raw: unknown, fallbackSlug: string, fallbackVersion: stri
   if (!raw || typeof raw !== 'object') return null
   const pack = raw as LegacyFrontendExport
   if (typeof pack.register === 'function') {
-    return {
+    const mod: JaseflyFrontendModule = {
       slug: pack.slug || fallbackSlug,
       version: pack.version || fallbackVersion,
       register: pack.register.bind(pack),
     }
+    const maybeUnregister = (pack as JaseflyFrontendModule).unregister
+    if (typeof maybeUnregister === 'function') {
+      mod.unregister = maybeUnregister.bind(pack)
+    }
+    return mod
   }
   const hasLegacy = (pack.adminNav?.length ?? 0) > 0 || (pack.adminScreens?.length ?? 0) > 0
   if (!hasLegacy) return null
 
+  const slug = pack.slug || pack.name || fallbackSlug
+  console.warn(
+    '[packageModuleLoader] legacy static adminNav/adminScreens without register(); migrate to register(ctx)',
+    slug,
+  )
+
   return {
-    slug: pack.slug || pack.name || fallbackSlug,
+    slug,
     version: pack.version || fallbackVersion,
     register: (ctx) => {
       for (const item of pack.adminNav ?? []) {
@@ -250,6 +262,9 @@ async function loadOne(asset: RuntimeModuleAsset): Promise<void> {
       version,
     }
     await pack.register(hybrid as unknown as ModuleFrontendContext)
+    if (typeof pack.unregister === 'function') {
+      packUnregisterFns.set(slug, () => pack.unregister?.(hybrid as unknown as ModuleFrontendContext))
+    }
     loaded.add(slug)
   } catch (e) {
     console.error('[packageModuleLoader] failed', slug, e)
@@ -259,7 +274,17 @@ async function loadOne(asset: RuntimeModuleAsset): Promise<void> {
 /** Tear down FE extensions for a disabled package module. */
 export function unloadPackageModule(slug: string): void {
   if (!slug) return
+  const packFn = packUnregisterFns.get(slug)
+  if (packFn) {
+    try {
+      void packFn()
+    } catch {
+      /* ignore */
+    }
+    packUnregisterFns.delete(slug)
+  }
   unregisterPlatformModule(slug)
+  unregisterModule(slug)
   setPluginEnabled(slug, false)
   loaded.delete(slug)
 }
