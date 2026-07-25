@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace App\PackageModules\DemoKit\Hooks;
 
-use App\Core\Modules\ModuleHookInterface;
 use App\Core\Modules\ModuleInstallContext;
+use App\Platform\Package\ModuleHookInterface;
 
 final class PostInstallHook implements ModuleHookInterface
 {

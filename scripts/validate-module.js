@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-/** Validate modules-src/{slug} structure + module.json shape */
+/** Validate modules-src/{slug} structure + Platform SDK compliance */
 import fs from 'fs'
 import path from 'path'
+import { spawnSync } from 'child_process'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -22,14 +23,18 @@ else {
   if (m.type !== 'jasefly-module') errors.push('type')
   if (m.slug !== slug) errors.push('slug mismatch')
   if (!m.entrypoints?.backend) errors.push('entrypoints.backend')
+  if (m.jasefly?.sdk_version == null) errors.push('jasefly.sdk_version recommended/required for Platform SDK')
   const be = path.join(dir, m.entrypoints.backend)
   if (!fs.existsSync(be)) errors.push('backend entry missing')
-}
-if (!fs.existsSync(path.join(dir, 'checksums.json')) && !process.argv.includes('--allow-no-checksums')) {
-  // ok for source; required in built zip
 }
 if (errors.length) {
   console.error('FAIL', errors.join('; '))
   process.exit(1)
+}
+
+const sdk = spawnSync('php', [path.join(root, 'backend', 'bin', 'sdk.php'), 'validate-sdk', dir], { encoding: 'utf8' })
+if (sdk.status !== 0) {
+  console.error(sdk.stdout || sdk.stderr || 'sdk validate failed')
+  process.exit(sdk.status || 2)
 }
 console.log('OK', slug)

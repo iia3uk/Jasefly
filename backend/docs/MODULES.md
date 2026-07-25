@@ -58,7 +58,7 @@ Third-party / separately shipped modules use ZIP packages (`docs/MODULE-PACKAGES
 Bundled modules under `src/Modules/` remain in-repo **platform** plugins (enable/disable via `/admin/plugins`).
 
 **Policy:** new optional features are installable packages under `modules-src/`, not new folders in `src/Modules/`.  
-Guide: `docs/MODULE-FROM-PLUGINS.md`.
+Guide: `docs/MODULE-FROM-PLUGINS.md`. Platform API: `docs/platform/PLATFORM-SDK.md` (`App\Platform\*` only).
 
 ## Frontend modules
 

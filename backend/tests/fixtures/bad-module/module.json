@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Bad Module",
+  "slug": "bad-module",
+  "version": "1.0.0",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "entrypoints": {
+    "backend": "backend/BadModule.php"
+  }
+}

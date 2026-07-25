@@ -277,6 +277,33 @@ final class ModuleManagerModule extends AbstractModule
             $activity->log($r, 'health_check', 'installed_modules', null, $slug, $result);
             Response::json(['data' => $result]);
         }, $protected);
+
+        $router->get($p('/admin/modules/{slug}/compatibility'), function (Request $r, string $slug) use ($db, $app, $repo, $require) {
+            $require($r, 'modules.view');
+            $row = $repo->getBySlug($slug);
+            if ($row === null) {
+                Response::error('Module not found', 404);
+            }
+            $paths = ModulePackagePaths::fromApp($app);
+            $root = $paths->moduleRoot($slug);
+            $checker = new \App\Platform\Analysis\CompatibilityChecker(db: $db);
+            Response::json(['data' => $checker->checkDirectory($root)]);
+        }, $protected);
+
+        $router->get($p('/admin/platform/sdk'), function (Request $r) use ($require) {
+            $require($r, 'modules.view');
+            $reg = new \App\Platform\Manifest\PublicApiRegistry();
+            Response::json(['data' => $reg->exportManifest()]);
+        }, $protected);
+
+        $router->get($p('/admin/platform/capabilities'), function (Request $r) use ($db, $require) {
+            $require($r, 'modules.view');
+            $caps = new \App\Platform\Capabilities\CapabilityRegistry($db);
+            Response::json(['data' => [
+                'capabilities' => $caps->list(),
+                'providers' => $caps->dump(),
+            ]]);
+        }, $protected);
     }
 
     private function packageService(Database $db, array $app): ModulePackageService

@@ -80,6 +80,11 @@ if (is_file($condFile)) {
 // —— Module package validator (no DB) ——
 require_once "$root/tests/ModulePackageValidatorTest.php";
 
+// —— Platform SDK ——
+echo "Platform SDK\n";
+\App\Bootstrap::registerAutoload();
+require_once "$root/tests/PlatformSdkTest.php";
+
 echo str_repeat('-', 40) . "\n";
 echo "Passed: $passed  Failed: $failed\n";
 exit($failed > 0 ? 1 : 0);

@@ -28,9 +28,14 @@ final class ModulePackageService
         private ModuleMigrationService $migrations,
         private ModuleHookRunner $hooks,
         private ModuleHealthService $health,
-        private ModulePackageValidator $validator = new ModulePackageValidator(),
+        private ?ModulePackageValidator $validator = null,
         private ModuleDependencyResolver $deps = new ModuleDependencyResolver(),
     ) {}
+
+    private function validator(): ModulePackageValidator
+    {
+        return $this->validator ??= new ModulePackageValidator(db: $this->db);
+    }
 
     /**
      * @param array<string, mixed> $file PHP upload array (tmp_name, name, size, error)
@@ -66,7 +71,7 @@ final class ModulePackageService
             throw new \RuntimeException('Cannot store uploaded package');
         }
 
-        $zipCheck = $this->validator->validateZipFile($dest);
+        $zipCheck = $this->validator()->validateZipFile($dest);
         if (!$zipCheck['ok']) {
             @unlink($dest);
             throw new \RuntimeException('Invalid package: ' . implode('; ', $zipCheck['errors']));
@@ -86,7 +91,7 @@ final class ModulePackageService
     public function inspect(string $packageIdOrPath, ?string $targetSlug = null): array
     {
         $zipPath = $this->resolvePackagePath($packageIdOrPath);
-        $zipCheck = $this->validator->validateZipFile($zipPath);
+        $zipCheck = $this->validator()->validateZipFile($zipPath);
         if (!$zipCheck['ok']) {
             return [
                 'ok' => false,
@@ -102,7 +107,7 @@ final class ModulePackageService
             $root = $staging['package_root'];
             $cmsVersion = (string) ($this->app['version'] ?? '1.0.0');
             $installedMap = $this->installedVersionMap();
-            $validation = $this->validator->validateExtracted($root, $cmsVersion, $installedMap);
+            $validation = $this->validator()->validateExtracted($root, $cmsVersion, $installedMap);
             $manifest = $validation['manifest'];
             $slug = $manifest?->slug() ?? '';
             if ($targetSlug !== null && $slug !== '' && $targetSlug !== $slug) {
@@ -273,6 +278,10 @@ final class ModulePackageService
             $this->runLifecycleHook('before_disable', $manifest, $slug, 'disable', $opId);
             $this->registry->setStatus($slug, 'disabled', null, (string) ($row['health_status'] ?? 'unknown'));
             $this->syncPluginState($slug, false);
+            try {
+                (new \App\Platform\Capabilities\CapabilityRegistry($this->db))->revokeModule($slug);
+            } catch (\Throwable) {
+            }
             $this->runLifecycleHook('after_disable', $manifest, $slug, 'disable', $opId);
             $this->registry->finishOperation($opId, 'success');
             return ['ok' => true, 'slug' => $slug, 'status' => 'disabled'];
@@ -407,7 +416,7 @@ final class ModulePackageService
             $packageRoot = $staging['package_root'];
 
             $cmsVersion = (string) ($this->app['version'] ?? '1.0.0');
-            $validation = $this->validator->validateExtracted($packageRoot, $cmsVersion, $this->installedVersionMap());
+            $validation = $this->validator()->validateExtracted($packageRoot, $cmsVersion, $this->installedVersionMap());
             if (!$validation['ok'] || !$validation['manifest'] instanceof ModuleManifest) {
                 throw new \RuntimeException('Validation failed: ' . implode('; ', $validation['errors']));
             }

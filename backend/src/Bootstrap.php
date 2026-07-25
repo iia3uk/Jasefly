@@ -8,8 +8,15 @@ use App\Core\ModuleRegistry;
 
 final class Bootstrap
 {
-    public static function init(): array
+    private static bool $autoloadRegistered = false;
+
+    /** Register App\* autoload without DB (CLI validate-sdk / tests). */
+    public static function registerAutoload(): void
     {
+        if (self::$autoloadRegistered) {
+            return;
+        }
+        self::$autoloadRegistered = true;
         $apiRoot = dirname(__DIR__);
         spl_autoload_register(static function (string $class) use ($apiRoot): void {
             if (!str_starts_with($class, 'App\\')) {
@@ -51,6 +58,11 @@ final class Bootstrap
                 }
             }
         });
+    }
+
+    public static function init(): array
+    {
+        self::registerAutoload();
 
         // Secrets from config/.env (blocked from HTTP). Does not override real OS env.
         require_once __DIR__ . '/Support/EnvFile.php';

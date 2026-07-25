@@ -4,7 +4,11 @@ declare(strict_types=1);
 namespace App\Core\Modules;
 
 use App\Core\AbstractModule;
+use App\Core\Container;
+use App\Core\EventDispatcher;
 use App\Database;
+use App\Platform\Capabilities\CapabilityRegistry;
+use App\Platform\PlatformContextFactory;
 use App\Router;
 
 /**
@@ -12,6 +16,8 @@ use App\Router;
  */
 final class PackageModuleAdapter extends AbstractModule
 {
+    private bool $platformBooted = false;
+
     public function __construct(
         private InstallableModuleInterface $inner,
         private ModuleManifest $packageManifest,
@@ -55,7 +61,41 @@ final class PackageModuleAdapter extends AbstractModule
 
     public function registerRoutes(Router $router, Database $db, array $app, string $apiPrefix): void
     {
+        $this->bootPlatformOnce($router, $db, $app, $apiPrefix);
         $this->inner->registerRoutes($router, $db, $app, $apiPrefix);
+    }
+
+    private function bootPlatformOnce(Router $router, Database $db, array $app, string $apiPrefix): void
+    {
+        if ($this->platformBooted) {
+            return;
+        }
+        $this->platformBooted = true;
+        try {
+            $paths = ModulePackagePaths::fromApp($app);
+            $c = Container::getInstance();
+            $events = $c->has(EventDispatcher::class) ? $c->get(EventDispatcher::class) : null;
+            if (!$events instanceof EventDispatcher) {
+                $events = new EventDispatcher();
+            }
+            $factory = new PlatformContextFactory($db, $app, $paths, $events);
+            $ctx = $factory->withRouter($router, $apiPrefix)->create(
+                $this->packageManifest->slug(),
+                $this->packageManifest,
+            );
+            foreach ($this->packageManifest->providedCapabilities() as $cap) {
+                $factory->capabilities()->register(
+                    $cap,
+                    'module.' . $this->packageManifest->slug(),
+                    $this->packageManifest->slug(),
+                    80,
+                );
+            }
+            $this->inner->bootPlatform($ctx);
+        } catch (\Throwable $e) {
+            @error_log('PackageModuleAdapter bootPlatform ' . $this->packageManifest->slug() . ': ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     public function adminNav(): array

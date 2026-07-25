@@ -8,21 +8,26 @@ This repository is a **reusable modular CMS**. Sites are content + configuration
 ┌─────────────────────────────────────────────┐
 │  Frontend modules (React)                   │
 │  shared/ui · shared/admin · modules/*       │
+│  platform/*  ← public FE SDK for ZIP packs  │
 ├─────────────────────────────────────────────┤
 │  REST API /api/v1 (versioned)               │
 ├─────────────────────────────────────────────┤
-│  Module packages (PHP)                      │
-│  System · Content · Forms · Scheduler · …   │
-│  Automation · Notifications · Newsletter    │
-│  Orders · Comments · Analytics · Commerce   │
+│  Platform SDK (App\Platform\*)              │
+│  PlatformContext · Capabilities · Compat    │
 ├─────────────────────────────────────────────┤
-│  Core                                       │
+│  Module packages (PHP)                      │
+│  Bundled: System · Forms · Scheduler · …    │
+│  ZIP: App\PackageModules\* via Platform SDK │
+├─────────────────────────────────────────────┤
+│  Core (internal — not for ZIP modules)      │
 │  Router · DB · JWT · ModuleRegistry · CRUD  │
 │  EventDispatcher · JobHandlerRegistry       │
 ├─────────────────────────────────────────────┤
 │  MySQL (normalized, FK, soft-delete ready)  │
 └─────────────────────────────────────────────┘
 ```
+
+Platform SDK docs: `docs/platform/PLATFORM-SDK.md`, `SDK-VERSIONING.md`, `CAPABILITY-SYSTEM.md`, `COMPATIBILITY-LAYER.md`.
 
 Platform modules docs: `docs/FORMS.md`, `SCHEDULER.md`, `AUTOMATION.md`, `NOTIFICATIONS.md`, `NEWSLETTER.md`, `ORDERS.md`, `COMMENTS.md`, `ANALYTICS.md`.
 
@@ -38,13 +43,11 @@ Auto-discovered by `ModuleRegistry`. Each package owns:
 
 Core never imports feature code. Features never patch the bootstrap.
 
+**ZIP modules** live under `App\PackageModules\{Studly}\` and must use **only** `App\Platform\*` (see `docs/platform/MODULE-DEVELOPMENT.md`).
+
 ### Add Games / Courses / Marketplace later
 
-1. `backend/src/Modules/Games/GamesModule.php`
-2. SQL migration for `games` (+ `deleted_at`, `slug`)
-3. Controllers/Services under that folder
-4. Frontend `frontend/src/modules/games/`
-5. Done — no refactor of Projects/Blog/Core
+Prefer a ZIP package (`modules-src/`) via Platform SDK. Bundled modules remain for platform core features.
 
 See `backend/docs/MODULES.md`.
 
@@ -53,24 +56,17 @@ See `backend/docs/MODULES.md`.
 ```
 frontend/src/
   core/moduleRegistry.ts
-  shared/ui/          ← Buttons, Cards, Grids, Modals, Timelines…
-  shared/admin/       ← Tables, Forms, SaveBar, Dialogs…
-  modules/projects/   ← Feature package
+  platform/           ← public SDK for package FE
+  shared/ui/
+  shared/admin/
+  modules/projects/
   modules/blog/
-  pages/              ← Route composition (assembles modules)
+  pages/
 ```
-
-Generic UI never contains page fetch logic. Modules own domain components.
 
 ## API versioning
 
-`config/app.php`:
-
-```php
-'api' => ['versions' => ['/api/v1', '/api']],
-```
-
-Add `/api/v2` beside v1 without removing v1. Clients opt in.
+`config/app.php` → `api.versions`. Platform SDK generations: `App\Platform\SdkVersion` (CURRENT=2, SUPPORTED=[1,2]).
 
 ## Configuration
 
@@ -78,15 +74,13 @@ Add `/api/v2` beside v1 without removing v1. Clients opt in.
 | --- | --- |
 | Env / `config.local.php` | DB, JWT, CORS, disabled modules |
 | `config/app.php` | pagination defaults, rate limits, API versions |
-| Database | theme, SEO, content, permissions |
-
-No magic numbers in controllers.
+| Database | theme, SEO, content, permissions, platform_capabilities |
 
 ## Service layer
 
 - Controllers: validate → call services → respond
-- `Core\Services\ResourceCrudService` — shared CRUD
-- Domain services: Media, Slug, SoftDelete, Search, Permissions…
+- Package modules: `PlatformContext` facades only (never `new Mailer` / Core imports)
+- `Core\Services\ResourceCrudService` — shared CRUD (internal)
 
 ## Long-term content types
 

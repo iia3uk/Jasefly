@@ -3,15 +3,9 @@ declare(strict_types=1);
 
 namespace App\PackageModules\DemoKit;
 
-use App\Core\Modules\AbstractPackageModule;
-use App\Core\Modules\ModuleContext;
-use App\Database;
-use App\Middleware\AuthMiddleware;
-use App\Middleware\PermissionMiddleware;
-use App\Request;
-use App\Response;
-use App\Router;
-use App\Services\PermissionService;
+use App\Platform\Package\AbstractPackageModule;
+use App\Platform\Package\PlatformResponse;
+use App\Platform\PlatformContext;
 
 final class DemoKitModule extends AbstractPackageModule
 {
@@ -43,24 +37,27 @@ final class DemoKitModule extends AbstractPackageModule
         ];
     }
 
-    public function register(ModuleContext $context): void
+    public function bootPlatform(PlatformContext $ctx): void
     {
-        // Routes registered via registerRoutes during HTTP boot.
-    }
+        parent::bootPlatform($ctx);
 
-    public function registerRoutes(Router $router, Database $db, array $app, string $apiPrefix): void
-    {
-        $p = fn(string $path) => rtrim($apiPrefix, '/') . $path;
-        $perms = new PermissionService($db);
-        $protected = [new AuthMiddleware($app['jwt_secret']), new PermissionMiddleware($perms)];
+        $ctx->capabilities()->require('http.client');
+        $ctx->storage()->put('boot-marker.txt', 'booted-at=' . gmdate(DATE_ATOM));
+        $ctx->events()->publish('demo-kit.booted', ['slug' => $ctx->slug()]);
+        $ctx->logger()->info('Demo Kit platform boot', ['sdk' => $ctx->moduleSdkVersion()]);
 
-        $router->get($p('/admin/demo-kit/ping'), function (Request $r) use ($perms) {
+        $http = $ctx->http();
+        $perms = $ctx->permissions();
+        $protected = [$http->authMiddleware(), $http->permissionMiddleware()];
+
+        $http->get('/admin/demo-kit/ping', static function ($r) use ($perms) {
             $perms->require($r->user ?? [], 'demo-kit.view');
-            Response::json(['data' => [
+            PlatformResponse::json(['data' => [
                 'ok' => true,
                 'module' => 'demo-kit',
                 'message' => 'pong',
                 'time' => gmdate(DATE_ATOM),
+                'sdk' => 'platform',
             ]]);
         }, $protected);
     }

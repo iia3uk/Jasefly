@@ -1,0 +1,161 @@
+{
+    "name": "jasefly-platform-sdk",
+    "sdk_version": 2,
+    "supported_sdk_versions": [
+        1,
+        2
+    ],
+    "api_version": 1,
+    "generated_at": "2026-07-25T18:26:18+00:00",
+    "public_apis": [
+        {
+            "id": "App\\Platform\\Contracts\\PlatformDatabaseInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformStorageInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformEventsInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformSchedulerInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformJobsInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformMailInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformNotificationsInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformSettingsInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformPermissionsInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformUsersInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformMediaInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformHttpInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformCacheInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformLoggerInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformConfigInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformTranslationsInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformAssetsInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformHealthInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformContentInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformBuilderInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Contracts\\PlatformCapabilitiesInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\PlatformContext",
+            "kind": "context",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Package\\AbstractPackageModule",
+            "kind": "base",
+            "version": 2
+        },
+        {
+            "id": "frontend\/src\/platform",
+            "kind": "frontend_sdk",
+            "version": 2
+        }
+    ],
+    "capabilities": [
+        "mail.send",
+        "scheduler.jobs",
+        "storage.files",
+        "builder.widgets",
+        "builder.inspector",
+        "notifications.send",
+        "media.library",
+        "users.roles",
+        "events.publish",
+        "events.subscribe",
+        "http.client",
+        "settings.global",
+        "analytics.events",
+        "permissions.check",
+        "content.pages"
+    ],
+    "feature_flags": {
+        "builder.widgets": true,
+        "builder.inspector": true,
+        "builder.toolbar": true,
+        "admin.dashboard_cards": true,
+        "admin.search_providers": true,
+        "public.routes": true,
+        "events.delay": true,
+        "scheduler.jobs": true,
+        "sdk.v2": true,
+        "capabilities.resolve": true
+    }
+}

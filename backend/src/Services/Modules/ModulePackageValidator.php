@@ -5,6 +5,9 @@ namespace App\Services\Modules;
 
 use App\Core\Modules\ModuleDependencyResolver;
 use App\Core\Modules\ModuleManifest;
+use App\Platform\Compatibility\CompatibilityLayer;
+use App\Platform\Capabilities\CapabilityRegistry;
+use App\Database;
 use ZipArchive;
 
 /**
@@ -20,6 +23,7 @@ final class ModulePackageValidator
     public function __construct(
         private ModuleDependencyResolver $deps = new ModuleDependencyResolver(),
         private ModuleSignatureService $signatures = new ModuleSignatureService(),
+        private ?Database $db = null,
     ) {}
 
     /**
@@ -165,6 +169,15 @@ final class ModulePackageValidator
             if ($manifest->apiVersion() !== ModuleManifest::API_VERSION) {
                 $errors[] = 'Incompatible module api_version';
             }
+            $sdkCheck = CompatibilityLayer::checkSdkVersion($manifest->sdkVersion());
+            $errors = array_merge($errors, $sdkCheck['errors']);
+            $warnings = array_merge($warnings, $sdkCheck['warnings']);
+            $caps = new CapabilityRegistry($this->db);
+            foreach ($manifest->requiredCapabilities() as $cap) {
+                if (!$caps->has($cap)) {
+                    $errors[] = 'Missing platform capability: ' . $cap;
+                }
+            }
             if (!$this->deps->satisfies($cmsVersion, '>=' . $manifest->minJaseflyVersion())) {
                 $errors[] = 'CMS version ' . $cmsVersion . ' < required ' . $manifest->minJaseflyVersion();
             }
@@ -247,6 +260,12 @@ final class ModulePackageValidator
             $errors[] = 'jasefly.min_version and api_version required';
         } elseif ((int) $j['api_version'] !== 1) {
             $errors[] = 'jasefly.api_version must be 1';
+        }
+        if (is_array($j) && isset($j['sdk_version']) && (!is_int($j['sdk_version']) && !ctype_digit((string) $j['sdk_version']))) {
+            $errors[] = 'jasefly.sdk_version must be an integer';
+        }
+        if (is_array($j) && !isset($j['sdk_version'])) {
+            // default 1 — warn via caller optional; shape allows omit
         }
         $ep = $data['entrypoints'] ?? null;
         if (!is_array($ep) || !is_string($ep['backend'] ?? null)) {

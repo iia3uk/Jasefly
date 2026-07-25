@@ -123,9 +123,12 @@ export function subscribePluginState(cb: () => void): () => void {
 }
 
 export function registerModule(manifest: ModuleManifest): void {
-  if (!manifests.find((m) => m.name === manifest.name)) {
-    manifests.push(manifest)
+  const idx = manifests.findIndex((m) => m.name === manifest.name)
+  if (idx >= 0) {
+    manifests[idx] = { ...manifests[idx], ...manifest }
+    return
   }
+  manifests.push(manifest)
 }
 
 /** Apply plugin states fetched from the backend (toggles runtime visibility). */

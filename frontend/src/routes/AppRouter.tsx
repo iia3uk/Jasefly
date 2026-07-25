@@ -14,6 +14,7 @@ import { SLUG_PLUGIN_GATES, siteHasPlugin } from '@/core/pluginGates'
 import { RegisterPage, RegisterVerifyPage } from '@/pages/RegisterPages'
 import { adminUrl, getAdminBase, isAdminPathname, setAdminBaseFromSite } from '@/admin/adminBasePath'
 import { LabPublicPage } from '@/modules/lab/LabPublicPage'
+import { usePackagePublicRouteElements } from '@/platform/PackagePublicRoutes'
 
 const publicPage = <T extends keyof typeof import('@/pages/PublicPages')>(name: T) =>
   lazy(() => import('@/pages/PublicPages').then((module) => ({ default: module[name] as ComponentType })))
@@ -124,6 +125,7 @@ export function AppRouter() {
   const base = getAdminBase()
   const adminRoot = `/${base}`
   const adminLogin = `${adminRoot}/login`
+  const packagePublicRoutes = usePackagePublicRouteElements()
 
   return (
     <Suspense fallback={<LazyLoaderFallback />}>
@@ -159,6 +161,7 @@ export function AppRouter() {
           <Route path="/contact" element={<CmsOr slug="contact" path="/contact"><ContactPage /></CmsOr>} />
           <Route path="/privacy" element={<CmsOr slug="privacy" path="/privacy"><PrivacyPage /></CmsOr>} />
           <Route path="/terms" element={<CmsOr slug="terms" path="/terms"><TermsPage /></CmsOr>} />
+          {packagePublicRoutes}
           <Route path="/:slug" element={<CmsSlugPage />} />
           <Route path="*" element={<CmsOr slug="not-found" path="/not-found"><NotFoundPage /></CmsOr>} />
         </Route>

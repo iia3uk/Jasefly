@@ -3,8 +3,9 @@ declare(strict_types=1);
 
 namespace App\Services\Modules;
 
-use App\Core\Modules\ModuleHookInterface;
+use App\Core\Modules\ModuleHookInterface as CoreModuleHookInterface;
 use App\Core\Modules\ModuleInstallContext;
+use App\Platform\Package\ModuleHookInterface as PlatformModuleHookInterface;
 
 /**
  * Executes install/update lifecycle hooks declared in module.json.
@@ -45,9 +46,17 @@ final class ModuleHookRunner
         require_once $hookReal;
         $newClasses = array_diff(get_declared_classes(), $before);
 
+        $isHook = static function (string $class): bool {
+            $impl = class_implements($class) ?: [];
+            return is_subclass_of($class, PlatformModuleHookInterface::class)
+                || is_subclass_of($class, CoreModuleHookInterface::class)
+                || in_array(PlatformModuleHookInterface::class, $impl, true)
+                || in_array(CoreModuleHookInterface::class, $impl, true);
+        };
+
         $instance = null;
         foreach ($newClasses as $class) {
-            if (!is_subclass_of($class, ModuleHookInterface::class) && !in_array(ModuleHookInterface::class, class_implements($class) ?: [], true)) {
+            if (!$isHook($class)) {
                 continue;
             }
             $instance = new $class();
@@ -60,14 +69,14 @@ final class ModuleHookRunner
                 if (!str_starts_with($class, $expectedNs . '\\')) {
                     continue;
                 }
-                if (is_subclass_of($class, ModuleHookInterface::class) || in_array(ModuleHookInterface::class, class_implements($class) ?: [], true)) {
+                if ($isHook($class)) {
                     $instance = new $class();
                     break;
                 }
             }
         }
 
-        if (!$instance instanceof ModuleHookInterface) {
+        if ($instance === null || !method_exists($instance, 'run')) {
             throw new \RuntimeException('Hook class must implement ModuleHookInterface');
         }
 
