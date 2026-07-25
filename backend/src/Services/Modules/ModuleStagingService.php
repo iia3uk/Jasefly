@@ -96,9 +96,10 @@ final class ModuleStagingService
 
         $zip->close();
         $packageRoot = $this->detectPackageRoot($stagingDir);
+        // Deny HTTP to installer trees only — never write into packageRoot
+        // (flat ZIPs extract to stagingDir === packageRoot; .htaccess would break checksums).
         $this->ensureDenyHtaccess($this->paths->installerRoot());
         $this->ensureDenyHtaccess($this->paths->stagingRoot());
-        $this->ensureDenyHtaccess($stagingDir);
 
         return [
             'staging_dir' => $stagingDir,

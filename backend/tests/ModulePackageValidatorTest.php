@@ -61,7 +61,18 @@ assert_true(
     'checksum mismatch error message present'
 );
 
+// —— installer .htaccess must not fail checksum listing ——
+file_put_contents($tmp . '/.htaccess', "Require all denied\n");
+file_put_contents($checksumsPath, json_encode([
+    'files' => [
+        'payload.txt' => 'sha256:' . hash_file('sha256', $payloadPath),
+    ],
+], JSON_UNESCAPED_SLASHES));
+$ckHt = $validator->verifyChecksums($tmp, $checksumsPath);
+assert_true($ckHt['ok'] === true, 'installer .htaccess ignored in checksum scan');
+
 // cleanup temp
 @unlink($payloadPath);
 @unlink($checksumsPath);
+@unlink($tmp . '/.htaccess');
 @rmdir($tmp);
