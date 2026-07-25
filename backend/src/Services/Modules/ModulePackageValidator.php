@@ -308,7 +308,9 @@ final class ModulePackageValidator
             }
             $full = str_replace('\\', '/', $fileInfo->getPathname());
             $rel = ltrim(substr($full, strlen($root)), '/');
-            if (in_array($rel, ['checksums.json', 'signature.json'], true)) {
+            // checksums.json itself + optional signature; installer may drop .htaccess nearby
+            $base = basename($rel);
+            if (in_array($rel, ['checksums.json', 'signature.json'], true) || $base === '.htaccess') {
                 continue;
             }
             if (!isset($listedSet[$rel])) {
