@@ -193,11 +193,8 @@ final class ModuleHealthService
 
     private function installedEntryRelative(ModuleManifest $manifest): string
     {
-        $ep = str_replace('\\', '/', $manifest->backendEntrypoint());
-        if (str_starts_with($ep, 'backend/')) {
-            return substr($ep, strlen('backend/'));
-        }
-        return ltrim($ep, '/');
+        // Keep package-relative path (backend/Foo.php) — copyPackageFiles installs under moduleRoot/backend/.
+        return ltrim(str_replace('\\', '/', $manifest->backendEntrypoint()), '/');
     }
 
     /** @param list<string> $issues */
