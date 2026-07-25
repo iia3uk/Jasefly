@@ -55,7 +55,10 @@ Third-party / separately shipped modules use ZIP packages (`docs/MODULE-PACKAGES
 - Build: `node scripts/build-module.js {slug}`
 - Demo source: `modules-src/demo-kit/`
 
-Bundled modules under `src/Modules/` remain the primary in-repo plugins (enable/disable via `/admin/plugins`).
+Bundled modules under `src/Modules/` remain in-repo **platform** plugins (enable/disable via `/admin/plugins`).
+
+**Policy:** new optional features are installable packages under `modules-src/`, not new folders in `src/Modules/`.  
+Guide: `docs/MODULE-FROM-PLUGINS.md`.
 
 ## Frontend modules
 

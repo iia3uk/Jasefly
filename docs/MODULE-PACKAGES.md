@@ -2,6 +2,8 @@
 
 Jasefly can install feature modules from ZIP packages without rebuilding the whole CMS.
 
+**Plugins vs packages:** same feature idea; packages install *on top of* CMS. New optional features → packages. See [MODULE-FROM-PLUGINS.md](MODULE-FROM-PLUGINS.md).
+
 ## Layout on hosting
 
 ```text

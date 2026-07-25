@@ -1,5 +1,51 @@
 # Changelog
 
+## 2026-07-25 — feat(demo-kit): admin page shows live ping response
+
+- Package module placeholder page calls GET /admin/{slug}/ping and renders JSON
+
+## 2026-07-25 — fix(modules): load legacy demo-kit FE export via packageModuleLoader
+
+- Accept static adminNav/adminScreens or register()
+- Placeholder admin page when screen has no Component
+- Map demo-kit.view in rolePermissions
+
+## 2026-07-25 — fix(modules): health false positive when entrypoint class already loaded
+
+- Health accepts App\PackageModules\{Slug}\* if class was loaded earlier via require_once
+
+## 2026-07-25 — fix(modules): stop wiping package files after false health failure
+
+- Do not delete/restore module files after successful copy
+- Failed modules reinstall via install (not empty update snapshot)
+- Entrypoint resolution tries backend/Foo.php and Foo.php
+- Clearer missing-entrypoint health message
+
+## 2026-07-25 — fix(modules): Health/Rollback UI feedback on Modules page
+
+- Health shows status/issues/warnings panel after check
+- Rollback disabled without snapshot; clear RU error after fresh install
+- List API exposes rollback_available
+
+## 2026-07-25 — fix(modules): Backend entrypoint missing after demo-kit install
+
+- Health check and loader keep backend/ relative path
+- Matches copyPackageFiles layout under api/modules/{slug}/backend/
+
+## 2026-07-25 — fix(modules): Demo Kit install blocked by staging .htaccess checksum
+
+- Do not write deny .htaccess into package extract root
+- Ignore .htaccess in checksum unlisted-file scan
+- Unit test for installer .htaccess ignore
+
+## 2026-07-25 — feat: Module Package Manager — installable ZIP modules
+
+- Package format + validator + signatures foundation
+- installed_modules registry and install/update/rollback pipeline
+- Admin /admin/modules + CLI modules.php + FE runtime loader
+- MCP cms_module_* tools + demo-kit package builder
+- SiteUpdater preserves api/modules and public modules assets
+
 ## 2026-07-25 — feat: Module Package Manager (installable ZIP modules)
 
 - Package format module.json + checksums, validator, optional ed25519 signatures

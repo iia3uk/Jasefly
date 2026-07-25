@@ -56,6 +56,7 @@
 | Telegram с контакт-формы | `Modules/Mail/ContactFormService.php` + `TelegramNotifier.php` + `/admin/mail` |
 | Сообщения / mark-read «зависло» | `UtilityPages.tsx` + `.htaccess`: `/api/*` не кэшировать (`IS_API` / `no-store`); не `max-age` с HTML `index.php` |
 | Module Package Manager / ZIP модули | `Modules/ModuleManager/` + `Services/Modules/*` + `/admin/modules` + `scripts/build-module.js` + `modules-src/` + docs `MODULE-*.md` |
+| Плагин → пакетный модуль (политика) | `docs/MODULE-FROM-PLUGINS.md` (+ `MODULE-DEVELOPMENT.md`, эталон `modules-src/demo-kit/`) |
 | Установка пакета модуля | `ModulePackageService` (upload→inspect→install) + CLI `backend/bin/modules.php` + MCP `cms_module_*` |
 | FE runtime пакетных модулей | `packageModuleLoader.ts` + `GET /modules/runtime-assets` + `/modules/{slug}/` assets |
 | Отложенная публикация страниц | `PageScheduleService` (lazy publish) + `scheduled_at` в билдере |
