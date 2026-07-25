@@ -1110,6 +1110,61 @@ server.tool('cms_export_sdk', 'Экспорт platform.manifest.json (локал
   }
 });
 
+async function sdkCliSpawn(args) {
+  const { spawnSync } = await import('node:child_process');
+  const php = path.join(repoRoot(), 'backend', 'bin', 'sdk.php');
+  const r = spawnSync('php', [php, ...args], { cwd: repoRoot(), encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
+  let parsed = null;
+  try {
+    parsed = JSON.parse(r.stdout || '{}');
+  } catch {
+    parsed = { raw: r.stdout, stderr: r.stderr };
+  }
+  if (r.status !== 0) {
+    const err = new Error(r.stderr || r.stdout || `sdk.php ${args.join(' ')} failed`);
+    err.result = parsed;
+    throw err;
+  }
+  return parsed;
+}
+
+server.tool(
+  'cms_module_certify',
+  'Certify module package (php bin/sdk.php certify). Path or slug under modules-src/.',
+  { path_or_slug: z.string().min(1) },
+  async ({ path_or_slug }) => {
+    try {
+      return ok(await sdkCliSpawn(['certify', path_or_slug]));
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool('cms_sdk_api_diff', 'Platform SDK public API diff (php bin/sdk.php api-diff).', {}, async () => {
+  try {
+    return ok(await sdkCliSpawn(['api-diff']));
+  } catch (e) {
+    return fail(e);
+  }
+});
+
+server.tool('cms_public_services', 'List public Platform SDK service catalog (list-public-services).', {}, async () => {
+  try {
+    return ok(await sdkCliSpawn(['list-public-services']));
+  } catch (e) {
+    return fail(e);
+  }
+});
+
+server.tool('cms_sdk_deprecations', 'Platform SDK deprecation report (php bin/sdk.php deprecations).', {}, async () => {
+  try {
+    return ok(await sdkCliSpawn(['deprecations']));
+  } catch (e) {
+    return fail(e);
+  }
+});
+
 server.tool('cms_module_operations', 'Журнал операций Module Package Manager.', {}, async () => {
   try {
     return ok((await getClient().get('/admin/module-operations'))?.data ?? []);

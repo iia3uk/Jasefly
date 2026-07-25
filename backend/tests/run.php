@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 $root = dirname(__DIR__);
 require_once "$root/src/Bootstrap.php";
+\App\Bootstrap::registerAutoload();
 
 $failed = 0;
 $passed = 0;
@@ -82,8 +83,11 @@ require_once "$root/tests/ModulePackageValidatorTest.php";
 
 // —— Platform SDK ——
 echo "Platform SDK\n";
-\App\Bootstrap::registerAutoload();
 require_once "$root/tests/PlatformSdkTest.php";
+
+// —— Platform package lifecycle (offline) ——
+echo "Platform package lifecycle\n";
+require_once "$root/tests/PlatformPackageLifecycleTest.php";
 
 echo str_repeat('-', 40) . "\n";
 echo "Passed: $passed  Failed: $failed\n";
