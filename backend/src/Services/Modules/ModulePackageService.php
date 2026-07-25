@@ -111,8 +111,14 @@ final class ModulePackageService
             }
 
             $existing = $slug !== '' ? $this->registry->getBySlug($slug) : null;
-            $operation = $existing === null ? 'install' : 'update';
-            $fromVersion = $existing !== null ? (string) ($existing['installed_version'] ?? '0.0.0') : null;
+            $existingStatus = is_array($existing) ? (string) ($existing['status'] ?? '') : '';
+            // Failed / wiped installs must reinstall, not "update" from an empty snapshot.
+            $operation = ($existing === null || in_array($existingStatus, ['failed', 'uninstalled'], true))
+                ? 'install'
+                : 'update';
+            $fromVersion = ($operation === 'update' && $existing !== null)
+                ? (string) ($existing['installed_version'] ?? '0.0.0')
+                : null;
             $toVersion = $manifest?->version();
 
             $planWarnings = $validation['warnings'];
@@ -170,8 +176,13 @@ final class ModulePackageService
         $slug = $manifest->slug();
 
         $existing = $this->registry->getBySlug($slug);
-        if ($existing !== null && !($opts['preserve_existing_data'] ?? false)) {
-            throw new \RuntimeException('Module slug already registered');
+        if ($existing !== null) {
+            $st = (string) ($existing['status'] ?? '');
+            $allowReplace = in_array($st, ['failed', 'uninstalled'], true)
+                || ($opts['preserve_existing_data'] ?? false);
+            if (!$allowReplace) {
+                throw new \RuntimeException('Module slug already registered');
+            }
         }
 
         return $this->runPipeline(
@@ -182,7 +193,7 @@ final class ModulePackageService
             $manifest->version(),
             (int) ($opts['initiated_by'] ?? 0) ?: null,
             (string) ($opts['content_mode'] ?? 'merge'),
-            null,
+            $existing,
         );
     }
 
@@ -388,6 +399,7 @@ final class ModulePackageService
         $opId = $this->registry->startOperation($slug, $operation, $fromVersion, $toVersion, $initiatedBy, $zipPath);
         $backupPath = null;
         $stagingOpId = $this->tempOperationId();
+        $filesCommitted = false;
 
         try {
             $this->registry->appendOperationLog($opId, 'Extracting package');
@@ -403,6 +415,15 @@ final class ModulePackageService
             if ($operation === 'update') {
                 $this->registry->appendOperationLog($opId, 'Creating snapshot');
                 $backupPath = $this->snapshots->createSnapshot($slug);
+            }
+
+            $modulesRoot = $this->paths->modulesRoot();
+            if (!is_dir($modulesRoot) && !@mkdir($modulesRoot, 0775, true) && !is_dir($modulesRoot)) {
+                throw new \RuntimeException('Cannot create modules root: ' . $modulesRoot);
+            }
+            $publicModulesRoot = $this->paths->publicModulesRoot();
+            if (!is_dir($publicModulesRoot) && !@mkdir($publicModulesRoot, 0775, true) && !is_dir($publicModulesRoot)) {
+                throw new \RuntimeException('Cannot create public modules root: ' . $publicModulesRoot);
             }
 
             $moduleRoot = $this->paths->moduleRoot($slug);
@@ -429,6 +450,8 @@ final class ModulePackageService
 
             $this->registry->appendOperationLog($opId, 'Copying module files');
             $fileInventory = $this->copyPackageFiles($packageRoot, $slug, $contentMode);
+            $filesCommitted = true;
+            $this->registry->appendOperationLog($opId, 'Copied ' . count($fileInventory) . ' files');
 
             $this->registerPermissions($manifest);
 
@@ -481,8 +504,10 @@ final class ModulePackageService
             $healthStatus = (string) ($health['status'] ?? 'unknown');
             if (in_array($healthStatus, ['failed', 'incompatible'], true)) {
                 $msg = implode('; ', $health['issues'] ?? [$healthStatus]);
-                $this->registry->setStatus($slug, 'failed', $msg, $healthStatus);
+                // Keep copied files for diagnosis / "Проверка" — do not throw into wipe/restore.
+                $this->registry->setStatus($slug, 'failed', 'Health check failed: ' . $msg, $healthStatus);
                 $this->syncPluginState($slug, false);
+                $this->registry->finishOperation($opId, 'failed', 'Health check failed: ' . $msg, $backupPath, $backupPath !== null, false);
                 throw new \RuntimeException('Health check failed: ' . $msg);
             }
             $this->registry->setStatus($slug, $nextStatus, null, $healthStatus);
@@ -499,18 +524,26 @@ final class ModulePackageService
                 'backup_path' => $backupPath,
             ];
         } catch (\Throwable $e) {
-            if ($backupPath !== null && is_file($backupPath)) {
-                try {
-                    $this->snapshots->restoreSnapshot($backupPath, $slug);
-                    $this->registry->appendOperationLog($opId, 'Restored snapshot after failure');
-                } catch (\Throwable $restoreErr) {
-                    $this->registry->appendOperationLog($opId, 'Snapshot restore failed: ' . $restoreErr->getMessage());
+            // After files are on disk, never wipe/restore — that hid the real bug (false health fail).
+            if (!$filesCommitted) {
+                if ($backupPath !== null && is_file($backupPath)) {
+                    try {
+                        $this->snapshots->restoreSnapshot($backupPath, $slug);
+                        $this->registry->appendOperationLog($opId, 'Restored snapshot after failure');
+                    } catch (\Throwable $restoreErr) {
+                        $this->registry->appendOperationLog($opId, 'Snapshot restore failed: ' . $restoreErr->getMessage());
+                    }
+                } elseif ($operation === 'install') {
+                    $this->removeInstalledFiles($slug);
                 }
-            } elseif ($operation === 'install') {
-                $this->removeInstalledFiles($slug);
+            } else {
+                $this->registry->appendOperationLog($opId, 'Left module files in place after failure (no wipe)');
             }
             $this->registry->setStatus($slug, 'failed', $e->getMessage(), 'failed');
-            $this->registry->finishOperation($opId, 'failed', $e->getMessage(), $backupPath, $backupPath !== null, false);
+            $op = $this->registry->getOperation($opId);
+            if ($op === null || ($op['status'] ?? '') === 'running') {
+                $this->registry->finishOperation($opId, 'failed', $e->getMessage(), $backupPath, $backupPath !== null, false);
+            }
             throw $e;
         } finally {
             $this->staging->cleanupStaging($stagingOpId);
