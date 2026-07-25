@@ -1,26 +1,25 @@
 /**
- * Prebuilt stub for package install tests without a frontend build step.
- * Source: frontend/src/index.ts
+ * Prebuilt stub for package install tests (no separate FE build).
+ * Contract: export default { slug, version, register(ctx) }.
  */
 export const JaseflyFrontendModule = {
-  name: 'demo-kit',
-  label: 'Demo Kit',
-  adminNav: [
-    {
+  slug: 'demo-kit',
+  version: '1.0.0',
+  async register(ctx) {
+    ctx.registerAdminNavItem({
       group: 'Разработка',
       path: '/admin/demo-kit',
       label: 'Demo Kit',
       permission: 'demo-kit.view',
       icon: 'package',
-    },
-  ],
-  adminScreens: [
-    {
+    })
+    ctx.registerAdminRoute({
       path: 'demo-kit',
       label: 'Demo Kit',
       group: 'Разработка',
-    },
-  ],
+      permission: 'demo-kit.view',
+    })
+  },
 }
 
 export default JaseflyFrontendModule

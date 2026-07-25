@@ -1,3 +1,4 @@
+import { createElement, type ReactElement } from 'react'
 import { registerModule, setPluginEnabled } from '@/core/moduleRegistry'
 import { registerWidget } from '@/builder/registry'
 import type { JaseflyFrontendModule, ModuleFrontendContext, RuntimeModuleAsset } from '@/core/packageModuleTypes'
@@ -6,6 +7,29 @@ import type { WidgetDefinition } from '@/builder/types'
 
 const loaded = new Set<string>()
 const dashboardCards: Array<{ id: string; label: string; render: () => unknown }> = []
+
+type LegacyFrontendExport = {
+  slug?: string
+  name?: string
+  label?: string
+  version?: string
+  register?: (context: ModuleFrontendContext) => void | Promise<void>
+  adminNav?: Array<{
+    group: string
+    path: string
+    label: string
+    permission?: string
+    icon?: string
+  }>
+  adminScreens?: Array<{
+    path: string
+    label: string
+    group: string
+    permission?: string
+    element?: ReactElement
+    Component?: AdminScreen['Component']
+  }>
+}
 
 function isSafeModuleUrl(url: string, slug: string): boolean {
   try {
@@ -29,6 +53,19 @@ function injectCss(href: string, slug: string): void {
   document.head.appendChild(link)
 }
 
+function PlaceholderPage({ title, slug }: { title: string; slug: string }) {
+  return createElement(
+    'div',
+    { className: 'p-6 space-y-2' },
+    createElement('h1', { className: 'text-xl font-semibold' }, title),
+    createElement(
+      'p',
+      { className: 'text-sm text-zinc-500' },
+      `Package-модуль «${slug}» загружен. Backend: GET /api/v1/admin/${slug}/ping`,
+    ),
+  )
+}
+
 function createContext(slug: string, version: string): ModuleFrontendContext {
   const adminScreens: AdminScreen[] = []
   const adminNav: NonNullable<Parameters<typeof registerModule>[0]['adminNav']> = []
@@ -47,11 +84,19 @@ function createContext(slug: string, version: string): ModuleFrontendContext {
     setPluginEnabled(slug, true)
   }
 
+  const ensureScreen = (screen: AdminScreen): AdminScreen => {
+    if (screen.element || screen.Component || screen.lazy) return screen
+    return {
+      ...screen,
+      Component: () => createElement(PlaceholderPage, { title: screen.label || slug, slug }),
+    }
+  }
+
   return {
     slug,
     version,
     registerAdminRoute: (screen) => {
-      adminScreens.push(screen)
+      adminScreens.push(ensureScreen(screen))
       flush()
     },
     registerAdminNavItem: (item) => {
@@ -77,7 +122,7 @@ function createContext(slug: string, version: string): ModuleFrontendContext {
       flush()
     },
     registerSettingsPage: (screen) => {
-      adminScreens.push(screen)
+      adminScreens.push(ensureScreen(screen))
       flush()
     },
     registerDashboardCard: (card) => {
@@ -85,6 +130,41 @@ function createContext(slug: string, version: string): ModuleFrontendContext {
     },
     registerTranslation: () => {
       // v1: no-op hook for future i18n merge
+    },
+  }
+}
+
+/** Accept contract v1 (register) or legacy static adminNav/adminScreens. */
+function normalizePack(raw: unknown, fallbackSlug: string, fallbackVersion: string): JaseflyFrontendModule | null {
+  if (!raw || typeof raw !== 'object') return null
+  const pack = raw as LegacyFrontendExport
+  if (typeof pack.register === 'function') {
+    return {
+      slug: pack.slug || fallbackSlug,
+      version: pack.version || fallbackVersion,
+      register: pack.register.bind(pack),
+    }
+  }
+  const hasLegacy = (pack.adminNav?.length ?? 0) > 0 || (pack.adminScreens?.length ?? 0) > 0
+  if (!hasLegacy) return null
+
+  return {
+    slug: pack.slug || pack.name || fallbackSlug,
+    version: pack.version || fallbackVersion,
+    register: (ctx) => {
+      for (const item of pack.adminNav ?? []) {
+        ctx.registerAdminNavItem(item)
+      }
+      for (const screen of pack.adminScreens ?? []) {
+        ctx.registerAdminRoute({
+          path: screen.path,
+          label: screen.label,
+          group: screen.group,
+          permission: screen.permission,
+          element: screen.element,
+          Component: screen.Component,
+        })
+      }
     },
   }
 }
@@ -105,11 +185,13 @@ async function loadOne(asset: RuntimeModuleAsset): Promise<void> {
 
   try {
     const mod = (await import(/* @vite-ignore */ entry)) as {
-      default?: JaseflyFrontendModule
-      module?: JaseflyFrontendModule
+      default?: unknown
+      module?: unknown
+      JaseflyFrontendModule?: unknown
     }
-    const pack = mod.default ?? mod.module
-    if (!pack || typeof pack.register !== 'function') {
+    const raw = mod.default ?? mod.module ?? mod.JaseflyFrontendModule
+    const pack = normalizePack(raw, slug, asset.version || '0.0.0')
+    if (!pack) {
       console.warn('[packageModuleLoader] invalid module export', slug)
       return
     }
