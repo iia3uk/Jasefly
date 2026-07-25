@@ -37,8 +37,14 @@ final class CompatibilityLayer
         } elseif ($moduleSdkVersion < SdkVersion::MIN_SUPPORTED) {
             $errors[] = 'Module SDK v' . $moduleSdkVersion . ' is no longer supported';
         } elseif (SdkVersion::isDeprecatedGeneration($moduleSdkVersion)) {
-            $warnings[] = 'Module uses deprecated SDK v' . $moduleSdkVersion
-                . '; current is v' . SdkVersion::CURRENT . ' (still supported via Compatibility Layer)';
+            if (SdkVersion::isStable($moduleSdkVersion)) {
+                $warnings[] = 'Module uses SDK v' . $moduleSdkVersion
+                    . ' (stable); consider upgrading to v' . SdkVersion::CURRENT
+                    . ' for the latest platform APIs (still supported via Compatibility Layer)';
+            } else {
+                $warnings[] = 'Module uses deprecated SDK v' . $moduleSdkVersion
+                    . '; current is v' . SdkVersion::CURRENT . ' (still supported via Compatibility Layer)';
+            }
         }
         return ['ok' => $errors === [], 'errors' => $errors, 'warnings' => $warnings];
     }

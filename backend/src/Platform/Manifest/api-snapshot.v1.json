@@ -1,0 +1,227 @@
+{
+    "schema_version": 1,
+    "sdk_version": 2,
+    "generated_at": "2026-07-25T18:51:01+00:00",
+    "contracts": {
+        "App\\Platform\\Contracts\\PlatformDatabaseInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformDatabaseInterface",
+            "methods": {
+                "all": "all(string $sql, array $params=array (\n)): array",
+                "lastInsertId": "lastInsertId(): int",
+                "one": "one(string $sql, array $params=array (\n)): ?array",
+                "run": "run(string $sql, array $params=array (\n)): void",
+                "transaction": "transaction(callable $callback): mixed"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformStorageInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformStorageInterface",
+            "methods": {
+                "delete": "delete(string $relativePath): bool",
+                "exists": "exists(string $relativePath): bool",
+                "get": "get(string $relativePath): ?string",
+                "list": "list(string $relativeDir=''): array",
+                "publicUrl": "publicUrl(string $relativePath): ?string",
+                "put": "put(string $relativePath, string $contents): void"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformEventsInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformEventsInterface",
+            "methods": {
+                "publish": "publish(string $event, array $payload=array (\n)): void",
+                "publishLater": "publishLater(string $event, array $payload, int $delaySeconds): void",
+                "subscribe": "subscribe(string $event, callable $handler, int $priority=100): void"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformSchedulerInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformSchedulerInterface",
+            "methods": {
+                "cancel": "cancel(int $jobId): bool",
+                "enqueue": "enqueue(string $jobType, array $payload=array (\n), ?int $delaySeconds=NULL): int",
+                "registerHandler": "registerHandler(string $jobType, callable $handler): void"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformJobsInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformJobsInterface",
+            "methods": {
+                "cancel": "cancel(int $jobId): bool",
+                "enqueue": "enqueue(string $jobType, array $payload=array (\n), ?int $delaySeconds=NULL): int",
+                "registerHandler": "registerHandler(string $jobType, callable $handler): void"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformMailInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformMailInterface",
+            "methods": {
+                "sendHtml": "sendHtml(array|string $to, string $subject, string $htmlBody, ?string $textBody=NULL): array"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformNotificationsInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformNotificationsInterface",
+            "methods": {
+                "create": "create(int $userId, string $type, string $title, string $body='', array $data=array (\n)): void",
+                "notifyAdmins": "notifyAdmins(string $type, string $title, string $body='', array $data=array (\n)): void"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformSettingsInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformSettingsInterface",
+            "methods": {
+                "all": "all(): array",
+                "get": "get(string $key, mixed $default=NULL): mixed",
+                "set": "set(string $key, mixed $value): void"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformPermissionsInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformPermissionsInterface",
+            "methods": {
+                "can": "can(array $user, string $permission): bool",
+                "require": "require(array $user, string $permission): void"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformUsersInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformUsersInterface",
+            "methods": {
+                "findByEmail": "findByEmail(string $email): ?array",
+                "findById": "findById(int $id): ?array",
+                "rolesFor": "rolesFor(int $userId): array"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformMediaInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformMediaInterface",
+            "methods": {
+                "find": "find(int $id): ?array",
+                "url": "url(?int $mediaId): ?string"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformHttpInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformHttpInterface",
+            "methods": {
+                "apiPrefix": "apiPrefix(): string",
+                "authMiddleware": "authMiddleware(): object",
+                "delete": "delete(string $path, callable $handler, array $middleware=array (\n)): void",
+                "download": "download(string $filename, string $body, string $contentType='text/csv; charset=utf-8', array $headers=array (\n)): never",
+                "get": "get(string $path, callable $handler, array $middleware=array (\n)): void",
+                "permissionMiddleware": "permissionMiddleware(): object",
+                "post": "post(string $path, callable $handler, array $middleware=array (\n)): void",
+                "put": "put(string $path, callable $handler, array $middleware=array (\n)): void",
+                "rateLimitMiddleware": "rateLimitMiddleware(int $maxAttempts=20, int $windowSeconds=60): object"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformCacheInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformCacheInterface",
+            "methods": {
+                "delete": "delete(string $key): void",
+                "get": "get(string $key, mixed $default=NULL): mixed",
+                "set": "set(string $key, mixed $value, int $ttlSeconds=300): void"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformLoggerInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformLoggerInterface",
+            "methods": {
+                "error": "error(string $message, array $context=array (\n)): void",
+                "info": "info(string $message, array $context=array (\n)): void",
+                "warning": "warning(string $message, array $context=array (\n)): void"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformConfigInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformConfigInterface",
+            "methods": {
+                "cmsVersion": "cmsVersion(): string",
+                "get": "get(string $key, mixed $default=NULL): mixed",
+                "sdkVersion": "sdkVersion(): int"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformTranslationsInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformTranslationsInterface",
+            "methods": {
+                "register": "register(string $locale, array $messages): void",
+                "t": "t(string $key, ?string $locale=NULL, array $replace=array (\n)): string"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformAssetsInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformAssetsInterface",
+            "methods": {
+                "moduleAssetPath": "moduleAssetPath(string $relativePath): string",
+                "modulePublicUrl": "modulePublicUrl(string $relativePath): string"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformHealthInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformHealthInterface",
+            "methods": {
+                "checkModule": "checkModule(string $slug): array",
+                "warn": "warn(string $message): void",
+                "warnings": "warnings(): array"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformContentInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformContentInterface",
+            "methods": {
+                "pageBySlug": "pageBySlug(string $slug): ?array",
+                "publishedPages": "publishedPages(int $limit=50): array"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformBuilderInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformBuilderInterface",
+            "methods": {
+                "listBlockMeta": "listBlockMeta(): array",
+                "registerBlockMeta": "registerBlockMeta(string $type, array $blockMeta): void"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformCapabilitiesInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformCapabilitiesInterface",
+            "methods": {
+                "has": "has(string $capability): bool",
+                "list": "list(): array",
+                "require": "require(string $capability): void",
+                "resolveProvider": "resolveProvider(string $capability): ?string"
+            }
+        },
+        "App\\Platform\\Contracts\\PlatformRequestInterface": {
+            "class": "App\\Platform\\Contracts\\PlatformRequestInterface",
+            "methods": {
+                "body": "body(): array",
+                "header": "header(string $name, ?string $default=NULL): ?string",
+                "input": "input(string $key, mixed $default=NULL): mixed",
+                "ip": "ip(): string",
+                "method": "method(): string",
+                "path": "path(): string",
+                "query": "query(): array",
+                "raw": "raw(): mixed",
+                "user": "user(): ?array"
+            }
+        }
+    },
+    "context": {
+        "class": "App\\Platform\\PlatformContext",
+        "methods": {
+            "assets": "assets(): App\\Platform\\Contracts\\PlatformAssetsInterface",
+            "builder": "builder(): App\\Platform\\Contracts\\PlatformBuilderInterface",
+            "cache": "cache(): App\\Platform\\Contracts\\PlatformCacheInterface",
+            "capabilities": "capabilities(): App\\Platform\\Contracts\\PlatformCapabilitiesInterface",
+            "config": "config(): App\\Platform\\Contracts\\PlatformConfigInterface",
+            "content": "content(): App\\Platform\\Contracts\\PlatformContentInterface",
+            "database": "database(): App\\Platform\\Contracts\\PlatformDatabaseInterface",
+            "db": "db(): App\\Platform\\Contracts\\PlatformDatabaseInterface",
+            "deprecatedApiHits": "deprecatedApiHits(): array",
+            "events": "events(): App\\Platform\\Contracts\\PlatformEventsInterface",
+            "feature": "feature(string $flag): bool",
+            "health": "health(): App\\Platform\\Contracts\\PlatformHealthInterface",
+            "http": "http(): App\\Platform\\Contracts\\PlatformHttpInterface",
+            "jobs": "jobs(): App\\Platform\\Contracts\\PlatformJobsInterface",
+            "logger": "logger(): App\\Platform\\Contracts\\PlatformLoggerInterface",
+            "mail": "mail(): App\\Platform\\Contracts\\PlatformMailInterface",
+            "manifest": "manifest(): App\\Platform\\Manifest\\PlatformModuleManifestInterface",
+            "media": "media(): App\\Platform\\Contracts\\PlatformMediaInterface",
+            "moduleSdkVersion": "moduleSdkVersion(): int",
+            "notifications": "notifications(): App\\Platform\\Contracts\\PlatformNotificationsInterface",
+            "permissions": "permissions(): App\\Platform\\Contracts\\PlatformPermissionsInterface",
+            "scheduler": "scheduler(): App\\Platform\\Contracts\\PlatformSchedulerInterface",
+            "sdkVersion": "sdkVersion(): int",
+            "service": "service(string $id): object",
+            "serviceAs": "serviceAs(string $id, string $contractFqcn): object",
+            "settings": "settings(): App\\Platform\\Contracts\\PlatformSettingsInterface",
+            "slug": "slug(): string",
+            "storage": "storage(): App\\Platform\\Contracts\\PlatformStorageInterface",
+            "translations": "translations(): App\\Platform\\Contracts\\PlatformTranslationsInterface",
+            "users": "users(): App\\Platform\\Contracts\\PlatformUsersInterface"
+        }
+    }
+}

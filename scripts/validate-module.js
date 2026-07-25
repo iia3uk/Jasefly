@@ -32,9 +32,9 @@ if (errors.length) {
   process.exit(1)
 }
 
-const sdk = spawnSync('php', [path.join(root, 'backend', 'bin', 'sdk.php'), 'validate-sdk', dir], { encoding: 'utf8' })
+const sdk = spawnSync('php', [path.join(root, 'backend', 'bin', 'sdk.php'), 'verify-module', dir], { encoding: 'utf8' })
 if (sdk.status !== 0) {
-  console.error(sdk.stdout || sdk.stderr || 'sdk validate failed')
+  console.error(sdk.stdout || sdk.stderr || 'sdk verify-module failed')
   process.exit(sdk.status || 2)
 }
 console.log('OK', slug)
