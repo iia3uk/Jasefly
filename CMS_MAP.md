@@ -58,8 +58,9 @@
 | Module Package Manager / ZIP модули | `Modules/ModuleManager/` + `Services/Modules/*` + `/admin/modules` + `scripts/build-module.js` + `modules-src/` + docs `MODULE-*.md` |
 | Плагин → пакетный модуль (политика) | `docs/MODULE-FROM-PLUGINS.md` (+ `MODULE-DEVELOPMENT.md`, эталон `modules-src/demo-kit/`) |
 | Platform SDK (ZIP модули) | `backend/src/Platform/` + `frontend/src/platform/` + `docs/platform/*` |
-| SDK validate / compat CLI | `backend/bin/sdk.php` (+ gate в `scripts/build-module.js`) |
-| Capabilities / SDK report | `GET /admin/platform/capabilities` · `/admin/platform/sdk` · MCP `cms_sdk_report` / `cms_capability_report` / `cms_module_compatibility` |
+| SDK validate / certify CLI | `backend/bin/sdk.php` · `Platform/Analysis/*` (+ `verify-module` in `validate-module.js`, `certify` in `build-module.js`) · lifecycle: `backend/bin/certify-lifecycle.php` |
+| SDK certification docs / governance | `docs/platform/SDK-CERTIFICATION.md` · `PUBLIC-API-GOVERNANCE.md` · `API-SNAPSHOT.md` · `FORMS-REFERENCE-MODULE.md` · `MIGRATION-BUNDLED-FORMS.md` |
+| Capabilities / SDK report | `GET /admin/platform/capabilities` · `/admin/platform/sdk` · MCP `cms_sdk_report` / `cms_capability_report` / `cms_module_compatibility` / `cms_module_certify` / `cms_sdk_api_diff` / `cms_public_services` / `cms_sdk_deprecations` / `cms_export_sdk` |
 | Установка пакета модуля | `ModulePackageService` (upload→inspect→install) + CLI `backend/bin/modules.php` + MCP `cms_module_*` |
 | FE runtime пакетных модулей | `packageModuleLoader.ts` + `GET /modules/runtime-assets` + `/modules/{slug}/` assets |
 | Отложенная публикация страниц | `PageScheduleService` (lazy publish) + `scheduled_at` в билдере |
@@ -81,6 +82,7 @@
 | Миграции SQL | `backend/migrations/*.sql` (+ plugin migrations в `Modules/*/migrations/`) |
 | Module Package Manager (install/update ZIP) | `Modules/ModuleManager/ModuleManagerModule.php`, `Services/Modules/ModulePackageService.php`, `bin/modules.php`, `Core/Modules/*`, `migrations/020_installed_modules.sql` |
 | Demo package module source | `modules-src/demo-kit/` |
+| Forms SDK certification reference | `modules-src/forms-sdk-reference/` |
 | Залить апдейт на хостинг | MCP **`cms_release`** (summary + changes). Не invent deploy вручную |
 | Контент на проде (текст/страницы) | MCP `cms_site_map` → `cms_get` / `cms_bulk` / `cms_put_singleton` |
 | Публичная API-документация (люди + агенты) | страница CMS `/api-docs` + `GET /api/v1/docs` ([backend/docs/openapi.php](backend/docs/openapi.php)); локальный черновик `content/jasefly-official/apply-api-docs.mjs` |
