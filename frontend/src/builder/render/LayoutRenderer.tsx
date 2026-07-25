@@ -105,8 +105,15 @@ function WidgetNode({
       <def.Render settings={el.settings ?? {}} editMode={editMode} />
     </BuilderEditProvider>
   ) : (
-    <div className="rounded-lg border border-dashed border-amber-500/40 p-4 text-sm text-amber-200">
-      Неизвестный виджет: {el.widgetType}
+    <div className="rounded-lg border border-dashed border-amber-500/40 bg-amber-500/[0.04] p-4 text-sm text-amber-100/90">
+      {el.widgetType && el.widgetType.includes('.') ? (
+        <>
+          Модуль «{el.widgetType.split('.')[0]}» отключён или не установлен.
+          <div className="mt-1 text-xs text-amber-200/70">Виджет «{el.widgetType}» временно недоступен</div>
+        </>
+      ) : (
+        <>Неизвестный виджет: {el.widgetType}</>
+      )}
     </div>
   )
 

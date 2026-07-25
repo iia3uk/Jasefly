@@ -140,6 +140,10 @@ final class PluginCatalogMeta
                 'requires' => ['system'],
                 'suggests' => [],
             ],
+            'module-manager' => [
+                'requires' => ['system'],
+                'suggests' => [],
+            ],
             'forms' => [
                 'requires' => ['system'],
                 'suggests' => ['mail'],
@@ -380,6 +384,17 @@ final class PluginCatalogMeta
                     . "• HTTP tick по токену или lazy tick при входе в админку\n"
                     . "• Inbox в админке: статус cron, retry, cancel\n\n"
                     . "Базовый системный модуль для отложенных операций.",
+            ],
+            'module-manager' => [
+                'category' => 'core',
+                'description' => 'Менеджер модулей: установка, обновление и откат ZIP-пакетов.',
+                'long_description' => "Системный модуль Module Package Manager.\n\n"
+                    . "• Загрузка и inspect ZIP (module.json + checksums)\n"
+                    . "• Install / update / enable / disable / uninstall / rollback\n"
+                    . "• Реестр installed_modules, миграции и health-check\n"
+                    . "• CLI: php backend/bin/modules.php\n"
+                    . "• Публичный SPA loader: GET /api/v1/modules/runtime-assets\n\n"
+                    . "Ядро для расширений из api/modules/{slug}.",
             ],
             'forms' => [
                 'category' => 'comms',

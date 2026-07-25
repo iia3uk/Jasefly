@@ -31,6 +31,12 @@ MCP_API_TOKEN=тот_же_секрет
 ```
 (или `mcp_api_token` в `config.local.php`)
 
+## Module packages
+
+MCP tools: `cms_modules_list`, `cms_module_inspect`, `cms_module_install`, `cms_module_update`, `cms_module_enable`, `cms_module_disable`, `cms_module_health`, `cms_module_operations`, `cms_module_rollback`, `cms_module_release`.
+
+Dangerous ops require `confirm: true`. Build locally: `cms_module_release({ module: "demo-kit" })` → `release/modules/*.zip`.
+
 ## Хостинг не долбим
 
 По умолчанию MCP:

@@ -45,6 +45,18 @@ Every module implements `App\Core\Contract\ModuleInterface`:
 `config/app.php` → `api.versions` registers modules on **both** `/api/v1` and `/api`.  
 Ship `/api/v2` later by appending a prefix — v1 clients keep working.
 
+## Installable packages (Module Package Manager)
+
+Third-party / separately shipped modules use ZIP packages (`docs/MODULE-PACKAGES.md`):
+
+- Runtime path: `api/modules/{slug}/` + `public_html/modules/{slug}/`
+- Registry tables: `installed_modules`, `module_operations`, `module_migrations`
+- Admin: `/admin/modules` · CLI: `php backend/bin/modules.php`
+- Build: `node scripts/build-module.js {slug}`
+- Demo source: `modules-src/demo-kit/`
+
+Bundled modules under `src/Modules/` remain the primary in-repo plugins (enable/disable via `/admin/plugins`).
+
 ## Frontend modules
 
 Mirror structure under `frontend/src/modules/{name}/`:

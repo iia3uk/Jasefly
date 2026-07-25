@@ -34,8 +34,13 @@ final class SiteUpdater
         'api/storage/updates',
         'api/storage/sqlite',
         'api/storage/.installed',
+        'api/storage/modules',
+        'api/storage/module-installer',
+        'api/modules',
         'api/config/config.local.php',
         'api/config/.env',
+        // Public package frontend assets (third-party modules)
+        'modules',
         // Monorepo / api-only package paths:
         'storage/uploads',
         'storage/thumbnails',
@@ -44,6 +49,8 @@ final class SiteUpdater
         'storage/updates',
         'storage/sqlite',
         'storage/.installed',
+        'storage/modules',
+        'storage/module-installer',
         'config/config.local.php',
         'config/.env',
     ];

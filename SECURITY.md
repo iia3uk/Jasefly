@@ -2,6 +2,10 @@
 
 Минимальный набор hardening для PHP-сайта на shared/VPS хостинге.
 
+## Module packages
+
+Установка ZIP-модуля равносильна установке серверного ПО. Проверки: Zip Slip/bomb, checksums, path jail, optional ed25519, permissions без auto-grant. См. `docs/MODULE-SECURITY.md`.
+
 ## В приложении (CMS)
 
 | Требование | Статус |

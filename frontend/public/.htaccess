@@ -91,6 +91,10 @@ RewriteRule ^ index.php [L,QSA]
   SetEnvIf Request_URI "^/apple-touch-icon\.png$" BRAND_ASSET
   Header set Cache-Control "public, max-age=300, must-revalidate" env=BRAND_ASSET
 
+  # Installed module frontend assets (prebuilt ESM) — short cache, no PHP.
+  SetEnvIf Request_URI "^/modules/" MODULE_ASSET
+  Header set Cache-Control "public, max-age=3600, must-revalidate" env=MODULE_ASSET
+
   # HTML shell only — /api/* goes to api/public/index.php; never cache API JSON.
   SetEnvIf Request_URI "^/api/" IS_API
   <Files "index.php">
