@@ -22,7 +22,7 @@
 - Любая **новая** опциональная фича
 - Клиентские / партнёрские / экспериментальные фичи
 - Всё, что должно ставиться и обновляться **без** пересборки CMS
-- Эталон: `modules-src/demo-kit/`
+- Эталон: `modules-src/demo-kit/` (minimal) · **Forms SDK reference:** `modules-src/forms-sdk-reference/` (full certification target)
 
 ---
 
@@ -39,7 +39,7 @@ node scripts/build-module.js my-feature --yes
 Админка: **Модули** → Загрузить → Установить → Включить.  
 CLI: `php backend/bin/modules.php install path/to.zip`
 
-Подробности: [platform/MODULE-DEVELOPMENT.md](platform/MODULE-DEVELOPMENT.md), [platform/PLATFORM-SDK.md](platform/PLATFORM-SDK.md), [MODULE-PACKAGES.md](MODULE-PACKAGES.md), [MODULE-MANIFEST.md](MODULE-MANIFEST.md).
+Подробности: [platform/MODULE-DEVELOPMENT.md](platform/MODULE-DEVELOPMENT.md), [platform/PLATFORM-SDK.md](platform/PLATFORM-SDK.md), [platform/SDK-CERTIFICATION.md](platform/SDK-CERTIFICATION.md), [platform/FORMS-REFERENCE-MODULE.md](platform/FORMS-REFERENCE-MODULE.md), [MODULE-PACKAGES.md](MODULE-PACKAGES.md), [MODULE-MANIFEST.md](MODULE-MANIFEST.md).
 
 ---
 

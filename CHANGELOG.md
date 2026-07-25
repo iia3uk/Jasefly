@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-07-25 — Platform SDK v1 stable + Forms certification
+
+- Freeze SDK v1 as stable (`SdkVersion::STABILITY`); Compatibility Layer soft recommendation for v1
+- `forms-sdk-reference` certification reference module + `PlatformPackageLifecycleTest`
+- CLI `certify-lifecycle.php`; GitHub Actions `platform-sdk.yml`
+- MCP: `cms_module_certify`, `cms_sdk_api_diff`, `cms_public_services`, `cms_sdk_deprecations`
+- Docs: SDK-CERTIFICATION, PUBLIC-API-GOVERNANCE, API-SNAPSHOT, FORMS-REFERENCE-MODULE, MIGRATION-BUNDLED-FORMS
+- `create-module.js` scaffold: PlatformRequestInterface, hooks, unregister, certify hints
+
 ## 2026-07-25 — Fix package admin screens without Component
 
 - Platform FE registerPage/registerSettingsSection attach PlaceholderPage when Component/lazy/element missing

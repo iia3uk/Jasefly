@@ -27,7 +27,9 @@ This repository is a **reusable modular CMS**. Sites are content + configuration
 └─────────────────────────────────────────────┘
 ```
 
-Platform SDK docs: `docs/platform/PLATFORM-SDK.md`, `SDK-VERSIONING.md`, `CAPABILITY-SYSTEM.md`, `COMPATIBILITY-LAYER.md`.
+Platform SDK docs: `docs/platform/PLATFORM-SDK.md`, `SDK-VERSIONING.md`, `SDK-CERTIFICATION.md`, `CAPABILITY-SYSTEM.md`, `COMPATIBILITY-LAYER.md`.
+
+**SDK v1 is stable** (Forms reference certified). **SDK v2 is current.** Reference package: `modules-src/forms-sdk-reference/`.
 
 Platform modules docs: `docs/FORMS.md`, `SCHEDULER.md`, `AUTOMATION.md`, `NOTIFICATIONS.md`, `NEWSLETTER.md`, `ORDERS.md`, `COMMENTS.md`, `ANALYTICS.md`.
 
@@ -66,7 +68,7 @@ frontend/src/
 
 ## API versioning
 
-`config/app.php` → `api.versions`. Platform SDK generations: `App\Platform\SdkVersion` (CURRENT=2, SUPPORTED=[1,2]).
+`config/app.php` → `api.versions`. Platform SDK generations: `App\Platform\SdkVersion` (CURRENT=2, SUPPORTED=[1,2], v1=stable).
 
 ## Configuration
 
