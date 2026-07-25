@@ -70,11 +70,12 @@ final class ModuleHealthService
         }
 
         $moduleRoot = $this->paths->moduleRoot($slug);
-        $entryRel = $this->installedEntryRelative($manifest);
-        $entryPath = $moduleRoot . '/' . $entryRel;
-        if (!is_file($entryPath)) {
-            $issues[] = 'Backend entrypoint missing';
+        $entryRel = $this->resolveInstalledEntryRelative($moduleRoot, $manifest);
+        if ($entryRel === null) {
+            $wanted = ltrim(str_replace('\\', '/', $manifest->backendEntrypoint()), '/');
+            $issues[] = 'Backend entrypoint missing: ' . $wanted . ' under modules/' . $slug;
         } else {
+            $entryPath = $moduleRoot . '/' . $entryRel;
             try {
                 $this->paths->assertContained($moduleRoot, $entryPath);
                 $before = get_declared_classes();
@@ -191,10 +192,25 @@ final class ModuleHealthService
         return ModuleManifest::fromArray($data);
     }
 
-    private function installedEntryRelative(ModuleManifest $manifest): string
+    /** Resolve entrypoint on disk (backend/Foo.php or Foo.php). */
+    private function resolveInstalledEntryRelative(string $moduleRoot, ModuleManifest $manifest): ?string
     {
-        // Keep package-relative path (backend/Foo.php) — copyPackageFiles installs under moduleRoot/backend/.
-        return ltrim(str_replace('\\', '/', $manifest->backendEntrypoint()), '/');
+        $ep = ltrim(str_replace('\\', '/', $manifest->backendEntrypoint()), '/');
+        if ($ep === '') {
+            return null;
+        }
+        $candidates = [$ep];
+        if (str_starts_with($ep, 'backend/')) {
+            $candidates[] = substr($ep, strlen('backend/'));
+        } else {
+            $candidates[] = 'backend/' . $ep;
+        }
+        foreach ($candidates as $rel) {
+            if (is_file($moduleRoot . '/' . $rel)) {
+                return $rel;
+            }
+        }
+        return null;
     }
 
     /** @param list<string> $issues */

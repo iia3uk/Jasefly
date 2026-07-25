@@ -63,13 +63,16 @@ final class InstalledModuleLoader
             throw new \RuntimeException('Module directory missing');
         }
 
-        $entryRel = $this->installedEntryRelative($manifest);
+        $entryRel = $this->resolveInstalledEntryRelative($moduleRoot, $manifest);
+        if ($entryRel === null) {
+            $wanted = ltrim(str_replace('\\', '/', $manifest->backendEntrypoint()), '/');
+            throw new \RuntimeException('Entrypoint missing: ' . $wanted);
+        }
         $entryPath = $moduleRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $entryRel);
-        $this->paths->assertContained($moduleRoot, $entryPath);
-
         if (!is_file($entryPath)) {
             throw new \RuntimeException('Entrypoint missing: ' . $entryRel);
         }
+        $this->paths->assertContained($moduleRoot, $entryPath);
 
         $before = get_declared_classes();
         require_once $entryPath;
@@ -131,9 +134,24 @@ final class InstalledModuleLoader
         return ModuleManifest::fromArray($data);
     }
 
-    private function installedEntryRelative(ModuleManifest $manifest): string
+    private function resolveInstalledEntryRelative(string $moduleRoot, ModuleManifest $manifest): ?string
     {
-        // Keep package-relative path (backend/Foo.php) — files live under moduleRoot/backend/.
-        return ltrim(str_replace('\\', '/', $manifest->backendEntrypoint()), '/');
+        $ep = ltrim(str_replace('\\', '/', $manifest->backendEntrypoint()), '/');
+        if ($ep === '') {
+            return null;
+        }
+        $candidates = [$ep];
+        if (str_starts_with($ep, 'backend/')) {
+            $candidates[] = substr($ep, strlen('backend/'));
+        } else {
+            $candidates[] = 'backend/' . $ep;
+        }
+        foreach ($candidates as $rel) {
+            $abs = $moduleRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $rel);
+            if (is_file($abs)) {
+                return $rel;
+            }
+        }
+        return null;
     }
 }
