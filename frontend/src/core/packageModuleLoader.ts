@@ -73,7 +73,6 @@ function createContext(slug: string, version: string): ModuleFrontendContext {
         defaultSettings: widget.defaultSettings,
         settingsFields: widget.settingsFields,
         Render: widget.Render,
-        plugin: slug,
       })
       flush()
     },
