@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "public_namespaces": [
+    "App\\Platform\\",
+    "App\\PackageModules\\"
+  ],
+  "forbidden_namespaces": [
+    "App\\Core\\",
+    "App\\Services\\",
+    "App\\Modules\\",
+    "App\\Controllers\\",
+    "App\\Middleware\\",
+    "App\\Support\\"
+  ],
+  "forbidden_php_patterns": [
+    "Container::get",
+    "new Mailer",
+    "new JobQueue",
+    "new NotificationService",
+    "new MediaService",
+    "new PermissionService",
+    "new EventDispatcher",
+    "new Router",
+    "new Database"
+  ],
+  "allowed_service_ids": [
+    "db",
+    "database",
+    "storage",
+    "events",
+    "scheduler",
+    "mail",
+    "notifications",
+    "settings",
+    "permissions",
+    "users",
+    "media",
+    "builder",
+    "http",
+    "cache",
+    "logger",
+    "config",
+    "translations",
+    "assets",
+    "health",
+    "content",
+    "capabilities",
+    "features"
+  ],
+  "frontend_allowed_imports": [
+    "react",
+    "react-dom",
+    "react-router-dom",
+    "@jasefly/platform"
+  ],
+  "frontend_forbidden": [
+    "@/core/",
+    "@/admin/",
+    "@/lib/api",
+    "@/modules/",
+    "@/builder/registry",
+    "frontend/src/"
+  ],
+  "deprecated_apis": [
+    {
+      "symbol": "PlatformContext::db()",
+      "since": 2,
+      "remove_in": 3,
+      "replacement": "database()",
+      "message": "Use database() instead of db()"
+    }
+  ]
+}

@@ -5,8 +5,12 @@
         1,
         2
     ],
+    "stability": {
+        "1": "stable",
+        "2": "current"
+    },
     "api_version": 1,
-    "generated_at": "2026-07-25T18:26:18+00:00",
+    "generated_at": "2026-07-25T18:51:01+00:00",
     "public_apis": [
         {
             "id": "App\\Platform\\Contracts\\PlatformDatabaseInterface",
@@ -114,8 +118,18 @@
             "version": 2
         },
         {
+            "id": "App\\Platform\\Contracts\\PlatformRequestInterface",
+            "kind": "contract",
+            "version": 2
+        },
+        {
             "id": "App\\Platform\\PlatformContext",
             "kind": "context",
+            "version": 2
+        },
+        {
+            "id": "App\\Platform\\Manifest\\PlatformModuleManifestInterface",
+            "kind": "manifest",
             "version": 2
         },
         {
@@ -124,11 +138,128 @@
             "version": 2
         },
         {
+            "id": "App\\Platform\\Package\\PlatformInstallContextInterface",
+            "kind": "hook_context",
+            "version": 2
+        },
+        {
             "id": "frontend\/src\/platform",
             "kind": "frontend_sdk",
             "version": 2
         }
     ],
+    "public_services": {
+        "db": {
+            "contract": "App\\Platform\\Contracts\\PlatformDatabaseInterface",
+            "sdk_version": 2,
+            "capability": null
+        },
+        "database": {
+            "contract": "App\\Platform\\Contracts\\PlatformDatabaseInterface",
+            "sdk_version": 2,
+            "capability": null
+        },
+        "storage": {
+            "contract": "App\\Platform\\Contracts\\PlatformStorageInterface",
+            "sdk_version": 2,
+            "capability": "storage.files"
+        },
+        "events": {
+            "contract": "App\\Platform\\Contracts\\PlatformEventsInterface",
+            "sdk_version": 2,
+            "capability": "events.publish"
+        },
+        "scheduler": {
+            "contract": "App\\Platform\\Contracts\\PlatformSchedulerInterface",
+            "sdk_version": 2,
+            "capability": "scheduler.jobs"
+        },
+        "mail": {
+            "contract": "App\\Platform\\Contracts\\PlatformMailInterface",
+            "sdk_version": 2,
+            "capability": "mail.send"
+        },
+        "notifications": {
+            "contract": "App\\Platform\\Contracts\\PlatformNotificationsInterface",
+            "sdk_version": 2,
+            "capability": "notifications.send"
+        },
+        "settings": {
+            "contract": "App\\Platform\\Contracts\\PlatformSettingsInterface",
+            "sdk_version": 2,
+            "capability": "settings.module"
+        },
+        "permissions": {
+            "contract": "App\\Platform\\Contracts\\PlatformPermissionsInterface",
+            "sdk_version": 2,
+            "capability": "permissions.check"
+        },
+        "users": {
+            "contract": "App\\Platform\\Contracts\\PlatformUsersInterface",
+            "sdk_version": 2,
+            "capability": "users.current"
+        },
+        "media": {
+            "contract": "App\\Platform\\Contracts\\PlatformMediaInterface",
+            "sdk_version": 2,
+            "capability": "media.library"
+        },
+        "builder": {
+            "contract": "App\\Platform\\Contracts\\PlatformBuilderInterface",
+            "sdk_version": 2,
+            "capability": "builder.widgets"
+        },
+        "http": {
+            "contract": "App\\Platform\\Contracts\\PlatformHttpInterface",
+            "sdk_version": 2,
+            "capability": "http.client"
+        },
+        "cache": {
+            "contract": "App\\Platform\\Contracts\\PlatformCacheInterface",
+            "sdk_version": 2,
+            "capability": null
+        },
+        "logger": {
+            "contract": "App\\Platform\\Contracts\\PlatformLoggerInterface",
+            "sdk_version": 2,
+            "capability": null
+        },
+        "config": {
+            "contract": "App\\Platform\\Contracts\\PlatformConfigInterface",
+            "sdk_version": 2,
+            "capability": null
+        },
+        "translations": {
+            "contract": "App\\Platform\\Contracts\\PlatformTranslationsInterface",
+            "sdk_version": 2,
+            "capability": null
+        },
+        "assets": {
+            "contract": "App\\Platform\\Contracts\\PlatformAssetsInterface",
+            "sdk_version": 2,
+            "capability": null
+        },
+        "health": {
+            "contract": "App\\Platform\\Contracts\\PlatformHealthInterface",
+            "sdk_version": 2,
+            "capability": null
+        },
+        "content": {
+            "contract": "App\\Platform\\Contracts\\PlatformContentInterface",
+            "sdk_version": 2,
+            "capability": "content.pages"
+        },
+        "capabilities": {
+            "contract": "App\\Platform\\Contracts\\PlatformCapabilitiesInterface",
+            "sdk_version": 2,
+            "capability": null
+        },
+        "features": {
+            "contract": "App\\Platform\\Manifest\\FeatureFlags",
+            "sdk_version": 2,
+            "capability": null
+        }
+    },
     "capabilities": [
         "mail.send",
         "scheduler.jobs",
@@ -142,9 +273,14 @@
         "events.subscribe",
         "http.client",
         "settings.global",
+        "settings.module",
         "analytics.events",
         "permissions.check",
-        "content.pages"
+        "content.pages",
+        "admin.pages",
+        "public.routes",
+        "api.routes",
+        "users.current"
     ],
     "feature_flags": {
         "builder.widgets": true,

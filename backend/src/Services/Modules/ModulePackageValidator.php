@@ -5,6 +5,7 @@ namespace App\Services\Modules;
 
 use App\Core\Modules\ModuleDependencyResolver;
 use App\Core\Modules\ModuleManifest;
+use App\Platform\Analysis\PackageStaticAnalyzer;
 use App\Platform\Compatibility\CompatibilityLayer;
 use App\Platform\Capabilities\CapabilityRegistry;
 use App\Database;
@@ -23,8 +24,13 @@ final class ModulePackageValidator
     public function __construct(
         private ModuleDependencyResolver $deps = new ModuleDependencyResolver(),
         private ModuleSignatureService $signatures = new ModuleSignatureService(),
+        ?PackageStaticAnalyzer $staticAnalyzer = null,
         private ?Database $db = null,
-    ) {}
+    ) {
+        $this->staticAnalyzer = $staticAnalyzer ?? new PackageStaticAnalyzer();
+    }
+
+    private PackageStaticAnalyzer $staticAnalyzer;
 
     /**
      * Validate ZIP path without extracting (structure + slip + bomb).
@@ -218,6 +224,12 @@ final class ModulePackageValidator
             // Forbidden path segments in tree
             $forbidden = $this->scanForbiddenFiles($root);
             $errors = array_merge($errors, $forbidden);
+
+            $static = $this->staticAnalyzer->analyzeDirectory($root);
+            if (!$static['ok']) {
+                $errors = array_merge($errors, $static['errors']);
+            }
+            $warnings = array_merge($warnings, $static['warnings']);
         }
 
         return [

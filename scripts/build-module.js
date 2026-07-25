@@ -58,14 +58,14 @@ copyFiltered(src, stage)
 // Platform SDK gate — fail build if package imports internal Core
 const sdkPhp = path.join(root, 'backend', 'bin', 'sdk.php')
 if (fs.existsSync(sdkPhp)) {
-  const gate = spawnSync('php', [sdkPhp, 'validate-sdk', src], { encoding: 'utf8' })
+  const gate = spawnSync('php', [sdkPhp, 'certify', src], { encoding: 'utf8' })
   if (gate.status !== 0) {
     console.error(gate.stdout || '')
     console.error(gate.stderr || '')
-    console.error('SDK validation failed — fix Platform SDK violations before packaging')
+    console.error('SDK certification failed — fix Platform SDK violations before packaging')
     process.exit(gate.status || 2)
   }
-  console.log('SDK validate-sdk: OK')
+  console.log('SDK certify: OK')
 }
 
 // Prefer prebuilt frontend-dist; optionally build from frontend/ via vite lib if present
