@@ -25,9 +25,17 @@ type InstalledModule = {
   signature_status?: string
   health_status?: string
   last_error?: string | null
+  rollback_available?: boolean
   description?: string
   installed_at?: string
   updated_at?: string
+}
+
+type HealthReport = {
+  slug: string
+  status: string
+  issues: string[]
+  warnings: string[]
 }
 
 type InspectPlan = {
@@ -71,6 +79,8 @@ export function ModulesPage() {
   const [plan, setPlan] = useState<InspectPlan | null>(null)
   const [keepData, setKeepData] = useState(true)
   const [contentMode, setContentMode] = useState<'merge' | 'skip' | 'replace'>('merge')
+  const [healthReport, setHealthReport] = useState<HealthReport | null>(null)
+  const [notice, setNotice] = useState('')
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -96,11 +106,60 @@ export function ModulesPage() {
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key)
     setError('')
+    setNotice('')
     try {
       await fn()
       await refresh()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка операции')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const runHealth = async (slug: string) => {
+    setBusy(`health-${slug}`)
+    setError('')
+    setNotice('')
+    setHealthReport(null)
+    try {
+      const res = await api.post<{
+        data: { status?: string; issues?: string[]; warnings?: string[] }
+      }>(`/admin/modules/${slug}/health`, {})
+      const data = res.data ?? {}
+      setHealthReport({
+        slug,
+        status: String(data.status || 'unknown'),
+        issues: Array.isArray(data.issues) ? data.issues : [],
+        warnings: Array.isArray(data.warnings) ? data.warnings : [],
+      })
+      setNotice(`Проверка ${slug}: ${String(data.status || 'unknown')}`)
+      await refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ошибка health-check')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const runRollback = async (slug: string, available: boolean) => {
+    if (!available) {
+      setError(
+        'Откат недоступен: снимок создаётся только при обновлении модуля (update). После первой установки откатывать некуда.',
+      )
+      return
+    }
+    const ok = window.confirm(`Откатить модуль ${slug} к предыдущему снимку файлов?`)
+    if (!ok) return
+    setBusy(`rb-${slug}`)
+    setError('')
+    setNotice('')
+    try {
+      await api.post(`/admin/modules/${slug}/rollback`, {})
+      setNotice(`Откат ${slug} выполнен`)
+      await refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ошибка отката')
     } finally {
       setBusy(null)
     }
@@ -204,6 +263,11 @@ export function ModulesPage() {
       {error ? (
         <GlassPanel className="mb-4 border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">{error}</GlassPanel>
       ) : null}
+      {notice ? (
+        <GlassPanel className="mb-4 border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-100">
+          {notice}
+        </GlassPanel>
+      ) : null}
 
       {tab === 'installed' && (
         <div className="space-y-3">
@@ -230,6 +294,7 @@ export function ModulesPage() {
                     <p className="mt-1 text-xs text-zinc-500">
                       source={m.source} · signature={m.signature_status || '—'} · health=
                       {m.health_status || '—'}
+                      {m.rollback_available ? ' · rollback=yes' : ' · rollback=no'}
                     </p>
                     {m.last_error ? <p className="mt-2 text-xs text-red-300">{m.last_error}</p> : null}
                   </div>
@@ -238,7 +303,11 @@ export function ModulesPage() {
                       <Button
                         type="button"
                         disabled={!!busy}
-                        onClick={() => void run(`en-${m.slug}`, () => api.post(`/admin/modules/${m.slug}/enable`).then(() => undefined))}
+                        onClick={() =>
+                          void run(`en-${m.slug}`, () =>
+                            api.post(`/admin/modules/${m.slug}/enable`, {}).then(() => undefined),
+                          )
+                        }
                       >
                         Включить
                       </Button>
@@ -246,7 +315,11 @@ export function ModulesPage() {
                       <GhostButton
                         type="button"
                         disabled={!!busy}
-                        onClick={() => void run(`dis-${m.slug}`, () => api.post(`/admin/modules/${m.slug}/disable`).then(() => undefined))}
+                        onClick={() =>
+                          void run(`dis-${m.slug}`, () =>
+                            api.post(`/admin/modules/${m.slug}/disable`, {}).then(() => undefined),
+                          )
+                        }
                       >
                         Отключить
                       </GhostButton>
@@ -254,26 +327,23 @@ export function ModulesPage() {
                     <GhostButton
                       type="button"
                       disabled={!!busy}
-                      onClick={() =>
-                        void run(`health-${m.slug}`, () =>
-                          api.post(`/admin/modules/${m.slug}/health`).then(() => undefined),
-                        )
-                      }
+                      onClick={() => void runHealth(m.slug)}
                     >
                       <CheckCircle2 size={15} />
-                      Health
+                      {busy === `health-${m.slug}` ? 'Проверка…' : 'Проверка'}
                     </GhostButton>
                     <GhostButton
                       type="button"
-                      disabled={!!busy}
-                      onClick={() =>
-                        void run(`rb-${m.slug}`, () =>
-                          api.post(`/admin/modules/${m.slug}/rollback`).then(() => undefined),
-                        )
+                      disabled={!!busy || !m.rollback_available}
+                      title={
+                        m.rollback_available
+                          ? 'Откатить к снимку после последнего update'
+                          : 'Нет снимка: rollback только после обновления пакета'
                       }
+                      onClick={() => void runRollback(m.slug, !!m.rollback_available)}
                     >
                       <Download size={15} />
-                      Rollback
+                      Откат
                     </GhostButton>
                     <GhostButton
                       type="button"
@@ -297,6 +367,30 @@ export function ModulesPage() {
                     </GhostButton>
                   </div>
                 </div>
+                {healthReport?.slug === m.slug ? (
+                  <div className="mt-4 rounded-lg border border-white/10 bg-black/25 p-3 text-xs text-zinc-300">
+                    <div className="mb-2 font-medium text-zinc-100">
+                      Результат проверки: <span className="uppercase">{healthReport.status}</span>
+                    </div>
+                    {healthReport.issues.length === 0 && healthReport.warnings.length === 0 ? (
+                      <p className="text-emerald-200/90">Проблем не найдено.</p>
+                    ) : null}
+                    {healthReport.issues.length > 0 ? (
+                      <ul className="mb-2 list-disc space-y-1 pl-4 text-red-300">
+                        {healthReport.issues.map((i) => (
+                          <li key={i}>{i}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {healthReport.warnings.length > 0 ? (
+                      <ul className="list-disc space-y-1 pl-4 text-amber-200/90">
+                        {healthReport.warnings.map((w) => (
+                          <li key={w}>{w}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                ) : null}
               </GlassPanel>
             ))
           )}

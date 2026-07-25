@@ -181,6 +181,24 @@ final class ModuleRegistryRepository
         }
     }
 
+    /** True when a successful op left a restoreable file snapshot. */
+    public function hasRollbackSnapshot(string $slug): bool
+    {
+        foreach ($this->listOperations($slug, 20) as $op) {
+            if (($op['status'] ?? '') !== 'success') {
+                continue;
+            }
+            if (empty($op['backup_path']) || empty($op['file_rollback_available'])) {
+                continue;
+            }
+            $path = (string) $op['backup_path'];
+            if (is_file($path)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** @return array<string, mixed>|null */
     public function getOperation(int $operationId): ?array
     {
