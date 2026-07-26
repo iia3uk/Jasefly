@@ -6,6 +6,7 @@ import { api } from '@/lib/api'
 import { Button, Field, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { adminUrl } from '@/admin/adminBasePath'
+import { usePluginEnabled } from '@/hooks/useApi'
 
 type FaqItem = {
   id: number
@@ -32,6 +33,7 @@ export function SupportFaqPage() {
 
 function SupportFaqInner() {
   const qc = useQueryClient()
+  const pluginOn = usePluginEnabled('support')
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState('')
   const [keywords, setKeywords] = useState('')
@@ -42,6 +44,7 @@ function SupportFaqInner() {
 
   const list = useQuery({
     queryKey: ['admin', 'support', 'faq'],
+    enabled: pluginOn,
     queryFn: async () => asData<FaqItem[]>(await api.get('/admin/support/faq')),
   })
 

@@ -6,6 +6,7 @@ import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { adminUrl } from '@/admin/adminBasePath'
 import { Link } from 'react-router-dom'
+import { usePluginEnabled } from '@/hooks/useApi'
 
 type Status = {
   source_lang: string
@@ -45,11 +46,13 @@ function asData<T>(payload: { data?: T } | T): T {
  */
 export function TranslatePage() {
   const qc = useQueryClient()
+  const pluginOn = usePluginEnabled('translate')
   const [log, setLog] = useState<string[]>([])
   const [running, setRunning] = useState(false)
 
   const status = useQuery({
     queryKey: ['admin', 'translate', 'status'],
+    enabled: pluginOn,
     queryFn: async () => asData<Status>(await api.get('/admin/translate/status')),
   })
 

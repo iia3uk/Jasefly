@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-07-26 — Fix admin API 404 spam when optional plugins are off
+
+- Gate CrudList/Edit and dedicated admin screens with plugin enable checks
+- Extend ADMIN_RESOURCE_PLUGINS (projects, blog, products, payments, orders, webhooks)
+- Hide Dashboard/AdminBar/HubTabs/Ctrl+K entry points for disabled plugins
+- SearchService skips projects/blog when plugins disabled
+- Fix PackageErrorBoundary children + hooks order for release build
+
+
 ## 2026-07-25 — Platform SDK v1 stable + Forms certification
 
 - Freeze SDK v1 as stable (`SdkVersion::STABILITY`); Compatibility Layer soft recommendation for v1

@@ -3,9 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowDown, ArrowUp, Copy, ExternalLink, GripVertical, Plus, Trash2 } from 'lucide-react'
 import { endpoints } from '@/lib/api'
-import { useAdminItem, useAdminList, useAdminSingleton, useCrud, usePluginEnabled, useSingletonSave } from '@/hooks/useApi'
+import { useAdminItem, useAdminList, useAdminResourceEnabled, useAdminSingleton, useCrud, usePluginEnabled, usePluginsHydrated, useSingletonSave } from '@/hooks/useApi'
 import type { BlogPost, ID, Profile, Project } from '@/types'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
+import { pluginForAdminResource } from '@/core/pluginGates'
 import { RichTextEditor } from '@/admin/components/RichTextEditor'
 import { MediaPicker } from '@/admin/components/MediaPicker'
 import { GalleryPicker } from '@/admin/components/GalleryPicker'
@@ -125,8 +126,26 @@ function useDirtyForm(form: Data, baseline: Data | null) {
   return { dirty, baselineJson }
 }
 
+function PluginOffNotice({ plugin }: { plugin: string }) {
+  return (
+    <GlassPanel className="p-10 text-center">
+      <h1 className="font-heading text-xl">{resourceTitle(plugin)}</h1>
+      <p className="mt-2 text-sm text-zinc-500">
+        Плагин «{plugin}» выключен — раздел недоступен. Включите его в{' '}
+        <Link to={adminUrl('/plugins')} className="text-[var(--accent)] underline-offset-2 hover:underline">
+          Плагинах
+        </Link>
+        .
+      </p>
+    </GlassPanel>
+  )
+}
+
 export function CrudListPage({ resource, basePath }: { resource: string; basePath?: string }) {
-  const { data = [], isLoading } = useAdminList<Data>(resource)
+  const gatePlugin = pluginForAdminResource(resource)
+  const pluginsReady = usePluginsHydrated()
+  const canFetch = useAdminResourceEnabled(resource)
+  const { data = [], isLoading } = useAdminList<Data>(resource, canFetch)
   const { remove, save } = useCrud(resource)
   const client = useQueryClient()
   const nav = useNavigate()
@@ -168,6 +187,9 @@ export function CrudListPage({ resource, basePath }: { resource: string; basePat
       setOrdered(data.slice())
     },
   })
+
+  if (gatePlugin && !pluginsReady) return <Skeleton className="h-64" />
+  if (gatePlugin && !canFetch) return <PluginOffNotice plugin={gatePlugin} />
 
   const persistOrder = (next: Data[]) => {
     setOrdered(next)
@@ -365,8 +387,11 @@ export function CrudListPage({ resource, basePath }: { resource: string; basePat
 
 export function CrudEditPage({ resource, basePath }: { resource: string; basePath?: string }) {
   const { id = 'new' } = useAdminRouteParams()
-  const { data, isLoading } = useAdminItem<Data>(resource, id)
-  const { data: skillCategories = [] } = useAdminList<Data>('skill-categories', resource === 'skills')
+  const gatePlugin = pluginForAdminResource(resource)
+  const pluginsReady = usePluginsHydrated()
+  const canFetch = useAdminResourceEnabled(resource)
+  const { data, isLoading } = useAdminItem<Data>(resource, id, canFetch)
+  const { data: skillCategories = [] } = useAdminList<Data>('skill-categories', resource === 'skills' && canFetch)
   const { save } = useCrud(resource)
   const nav = useNavigate()
   const { form, setForm, baseline } = useHydratedForm<Data>(data, String(id))
@@ -397,6 +422,8 @@ export function CrudEditPage({ resource, basePath }: { resource: string; basePat
 
   useAdminSaveHotkey(submit)
 
+  if (gatePlugin && !pluginsReady) return <Skeleton className="h-96" />
+  if (gatePlugin && !canFetch) return <PluginOffNotice plugin={gatePlugin} />
   if (isLoading) return <Skeleton className="h-96" />
 
   return (
@@ -557,7 +584,9 @@ function Repeatable({ label, values, onChange }: { label: string; values?: any[]
 
 export function ProjectEditPage() {
   const { id = 'new' } = useAdminRouteParams()
-  const { data, isLoading } = useAdminItem<Project>('projects', id)
+  const pluginsReady = usePluginsHydrated()
+  const projectsOn = usePluginEnabled('projects')
+  const { data, isLoading } = useAdminItem<Project>('projects', id, projectsOn)
   const crud = useCrud('projects')
   const nav = useNavigate()
   const client = useQueryClient()
@@ -568,7 +597,7 @@ export function ProjectEditPage() {
   useUnsavedGuard(dirty)
   const { bannerNode, clearDraftLocal } = useFormAutosave('projects', id, form, baselineJson, dirty, (d) => setForm(d))
 
-  const normalizeGallery = (items: unknown) => {
+  const normalizeGallery = useCallback((items: unknown) => {
     if (!Array.isArray(items)) return []
     return items
       .map((item: any, i: number) => {
@@ -592,7 +621,7 @@ export function ProjectEditPage() {
         }
       })
       .filter(Boolean)
-  }
+  }, [])
 
   const submit = useCallback((status?: string) => {
     crud.save.mutate({
@@ -617,11 +646,13 @@ export function ProjectEditPage() {
         nav(adminUrl(`/projects/${saved.id ?? id}`))
       },
     })
-  }, [crud.save, form, id, clearDraftLocal, client, nav, resetHydration, setForm, setBaseline])
+  }, [crud.save, form, id, clearDraftLocal, client, nav, resetHydration, setForm, setBaseline, normalizeGallery])
 
   const saveDraft = useCallback(() => submit('draft'), [submit])
   useAdminSaveHotkey(saveDraft)
 
+  if (!pluginsReady) return <Skeleton className="h-96" />
+  if (!projectsOn) return <PluginOffNotice plugin="projects" />
   if (isLoading) return <Skeleton className="h-96" />
 
   return (
@@ -678,11 +709,25 @@ export function ProjectEditPage() {
 }
 
 function ProjectLinkedPosts({ projectId }: { projectId: unknown }) {
-  const { data: posts = [], isLoading } = useAdminList<BlogPost>('blog')
+  const blogOn = usePluginEnabled('blog')
+  const { data: posts = [], isLoading } = useAdminList<BlogPost>('blog', blogOn)
   const linked = useMemo(
     () => posts.filter((p) => String(p.project_id ?? '') === String(projectId ?? '')),
     [posts, projectId],
   )
+  if (!blogOn) {
+    return (
+      <div className={adminFormFullClass}>
+        <p className="mb-2 text-sm text-zinc-300">{t.linkedBlogPosts}</p>
+        <p className="text-sm text-zinc-500">
+          Плагин «blog» выключен — связанные посты недоступны.{' '}
+          <Link to={adminUrl('/plugins')} className="text-[var(--accent)] underline-offset-2 hover:underline">
+            Плагины
+          </Link>
+        </p>
+      </div>
+    )
+  }
   return (
     <div className={adminFormFullClass}>
       <p className="mb-2 text-sm text-zinc-300">{t.linkedBlogPosts}</p>
@@ -708,7 +753,9 @@ function ProjectLinkedPosts({ projectId }: { projectId: unknown }) {
 
 export function BlogEditPage() {
   const { id = 'new' } = useAdminRouteParams()
-  const { data } = useAdminItem<BlogPost>('blog', id)
+  const pluginsReady = usePluginsHydrated()
+  const blogOn = usePluginEnabled('blog')
+  const { data } = useAdminItem<BlogPost>('blog', id, blogOn)
   const projectsOn = usePluginEnabled('projects')
   const { data: projects = [] } = useAdminList<Project>('projects', projectsOn)
   const crud = useCrud('blog')
@@ -748,6 +795,9 @@ export function BlogEditPage() {
 
   const saveDraft = useCallback(() => submit('draft'), [submit])
   useAdminSaveHotkey(saveDraft)
+
+  if (!pluginsReady) return <Skeleton className="h-96" />
+  if (!blogOn) return <PluginOffNotice plugin="blog" />
 
   return (
     <AdminSplitLayout

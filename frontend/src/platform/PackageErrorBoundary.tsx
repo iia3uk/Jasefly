@@ -3,7 +3,8 @@ import { Component, type ErrorInfo, type ReactNode } from 'react'
 type Props = {
   slug?: string
   label?: string
-  children: ReactNode
+  /** Optional so createElement(Boundary, props, child) typechecks under React 18. */
+  children?: ReactNode
 }
 
 type State = { error: Error | null }

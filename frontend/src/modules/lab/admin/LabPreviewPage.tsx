@@ -4,6 +4,7 @@ import { api } from '@/lib/api'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { adminUrl } from '@/admin/adminBasePath'
 import { useAdminRouteParams } from '@/admin/AdminRouteParams'
+import { usePluginEnabled } from '@/hooks/useApi'
 import { LabBareLayout } from '../LabBareLayout'
 import { LabExperimentHost, type LabExperimentPayload } from '../LabExperimentHost'
 
@@ -23,9 +24,10 @@ export function LabPreviewPage() {
 
 function LabPreviewInner() {
   const { id = '' } = useAdminRouteParams()
+  const pluginOn = usePluginEnabled('lab')
   const q = useQuery({
     queryKey: ['lab-preview', id],
-    enabled: Boolean(id),
+    enabled: pluginOn && Boolean(id),
     queryFn: async () => asData<LabExperimentPayload>(await api.get(`/admin/lab/experiments/${id}/preview`)),
   })
 

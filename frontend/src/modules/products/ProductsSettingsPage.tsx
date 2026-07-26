@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, ExternalLink, Save } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '@/lib/api'
-import { Button, Skeleton } from '@/components/ui'
+import { Button, GlassPanel, Skeleton } from '@/components/ui'
+import { usePluginEnabled, usePluginsHydrated } from '@/hooks/useApi'
+import { adminUrl } from '@/admin/adminBasePath'
 
 type TemplateField = {
   key: string
@@ -115,8 +117,11 @@ function WirePreview({ id, colors }: { id: string; colors: [string, string] }) {
 
 export function ProductsSettingsPage() {
   const qc = useQueryClient()
+  const pluginsReady = usePluginsHydrated()
+  const productsOn = usePluginEnabled('products')
   const { data, isLoading } = useQuery({
     queryKey: ['products-templates-meta'],
+    enabled: productsOn,
     queryFn: async () => {
       const res = await api.get<{ data: MetaPayload }>('/admin/products-meta/templates')
       return (res as { data?: MetaPayload })?.data ?? null
@@ -145,6 +150,20 @@ export function ProductsSettingsPage() {
     },
   })
 
+  if (!pluginsReady) return <Skeleton className="h-64" />
+  if (!productsOn) {
+    return (
+      <GlassPanel className="p-10 text-center">
+        <h1 className="font-heading text-xl">Товары</h1>
+        <p className="mt-2 text-sm text-zinc-500">
+          Плагин «products» выключен.{' '}
+          <Link to={adminUrl('/plugins')} className="text-[var(--accent)] underline-offset-2 hover:underline">
+            Плагины
+          </Link>
+        </p>
+      </GlassPanel>
+    )
+  }
   if (isLoading || !data) {
     return <Skeleton className="h-64" />
   }

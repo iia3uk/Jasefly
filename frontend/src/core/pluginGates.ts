@@ -1,4 +1,36 @@
 /**
+ * Admin CRUD resource → plugin(s) that register the API.
+ * Any one enabled plugin is enough (e.g. orders via Orders or Payments fallback).
+ * Resources without an entry are always available (core Content/System).
+ */
+export const ADMIN_RESOURCE_PLUGINS: Record<string, string[]> = {
+  projects: ['projects'],
+  'project-categories': ['projects'],
+  blog: ['blog'],
+  'blog-categories': ['blog'],
+  'blog-tags': ['blog'],
+  products: ['products'],
+  payments: ['payments'],
+  orders: ['orders', 'payments'],
+  webhooks: ['webhooks'],
+}
+
+/** @deprecated use ADMIN_RESOURCE_PLUGINS / pluginsForAdminResource */
+export const ADMIN_RESOURCE_PLUGIN: Record<string, string> = Object.fromEntries(
+  Object.entries(ADMIN_RESOURCE_PLUGINS).map(([k, v]) => [k, v[0]!]),
+)
+
+/** Plugins that can serve an admin list/edit resource, or null for ungated core CRUD. */
+export function pluginsForAdminResource(resource: string): string[] | null {
+  return ADMIN_RESOURCE_PLUGINS[resource] ?? null
+}
+
+/** Primary plugin label for empty-state copy. */
+export function pluginForAdminResource(resource: string): string | null {
+  return pluginsForAdminResource(resource)?.[0] ?? null
+}
+
+/**
  * Public path → owning plugin. Used to hide nav links and SPA routes
  * when the plugin is disabled.
  */

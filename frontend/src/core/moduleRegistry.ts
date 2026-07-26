@@ -87,6 +87,9 @@ const KNOWN_PLUGINS = [
   'automation', 'notifications', 'newsletter', 'orders', 'comments', 'analytics',
 ]
 
+/** Always shown in admin before /site|/admin/plugins hydrates (no optional API). */
+const CORE_BOOT_PLUGINS = new Set(['system', 'users', 'content', 'site', 'media', 'seo'])
+
 /** Subscribers notified whenever plugin enable/disable state changes
  *  (so the admin sidebar / screens can re-render). */
 const pluginStateListeners = new Set<() => void>()
@@ -182,7 +185,13 @@ export function arePluginsHydrated(): boolean {
 }
 
 export function getModules(): ModuleManifest[] {
-  return manifests.filter((m) => m.enabled !== false && !runtimeDisabled.has(m.name))
+  return manifests.filter((m) => {
+    if (m.enabled === false) return false
+    // Fail-closed for optional modules until enable map is known — otherwise
+    // sidebar shows Projects and CrudList hits GET /admin/projects → 404.
+    if (!pluginsHydrated) return CORE_BOOT_PLUGINS.has(m.name)
+    return !runtimeDisabled.has(m.name)
+  })
 }
 
 /** All registered manifests regardless of enabled state (for the Plugins page). */
