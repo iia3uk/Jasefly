@@ -3,6 +3,7 @@ import { Shield, RefreshCw, Zap } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { t } from '@/admin/i18n'
+import { usePluginEnabled } from '@/hooks/useApi'
 
 type ProviderStatus = {
   id: string
@@ -25,9 +26,11 @@ type DdosStatus = {
 
 export function DdosPage() {
   const client = useQueryClient()
+  const pluginOn = usePluginEnabled('ddos')
   const queryKey = ['admin', 'ddos', 'status']
   const { data, isLoading } = useQuery<DdosStatus>({
     queryKey,
+    enabled: pluginOn,
     queryFn: async () => {
       const res = await api.get<{ data: DdosStatus }>('/admin/ddos/status')
       return (res as { data?: DdosStatus })?.data as DdosStatus

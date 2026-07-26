@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { endpoints } from '@/lib/api'
 import { t } from '@/admin/i18n'
 import { adminUrl } from '@/admin/adminBasePath'
+import { usePluginEnabled } from '@/hooks/useApi'
 
 type Command = { id: string; label: string; subtitle: string; run: () => void }
 
@@ -12,6 +13,8 @@ export function GlobalSearch() {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const navigate = useNavigate()
+  const projectsOn = usePluginEnabled('projects')
+  const blogOn = usePluginEnabled('blog')
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -26,44 +29,61 @@ export function GlobalSearch() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  const commands = useMemo<Command[]>(() => [
-    {
-      id: 'new-page',
-      label: 'Новая страница (билдер)',
-      subtitle: t.commands,
-      run: () => navigate(adminUrl('/pages')),
-    },
-    {
-      id: 'new-project',
-      label: t.newProjectCmd,
-      subtitle: t.commands,
-      run: () => navigate(adminUrl('/projects/new')),
-    },
-    {
-      id: 'new-post',
-      label: t.newPostCmd,
-      subtitle: t.commands,
-      run: () => navigate(adminUrl('/blog/new')),
-    },
-    {
-      id: 'toggle-sidebar',
-      label: t.toggleSidebarCmd,
-      subtitle: t.commands,
-      run: () => window.dispatchEvent(new Event('admin:toggle-sidebar')),
-    },
-    {
-      id: 'view-site',
-      label: t.viewSite,
-      subtitle: t.commands,
-      run: () => window.open('/', '_blank'),
-    },
-  ], [navigate])
+  const commands = useMemo<Command[]>(() => {
+    const list: Command[] = [
+      {
+        id: 'new-page',
+        label: 'Новая страница (билдер)',
+        subtitle: t.commands,
+        run: () => navigate(adminUrl('/pages')),
+      },
+    ]
+    if (projectsOn) {
+      list.push({
+        id: 'new-project',
+        label: t.newProjectCmd,
+        subtitle: t.commands,
+        run: () => navigate(adminUrl('/projects/new')),
+      })
+    }
+    if (blogOn) {
+      list.push({
+        id: 'new-post',
+        label: t.newPostCmd,
+        subtitle: t.commands,
+        run: () => navigate(adminUrl('/blog/new')),
+      })
+    }
+    list.push(
+      {
+        id: 'toggle-sidebar',
+        label: t.toggleSidebarCmd,
+        subtitle: t.commands,
+        run: () => window.dispatchEvent(new Event('admin:toggle-sidebar')),
+      },
+      {
+        id: 'view-site',
+        label: t.viewSite,
+        subtitle: t.commands,
+        run: () => window.open('/', '_blank'),
+      },
+    )
+    return list
+  }, [navigate, projectsOn, blogOn])
 
   const { data = [] } = useQuery({
     queryKey: ['admin-search', q],
     queryFn: () => endpoints.search(q),
     enabled: open && q.length >= 2,
   })
+
+  const filteredResults = useMemo(() => {
+    return data.filter((item) => {
+      if (item.type === 'project' || String(item.href).includes('/admin/projects')) return projectsOn
+      if (item.type === 'blog' || String(item.href).includes('/admin/blog')) return blogOn
+      return true
+    })
+  }, [data, projectsOn, blogOn])
 
   const filteredCommands = useMemo(() => {
     const needle = q.trim().toLowerCase()
@@ -117,8 +137,8 @@ export function GlobalSearch() {
             </div>
           )}
           {q.length < 2 && <p className="px-3 py-4 text-sm text-zinc-500">{t.searchHint}</p>}
-          {q.length >= 2 && !data.length && <p className="px-3 py-4 text-sm text-zinc-500">{t.noResults}</p>}
-          {data.map((item, i) => (
+          {q.length >= 2 && !filteredResults.length && <p className="px-3 py-4 text-sm text-zinc-500">{t.noResults}</p>}
+          {filteredResults.map((item, i) => (
             <button
               key={`${item.type}-${item.id}-${i}`}
               type="button"

@@ -255,7 +255,9 @@ export function DashboardPage() {
           ...(projectsOn
             ? [{ label: t.weekProjects, value: data?.recent?.projects_7d, href: adminUrl('/projects') }]
             : []),
-          { label: t.weekPosts, value: data?.recent?.posts_7d, href: adminUrl('/blog') },
+          ...(blogOn
+            ? [{ label: t.weekPosts, value: data?.recent?.posts_7d, href: adminUrl('/blog') }]
+            : []),
           { label: t.weekMedia, value: data?.recent?.media_7d, href: adminUrl('/media') },
           { label: t.weekMessages, value: data?.recent?.messages_7d, href: adminUrl('/messages') },
         ].map((item) => (
@@ -312,7 +314,9 @@ export function DashboardPage() {
         {projectsOn ? (
           <StatusBars title={t.publishProjects} href={adminUrl('/projects')} data={data?.publish?.projects} />
         ) : null}
-        <StatusBars title={t.publishPosts} href={adminUrl('/blog')} data={data?.publish?.posts} />
+        {blogOn ? (
+          <StatusBars title={t.publishPosts} href={adminUrl('/blog')} data={data?.publish?.posts} />
+        ) : null}
         <StatusBars title={t.publishPages} href={adminUrl('/pages')} data={data?.publish?.pages} />
       </div>
 
@@ -354,7 +358,9 @@ export function DashboardPage() {
               ...(projectsOn
                 ? [{ label: t.projects, value: data?.drafts?.projects, href: adminUrl('/projects'), icon: FolderKanban }]
                 : []),
-              { label: t.posts, value: data?.drafts?.posts, href: adminUrl('/blog'), icon: FileText },
+              ...(blogOn
+                ? [{ label: t.posts, value: data?.drafts?.posts, href: adminUrl('/blog'), icon: FileText }]
+                : []),
               { label: t.pagesLabel, value: data?.drafts?.pages, href: adminUrl('/pages'), icon: LayoutTemplate },
             ].map((item) => {
               const Icon = item.icon

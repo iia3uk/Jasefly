@@ -3,7 +3,7 @@ import { ExternalLink, LayoutTemplate, LogOut, Pencil, Plus, Settings } from 'lu
 import { useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useSiteContext } from '@/context/SiteContext'
-import { useCrud, usePage } from '@/hooks/useApi'
+import { useCrud, usePage, usePluginEnabled } from '@/hooks/useApi'
 import { emptyLayout } from '@/builder/types'
 import { adminUrl, getAdminBase } from '@/admin/adminBasePath'
 import type { Page } from '@/types'
@@ -38,6 +38,10 @@ export function AdminBar() {
   const isCmsSlug = Boolean(firstSeg) && !reserved.has(firstSeg) && !path.startsWith('/projects/') && !path.startsWith('/blog/')
   const cmsSlug = isCmsSlug ? firstSeg : ''
   const { data: cmsPage } = usePage(cmsSlug)
+  const projectsOn = usePluginEnabled('projects')
+  const blogOn = usePluginEnabled('blog')
+  const portfolioOn = usePluginEnabled('portfolio')
+  const servicesOn = usePluginEnabled('services') || portfolioOn
 
   useEffect(() => {
     if (!token) {
@@ -67,19 +71,19 @@ export function AdminBar() {
   } else if (isCmsSlug && cmsPage?.id != null) {
     editHref = adminUrl(`/pages/${cmsPage.id}/builder`)
     editLabel = 'Редактировать в билдере'
-  } else if (path.startsWith('/projects')) {
+  } else if (path.startsWith('/projects') && projectsOn) {
     editHref = adminUrl('/projects')
     editLabel = 'Проекты в админке'
-  } else if (path.startsWith('/blog')) {
+  } else if (path.startsWith('/blog') && blogOn) {
     editHref = adminUrl('/blog')
     editLabel = 'Блог в админке'
   } else if (path === '/contact') {
     editHref = adminUrl('/contact-info')
     editLabel = 'Контакты'
-  } else if (path === '/about') {
+  } else if (path === '/about' && portfolioOn) {
     editHref = adminUrl('/profile')
     editLabel = 'Профиль'
-  } else if (path === '/services') {
+  } else if (path === '/services' && servicesOn) {
     editHref = adminUrl('/services')
     editLabel = 'Услуги'
   } else {

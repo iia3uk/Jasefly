@@ -7,6 +7,7 @@ import { Button, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { adminUrl } from '@/admin/adminBasePath'
 import { playSupportSound, unlockSupportSound } from '@/lib/supportNotifySound'
+import { usePluginEnabled } from '@/hooks/useApi'
 
 type Ticket = {
   id: number
@@ -53,6 +54,7 @@ export function SupportInboxPage() {
 
 function SupportInboxInner() {
   const qc = useQueryClient()
+  const pluginOn = usePluginEnabled('support')
   const [status, setStatus] = useState('all')
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [draft, setDraft] = useState('')
@@ -77,21 +79,23 @@ function SupportInboxInner() {
 
   // Agent heartbeat while inbox is open
   useEffect(() => {
+    if (!pluginOn) return
     const beat = () => {
       void api.post('/admin/support/presence', {}).catch(() => {})
     }
     beat()
     const id = window.setInterval(beat, 20000)
     return () => window.clearInterval(id)
-  }, [])
+  }, [pluginOn])
 
   const tickets = useQuery({
     queryKey: ['admin', 'support', 'tickets', status],
+    enabled: pluginOn,
     queryFn: async () => {
       const q = status === 'all' ? '' : `?status=${encodeURIComponent(status)}`
       return asData<Ticket[]>(await api.get(`/admin/support/tickets${q}`))
     },
-    refetchInterval: 5000,
+    refetchInterval: pluginOn ? 5000 : false,
   })
 
   // New ticket / new activity in list → agent ping
@@ -123,12 +127,12 @@ function SupportInboxInner() {
 
   const detail = useQuery({
     queryKey: ['admin', 'support', 'ticket', selectedId],
-    enabled: selectedId != null,
+    enabled: pluginOn && selectedId != null,
     queryFn: async () =>
       asData<{ ticket: Ticket; messages: ChatMessage[] }>(
         await api.get(`/admin/support/tickets/${selectedId}`),
       ),
-    refetchInterval: 2500,
+    refetchInterval: pluginOn ? 2500 : false,
   })
 
   // Reset detail prime when switching tickets

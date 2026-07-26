@@ -25,18 +25,22 @@ final class SearchService
             $results[] = compact('type', 'label', 'href', 'subtitle', 'id');
         };
 
-        foreach ($this->db->all(
-            "SELECT id, title, slug, short_description FROM projects WHERE deleted_at IS NULL AND status='published' AND (title LIKE ? OR short_description LIKE ?) LIMIT 5",
-            [$like, $like]
-        ) as $row) {
-            $add('project', $row['title'], '/admin/projects/' . $row['id'], $row['short_description'], (int) $row['id']);
+        if ($this->pluginOn('projects')) {
+            foreach ($this->db->all(
+                "SELECT id, title, slug, short_description FROM projects WHERE deleted_at IS NULL AND status='published' AND (title LIKE ? OR short_description LIKE ?) LIMIT 5",
+                [$like, $like]
+            ) as $row) {
+                $add('project', $row['title'], '/admin/projects/' . $row['id'], $row['short_description'], (int) $row['id']);
+            }
         }
 
-        foreach ($this->db->all(
-            "SELECT id, title, slug, excerpt FROM blog_posts WHERE deleted_at IS NULL AND (title LIKE ? OR excerpt LIKE ?) LIMIT 5",
-            [$like, $like]
-        ) as $row) {
-            $add('blog', $row['title'], '/admin/blog/' . $row['id'], $row['excerpt'], (int) $row['id']);
+        if ($this->pluginOn('blog')) {
+            foreach ($this->db->all(
+                "SELECT id, title, slug, excerpt FROM blog_posts WHERE deleted_at IS NULL AND (title LIKE ? OR excerpt LIKE ?) LIMIT 5",
+                [$like, $like]
+            ) as $row) {
+                $add('blog', $row['title'], '/admin/blog/' . $row['id'], $row['excerpt'], (int) $row['id']);
+            }
         }
 
         foreach ($this->db->all(
@@ -75,6 +79,20 @@ final class SearchService
         }
 
         return $results;
+    }
+
+    /** Default-on when no modules row (same rule as PluginStateService). */
+    private function pluginOn(string $name): bool
+    {
+        try {
+            $row = $this->db->one('SELECT is_enabled FROM modules WHERE name = ? LIMIT 1', [$name]);
+            if ($row === null) {
+                return true;
+            }
+            return (int) ($row['is_enabled'] ?? 0) === 1;
+        } catch (\Throwable) {
+            return true;
+        }
     }
 
     /**
@@ -121,30 +139,34 @@ final class SearchService
             // pages schema may vary
         }
 
-        try {
-            foreach ($this->db->all(
-                "SELECT title, slug, short_description FROM projects
-                 WHERE deleted_at IS NULL AND status='published'
-                   AND (title LIKE ? OR short_description LIKE ? OR slug LIKE ?)
-                 LIMIT 5",
-                [$like, $like, $like]
-            ) as $row) {
-                $add('project', (string) $row['title'], '/projects/' . $row['slug'], $row['short_description'] ?? null);
+        if ($this->pluginOn('portfolio') || $this->pluginOn('projects')) {
+            try {
+                foreach ($this->db->all(
+                    "SELECT title, slug, short_description FROM projects
+                     WHERE deleted_at IS NULL AND status='published'
+                       AND (title LIKE ? OR short_description LIKE ? OR slug LIKE ?)
+                     LIMIT 5",
+                    [$like, $like, $like]
+                ) as $row) {
+                    $add('project', (string) $row['title'], '/projects/' . $row['slug'], $row['short_description'] ?? null);
+                }
+            } catch (\Throwable) {
             }
-        } catch (\Throwable) {
         }
 
-        try {
-            foreach ($this->db->all(
-                "SELECT title, slug, excerpt FROM blog_posts
-                 WHERE deleted_at IS NULL AND status='published'
-                   AND (title LIKE ? OR excerpt LIKE ? OR slug LIKE ?)
-                 LIMIT 5",
-                [$like, $like, $like]
-            ) as $row) {
-                $add('blog', (string) $row['title'], '/blog/' . $row['slug'], $row['excerpt'] ?? null);
+        if ($this->pluginOn('blog')) {
+            try {
+                foreach ($this->db->all(
+                    "SELECT title, slug, excerpt FROM blog_posts
+                     WHERE deleted_at IS NULL AND status='published'
+                       AND (title LIKE ? OR excerpt LIKE ? OR slug LIKE ?)
+                     LIMIT 5",
+                    [$like, $like, $like]
+                ) as $row) {
+                    $add('blog', (string) $row['title'], '/blog/' . $row['slug'], $row['excerpt'] ?? null);
+                }
+            } catch (\Throwable) {
             }
-        } catch (\Throwable) {
         }
 
         return $results;

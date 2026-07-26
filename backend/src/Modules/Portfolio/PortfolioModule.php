@@ -44,6 +44,9 @@ final class PortfolioModule extends AbstractModule
 
     public function adminNav(): array
     {
+        // Projects / Blog / Services have their own modules (and FE manifests).
+        // Do not advertise /admin/projects here — that route only exists when
+        // the Projects plugin is enabled; otherwise the SPA gets a hard 404.
         return [
             ['group' => 'Контент', 'path' => '/admin/profile', 'label' => 'Профиль'],
             ['group' => 'Контент', 'path' => '/admin/social-links', 'label' => 'Соцсети'],
@@ -52,12 +55,14 @@ final class PortfolioModule extends AbstractModule
             ['group' => 'Контент', 'path' => '/admin/education', 'label' => 'Образование'],
             ['group' => 'Контент', 'path' => '/admin/skills', 'label' => 'Навыки'],
             ['group' => 'Контент', 'path' => '/admin/skill-categories', 'label' => 'Категории навыков'],
-            ['group' => 'Контент', 'path' => '/admin/projects', 'label' => 'Проекты'],
-            ['group' => 'Контент', 'path' => '/admin/blog', 'label' => 'Блог'],
-            ['group' => 'Контент', 'path' => '/admin/services', 'label' => 'Услуги'],
             ['group' => 'Контент', 'path' => '/admin/testimonials', 'label' => 'Отзывы'],
             ['group' => 'Сайт', 'path' => '/admin/homepage', 'label' => 'Главная (портфолио)'],
         ];
+    }
+
+    public function suggests(): array
+    {
+        return ['projects', 'blog', 'services'];
     }
 
     public function settingsSchema(): array

@@ -349,7 +349,10 @@ export function AdminShell() {
         const list = (res as { data?: PluginState[] })?.data ?? (res as unknown as PluginState[])
         if (Array.isArray(list)) setPluginStates(list)
       })
-      .catch(() => { /* non-fatal: defaults to all-enabled */ })
+      .catch(() => {
+        // Keep fail-closed: SiteContext /site.enabled_plugins usually hydrates.
+        // If both fail, optional modules stay hidden (CORE_BOOT_PLUGINS only).
+      })
     // Refresh HttpOnly media cookie for sessions started before cookie support.
     void endpoints.me().catch(() => { /* ignore */ })
     return () => { cancelled = true }

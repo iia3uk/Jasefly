@@ -5,6 +5,7 @@ import { api } from '@/lib/api'
 import { Button, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { adminUrl } from '@/admin/adminBasePath'
+import { usePluginEnabled } from '@/hooks/useApi'
 
 export type LabExperimentRow = {
   id: number
@@ -43,8 +44,10 @@ export function LabListPage() {
 
 function LabListInner() {
   const qc = useQueryClient()
+  const pluginOn = usePluginEnabled('lab')
   const q = useQuery({
     queryKey: ['lab-experiments'],
+    enabled: pluginOn,
     queryFn: async () => asData<LabExperimentRow[]>(await api.get('/admin/lab/experiments')),
   })
 

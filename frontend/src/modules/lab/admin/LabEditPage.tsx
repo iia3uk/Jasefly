@@ -7,6 +7,7 @@ import { RequirePermission } from '@/admin/components/RequirePermission'
 import { adminUrl } from '@/admin/adminBasePath'
 import { useAdminRouteParams } from '@/admin/AdminRouteParams'
 import { useAuth } from '@/context/AuthContext'
+import { usePluginEnabled } from '@/hooks/useApi'
 import type { LabExperimentRow } from './LabListPage'
 
 type LabEntry = { key: string; label: string; description?: string }
@@ -48,14 +49,17 @@ function LabEditInner() {
   const qc = useQueryClient()
   const { can } = useAuth()
 
+  const pluginOn = usePluginEnabled('lab')
+
   const entriesQ = useQuery({
     queryKey: ['lab-entries'],
+    enabled: pluginOn,
     queryFn: async () => asData<LabEntry[]>(await api.get('/admin/lab/entries')),
   })
 
   const itemQ = useQuery({
     queryKey: ['lab-experiment', id],
-    enabled: !isNew && Boolean(id),
+    enabled: pluginOn && !isNew && Boolean(id),
     queryFn: async () => asData<LabExperimentDetail>(await api.get(`/admin/lab/experiments/${id}`)),
   })
 

@@ -2,7 +2,8 @@ import { useCallback, useMemo, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import { useAdminItem, useCrud } from '@/hooks/useApi'
+import { useAdminItem, useCrud, usePluginEnabled, usePluginsHydrated } from '@/hooks/useApi'
+import { adminUrl } from '@/admin/adminBasePath'
 import { useAdminRouteParams } from '@/admin/AdminRouteParams'
 import { AdminSplitLayout, adminFormFullClass, adminFormGridClass } from '@/admin/components/AdminSplitLayout'
 import { MediaPicker } from '@/admin/components/MediaPicker'
@@ -174,10 +175,13 @@ function DynamicField({
 export function ProductEditPage() {
   const { id = 'new' } = useAdminRouteParams()
   const nav = useNavigate()
-  const { data: raw, isLoading } = useAdminItem<Data>('products', id)
+  const pluginsReady = usePluginsHydrated()
+  const productsOn = usePluginEnabled('products')
+  const { data: raw, isLoading } = useAdminItem<Data>('products', id, productsOn)
   const { save } = useCrud('products')
   const { data: meta } = useQuery({
     queryKey: ['products-templates-meta'],
+    enabled: productsOn,
     queryFn: async () => {
       const res = await api.get<{ data: MetaPayload }>('/admin/products-meta/templates')
       return (res as { data?: MetaPayload })?.data ?? null
@@ -228,6 +232,20 @@ export function ProductEditPage() {
 
   const templateLabel = useMemo(() => meta?.active ?? '…', [meta?.active])
 
+  if (!pluginsReady) return <Skeleton className="h-96" />
+  if (!productsOn) {
+    return (
+      <GlassPanel className="p-10 text-center">
+        <h1 className="font-heading text-xl">Товары</h1>
+        <p className="mt-2 text-sm text-zinc-500">
+          Плагин «products» выключен.{' '}
+          <Link to={adminUrl('/plugins')} className="text-[var(--accent)] underline-offset-2 hover:underline">
+            Плагины
+          </Link>
+        </p>
+      </GlassPanel>
+    )
+  }
   if (isLoading) return <Skeleton className="h-96" />
 
   return (
@@ -241,7 +259,7 @@ export function ProductEditPage() {
             Шаблон витрины: <span className="text-zinc-300">{templateLabel}</span>
             {meta?.page_slug ? <> · layout <code className="text-zinc-400">{meta.page_slug}</code></> : null}
             {' · '}
-            <Link to="/admin/products-templates" className="link-text">сменить</Link>
+            <Link to={adminUrl('/products-templates')} className="link-text">сменить</Link>
           </p>
           <GlassPanel className={adminFormGridClass}>
             <div className={adminFormFullClass}>

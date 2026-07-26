@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, endpoints } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
-import { siteHasPlugin } from '@/core/pluginGates'
+import { pluginsForAdminResource, siteHasPlugin } from '@/core/pluginGates'
 import {
   arePluginsHydrated,
   isPluginEnabledReady,
@@ -22,6 +22,22 @@ export function usePluginEnabled(name: string): boolean {
     subscribePluginState,
     () => isPluginEnabledReady(name),
     () => false,
+  )
+}
+
+/**
+ * True when any owning plugin for an admin CRUD resource is on.
+ * Core resources (no map entry) are always allowed.
+ */
+export function useAdminResourceEnabled(resource: string): boolean {
+  return useSyncExternalStore(
+    subscribePluginState,
+    () => {
+      const plugins = pluginsForAdminResource(resource)
+      if (!plugins) return true
+      return plugins.some((p) => isPluginEnabledReady(p))
+    },
+    () => pluginsForAdminResource(resource) == null,
   )
 }
 
@@ -108,11 +124,11 @@ export const useDashboard = () => useQuery({ queryKey: ['dashboard'], queryFn: e
 export const useAdminList = <T>(resource: string, enabled = true) =>
   useQuery({ queryKey: ['admin', resource], queryFn: () => endpoints.adminList<T>(resource), enabled })
 
-export const useAdminItem = <T>(resource: string, id?: string) =>
+export const useAdminItem = <T>(resource: string, id?: string, enabled = true) =>
   useQuery({
     queryKey: ['admin', resource, id],
     queryFn: () => endpoints.adminGet<T>(resource, id!),
-    enabled: !!id && id !== 'new',
+    enabled: enabled && !!id && id !== 'new',
   })
 
 export const useAdminSingleton = <T>(path: string) =>
