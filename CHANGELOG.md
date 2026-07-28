@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-07-28 — Priority 1–7 harden + fix vitest tsc build
+
+- Priority 1–7 platform hardening (tests, contracts, SSRF, integrity)
+- Exclude *.test.ts from tsconfig.app so release build passes
+
+Follow-up after fixing frontend tsc exclude for vitest files.
+
 ## 2026-07-26 — Fix admin API 404 spam when optional plugins are off
 
 - Gate CrudList/Edit and dedicated admin screens with plugin enable checks
