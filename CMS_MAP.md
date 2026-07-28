@@ -56,10 +56,10 @@
 | Telegram с контакт-формы | `Modules/Mail/ContactFormService.php` + `TelegramNotifier.php` + `/admin/mail` |
 | Сообщения / mark-read «зависло» | `UtilityPages.tsx` + `.htaccess`: `/api/*` не кэшировать (`IS_API` / `no-store`); не `max-age` с HTML `index.php` |
 | Module Package Manager / ZIP модули | `Modules/ModuleManager/` + `Services/Modules/*` + `/admin/modules` + `scripts/build-module.js` + `modules-src/` + docs `MODULE-*.md` |
-| Плагин → пакетный модуль (политика) | `docs/MODULE-FROM-PLUGINS.md` (+ `MODULE-DEVELOPMENT.md`, эталон `modules-src/demo-kit/`) |
-| Platform SDK (ZIP модули) | `backend/src/Platform/` + `frontend/src/platform/` + `docs/platform/*` |
-| SDK validate / certify CLI | `backend/bin/sdk.php` · `Platform/Analysis/*` (+ `verify-module` in `validate-module.js`, `certify` in `build-module.js`) · lifecycle: `backend/bin/certify-lifecycle.php` |
-| SDK certification docs / governance | `docs/platform/SDK-CERTIFICATION.md` · `PUBLIC-API-GOVERNANCE.md` · `API-SNAPSHOT.md` · `FORMS-REFERENCE-MODULE.md` · `MIGRATION-BUNDLED-FORMS.md` |
+| Плагин → пакетный модуль | `docs/glossary.md` + `docs/package-lifecycle.md` (эталон `modules-src/demo-kit/`) |
+| Platform SDK (ZIP модули) | `backend/src/Platform/` + `frontend/src/platform/` + `docs/platform-sdk.md` |
+| SDK validate / certify CLI | `backend/bin/sdk.php` · `Platform/Analysis/*` · `build-module.js` · `backend/bin/certify-lifecycle.php` · `docs/sdk-certification.md` |
+| SDK certification / governance | `docs/sdk-certification.md` · `docs/contracts-and-governance.md` · `docs/sdk-versioning.md` |
 | Capabilities / SDK report | `GET /admin/platform/capabilities` · `/admin/platform/sdk` · MCP `cms_sdk_report` / `cms_capability_report` / `cms_module_compatibility` / `cms_module_certify` / `cms_sdk_api_diff` / `cms_public_services` / `cms_sdk_deprecations` / `cms_export_sdk` |
 | Установка пакета модуля | `ModulePackageService` (upload→inspect→install) + CLI `backend/bin/modules.php` + MCP `cms_module_*` |
 | FE runtime пакетных модулей | `packageModuleLoader.ts` + `GET /modules/runtime-assets` + `/modules/{slug}/` assets |
@@ -103,9 +103,10 @@
 
 ```
 portfolio/
-  CMS_MAP.md          ← эта карта
-  ARCHITECTURE.md     ← слои фреймворка (редко)
+  ARCHITECTURE.md     ← layers + ownership (detail in docs/)
+  docs/README.md      ← engineer documentation reading order
   CHANGELOG.md        ← пишет cms_release
+  CMS_MAP.md          ← эта карта (agent lookup)
   frontend/src/
     admin/            ← админка UI
     builder/          ← page builder (холст + виджеты)
@@ -179,7 +180,7 @@ portfolio/
 | `analytics/` | `Analytics/` | события, цели, агрегация и retention |
 | `mail/` `webhooks/` `ddos/` `system/` | одноимённые | интеграции |
 
-Новый модуль: `backend/docs/MODULES.md` + зеркало в `frontend/src/modules/{name}/`.
+Новый модуль: `docs/module-system.md` + `docs/extension-points.md` + зеркало в `frontend/src/modules/{name}/`.
 
 ---
 
@@ -203,8 +204,8 @@ portfolio/
 
 | Что | Где |
 | --- | --- |
-| Роуты API | `backend/routes/api_v1.php`, `api.php` |
-| Реестр модулей | `backend/src/Core/` + каждый `*Module.php` |
+| Роуты API (live) | `ModuleRegistry::registerRoutes` via `public/index.php` (`routes/api_v1.php` — tests/legacy) |
+| Реестр модулей | `backend/src/Core/ModuleRegistry.php` + каждый `*Module.php` · docs: `docs/bootstrap-and-request.md` |
 | Публичный bootstrap | `Controllers/PublicController.php` |
 | Конфиг | `backend/config/app.php`, `config.local.php`, `.env` |
 | Установка/миграции CLI | `backend/migrate.php`, `install.php` |
@@ -226,7 +227,7 @@ portfolio/
 | `cms_hosting_guard` | Лимиты запросов к хостингу |
 | `list_lab_experiments` / `create_lab_experiment` / … | Lab CRUD + preview/publish |
 
-Не долбить хостинг циклами `cms_list`. Подробности: `mcp-cms/README.md`.
+Не долбить хостинг циклами `cms_list`. Подробности: `mcp-cms/README.md`, деплой: `docs/deployment.md`. Канон docs: `docs/README.md`.
 
 ---
 

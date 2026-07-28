@@ -194,7 +194,7 @@ php /path/to/api/bin/scheduler.php run --limit=20
 
 Либо HTTP tick: `POST /api/v1/system/scheduler/tick` с заголовком `X-Scheduler-Token` (токен в настройках плагина «Планировщик»). Пока cron не настроен, админ-дашборд делает lazy tick.
 
-Документация модулей: `docs/SCHEDULER.md`, `docs/FORMS.md` и соседние файлы.
+Документация модулей: [`docs/modules/`](docs/modules/). Инженерия платформы: [`docs/README.md`](docs/README.md).
 
 ---
 
@@ -242,13 +242,15 @@ CMS_REPO_ROOT=C:/path/to/jasefly
 
 | Файл | Тема |
 | --- | --- |
+| [docs/README.md](docs/README.md) | Каноническая документация (reading order) |
 | [README.md](README.md) | Обзор репозитория |
 | [LOCAL_DEV.md](LOCAL_DEV.md) | `setup.bat` / `start.bat` |
 | [CLEAN_INSTALL.md](CLEAN_INSTALL.md) | Чистая установка |
-| [DEVELOPMENT.md](DEVELOPMENT.md) | Модули, виджеты, API |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Слои системы |
-| [SECURITY.md](SECURITY.md) | Чеклист безопасности |
-| [CMS_MAP.md](CMS_MAP.md) | Карта путей для разработки |
+| [DEVELOPMENT.md](DEVELOPMENT.md) | Contributor entry |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Слои + ownership |
+| [docs/deployment.md](docs/deployment.md) | `cms_release` / hosting ZIP |
+| [SECURITY.md](SECURITY.md) | → `docs/security.md` |
+| [CMS_MAP.md](CMS_MAP.md) | Карта путей для агента |
 | [mcp-cms/README.md](mcp-cms/README.md) | MCP tools |
 
 ---

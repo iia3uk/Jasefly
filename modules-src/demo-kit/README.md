@@ -43,3 +43,5 @@ curl -H "Authorization: Bearer …" https://host/api/v1/admin/demo-kit/ping
 - Slug `demo-kit`, backend entry `backend/DemoKitModule.php`
 - Frontend manifest at `frontend-dist/manifest.json`, export `JaseflyFrontendModule`
 - `PostInstallHook` writes a marker under module storage on `after_install`
+
+Preferred build: `node scripts/build-module.js demo-kit --yes`. Docs: [`docs/package-lifecycle.md`](../../docs/package-lifecycle.md), [`docs/sdk-certification.md`](../../docs/sdk-certification.md).

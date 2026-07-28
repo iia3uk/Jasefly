@@ -1,57 +1,51 @@
-# Security checklist — Jasefly CMS
+# Security
 
-Минимальный набор hardening для PHP-сайта на shared/VPS хостинге.
+## Purpose
 
-## Module packages
+Point to the implementation security doc and secret locations.
 
-Установка ZIP-модуля равносильна установке серверного ПО. Проверки: Zip Slip/bomb, checksums, path jail, optional ed25519, permissions без auto-grant. См. `docs/MODULE-SECURITY.md`.
+## How it works
 
-## В приложении (CMS)
+Canonical detail: [`docs/security.md`](docs/security.md).
 
-| Требование | Статус |
-|---|---|
-| `PDO::prepare()` во всех SQL | Да — через `Database::run` / `one` / `all` |
-| Пароли Argon2id / `PASSWORD_DEFAULT` | Да — `App\Utils\Password` (+ rehash при логине) |
-| 2FA для админки | Да — TOTP (`/auth/2fa/*`, страница «Пароль») |
-| Ограничение загрузок + запрет PHP в uploads | Да — MIME allowlist + `storage/uploads/.htaccess` |
-| Зашифрованные бэкапы | Да — `.sql.enc` (libsodium / AES-256-GCM) |
-| WAF / Anti-DDoS перед приложением | Плагин **DDoS защита** + edge (Cloudflare / DDoS-Guard / StormWall / Qrator) |
-| Регулярная проверка по OWASP Top 10 | См. раздел ниже + code review перед релизом |
+Secrets:
 
-## На сервере / хостинге (обязательно вручную)
+| Where | File |
+| --- | --- |
+| API | `backend/config/.env`, `config.local.php` |
+| MCP | `mcp-cms/.env` |
+| Hosting | `api/config/.env` |
 
-1. **MySQL недоступен из интернета** — `bind-address = 127.0.0.1` (или только private VLAN); в панели хостинга отключите remote MySQL.
-2. **Приложение не под root** — PHP-FPM / Apache worker = отдельный пользователь (`www-data`, `u1234` и т.п.).
-3. **Секреты вне document root** — `.env` / `config.local.php`, `.git`, логи и бэкапы не должны отдаваться по HTTP. В пакете хостинга `api/config`, `api/src`, `api/storage` закрыты `.htaccess`; на VPS предпочтительно вынести `api/` выше `public_html`.
-4. **2FA** — включите в панели хостинга, для SSH (например Fail2ban + ключи) и в админке CMS (TOTP).
-5. **SSH только по ключам**, `PermitRootLogin no`, парольный вход отключён.
-6. **Обновления** — PHP, Composer-пакеты (если есть), ОС/панели по расписанию.
-7. **WAF + Anti-DDoS** — Cloudflare / DDoS-Guard / StormWall / Qrator *перед* origin; в CMS включите соответствующий провайдер в плагине DDoS.
-8. **Бэкапы** — копируйте `storage/backups/*.sql.enc` в отдельное хранилище (S3/другой сервер); ключ = `backup_key` или `jwt_secret`.
+Do not commit secrets. Do not put tokens in `mcp.json` or chat.
 
-## OWASP Top 10 — привычки при разработке
+## Execution flow
 
-- **A01 Broken Access Control** — все `/admin/*` и мутации через `AuthMiddleware` + permissions.
-- **A02 Cryptographic Failures** — HTTPS only; секреты не в git; Argon2id; encrypted backups.
-- **A03 Injection** — только prepared statements; никогда не склеивать SQL из user input.
-- **A04 Insecure Design** — rate limit на login/2FA; challenge JWT с коротким TTL.
-- **A05 Security Misconfiguration** — убрать `install.php` после установки; `display_errors=Off` в prod.
-- **A06 Vulnerable Components** — обновлять PHP и зависимости.
-- **A07 Auth Failures** — сильные пароли + 2FA; refresh token **rotation** on `/auth/refresh` + revocation on logout. SPA (`frontend/src/lib/api.ts`) делает single-flight silent refresh и один retry на admin 401, затем logout.
-- **A08 Data Integrity** — не доверять клиентским расширениям файлов; проверять MIME.
-- **A09 Logging/Monitoring** — activity log + `storage/logs`; не логировать пароли/токены (Automation `redact`).
-- **A10 SSRF** — `App\Support\SsrfGuard` на Forms/Automation/Webhooks outbound HTTP; private hosts rejected.
+See [`docs/authentication.md`](docs/authentication.md) and [`docs/authorization.md`](docs/authorization.md).
 
-### Platform modules
+## Key components
 
-- Forms: honeypot, timing, IP/UA HMAC hashes, backend validation, CSV formula escape (`=+-@`), webhook SSRF via `SsrfGuard`.
-- Scheduler: token-gated HTTP tick; job payload secrets masked in admin.
-- Automation: no `eval`, recursion/max-steps guards, webhook SSRF via `SsrfGuard`.
-- Newsletter: HMAC unsubscribe/confirm tokens; double opt-in.
-- Analytics: hashed visitor/session by default; no raw IP storage unless explicitly configured.
-- Orders: server-side totals; public_id for non-enumerable public refs.
-- Webhooks plugin: SSRF on register/dispatch; HMAC signature header when secret is set.
+See [`docs/security.md`](docs/security.md).
 
-Regression proof: `php backend/tests/run.php` → `SecurityVerificationTest`.
+## Files involved
 
-Подробности деплоя: `release/DEPLOYMENT-RU.md` рядом с ZIP после `build-hosting` (секция «Безопасность»).
+- `docs/security.md`
+- `backend/tests/SecurityVerificationTest.php`
+
+## Related pages
+
+- [docs/security.md](docs/security.md)
+- [docs/package-lifecycle.md](docs/package-lifecycle.md)
+- [docs/deployment.md](docs/deployment.md)
+
+## Common mistakes
+
+- Treating this root file as the full checklist without reading `docs/security.md`.
+
+## Extension points
+
+Use `SsrfGuard` / `OutboundHttp` for new outbound HTTP.
+
+## See also
+
+- [docs/testing.md](docs/testing.md)
+- [mcp-cms/README.md](mcp-cms/README.md)

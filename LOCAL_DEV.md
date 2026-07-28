@@ -76,4 +76,10 @@ DB_PASS=yourpassword
 
 ## Production
 
-These scripts are for local DX only. Shared hosting still uses `backend/public` + built `frontend/dist` as documented in the main README.
+These scripts are for local DX only. Shared hosting uses `scripts/build-hosting.js` — see [`docs/deployment.md`](docs/deployment.md) and [`INSTALL.md`](INSTALL.md).
+
+## See also
+
+- [`INSTALL.md`](INSTALL.md)
+- [`docs/README.md`](docs/README.md)
+- [`docs/bootstrap-and-request.md`](docs/bootstrap-and-request.md)
