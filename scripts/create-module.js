@@ -153,7 +153,7 @@ final class PostInstallHook implements ModuleHookInterface
 
 Scaffolded with Platform SDK (\`node scripts/create-module.js ${slug}\`).
 
-Docs: \`docs/platform/MODULE-DEVELOPMENT.md\`, \`docs/platform/SDK-CERTIFICATION.md\`
+Docs: \`docs/platform-sdk.md\`, \`docs/sdk-certification.md\`, \`docs/package-lifecycle.md\`
 
 Validate & certify:
 

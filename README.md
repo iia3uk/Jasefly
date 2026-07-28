@@ -1,97 +1,54 @@
 # Jasefly CMS
 
-Модульная CMS: PHP API, React-админка, Page Builder, плагины, MCP для AI-агентов, install/update ZIP для shared-хостинга.
+Modular CMS: PHP API (`backend/`), React SPA (`frontend/`), Page Builder, bundled modules + ZIP packages, MCP deploy/content tools (`mcp-cms/`).
 
-**Автор:** [IIA3UK](https://github.com/iia3uk)  
-**Сайт:** [jasefly.com](https://jasefly.com)
+**Docs (engineers):** start at [`docs/README.md`](docs/README.md).  
+**Agent path map:** [`CMS_MAP.md`](CMS_MAP.md).  
+**Install:** [`INSTALL.md`](INSTALL.md).
 
-> **Полная инструкция по установке и запуску:** [`INSTALL.md`](INSTALL.md)
+## Repository layout
 
----
-
-## Возможности
-
-- Page Builder (секции, колонки, виджеты, SEO, черновики)
-- Модули/плагины с явными зависимостями (контент, блог, магазин, платежи, формы, планировщик, автоматизации, уведомления, рассылки, заказы, комментарии, аналитика, перевод, поддержка, Lab, …)
-- MCP: агенты работают через tools и токен, не через весь репозиторий
-- Локальная сборка frontend → пакет → обновление из админки
-- Production runtime: PHP + MySQL (Node на хостинге не нужен)
-
----
-
-## Быстрый старт
-
-```bash
-git clone https://github.com/iia3uk/jasefly.git
-cd jasefly
-```
-
-**Windows:** `setup.bat` → `start.bat` → http://localhost:5173  
-
-**Вручную:** см. [`INSTALL.md`](INSTALL.md) (PHP API + `npm run dev`).
-
-Админка: `/admin`. Пароль после инсталлера смените сразу.
-
----
-
-## Структура репозитория
-
-| Путь | Роль |
+| Path | Role |
 | --- | --- |
 | `backend/` | REST API, installer, migrations, modules |
 | `frontend/` | Public site + admin (Vite/React) |
 | `mcp-cms/` | MCP server (build → test → deploy gate) |
-| `scripts/` | `build-hosting.js` — install/update ZIP |
-| `content/` | Content packs (пример `jasefly-official`) |
+| `scripts/` | `build-hosting.js`, `build-module.js` |
+| `modules-src/` | ZIP package sources |
+| `content/` | Content-pack templates |
+| `docs/` | Implementation documentation |
 
-Composer не используется.
+No Composer — custom PHP autoload in `Bootstrap`.
 
----
+## Quick start
 
-## Shared hosting (кратко)
+**Windows:** `setup.bat` → `start.bat` → http://localhost:5173  
+
+**Manual:** [`INSTALL.md`](INSTALL.md). Admin: `/admin` (change installer password immediately).
+
+## Shared hosting (short)
 
 1. `node scripts/build-hosting.js --mode=full --domain=https://YOUR_DOMAIN --demo=no --yes`
-2. Загрузить `release/jasefly-cms-install-*.zip`, распаковать
-3. Создать MySQL БД → открыть `/install.php`
-4. Обновления: `--mode=update` → админка → Обновления
+2. Upload `release/jasefly-cms-install-*.zip`, extract
+3. Create MySQL DB → open `/install.php`
+4. Updates: `--mode=update` or MCP `cms_release`
 
-Секреты только в `api/config/.env` на сервере (шаблон в `backend/config/.env.example`).
+Secrets only in `api/config/.env` / `config.local.php` on the server.
 
----
+## Documentation index
 
-## Документация
-
-| Документ | Тема |
+| Doc | Topic |
 | --- | --- |
-| [INSTALL.md](INSTALL.md) | **Установка и запуск (полная)** |
-| [LOCAL_DEV.md](LOCAL_DEV.md) | Лаунчер Windows |
-| [CLEAN_INSTALL.md](CLEAN_INSTALL.md) | Чистая установка |
-| [DEVELOPMENT.md](DEVELOPMENT.md) | Модули, виджеты, API |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Архитектура |
-| [SECURITY.md](SECURITY.md) | Безопасность |
-| [CMS_MAP.md](CMS_MAP.md) | Карта путей |
-| [mcp-cms/README.md](mcp-cms/README.md) | MCP |
+| [docs/README.md](docs/README.md) | Reading order |
+| [INSTALL.md](INSTALL.md) | Install / run |
+| [LOCAL_DEV.md](LOCAL_DEV.md) | Windows launcher |
+| [CLEAN_INSTALL.md](CLEAN_INSTALL.md) | Clean host install |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Layers + ownership |
+| [DEVELOPMENT.md](DEVELOPMENT.md) | Contributor entry |
+| [SECURITY.md](SECURITY.md) | Security pointer |
+| [CMS_MAP.md](CMS_MAP.md) | Symptom → file |
+| [mcp-cms/README.md](mcp-cms/README.md) | MCP ops |
 
----
+## Not in the public tree
 
-## Что не входит в публичный репозиторий
-
-- `.env`, `config.local.php`, токены MCP/JWT
-- `node_modules/`, `frontend/dist/`, `release/`
-- uploads / logs / backups
-- локальные дампы и third-party scrapes
-
----
-
-## Поддержать проект
-
-Если Jasefly CMS оказалась полезной — можно скинуть любую сумму:
-
-**https://pay.cloudtips.ru/p/4cbdc8ab**
-
----
-
-## License / authorship
-
-Jasefly CMS by IIA3UK.  
-Use and fork freely; do not commit secrets or production credentials.
+`.env`, `config.local.php`, tokens, `node_modules/`, `frontend/dist/`, `release/` build artifacts.

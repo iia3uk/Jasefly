@@ -1,89 +1,65 @@
-# Architecture — Jasefly CMS
+# Architecture
 
-This repository is a **reusable modular CMS**. Sites are content + configuration on top of the framework.
+## Purpose
 
-## Layers
+Show the layer stack and ownership. Detail lives under [`docs/`](docs/README.md).
 
-```
-┌─────────────────────────────────────────────┐
-│  Frontend modules (React)                   │
-│  shared/ui · shared/admin · modules/*       │
-│  platform/*  ← public FE SDK for ZIP packs  │
-├─────────────────────────────────────────────┤
-│  REST API /api/v1 (versioned)               │
-├─────────────────────────────────────────────┤
-│  Platform SDK (App\Platform\*)              │
-│  PlatformContext · Capabilities · Compat    │
-├─────────────────────────────────────────────┤
-│  Module packages (PHP)                      │
-│  Bundled: System · Forms · Scheduler · …    │
-│  ZIP: App\PackageModules\* via Platform SDK │
-├─────────────────────────────────────────────┤
-│  Core (internal — not for ZIP modules)      │
-│  Router · DB · JWT · ModuleRegistry · CRUD  │
-│  EventDispatcher · JobHandlerRegistry       │
-├─────────────────────────────────────────────┤
-│  MySQL (normalized, FK, soft-delete ready)  │
-└─────────────────────────────────────────────┘
-```
-
-Platform SDK docs: `docs/platform/PLATFORM-SDK.md`, `SDK-VERSIONING.md`, `SDK-CERTIFICATION.md`, `CAPABILITY-SYSTEM.md`, `COMPATIBILITY-LAYER.md`.
-
-**SDK v1 is stable** (Forms reference certified). **SDK v2 is current.** Reference package: `modules-src/forms-sdk-reference/`.
-
-Platform modules docs: `docs/FORMS.md`, `SCHEDULER.md`, `AUTOMATION.md`, `NOTIFICATIONS.md`, `NEWSLETTER.md`, `ORDERS.md`, `COMMENTS.md`, `ANALYTICS.md`.
-
-## Backend modules
-
-Location: `backend/src/Modules/{Name}/{Name}Module.php`
-
-Auto-discovered by `ModuleRegistry`. Each package owns:
-
-- Route registration
-- Admin navigation contributions
-- Resource metadata (table, soft-delete, sluggable)
-
-Core never imports feature code. Features never patch the bootstrap.
-
-**ZIP modules** live under `App\PackageModules\{Studly}\` and must use **only** `App\Platform\*` (see `docs/platform/MODULE-DEVELOPMENT.md`).
-
-### Add Games / Courses / Marketplace later
-
-Prefer a ZIP package (`modules-src/`) via Platform SDK. Bundled modules remain for platform core features.
-
-See `backend/docs/MODULES.md`.
-
-## Frontend modules
+## How it works
 
 ```
-frontend/src/
-  core/moduleRegistry.ts
-  platform/           ← public SDK for package FE
-  shared/ui/
-  shared/admin/
-  modules/projects/
-  modules/blog/
-  pages/
+Frontend (React)     admin · builder · modules · platform FE SDK
+        │
+REST /api/v1 · /api
+        │
+Platform SDK         App\Platform\*  (ZIP packages only)
+        │
+Modules              bundled App\Modules\* · ZIP App\PackageModules\*
+        │
+Core                 Router · Database · Jwt · ModuleRegistry · EventDispatcher · Middleware
+        │
+Database             MySQL (prod) · SQLite/Pg via SqlTranspiler
 ```
 
-## API versioning
+Live HTTP routes are registered by `ModuleRegistry` from modules — not by editing `backend/routes/api_v1.php` (test/legacy).
 
-`config/app.php` → `api.versions`. Platform SDK generations: `App\Platform\SdkVersion` (CURRENT=2, SUPPORTED=[1,2], v1=stable).
+Enable stores and Plugin/Package terminology: [`docs/glossary.md`](docs/glossary.md).
 
-## Configuration
+## Execution flow
 
-| Source | Examples |
+See [`docs/bootstrap-and-request.md`](docs/bootstrap-and-request.md).
+
+## Key components
+
+| Layer | Entry |
 | --- | --- |
-| Env / `config.local.php` | DB, JWT, CORS, disabled modules |
-| `config/app.php` | pagination defaults, rate limits, API versions |
-| Database | theme, SEO, content, permissions, platform_capabilities |
+| API front controller | `backend/public/index.php` |
+| Bootstrap | `backend/src/Bootstrap.php` |
+| Registry | `backend/src/Core/ModuleRegistry.php` |
+| SPA | `frontend/src/main.tsx` |
 
-## Service layer
+## Files involved
 
-- Controllers: validate → call services → respond
-- Package modules: `PlatformContext` facades only (never `new Mailer` / Core imports)
-- `Core\Services\ResourceCrudService` — shared CRUD (internal)
+- This file (overview only)
+- [`docs/ownership-boundaries.md`](docs/ownership-boundaries.md)
+- [`docs/module-system.md`](docs/module-system.md)
+- [`docs/platform-sdk.md`](docs/platform-sdk.md)
 
-## Long-term content types
+## Related pages
 
-Soft-delete + slug patterns already exist. New modules plug into trash, search, activity log, and RBAC by declaring resources / permissions.
+- [docs/README.md](docs/README.md)
+- [CMS_MAP.md](CMS_MAP.md)
+
+## Common mistakes
+
+- Treating this file as the full system manual.
+- Collapsing SoftPluginGate, `modules` table, and `installed_modules` into one concept.
+
+## Extension points
+
+See [`docs/extension-points.md`](docs/extension-points.md).
+
+## See also
+
+- [docs/ownership-boundaries.md](docs/ownership-boundaries.md)
+- [docs/glossary.md](docs/glossary.md)
+- [DEVELOPMENT.md](DEVELOPMENT.md)

@@ -1,7 +1,3 @@
-# Notifications
+# Moved
 
-Модуль добавляет inbox и колокольчик в админке. По умолчанию отключён.
-
-`NotificationService::create()` создаёт уведомление пользователю, `notifyAdmins()` — общее для администраторов. Канал browser хранится в БД; email и Telegram отправляются только при включённой записи в `notification_preferences` и используют настройки плагина Mail.
-
-API админки: список, счётчик непрочитанных, отметить одно или все уведомления прочитанными. Шаблоны доступны через `/admin/notification-templates`.
+See [modules/notifications.md](modules/notifications.md).

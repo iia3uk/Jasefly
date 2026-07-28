@@ -1,7 +1,3 @@
-# Newsletter
+# Moved
 
-Модуль подписок и email-кампаний, по умолчанию отключён. Для отправки нужны Mail и работающий cron Scheduler.
-
-Публичный виджет отправляет double opt-in письмо. Подтверждение использует одноразовый случайный токен, отписка — подписанный HMAC URL. Кампании ставятся в очередь `newsletter.campaign.send` и отправляются пакетами по 100 адресов с учётом suppression list.
-
-Админка содержит подписчиков и кампании. Импорт принимает CSV с колонками `email,name`; экспорт доступен по `/admin/newsletter/subscribers/export`.
+See [modules/newsletter.md](modules/newsletter.md).

@@ -1,24 +1,26 @@
 # Backend API
 
-PHP 8.3 REST API for the Jasefly CMS.
+PHP REST API for Jasefly CMS. No Composer — `App\Bootstrap` autoload.
 
 ## Local server
 
 ```bash
 cd backend
-php install.php --host=localhost --name=jasefly_cms --user=root --pass= --url=http://localhost:5173 --demo=1
 php -S localhost:8080 router.php
 ```
 
-## Key endpoints
+Installer / config: see [`../INSTALL.md`](../INSTALL.md). Architecture: [`../docs/bootstrap-and-request.md`](../docs/bootstrap-and-request.md).
 
-- `GET /api/site` — bootstrap payload (theme, SEO, nav, hero, sections)
-- `GET /api/projects`, `/api/blog`, `/api/profile`, …
-- `POST /api/contact` — honeypot + rate limit + mail
-- `POST /api/auth/login` — JWT access + refresh
-- `GET|POST|PUT|DELETE /api/admin/*` — protected CMS operations
-- `GET /api/sitemap.xml`, `/api/robots.txt`
+## Ownership
 
-## Storage
+- Front controller: `public/index.php`
+- Modules: `src/Modules/`
+- Platform SDK (ZIP): `src/Platform/`
+- Migrations: `migrations/` + `migrate.php`
 
-Writable directories under `storage/uploads`, `storage/thumbnails`, `storage/backups`.
+## See also
+
+- [`../docs/README.md`](../docs/README.md)
+- [`../docs/routing.md`](../docs/routing.md)
+- [`../docs/cli.md`](../docs/cli.md)
+- [`docs/MODULES.md`](docs/MODULES.md) → module system

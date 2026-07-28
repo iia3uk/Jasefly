@@ -71,3 +71,10 @@ Then point the frontend API base at the PHP server and run `start.bat`.
 - Confirm installer files were removed
 - Set a strong JWT secret / MCP token via `config/.env` (see `.env.example`)
 - Never commit `config.local.php` or `.env`
+
+## See also
+
+- [`docs/database-and-migrations.md`](docs/database-and-migrations.md)
+- [`docs/deployment.md`](docs/deployment.md)
+- [`docs/security.md`](docs/security.md)
+- [`INSTALL.md`](INSTALL.md)
