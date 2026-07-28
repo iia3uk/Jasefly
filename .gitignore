@@ -15,12 +15,14 @@ Thumbs.db
 !frontend/.env.example
 !/.env.example
 
-# Local DX / IDE / Cursor
-.dev/
-.cursor/
+# Local DX / IDE / Cursor (keep shared agent rules)
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
 .idea/
 .vscode/
 *.code-workspace
+.dev/
 
 # Backend secrets & runtime
 backend/config/config.local.php

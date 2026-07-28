@@ -1,0 +1,17 @@
+---
+description: CMS_MAP first + self-update (token-efficient navigation)
+alwaysApply: true
+---
+
+# CMS_MAP first
+
+1. Before broad search (`Glob` / wide `Grep` / explore), read root `CMS_MAP.md`.
+2. Use symptom→file table; open **1–3 files**, do not scan the repo.
+3. Live site content (pages, nav, theme) → MCP `cms_site_map` / digest, not walking `frontend/`.
+4. Layer architecture (rare): `ARCHITECTURE.md`.
+
+## Self-update `CMS_MAP.md` in the same change when
+
+- path rename/move; new widget/module/plugin; new frequent symptom→file; MCP tool / deploy path change; mapped path missing on open.
+
+Edit only affected table rows. Navigation only — not bugfix history. Do not wait to be asked.
