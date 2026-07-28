@@ -79,7 +79,8 @@ Desktop.ini
 **/service-account*.json
 
 # Local scratch / third-party dumps — not part of the product
-reference/
+# Anchor to repo root so Lab experiments/reference/ is not ignored.
+/reference/
 *.rar
 *.7z
 /general/

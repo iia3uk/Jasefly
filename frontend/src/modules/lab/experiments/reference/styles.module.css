@@ -1,0 +1,119 @@
+.root {
+  --lab-bg: #070a0f;
+  --lab-text: #f2f5f8;
+  --lab-muted: #9aa7b5;
+  --lab-accent: #5bdf6f;
+  --lab-surface: rgba(255, 255, 255, 0.04);
+  --lab-border: rgba(242, 245, 248, 0.12);
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 2.5rem 1.25rem 4rem;
+  overflow: hidden;
+  background: var(--lab-bg);
+  color: var(--lab-text);
+  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+}
+
+.root[data-theme='light'] {
+  --lab-bg: #eef2f6;
+  --lab-text: #101820;
+  --lab-muted: #5b6b7c;
+  --lab-surface: rgba(16, 24, 32, 0.04);
+  --lab-border: rgba(16, 24, 32, 0.12);
+}
+
+.plane {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(900px 480px at 12% 8%, color-mix(in srgb, var(--lab-accent) 22%, transparent), transparent 58%),
+    linear-gradient(165deg, transparent 40%, color-mix(in srgb, var(--lab-accent) 8%, transparent) 100%);
+  pointer-events: none;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 2.5rem;
+}
+
+.themeBtn {
+  border: 1px solid var(--lab-border);
+  background: var(--lab-surface);
+  color: var(--lab-text);
+  border-radius: 10px;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.brand {
+  margin: 0 0 0.75rem;
+  font-size: clamp(2.4rem, 7vw, 4.25rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+
+.kicker {
+  margin: 0 0 1rem;
+  color: var(--lab-accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.headline {
+  margin: 0 0 1rem;
+  font-size: clamp(1.35rem, 3.2vw, 1.85rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  margin: 0 0 2rem;
+  max-width: 34rem;
+  color: var(--lab-muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.ctaPrimary,
+.ctaSecondary {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.8rem 1.2rem;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.ctaPrimary {
+  background: var(--lab-accent);
+  color: #04140a;
+}
+
+.ctaSecondary {
+  border: 1px solid var(--lab-border);
+  background: var(--lab-surface);
+  color: var(--lab-text);
+}
