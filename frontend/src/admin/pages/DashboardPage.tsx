@@ -11,6 +11,7 @@ import { GlassPanel, Skeleton } from '@/components/ui'
 import { t, dashboardCounts } from '@/admin/i18n'
 import { PROJECT_STATUS_LABELS, projectStatusTone } from '@/modules/projects/projectStatus'
 import { fetchContentHealth, type HealthKind } from '@/admin/lib/contentHealth'
+import { formatMoscowDateTime } from '@/admin/lib/formatDateTime'
 import { adminUrl } from '@/admin/adminBasePath'
 
 const COUNT_META: Record<string, { href: string; icon: LucideIcon }> = {
@@ -57,10 +58,7 @@ const ACTION_LABELS: Record<string, string> = {
 }
 
 function formatWhen(iso?: string) {
-  if (!iso) return ''
-  const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T') + 'Z')
-  if (Number.isNaN(d.getTime())) return iso
-  return d.toLocaleString('ru-RU', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+  return formatMoscowDateTime(iso)
 }
 
 function StatusBars({
