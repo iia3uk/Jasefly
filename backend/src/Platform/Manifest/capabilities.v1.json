@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "capabilities": [
+    "admin.pages",
+    "analytics.events",
+    "api.routes",
+    "builder.inspector",
+    "builder.widgets",
+    "content.pages",
+    "events.publish",
+    "events.subscribe",
+    "http.client",
+    "mail.send",
+    "media.library",
+    "notifications.send",
+    "permissions.check",
+    "public.routes",
+    "scheduler.jobs",
+    "settings.global",
+    "settings.module",
+    "storage.files",
+    "users.current",
+    "users.roles"
+  ]
+}

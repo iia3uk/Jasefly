@@ -14,6 +14,7 @@ jobs:
         with:
           php-version: '8.2'
           coverage: none
+          extensions: pdo_sqlite, zip
 
       - uses: actions/setup-node@v4
         with:
@@ -33,10 +34,11 @@ jobs:
       - name: Certify forms-sdk-reference
         run: php backend/bin/sdk.php certify modules-src/forms-sdk-reference
 
-      - name: Frontend typecheck and build
+      - name: Frontend install, unit tests, build
         working-directory: frontend
         run: |
           npm ci
+          npm test
           npm run build
 
       - name: Build demo-kit package
@@ -47,7 +49,6 @@ jobs:
 
   lifecycle:
     runs-on: ubuntu-latest
-    continue-on-error: true
     services:
       mysql:
         image: mysql:8.0
@@ -68,7 +69,7 @@ jobs:
         with:
           php-version: '8.2'
           coverage: none
-          extensions: pdo_mysql
+          extensions: pdo_mysql, zip
 
       - uses: actions/setup-node@v4
         with:
@@ -76,20 +77,43 @@ jobs:
 
       - name: Configure test database
         run: |
-          cat > backend/config/database.local.php <<'PHP'
+          cat > backend/config/config.local.php <<'PHP'
           <?php
           return [
-              'host' => '127.0.0.1',
-              'port' => 3306,
-              'database' => 'jasefly_test',
-              'username' => 'root',
-              'password' => 'root',
-              'charset' => 'utf8mb4',
+              'app_url' => 'http://localhost',
+              'jwt_secret' => 'ci-lifecycle-test-secret-not-for-production',
+              'db_driver' => 'mysql',
+              'db_host' => '127.0.0.1',
+              'db_port' => '3306',
+              'db_name' => 'jasefly_test',
+              'db_user' => 'root',
+              'db_pass' => 'root',
+              'db_charset' => 'utf8mb4',
           ];
           PHP
 
-      - name: Run core migrations
-        run: php backend/migrate.php || true
+      - name: Apply base schema (001) then incremental migrations
+        run: |
+          php -r '
+          require "backend/src/Bootstrap.php";
+          App\Bootstrap::registerAutoload();
+          $root = getcwd() . "/backend";
+          $db = App\Database::get(require "$root/config/database.php");
+          $pdo = $db->pdo();
+          $t = new App\Core\Db\SqlTranspiler("mysql");
+          $sql = file_get_contents("$root/migrations/001_schema.sql");
+          if (str_starts_with($sql, "\xEF\xBB\xBF")) $sql = substr($sql, 3);
+          $sql = preg_replace("/^\s*--.*$/m", "", $sql) ?? $sql;
+          foreach (preg_split("/;\s*\n/", $sql) ?: [] as $part) {
+            $part = trim($part);
+            if ($part === "" || str_starts_with($part, "/*")) continue;
+            $part = rtrim($part, "; \t\r\n");
+            foreach ($t->transpile($part) as $out) { $pdo->exec($out); }
+          }
+          foreach ($t->drainTriggers() as $tr) { try { $pdo->exec($tr); } catch (Throwable) {} }
+          echo "001_schema applied\n";
+          '
+          php backend/migrate.php
 
       - name: Lifecycle certification (DB)
         env:

@@ -61,19 +61,16 @@ final class WebhooksModule extends AbstractModule
 
     private function post(string $url, array $body): void
     {
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        $payload = json_encode($body, JSON_UNESCAPED_UNICODE);
+        if ($payload === false) {
             return;
         }
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($body, JSON_UNESCAPED_UNICODE),
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 5,
-        ]);
-        curl_exec($ch);
-        curl_close($ch);
+        $headers = [];
+        $secret = (string) ($body['secret'] ?? '');
+        if ($secret !== '') {
+            $headers[] = 'X-Jasefly-Signature: sha256=' . hash_hmac('sha256', $payload, $secret);
+        }
+        \App\Support\OutboundHttp::postJson($url, $payload, $headers);
     }
 
     public function registerRoutes(Router $router, Database $db, array $app, string $apiPrefix): void
@@ -92,8 +89,8 @@ final class WebhooksModule extends AbstractModule
             $event = (string) ($r->input('event') ?? '*');
             $url = (string) ($r->input('url') ?? '');
             $secret = (string) ($r->input('secret') ?? '');
-            if (!filter_var($url, FILTER_VALIDATE_URL)) {
-                Response::error('Invalid URL', 422);
+            if (!\App\Support\SsrfGuard::isSafeHttpUrl($url)) {
+                Response::error('Invalid or blocked URL', 422);
             }
             $db->run('INSERT INTO webhooks (event, url, secret, is_active) VALUES (?, ?, ?, 1)', [$event, $url, $secret]);
             $id = $db->id();
@@ -105,7 +102,13 @@ final class WebhooksModule extends AbstractModule
             $params = [];
             foreach (['event', 'url', 'secret'] as $f) {
                 $v = $r->input($f);
-                if (is_string($v)) { $sets[] = "$f = ?"; $params[] = $v; }
+                if (is_string($v)) {
+                    if ($f === 'url' && !\App\Support\SsrfGuard::isSafeHttpUrl($v)) {
+                        Response::error('Invalid or blocked URL', 422);
+                    }
+                    $sets[] = "$f = ?";
+                    $params[] = $v;
+                }
             }
             $active = $r->input('is_active');
             if ($active !== null) { $sets[] = 'is_active = ?'; $params[] = $active ? 1 : 0; }

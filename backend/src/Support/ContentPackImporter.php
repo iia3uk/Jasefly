@@ -129,8 +129,12 @@ final class ContentPackImporter
         foreach ($tables as $t) {
             try {
                 $this->pdo->exec("DELETE FROM `$t`");
-            } catch (Throwable) {
-                continue;
+            } catch (Throwable $e) {
+                throw new RuntimeException(
+                    "Content wipe failed on table `{$t}`: " . $e->getMessage(),
+                    0,
+                    $e
+                );
             }
             // AUTO_INCREMENT reset is MySQL-only.
             if ($driver === 'mysql') {

@@ -30,14 +30,14 @@ final class Response
         exit;
     }
 
-    public static function error(string $message, int $status = 400, array $errors = []): never
+    public static function error(string $message, int $status = 400, array $errors = [], array $extra = []): never
     {
-        self::json([
+        self::json(array_merge([
             'success' => false,
             'error' => $message,
             'errors' => $errors,
             'data' => null,
-        ], $status);
+        ], $extra), $status);
     }
 
     /** Plain-text response (Robokassa OK{InvId}, Adyen [accepted], …). */

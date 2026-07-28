@@ -70,6 +70,9 @@ final class SqlTranspiler
         if (preg_match('/^INSERT\s+IGNORE\b/i', $s)) {
             return $this->transpileInsertIgnore($s);
         }
+        if (preg_match('/^DELETE\s+\w+\s+FROM\b/i', $s)) {
+            return $this->transpileDeleteJoin($s);
+        }
         if (preg_match('/^CREATE\s+(UNIQUE\s+)?FULLTEXT\s+INDEX/i', $s)) {
             return $this->transpileFulltextIndex($s);
         }
@@ -377,6 +380,48 @@ final class SqlTranspiler
         $s = preg_replace('/^CREATE\s+FULLTEXT\s+INDEX/i', 'CREATE INDEX', $s) ?? $s;
         $s = preg_replace('/^CREATE\s+UNIQUE\s+FULLTEXT\s+INDEX/i', 'CREATE UNIQUE INDEX', $s) ?? $s;
         return [$this->normalizeIdentifiers($s)];
+    }
+
+    /**
+     * MySQL multi-table DELETE:
+     *   DELETE rp FROM role_permissions rp INNER JOIN roles r ON ... WHERE ...
+     * → SQLite/Pg:
+     *   DELETE FROM role_permissions WHERE rowid|ctid IN (
+     *     SELECT rp.rowid FROM role_permissions rp INNER JOIN ... WHERE ...
+     *   )
+     *
+     * @return list<string>
+     */
+    private function transpileDeleteJoin(string $s): array
+    {
+        if (!preg_match(
+            '/^DELETE\s+(?P<alias>\w+)\s+FROM\s+(?P<table>[`"]?[\w]+[`"]?)\s+(?P=alias)\b(?P<body>.*)$/is',
+            $s,
+            $m
+        )) {
+            return [$this->normalizeGeneric($s)];
+        }
+
+        $alias = $m['alias'];
+        $table = trim($m['table'], '`"');
+        $body = $m['body'];
+        $tableQ = $this->quoteIdent($table);
+        $bodyN = $this->normalizeIdentifiers($body);
+
+        if ($this->driver === 'sqlite') {
+            return [
+                'DELETE FROM ' . $tableQ . ' WHERE rowid IN ('
+                . 'SELECT ' . $alias . '.rowid FROM ' . $tableQ . ' ' . $alias . $bodyN
+                . ')',
+            ];
+        }
+
+        // pgsql: use ctid
+        return [
+            'DELETE FROM ' . $tableQ . ' WHERE ctid IN ('
+            . 'SELECT ' . $alias . '.ctid FROM ' . $tableQ . ' ' . $alias . $bodyN
+            . ')',
+        ];
     }
 
     private function normalizeGeneric(string $s): string

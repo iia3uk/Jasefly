@@ -7,8 +7,12 @@ Track changes to the public Platform SDK surface over time.
 | File | Purpose |
 | --- | --- |
 | `backend/src/Platform/Manifest/api-snapshot.v1.json` | Committed baseline snapshot |
+| `backend/src/Platform/Manifest/capabilities.v1.json` | Core capability id freeze |
+| `backend/src/Platform/Manifest/permissions-core.v1.json` | Core permission id freeze |
+| `backend/src/Platform/Manifest/events-core.v1.json` | Core event id freeze |
 | `backend/src/Platform/Manifest/platform.manifest.json` | Exported public API catalog |
 | `backend/src/Platform/Analysis/ApiSnapshot.php` | Generator / diff engine |
+| `backend/tests/ContractGovernanceTest.php` | Wired into `run.php` (api-diff + related freezes) |
 
 ## Commands
 

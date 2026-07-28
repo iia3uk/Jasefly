@@ -171,6 +171,9 @@ final class AdminController
     public function show(Request $r, string $resource, string $id): never
     {
         $table = $this->table($resource);
+        if ($resource === 'pages') {
+            (new PageScheduleService($this->db))->promoteDue();
+        }
         $row = $this->db->one("SELECT * FROM `$table` WHERE id=? AND {$this->deletedFilter($table)}", [$id]);
         if (!$row) {
             Response::error('Not found', 404);

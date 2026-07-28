@@ -6,6 +6,8 @@ declare(strict_types=1);
  * Run via: php backend/tests/run.php
  */
 
+use App\Core\Modules\ModuleManifest;
+use App\Platform\Analysis\PackageStaticAnalyzer;
 use App\Services\Modules\ModulePackageValidator;
 
 require_once dirname(__DIR__) . '/src/Services/Modules/ModulePackageValidator.php';
@@ -76,3 +78,73 @@ assert_true($ckHt['ok'] === true, 'installer .htaccess ignored in checksum scan'
 @unlink($checksumsPath);
 @unlink($tmp . '/.htaccess');
 @rmdir($tmp);
+
+// —— Zip Slip via validateZipFile ——
+if (!class_exists(ZipArchive::class)) {
+    echo "  SKIP ZipArchive tests (ext-zip missing)\n";
+} else {
+    $zipPath = sys_get_temp_dir() . '/jasefly-zipslip-' . bin2hex(random_bytes(4)) . '.zip';
+    $zip = new ZipArchive();
+    assert_true($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true, 'create zip for slip test');
+    $zip->addFromString('../evil.php', '<?php');
+    $zip->addFromString('module.json', json_encode($validManifest));
+    $zip->addFromString('checksums.json', '{"files":{}}');
+    $zip->close();
+    $zipResult = $validator->validateZipFile($zipPath);
+    assert_true($zipResult['ok'] === false, 'validateZipFile rejects Zip Slip entry');
+    assert_true(
+        count(array_filter($zipResult['errors'], static fn(string $e) => str_contains($e, 'Path traversal') || str_contains($e, 'absolute'))) > 0,
+        'Zip Slip error mentions path traversal'
+    );
+    @unlink($zipPath);
+
+    // —— missing manifest in ZIP ——
+    $zipMissing = sys_get_temp_dir() . '/jasefly-zipmiss-' . bin2hex(random_bytes(4)) . '.zip';
+    $zip2 = new ZipArchive();
+    $zip2->open($zipMissing, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+    $zip2->addFromString('readme.txt', 'no manifest');
+    $zip2->close();
+    $miss = $validator->validateZipFile($zipMissing);
+    assert_true($miss['ok'] === false, 'validateZipFile rejects ZIP without module.json');
+    assert_true(
+        count(array_filter($miss['errors'], static fn(string $e) => str_contains($e, 'module.json'))) > 0,
+        'missing module.json reported'
+    );
+    @unlink($zipMissing);
+}
+
+// —— validateExtracted: incomplete package ——
+$extractTmp = sys_get_temp_dir() . '/jasefly-extract-' . bin2hex(random_bytes(4));
+@mkdir($extractTmp, 0775, true);
+$extracted = $validator->validateExtracted($extractTmp, '1.0.0');
+assert_true($extracted['ok'] === false, 'validateExtracted fails without module.json/checksums');
+@rmdir($extractTmp);
+
+// —— fixtures/bad-module: PackageStaticAnalyzer must flag Core import ——
+$fixtureRoot = dirname(__DIR__) . '/tests/fixtures/bad-module';
+assert_true(is_dir($fixtureRoot), 'bad-module fixture exists');
+$analyzer = new PackageStaticAnalyzer();
+$report = $analyzer->analyzeDirectory($fixtureRoot);
+$findingList = is_array($report['findings'] ?? null) ? $report['findings'] : [];
+$hasForbiddenNs = ($report['ok'] ?? true) === false;
+foreach ($findingList as $f) {
+    if (!is_array($f)) {
+        continue;
+    }
+    if (str_contains((string) ($f['rule'] ?? ''), 'forbidden')) {
+        $hasForbiddenNs = true;
+        break;
+    }
+}
+assert_true($hasForbiddenNs, 'fixtures/bad-module forbidden Core import detected');
+
+// —— permissions policy: manifest lists perms; registerPermissions must not auto-grant roles ——
+$refManifest = json_decode((string) file_get_contents(dirname(__DIR__, 2) . '/modules-src/forms-sdk-reference/module.json'), true);
+assert_true(is_array($refManifest), 'forms-sdk-reference module.json readable');
+$m = ModuleManifest::fromArray($refManifest);
+assert_true(count($m->permissions()) >= 3, 'manifest declares module permissions');
+$svcSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Services/Modules/ModulePackageService.php');
+assert_true(preg_match('/private function registerPermissions\(.*?\{(.*?)\n    \}/s', $svcSrc, $mm) === 1, 'registerPermissions method located');
+$body = $mm[1] ?? '';
+assert_true(str_contains($body, 'permissions'), 'registerPermissions writes permissions catalog');
+assert_true(!str_contains($body, 'role_permissions'), 'registerPermissions does not auto-grant role_permissions');

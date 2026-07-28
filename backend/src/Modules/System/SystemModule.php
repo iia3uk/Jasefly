@@ -92,8 +92,7 @@ final class SystemModule extends AbstractModule
             $registry = Container::getInstance()->get(ModuleRegistry::class);
             $module = $registry->get($name);
             if ($module === null) {
-                Response::json(['success' => false, 'error' => 'Plugin not found'], 404);
-                return;
+                Response::error('Plugin not found', 404);
             }
             $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
             $enabled = (bool) ($body['enabled'] ?? false);
@@ -101,36 +100,34 @@ final class SystemModule extends AbstractModule
 
             // Protect core modules from being disabled.
             if (in_array($name, ['system', 'users'], true) && !$enabled) {
-                Response::json(['success' => false, 'error' => 'Ядро нельзя отключить'], 422);
-                return;
+                Response::error('Ядро нельзя отключить', 422);
             }
 
             $enabledChain = [];
             if ($enabled) {
                 $missing = $registry->missingRequires($name);
                 if ($missing !== [] && !$autoDeps) {
-                    Response::json([
-                        'success' => false,
-                        'error' => 'Сначала включите зависимости: ' . implode(', ', $missing),
-                        'missing_requires' => $missing,
-                    ], 422);
-                    return;
+                    Response::error(
+                        'Сначала включите зависимости: ' . implode(', ', $missing),
+                        422,
+                        [],
+                        ['missing_requires' => $missing],
+                    );
                 }
                 try {
                     $enabledChain = $registry->enableWithDependencies($name);
                 } catch (\Throwable $e) {
-                    Response::json(['success' => false, 'error' => $e->getMessage()], 422);
-                    return;
+                    Response::error($e->getMessage(), 422);
                 }
             } else {
                 $requiredBy = $registry->requiredByEnabled($name);
                 if ($requiredBy !== []) {
-                    Response::json([
-                        'success' => false,
-                        'error' => 'Сначала отключите зависимые плагины: ' . implode(', ', $requiredBy),
-                        'required_by' => $requiredBy,
-                    ], 422);
-                    return;
+                    Response::error(
+                        'Сначала отключите зависимые плагины: ' . implode(', ', $requiredBy),
+                        422,
+                        [],
+                        ['required_by' => $requiredBy],
+                    );
                 }
                 $registry->state()->setEnabled($name, false);
             }
@@ -168,8 +165,7 @@ final class SystemModule extends AbstractModule
             $registry = Container::getInstance()->get(ModuleRegistry::class);
             $module = $registry->get($name);
             if ($module === null) {
-                Response::json(['success' => false, 'error' => 'Plugin not found'], 404);
-                return;
+                Response::error('Plugin not found', 404);
             }
             $seed = (new \App\Core\Services\PageSeedService(
                 Container::getInstance()->get('db')
@@ -182,8 +178,7 @@ final class SystemModule extends AbstractModule
             $registry = Container::getInstance()->get(ModuleRegistry::class);
             $module = $registry->get($name);
             if ($module === null) {
-                Response::json(['success' => false, 'error' => 'Plugin not found'], 404);
-                return;
+                Response::error('Plugin not found', 404);
             }
             $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
             $registry->state()->setSettings($module, is_array($body['settings'] ?? null) ? $body['settings'] : []);

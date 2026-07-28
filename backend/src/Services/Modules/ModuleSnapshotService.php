@@ -40,11 +40,13 @@ final class ModuleSnapshotService
 
         $registryRow = $this->registry->getBySlug($slug);
         $migrations = $this->registry->listModuleMigrations($slug);
+        $files = $this->registry->listModuleFiles($slug);
         $meta = [
             'slug' => $slug,
             'created_at' => gmdate(DATE_ATOM),
             'registry' => $registryRow,
             'module_migrations' => $migrations,
+            'module_files' => $files,
         ];
         $zip->addFromString('snapshot.json', json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 
@@ -145,9 +147,35 @@ final class ModuleSnapshotService
             $this->registry->upsert($registry);
         }
 
-        try {
-            $this->registry->clearModuleFiles($slug);
-        } catch (\Throwable) {
+        $migrations = $meta['module_migrations'] ?? [];
+        if (is_array($migrations)) {
+            /** @var list<array<string, mixed>> $migrations */
+            $this->registry->replaceModuleMigrations($slug, $migrations);
+        }
+
+        $files = $meta['module_files'] ?? null;
+        if (is_array($files)) {
+            $normalized = [];
+            foreach ($files as $f) {
+                if (!is_array($f)) {
+                    continue;
+                }
+                $rel = (string) ($f['relative_path'] ?? '');
+                if ($rel === '') {
+                    continue;
+                }
+                $normalized[] = [
+                    'relative_path' => $rel,
+                    'sha256' => (string) ($f['sha256'] ?? ''),
+                    'size_bytes' => (int) ($f['size_bytes'] ?? 0),
+                ];
+            }
+            $this->registry->replaceModuleFiles($slug, $normalized);
+        } else {
+            try {
+                $this->registry->clearModuleFiles($slug);
+            } catch (\Throwable) {
+            }
         }
     }
 

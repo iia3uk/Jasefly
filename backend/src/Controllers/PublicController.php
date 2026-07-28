@@ -35,7 +35,20 @@ final class PublicController
 
     public function health(Request $r): never
     {
-        Response::json(['status' => 'ok', 'time' => gmdate(DATE_ATOM)]);
+        $failureCount = 0;
+        try {
+            $registry = Container::getInstance()->get(ModuleRegistry::class);
+            if ($registry instanceof ModuleRegistry) {
+                $failureCount = count($registry->loadFailures());
+            }
+        } catch (Throwable) {
+        }
+        // Always HTTP 200 for uptime probes; `status` signals degraded boots.
+        Response::json([
+            'status' => $failureCount > 0 ? 'degraded' : 'ok',
+            'time' => gmdate(DATE_ATOM),
+            'module_load_failures' => $failureCount,
+        ]);
     }
 
     public function site(Request $r): never

@@ -31,6 +31,8 @@ final class ModuleRegistry
     private array $modules = [];
     /** @var array<string, Blueprint>|null */
     private ?array $blueprintIndex = null;
+    /** @var list<array{module:string, stage:string, error:string}> */
+    private array $loadFailures = [];
 
     public function __construct(
         private Database $db,
@@ -69,7 +71,9 @@ final class ModuleRegistry
                 try {
                     require $file;
                 } catch (\Throwable $e) {
-                    @error_log('ModuleRegistry skip ' . $name . ': ' . $e->getMessage());
+                    $msg = $e->getMessage();
+                    $this->loadFailures[] = ['module' => $name, 'stage' => 'require', 'error' => $msg];
+                    @error_log('ModuleRegistry skip ' . $name . ': ' . $msg);
                     continue;
                 }
             }
@@ -81,13 +85,26 @@ final class ModuleRegistry
                 $instance = new $class();
                 $this->register($instance);
             } catch (\Throwable $e) {
-                @error_log('ModuleRegistry boot fail ' . $name . ': ' . $e->getMessage());
+                $msg = $e->getMessage();
+                $this->loadFailures[] = ['module' => $name, 'stage' => 'construct', 'error' => $msg];
+                @error_log('ModuleRegistry boot fail ' . $name . ': ' . $msg);
             }
         }
 
         foreach ($manual as $class) {
-            if (class_exists($class)) {
+            if (!is_string($class) || $class === '' || !class_exists($class)) {
+                continue;
+            }
+            try {
                 $this->register(new $class());
+            } catch (\Throwable $e) {
+                $msg = $e->getMessage();
+                $this->loadFailures[] = [
+                    'module' => $class,
+                    'stage' => 'manual_register',
+                    'error' => $msg,
+                ];
+                @error_log('ModuleRegistry manual register fail ' . $class . ': ' . $msg);
             }
         }
 
@@ -105,12 +122,42 @@ final class ModuleRegistry
         $this->modules[] = $module;
     }
 
+    /**
+     * Modules that failed to require/construct/boot.
+     * Visible in admin system status — not silent.
+     *
+     * @return list<array{module:string, stage:string, error:string}>
+     */
+    public function loadFailures(): array
+    {
+        return $this->loadFailures;
+    }
+
+    public function recordLoadFailure(string $module, string $stage, string $error): void
+    {
+        $this->loadFailures[] = [
+            'module' => $module,
+            'stage' => $stage,
+            'error' => $error,
+        ];
+    }
+
     public function boot(): void
     {
         foreach ($this->modules as $module) {
             if ($this->isOn($module)) {
-                $module->boot($this->db, $this->app);
-                $this->wireHooks($module);
+                try {
+                    $module->boot($this->db, $this->app);
+                    $this->wireHooks($module);
+                } catch (\Throwable $e) {
+                    $msg = $e->getMessage();
+                    $this->loadFailures[] = [
+                        'module' => $module->name(),
+                        'stage' => 'boot',
+                        'error' => $msg,
+                    ];
+                    @error_log('ModuleRegistry boot() fail ' . $module->name() . ': ' . $msg);
+                }
             }
         }
         $this->events->dispatch('module.boot', ['modules' => array_map(fn($m) => $m->name(), $this->all())]);

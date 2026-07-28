@@ -52,7 +52,41 @@ final class SystemHealthService
             'gd_enabled' => extension_loaded('gd'),
             'pdo_enabled' => extension_loaded($pdoExt),
             'mcp' => $this->mcpStatus(),
+            'module_load_failures' => $this->moduleLoadFailures(),
+            'module_safe_mode' => $this->moduleSafeMode(),
         ];
+    }
+
+    /**
+     * Bundled modules that failed require/construct/boot (empty = healthy).
+     *
+     * @return list<array{module:string, stage:string, error:string}>
+     */
+    private function moduleLoadFailures(): array
+    {
+        try {
+            $registry = \App\Core\Container::getInstance()->get(\App\Core\ModuleRegistry::class);
+            if ($registry instanceof \App\Core\ModuleRegistry) {
+                return $registry->loadFailures();
+            }
+        } catch (\Throwable) {
+        }
+        return [];
+    }
+
+    /**
+     * Package modules currently in safe-mode (skipped on boot).
+     *
+     * @return array<string, array{error:string, at:string}>
+     */
+    private function moduleSafeMode(): array
+    {
+        try {
+            $paths = \App\Core\Modules\ModulePackagePaths::fromApp($this->app);
+            return (new \App\Services\Modules\ModuleSafeMode($paths))->read();
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     /** MCP token status for admin UI — never returns the full secret. */

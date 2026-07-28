@@ -53,12 +53,9 @@ final class PermissionMiddleware
             }
         }
 
-        if (in_array($r->method, ['POST', 'PUT'], true) && str_contains($r->path, '/admin/') && !str_contains($r->path, '/publish')) {
-            $perm = $r->method === 'POST' ? 'content.create' : 'content.update';
-            if (!$this->permissions->can($user, $perm) && !$this->permissions->can($user, 'content.view')) {
-                // Allow singleton settings updates only if settings.manage (handled above)
-            }
-        }
+        // CRUD create/update for content resources is enforced in AdminController /
+        // module handlers (resource-specific permissions). Do not blanket-require
+        // content.create/update on every admin POST/PUT — that breaks module routes.
 
         return $next();
     }
