@@ -70,11 +70,12 @@ final class Bootstrap
 
         $app = require dirname(__DIR__) . '/config/app.php';
         $dbConfig = require dirname(__DIR__) . '/config/database.php';
-        date_default_timezone_set($app['timezone'] ?? 'UTC');
+        date_default_timezone_set($app['timezone'] ?? 'Europe/Moscow');
         error_reporting(E_ALL);
         ini_set('display_errors', '0');
 
         $db = Database::get($dbConfig);
+        self::applyDatabaseTimezone($db, (string) ($app['timezone'] ?? 'Europe/Moscow'));
 
         $container = Container::getInstance();
         $container->set('app', $app);
@@ -103,5 +104,42 @@ final class Bootstrap
         $container->set(ModuleRegistry::class, $registry);
 
         return [$app, $db, $registry];
+    }
+
+    /**
+     * Align MySQL session clock with app timezone so CURRENT_TIMESTAMP / activity
+     * logs match Europe/Moscow wall time (Beget often differs from PHP default).
+     */
+    private static function applyDatabaseTimezone(Database $db, string $timezone): void
+    {
+        if ($db->driver() !== 'mysql') {
+            return;
+        }
+        try {
+            // Named zones need mysql timezone tables; MSK is fixed +03:00 since 2014.
+            $offset = self::mysqlUtcOffset($timezone);
+            $db->pdo()->exec('SET time_zone = ' . $db->pdo()->quote($offset));
+        } catch (\Throwable) {
+            // Non-fatal: display layer still formats naive DATETIME as Moscow.
+        }
+    }
+
+    private static function mysqlUtcOffset(string $timezone): string
+    {
+        if ($timezone === 'Europe/Moscow' || $timezone === 'MSK') {
+            return '+03:00';
+        }
+        try {
+            $tz = new \DateTimeZone($timezone);
+            $now = new \DateTimeImmutable('now', $tz);
+            $seconds = $tz->getOffset($now);
+            $sign = $seconds >= 0 ? '+' : '-';
+            $seconds = abs($seconds);
+            $h = intdiv($seconds, 3600);
+            $m = intdiv($seconds % 3600, 60);
+            return sprintf('%s%02d:%02d', $sign, $h, $m);
+        } catch (\Throwable) {
+            return '+03:00';
+        }
     }
 }

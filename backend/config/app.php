@@ -8,7 +8,7 @@ return [
     'name' => (string) ($local['app_name'] ?? $env('APP_NAME', 'Jasefly CMS')),
     'url' => rtrim((string) ($local['app_url'] ?? $env('APP_URL', 'http://localhost')), '/'),
     'env' => (string) ($local['app_env'] ?? $env('APP_ENV', 'production')),
-    'timezone' => (string) ($local['timezone'] ?? $env('APP_TIMEZONE', 'UTC')),
+    'timezone' => (string) ($local['timezone'] ?? $env('APP_TIMEZONE', 'Europe/Moscow')),
     'version' => (string) ($local['app_version'] ?? $env('APP_VERSION', '1.0.0')),
 
     'jwt_secret' => (string) ($local['jwt_secret'] ?? $env('JWT_SECRET', '')),

@@ -6,6 +6,7 @@ import { endpoints } from '@/lib/api'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { PageContext } from '@/admin/components/PageContext'
 import { t, resources, fieldLabel } from '@/admin/i18n'
+import { formatMoscowDateTime } from '@/admin/lib/formatDateTime'
 
 const MCP_CURSOR_SNIPPET = `{
   "mcpServers": {
@@ -206,7 +207,7 @@ export function ActivityPage() {
                     )}
                   </div>
                   <div className="shrink-0 text-zinc-500">
-                    {row.user_name ?? t.system} · {new Date(row.created_at).toLocaleString('ru-RU')}
+                    {row.user_name ?? t.system} · {formatMoscowDateTime(String(row.created_at ?? ''))}
                   </div>
                 </div>
                 {row.action === 'mcp_changelog' && changes.length > 0 && (
@@ -485,7 +486,7 @@ export function SystemStatusPage() {
                         {row.entity_label ? <span className="text-zinc-400"> — {String(row.entity_label)}</span> : null}
                       </p>
                       <span className="shrink-0 text-[11px] text-zinc-600">
-                        {new Date(String(row.created_at)).toLocaleString('ru-RU')}
+                        {formatMoscowDateTime(String(row.created_at ?? ''))}
                       </span>
                     </div>
                   </div>
