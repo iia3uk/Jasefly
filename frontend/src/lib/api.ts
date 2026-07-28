@@ -206,7 +206,8 @@ export const mediaUrl = (media?: MediaAsset | { id?: IDLike; media_id?: IDLike }
   return undefined
 }
 
-const list = async <T>(path: string): Promise<T[]> => unwrap(await api.get<ApiEnvelope<T[]> | T[]>(path))
+const list = async <T>(path: string, options?: RequestOptions): Promise<T[]> =>
+  unwrap(await api.get<ApiEnvelope<T[]> | T[]>(path, options))
 const one = async <T>(path: string, options?: RequestOptions): Promise<T> =>
   unwrap(await api.get<ApiEnvelope<T> | T>(path, options))
 
@@ -347,8 +348,23 @@ export const endpoints = {
   migrations: () => one<MigrationStatusPayload>('/admin/migrations'),
   migrationsRetry: async () =>
     unwrap(await api.post<ApiEnvelope<MigrationStatusPayload> | MigrationStatusPayload>('/admin/migrations/retry')),
-  adminList: <T>(resource: string) => list<T>(`/admin/${resource}`),
-  adminGet: <T>(resource: string, id: IDLike) => one<T>(`/admin/${resource}/${id}`),
+  adminList: async <T>(resource: string): Promise<T[]> => {
+    try {
+      // Optional plugins: missing route → empty list, never open API debugger.
+      return await list<T>(`/admin/${resource}`, { silent: true })
+    } catch (err) {
+      if (err instanceof ApiRequestError && err.details.status === 404) return []
+      throw err
+    }
+  },
+  adminGet: async <T>(resource: string, id: IDLike): Promise<T | null> => {
+    try {
+      return await one<T>(`/admin/${resource}/${id}`, { silent: true })
+    } catch (err) {
+      if (err instanceof ApiRequestError && err.details.status === 404) return null
+      throw err
+    }
+  },
   adminSave: async <T>(resource: string, data: unknown, id?: IDLike) => {
     const res = id != null
       ? await api.put<ApiEnvelope<T>>(`/admin/${resource}/${id}`, data)

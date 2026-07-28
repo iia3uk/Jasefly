@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, Save, Power, Puzzle, FilePlus2, Info } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
-import { setPluginEnabled, type PluginState, type PluginSettingField } from '@/core/moduleRegistry'
+import { setPluginEnabled, setPluginStates, type PluginState, type PluginSettingField } from '@/core/moduleRegistry'
 
 /** Core plugins that cannot be disabled (mirrors backend guard). */
 const CORE_PLUGINS = new Set(['system', 'users'])
@@ -40,10 +40,20 @@ export function PluginsPage() {
   const toggle = useMutation({
     mutationFn: ({ name, enabled }: { name: string; enabled: boolean }) =>
       api.post(`/admin/plugins/${name}/toggle`, { enabled }),
-    onSuccess: (_data, vars) => {
+    onSuccess: async (_data, vars) => {
       setPluginEnabled(vars.name, vars.enabled)
+      // Re-sync full enable map (deps / suggests) so admin API gates match routes.
+      try {
+        const res = await api.get<PluginsResponse>('/admin/plugins')
+        const list = (res as PluginsResponse)?.data ?? (res as unknown as PluginState[])
+        if (Array.isArray(list)) setPluginStates(list)
+      } catch {
+        /* keep optimistic setPluginEnabled */
+      }
       void client.invalidateQueries({ queryKey })
       void client.invalidateQueries({ queryKey: ['site'] })
+      void client.invalidateQueries({ queryKey: ['content-health'] })
+      void client.invalidateQueries({ queryKey: ['dashboard'] })
     },
     onError: (err: unknown) => {
       window.alert(err instanceof Error ? err.message : 'Не удалось переключить плагин')
