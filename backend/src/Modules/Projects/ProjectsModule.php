@@ -3,14 +3,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Projects;
 
-use App\Controllers\AdminController;
 use App\Core\AbstractModule;
 use App\Database;
-use App\Middleware\AuthMiddleware;
-use App\Middleware\PermissionMiddleware;
-use App\Request;
 use App\Router;
-use App\Services\PermissionService;
 
 final class ProjectsModule extends AbstractModule
 {
@@ -31,20 +26,9 @@ final class ProjectsModule extends AbstractModule
 
     public function registerRoutes(Router $router, Database $db, array $app, string $apiPrefix): void
     {
-        $p = fn(string $path) => rtrim($apiPrefix, '/') . $path;
-        $admin = new AdminController($db, $app);
-        $protected = [new AuthMiddleware($app['jwt_secret']), new PermissionMiddleware(new PermissionService($db))];
-
-        // Public GET /projects lives on ContentModule (always available; empty when portfolio off).
-
-        $base = $p('/admin/projects');
-        $router->get($base, fn(Request $r) => $admin->index($r, 'projects'), $protected);
-        $router->post($base, fn(Request $r) => $admin->create($r, 'projects'), $protected);
-        $router->get("$base/{id}", fn(Request $r, $id) => $admin->show($r, 'projects', $id), $protected);
-        $router->put("$base/{id}", fn(Request $r, $id) => $admin->update($r, 'projects', $id), $protected);
-        $router->delete("$base/{id}", fn(Request $r, $id) => $admin->delete($r, 'projects', $id), $protected);
-        $router->post("$base/{id}/publish", fn(Request $r, $id) => $admin->publish($r, 'projects', $id), $protected);
-        $router->post($p('/admin/projects/reorder'), fn(Request $r) => $admin->reorder($r, 'projects'), $protected);
+        // Admin /admin/projects CRUD is registered on ContentModule (always on)
+        // so disabling this plugin no longer 404s dashboard content-health fetches.
+        // Nav / blueprints below still hide the Projects UI when this module is off.
     }
 
     public function adminNav(): array

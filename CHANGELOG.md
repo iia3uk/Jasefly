@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-07-28 — Admin /projects always on ContentModule — no 404 when plugin off
+
+- Move admin projects CRUD (+ publish/reorder) to ContentModule so GET /api/v1/admin/projects never 404s
+- ProjectsModule keeps nav/blueprints/resources only
+- CMS_MAP: symptom row for admin/projects 404
+
 ## 2026-07-28 — Stop admin/projects 404 debugger spam
 
 - Silence adminList/adminGet 404 (no API debugger for disabled plugins)
