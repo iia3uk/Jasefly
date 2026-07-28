@@ -65,7 +65,8 @@
 | FE runtime пакетных модулей | `packageModuleLoader.ts` + `GET /modules/runtime-assets` + `/modules/{slug}/` assets |
 | Отложенная публикация страниц | `PageScheduleService` (lazy publish) + `scheduled_at` в билдере |
 | Плагины вкл/выкл, гейты UI | `frontend/src/core/pluginGates.ts`, `components/RequirePlugin.tsx`, `admin/pages/PluginsPage.tsx` |
-| Тесты / CI / cms_local_test | `backend/tests/run.php` (+ Permission/API/CleanInstall/SqlTranspiler/Diagnostics/ContractGovernance/Router/SecurityVerification/Maintainability), `backend/bin/certify-lifecycle.php`, `mcp-cms/src/local.js`, `.github/workflows/platform-sdk.yml`, `frontend` vitest (`npm test`) |
+| Тесты / CI / cms_local_test | `backend/tests/run.php` (+ Permission/API/CleanInstall/…/PackageEnableSync/ProjectsSoftApi/MigrationSqliteCompat/ContractGovernance/…), `backend/bin/certify-lifecycle.php`, `mcp-cms/src/local.js`, `.github/workflows/platform-sdk.yml`, `frontend` vitest (`npm test`) |
+| SQLite migrate: OLD.id / MODIFY / prefix(191) | `Core/Db/SqlTranspiler.php` (rowid triggers, skip MODIFY, strip index prefix lengths); smoke: `MigrationSmokeTest` / `MigrationSqliteCompatTest` |
 | Contract governance (snapshots) | `Platform/Manifest/{api-snapshot,capabilities,permissions-core,events-core}.v1.json` · `mcp-cms/manifest/mcp-tools.v1.json` · `builder/manifest/widget-types.v1.json` · `ContractGovernanceTest.php` · vitest `widget-types.test.ts` · regen: `node backend/tests/gen-contract-snapshots.js` |
 | Security verification (SSRF/2FA/upload) | `Support/SsrfGuard.php` · `SecurityVerificationTest.php` · `TotpService` · `BackupService` · `MediaService` · `AuthController::refresh` (rotation) · `WebhooksModule` (HMAC + SSRF) |
 | Maintainability helpers | `Support/{SsrfGuard,OutboundHttp,SecretRedactor}.php` · `Response::error(..., $extra)` · `MaintainabilityTest.php` |
@@ -73,7 +74,7 @@
 | Целостность ops (snapshot/migrate/schedule/content pack) | `ModulePackageService` + `ModuleSnapshotService` + `PageScheduleService` + `ContentPackImporter` / `import-content.php --confirm` |
 | Router 404/405 / CORS OPTIONS / RateLimit | `backend/src/Router.php`, `Request.php`, `public/index.php`, `Middleware/RateLimitMiddleware.php` |
 | `/api/v1/projects` 404 при выкл. Portfolio | public GET в `ContentModule`; FE гейт `useProjects` + `HomePage` (не звать без portfolio) |
-| `/api/v1/admin/projects` 404 при выкл. Projects | admin CRUD в `ContentModule` (всегда); `ProjectsModule` только nav/blueprints; FE гейт + silent 404 |
+| `/api/v1/admin/projects` при выкл. Projects | Design B: routes на `ProjectsModule` + `registersRoutesWhenDisabled`; GET list `[]`, GET item 404, mutations 409 `plugin_disabled`; public GET остаётся в `ContentModule` |
 | `/admin/{resource}` 404 при выкл. плагине | `ADMIN_RESOURCE_PLUGINS` + `useAdminResourceEnabled`; `PLUGIN_ALIASES` portfolio↔projects; `adminList`/`adminGet` silent 404→[]; Dashboard `contentHealth` gated; PluginsPage re-sync `setPluginStates` |
 | Билдер-страницы без Portfolio (about/contact/cta) | `pluginGates` + `widgetRequiredPlugin` (`cta-banner`/`blog-list`/`contact-form` ≠ portfolio) |
 | Админ-роуты / CRUD экраны | `admin/adminRoutes.tsx`, `core/moduleRegistry.ts`, `admin/pages/*` |
@@ -88,7 +89,8 @@
 | Медиа | `modules/media/` ↔ `Modules/Media/`, `Controllers/MediaController.php` |
 | Auth / users / 2FA | `context/AuthContext.tsx`, `Modules/Users/`, `Controllers/AuthController.php` |
 | Миграции SQL | `backend/migrations/*.sql` (+ plugin migrations в `Modules/*/migrations/`) |
-| Module Package Manager (install/update ZIP) | `Modules/ModuleManager/ModuleManagerModule.php`, `Services/Modules/ModulePackageService.php`, `bin/modules.php`, `Core/Modules/*`, `migrations/020_installed_modules.sql` |
+| Module Package Manager (install/update ZIP) | `Modules/ModuleManager/ModuleManagerModule.php`, `Services/Modules/ModulePackageService.php`, `ModulePluginMirror.php`, `bin/modules.php` (`reconcile-mirror`), `Core/Modules/*`, `migrations/020_installed_modules.sql` |
+| ZIP enable SoT (installed_modules vs plugins) | Canonical: `installed_modules.status`; mirror: `modules.is_enabled` via `ModulePluginMirror`; Plugins toggle for packages → `ModulePackageService`; CLI `modules.php reconcile-mirror` |
 | Demo package module source | `modules-src/demo-kit/` |
 | Forms SDK certification reference | `modules-src/forms-sdk-reference/` |
 | Залить апдейт на хостинг | MCP **`cms_release`** (summary + changes). Не invent deploy вручную |

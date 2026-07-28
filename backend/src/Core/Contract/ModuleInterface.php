@@ -144,6 +144,13 @@ interface ModuleInterface
     public function demoPages(): array;
 
     /**
+     * When true, registerRoutes() is invoked even if the plugin is disabled.
+     * Handlers must soft-fail (empty list / 404 / plugin_disabled) — do not boot
+     * domain services as if the plugin were enabled.
+     */
+    public function registersRoutesWhenDisabled(): bool;
+
+    /**
      * Global HTTP middleware contributed by this plugin (run on every request).
      * Each entry is a callable(Request $r, callable $next): mixed.
      *

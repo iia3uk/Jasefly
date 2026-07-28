@@ -84,6 +84,75 @@ type RequestOptions = {
   /** Do not open the API debugger for this call (used by the debugger itself). */
   silent?: boolean
   isForm?: boolean
+  /** Internal: skip silent-refresh retry (prevents loops). */
+  _retried?: boolean
+}
+
+let refreshInFlight: Promise<boolean> | null = null
+/** Single-flight auth clear + session-expired when shared refresh fails. */
+let authFailureInFlight: Promise<void> | null = null
+
+function isSilentRefreshExcluded(path: string): boolean {
+  return path === '/auth/refresh'
+    || path === '/auth/login'
+    || path === '/auth/logout'
+    || path.startsWith('/auth/refresh')
+    || path.startsWith('/auth/login')
+}
+
+async function settleAuthFailure(): Promise<void> {
+  if (authFailureInFlight) return authFailureInFlight
+  authFailureInFlight = (async () => {
+    emitSessionExpired()
+    const onLogin = isAdminPathname(window.location.pathname) && window.location.pathname.endsWith('/login')
+    if (!onLogin) {
+      const next = `${window.location.pathname}${window.location.search}`
+      window.location.replace(adminLoginUrl(next === adminUrl('/login') ? null : next))
+    }
+  })()
+  try {
+    await authFailureInFlight
+  } finally {
+    // Keep the settled promise so concurrent waiters join; reset on next refresh attempt.
+  }
+}
+
+async function trySilentRefresh(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight
+  // New refresh attempt may succeed — allow a future auth-failure side-effect cycle.
+  authFailureInFlight = null
+  refreshInFlight = (async () => {
+    const refresh = localStorage.getItem('refresh_token')
+    if (!refresh) return false
+    try {
+      const response = await fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ refresh_token: refresh }),
+      })
+      if (!response.ok) return false
+      const json = await response.json() as {
+        data?: { access_token?: string; refresh_token?: string; expires_in?: number }
+        access_token?: string
+        refresh_token?: string
+      }
+      const data = json.data ?? json
+      const access = data.access_token
+      const nextRefresh = data.refresh_token
+      if (!access || typeof access !== 'string') return false
+      localStorage.setItem('access_token', access)
+      if (nextRefresh && typeof nextRefresh === 'string') {
+        localStorage.setItem('refresh_token', nextRefresh)
+      }
+      return true
+    } catch {
+      return false
+    } finally {
+      refreshInFlight = null
+    }
+  })()
+  return refreshInFlight
 }
 
 async function request<T>(
@@ -92,7 +161,7 @@ async function request<T>(
   body?: unknown,
   options: RequestOptions = {},
 ): Promise<T> {
-  const { silent = false, isForm = false } = options
+  const { silent = false, isForm = false, _retried = false } = options
   const token = localStorage.getItem('access_token')
   const headers: Record<string, string> = {}
   if (token) headers.Authorization = `Bearer ${token}`
@@ -121,14 +190,20 @@ async function request<T>(
   }
 
   if (!response.ok) {
-    // Expired / invalid admin session → clear auth and let RequireAuth send to login.
-    if (response.status === 401 && path.startsWith('/admin')) {
-      emitSessionExpired()
-      const onLogin = isAdminPathname(window.location.pathname) && window.location.pathname.endsWith('/login')
-      if (!onLogin) {
-        const next = `${window.location.pathname}${window.location.search}`
-        window.location.replace(adminLoginUrl(next === adminUrl('/login') ? null : next))
+    // Expired access token → single-flight refresh once, then retry original request.
+    if (
+      response.status === 401
+      && path.startsWith('/admin')
+      && !_retried
+      && !isSilentRefreshExcluded(path)
+    ) {
+      const refreshed = await trySilentRefresh()
+      if (refreshed) {
+        return request<T>(path, method, body, { ...options, _retried: true })
       }
+      await settleAuthFailure()
+    } else if (response.status === 401 && path.startsWith('/admin') && !isSilentRefreshExcluded(path)) {
+      await settleAuthFailure()
     }
     const details = await parseErrorPayload(response, method, path)
     // Open debugger for server/client errors in admin (not every 401 redirect).

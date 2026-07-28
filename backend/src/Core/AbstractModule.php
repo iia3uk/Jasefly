@@ -103,6 +103,11 @@ abstract class AbstractModule implements Contract\ModuleInterface
         return [];
     }
 
+    public function registersRoutesWhenDisabled(): bool
+    {
+        return false;
+    }
+
     public function globalMiddleware(\App\Database $db, array $app): array
     {
         return [];

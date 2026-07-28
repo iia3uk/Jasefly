@@ -88,6 +88,7 @@ function writeJson(rel, data) {
     'content.force_delete',
     'media.manage',
     'settings.manage',
+    'system.manage',
     'users.manage',
     'activity.view',
     'commerce.manage',

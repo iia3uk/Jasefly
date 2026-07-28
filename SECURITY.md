@@ -37,7 +37,7 @@
 - **A04 Insecure Design** — rate limit на login/2FA; challenge JWT с коротким TTL.
 - **A05 Security Misconfiguration** — убрать `install.php` после установки; `display_errors=Off` в prod.
 - **A06 Vulnerable Components** — обновлять PHP и зависимости.
-- **A07 Auth Failures** — сильные пароли + 2FA; refresh token **rotation** on `/auth/refresh` + revocation on logout.
+- **A07 Auth Failures** — сильные пароли + 2FA; refresh token **rotation** on `/auth/refresh` + revocation on logout. SPA (`frontend/src/lib/api.ts`) делает single-flight silent refresh и один retry на admin 401, затем logout.
 - **A08 Data Integrity** — не доверять клиентским расширениям файлов; проверять MIME.
 - **A09 Logging/Monitoring** — activity log + `storage/logs`; не логировать пароли/токены (Automation `redact`).
 - **A10 SSRF** — `App\Support\SsrfGuard` на Forms/Automation/Webhooks outbound HTTP; private hosts rejected.

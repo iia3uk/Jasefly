@@ -247,6 +247,8 @@ final class ModulePackageService
     {
         $row = $this->requireInstalled($slug);
         if (($row['status'] ?? '') === 'enabled') {
+            // Idempotent: skip lifecycle hooks, but always repair plugins mirror (B).
+            $this->syncPluginState($slug, true);
             return ['ok' => true, 'slug' => $slug, 'status' => 'enabled'];
         }
 
@@ -264,6 +266,7 @@ final class ModulePackageService
         } catch (\Throwable $e) {
             $this->registry->finishOperation($opId, 'failed', $e->getMessage());
             $this->registry->setStatus($slug, 'failed', $e->getMessage(), 'failed');
+            $this->syncPluginState($slug, false);
             throw $e;
         }
     }
@@ -272,6 +275,11 @@ final class ModulePackageService
     public function disable(string $slug, ?int $initiatedBy = null): array
     {
         $row = $this->requireInstalled($slug);
+        if (($row['status'] ?? '') === 'disabled') {
+            // Idempotent: skip lifecycle hooks, but always repair plugins mirror (B).
+            $this->syncPluginState($slug, false);
+            return ['ok' => true, 'slug' => $slug, 'status' => 'disabled'];
+        }
         $opId = $this->registry->startOperation($slug, 'disable', (string) $row['installed_version'], null, $initiatedBy);
         try {
             $manifest = $this->rowManifest($row);
@@ -288,6 +296,7 @@ final class ModulePackageService
         } catch (\Throwable $e) {
             $this->registry->finishOperation($opId, 'failed', $e->getMessage());
             $this->registry->setStatus($slug, 'failed', $e->getMessage(), 'failed');
+            $this->syncPluginState($slug, false);
             throw $e;
         }
     }
@@ -859,14 +868,28 @@ final class ModulePackageService
 
     private function syncPluginState(string $slug, bool $enabled): void
     {
-        try {
-            $this->db->run(
-                'INSERT INTO modules (name, is_enabled, settings) VALUES (?, ?, NULL)
-                 ON DUPLICATE KEY UPDATE is_enabled=VALUES(is_enabled)',
-                [$slug, $enabled ? 1 : 0]
-            );
-        } catch (\Throwable) {
-            // modules table may be unavailable during early bootstrap
-        }
+        (new ModulePluginMirror($this->db))->mirror($slug, $enabled);
+    }
+
+    /**
+     * Align plugins `modules.is_enabled` with canonical installed_modules.status.
+     *
+     * @return array{
+     *   ok:bool,
+     *   dry_run:bool,
+     *   scanned:int,
+     *   checked:int,
+     *   divergent:int,
+     *   diverged:int,
+     *   repaired:int,
+     *   failed:int,
+     *   unchanged:int,
+     *   items:list<array<string,mixed>>,
+     *   failures:list<array{slug:string,error:string}>
+     * }
+     */
+    public function reconcilePluginMirror(bool $dryRun = true): array
+    {
+        return (new ModulePluginMirror($this->db))->reconcile($this->registry, $dryRun);
     }
 }

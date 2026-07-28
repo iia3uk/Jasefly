@@ -87,7 +87,7 @@ final class SystemModule extends AbstractModule
             Response::json(['data' => $registry->catalog()]);
         }, $protected);
 
-        $router->post($p('/admin/plugins/{name}/toggle'), function (Request $r, string $name) {
+        $router->post($p('/admin/plugins/{name}/toggle'), function (Request $r, string $name) use ($db, $app) {
             /** @var ModuleRegistry $registry */
             $registry = Container::getInstance()->get(ModuleRegistry::class);
             $module = $registry->get($name);
@@ -103,8 +103,34 @@ final class SystemModule extends AbstractModule
                 Response::error('Ядро нельзя отключить', 422);
             }
 
+            $packageRepo = new \App\Services\Modules\ModuleRegistryRepository($db);
+            $mirror = new \App\Services\Modules\ModulePluginMirror($db);
+            $isPackage = $mirror->isPackageBacked($packageRepo, $name);
+
             $enabledChain = [];
-            if ($enabled) {
+            if ($isPackage) {
+                // ZIP modules: installed_modules.status is canonical; Plugins UI delegates.
+                try {
+                    $pkg = $this->packageLifecycleService($db, $app);
+                    if ($enabled) {
+                        $pkg->enable($name, isset($r->user['sub']) ? (int) $r->user['sub'] : null);
+                        $enabledChain = [$name];
+                    } else {
+                        $requiredBy = $registry->requiredByEnabled($name);
+                        if ($requiredBy !== []) {
+                            Response::error(
+                                'Сначала отключите зависимые плагины: ' . implode(', ', $requiredBy),
+                                422,
+                                [],
+                                ['required_by' => $requiredBy],
+                            );
+                        }
+                        $pkg->disable($name, isset($r->user['sub']) ? (int) $r->user['sub'] : null);
+                    }
+                } catch (\Throwable $e) {
+                    Response::error($e->getMessage(), 422);
+                }
+            } elseif ($enabled) {
                 $missing = $registry->missingRequires($name);
                 if ($missing !== [] && !$autoDeps) {
                     Response::error(
@@ -133,16 +159,22 @@ final class SystemModule extends AbstractModule
             }
 
             $seed = null;
-            if ($enabled) {
+            if ($enabled && !$isPackage) {
                 // WordPress-style: create the plugin's demo/default pages on
                 // activation. Strictly additive & idempotent — existing pages
-                // are never touched.
+                // are never touched. Package modules seed via their own lifecycle.
                 $seed = (new \App\Core\Services\PageSeedService(
                     Container::getInstance()->get('db')
                 ))->seedModule($module);
                 $registry->events()->dispatch('plugin.enabled', [
                     'module' => $name,
                     'pages' => $seed,
+                    'enabled_chain' => $enabledChain,
+                ]);
+            } elseif ($enabled && $isPackage) {
+                $registry->events()->dispatch('plugin.enabled', [
+                    'module' => $name,
+                    'pages' => null,
                     'enabled_chain' => $enabledChain,
                 ]);
             } else {
@@ -665,6 +697,29 @@ final class SystemModule extends AbstractModule
     public function demoPages(): array
     {
         return SystemTemplates::demoPages();
+    }
+
+    private function packageLifecycleService(Database $db, array $app): \App\Services\Modules\ModulePackageService
+    {
+        $paths = \App\Core\Modules\ModulePackagePaths::fromApp($app);
+        $registry = new \App\Services\Modules\ModuleRegistryRepository($db);
+        $staging = new \App\Services\Modules\ModuleStagingService($paths);
+        $snapshots = new \App\Services\Modules\ModuleSnapshotService($paths, $registry);
+        $migrations = new \App\Services\Modules\ModuleMigrationService($db);
+        $hooks = new \App\Services\Modules\ModuleHookRunner();
+        $health = new \App\Services\Modules\ModuleHealthService($registry, $paths, $migrations, $app);
+
+        return new \App\Services\Modules\ModulePackageService(
+            $db,
+            $app,
+            $paths,
+            $registry,
+            $staging,
+            $snapshots,
+            $migrations,
+            $hooks,
+            $health,
+        );
     }
 
     public function adminNav(): array

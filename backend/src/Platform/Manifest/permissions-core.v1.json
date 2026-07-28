@@ -1,18 +1,19 @@
 {
   "schema_version": 1,
-  "permissions": [
-    "content.view",
-    "content.create",
-    "content.update",
-    "content.delete",
-    "content.publish",
-    "content.restore",
-    "content.force_delete",
-    "media.manage",
-    "settings.manage",
-    "users.manage",
-    "activity.view",
-    "commerce.manage",
-    "integrations.manage"
-  ]
+    "permissions": [
+        "content.view",
+        "content.create",
+        "content.update",
+        "content.delete",
+        "content.publish",
+        "content.restore",
+        "content.force_delete",
+        "media.manage",
+        "settings.manage",
+        "system.manage",
+        "users.manage",
+        "activity.view",
+        "commerce.manage",
+        "integrations.manage"
+    ]
 }

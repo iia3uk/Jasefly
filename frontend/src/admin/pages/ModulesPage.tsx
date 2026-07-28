@@ -295,8 +295,15 @@ export function ModulesPage() {
                     <p className="mt-1 text-xs text-zinc-500">
                       source={m.source} · signature={m.signature_status || '—'} · health=
                       {m.health_status || '—'}
-                      {m.rollback_available ? ' · rollback=yes' : ' · rollback=no'}
+                      {m.rollback_available ? ' · file-rollback=yes' : ' · file-rollback=no'}
+                      {' · db-rollback=no'}
                     </p>
+                    {m.rollback_available ? (
+                      <p className="mt-1 text-[11px] text-amber-200/90">
+                        Откат восстанавливает файлы модуля и записи реестра. SQL-миграции пакета
+                        обратно не откатываются (db_rollback_available=false).
+                      </p>
+                    ) : null}
                     {m.last_error ? <p className="mt-2 text-xs text-red-300">{m.last_error}</p> : null}
                   </div>
                   <div className="flex flex-wrap gap-2">

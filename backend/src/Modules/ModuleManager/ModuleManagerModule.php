@@ -166,6 +166,18 @@ final class ModuleManagerModule extends AbstractModule
             }
         }, $protected);
 
+        $router->post($p('/admin/modules/reconcile-mirror'), function (Request $r) use ($svc, $activity, $require, $userId) {
+            $require($r, 'modules.install');
+            $dryRun = !((bool) ($r->input('apply') ?? false));
+            try {
+                $result = $svc()->reconcilePluginMirror($dryRun);
+                $activity->log($r, 'reconcile_mirror', 'installed_modules', null, null, $result);
+                Response::json(['data' => $result]);
+            } catch (\Throwable $e) {
+                Response::error($e->getMessage(), 422);
+            }
+        }, $protected);
+
         $router->post($p('/admin/modules/{slug}/enable'), function (Request $r, string $slug) use ($svc, $activity, $require, $userId) {
             $require($r, 'modules.enable');
             try {

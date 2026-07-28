@@ -44,8 +44,14 @@ final class ModuleRegistry
     }
 
     /**
-     * A module is "on" when the DB-backed state says so (default-on when no
-     * row exists yet, falling back to the module's own config gate).
+     * A module is "on" when the DB-backed plugins projection says so
+     * (modules.is_enabled via PluginStateService; default-on when no row),
+     * falling back to the module's own config gate.
+     *
+     * For package-backed modules, installed_modules.status is the canonical
+     * lifecycle persistence; modules.is_enabled is the runtime projection that
+     * this method reads. Correctness depends on ModulePluginMirror sync after
+     * enable/disable/load-failure; reconcile/diagnostics expose projection drift.
      */
     private function isOn(ModuleInterface $module): bool
     {
@@ -203,10 +209,16 @@ final class ModuleRegistry
     public function registerRoutes(Router $router, string $apiPrefix): void
     {
         foreach ($this->modules as $module) {
-            if ($this->isOn($module)) {
+            if ($this->isOn($module) || $module->registersRoutesWhenDisabled()) {
                 $module->registerRoutes($router, $this->db, $this->app, $apiPrefix);
             }
         }
+    }
+
+    /** Public enable check by machine name (for soft-disabled route handlers). */
+    public function isEnabledByName(string $name): bool
+    {
+        return $this->isNameOn($name);
     }
 
     /**
