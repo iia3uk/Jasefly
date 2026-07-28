@@ -3,9 +3,17 @@ declare(strict_types=1);
 
 namespace App\Modules\Projects;
 
+use App\Controllers\AdminController;
 use App\Core\AbstractModule;
+use App\Core\Container;
+use App\Core\ModuleRegistry;
 use App\Database;
+use App\Middleware\AuthMiddleware;
+use App\Middleware\PermissionMiddleware;
+use App\Request;
 use App\Router;
+use App\Services\PermissionService;
+use App\Support\SoftPluginGate;
 
 final class ProjectsModule extends AbstractModule
 {
@@ -24,11 +32,57 @@ final class ProjectsModule extends AbstractModule
         return 30;
     }
 
+    public function registersRoutesWhenDisabled(): bool
+    {
+        // Design B: keep /admin/projects stable when plugin is off (soft empty / 409).
+        return true;
+    }
+
     public function registerRoutes(Router $router, Database $db, array $app, string $apiPrefix): void
     {
-        // Admin /admin/projects CRUD is registered on ContentModule (always on)
-        // so disabling this plugin no longer 404s dashboard content-health fetches.
-        // Nav / blueprints below still hide the Projects UI when this module is off.
+        $p = fn(string $path) => rtrim($apiPrefix, '/') . $path;
+        $admin = new AdminController($db, $app);
+        $protected = [new AuthMiddleware($app['jwt_secret']), new PermissionMiddleware(new PermissionService($db))];
+
+        $gate = static function (Request $r, bool $isItem): void {
+            /** @var ModuleRegistry $registry */
+            $registry = Container::getInstance()->get(ModuleRegistry::class);
+            SoftPluginGate::enforce($registry, 'projects', $r->method, $isItem);
+        };
+
+        $resources = ['projects', 'project-categories'];
+        foreach ($resources as $resource) {
+            $base = $p("/admin/$resource");
+            $router->get($base, function (Request $r) use ($admin, $resource, $gate) {
+                $gate($r, false);
+                $admin->index($r, $resource);
+            }, $protected);
+            $router->post($base, function (Request $r) use ($admin, $resource, $gate) {
+                $gate($r, false);
+                $admin->create($r, $resource);
+            }, $protected);
+            $router->get("$base/{id}", function (Request $r, $id) use ($admin, $resource, $gate) {
+                $gate($r, true);
+                $admin->show($r, $resource, $id);
+            }, $protected);
+            $router->put("$base/{id}", function (Request $r, $id) use ($admin, $resource, $gate) {
+                $gate($r, true);
+                $admin->update($r, $resource, $id);
+            }, $protected);
+            $router->delete("$base/{id}", function (Request $r, $id) use ($admin, $resource, $gate) {
+                $gate($r, true);
+                $admin->delete($r, $resource, $id);
+            }, $protected);
+        }
+
+        $router->post($p('/admin/projects/{id}/publish'), function (Request $r, $id) use ($admin, $gate) {
+            $gate($r, true);
+            $admin->publish($r, 'projects', $id);
+        }, $protected);
+        $router->post($p('/admin/projects/reorder'), function (Request $r) use ($admin, $gate) {
+            $gate($r, false);
+            $admin->reorder($r, 'projects');
+        }, $protected);
     }
 
     public function adminNav(): array
@@ -101,8 +155,6 @@ final class ProjectsModule extends AbstractModule
                 if (($payload['resource'] ?? '') !== 'projects') {
                     return;
                 }
-                // Hook consumers can extend search indexing, cache invalidation,
-                // webhook dispatch, etc. The kernel guarantees ordering by priority.
             }, 10],
         ];
     }

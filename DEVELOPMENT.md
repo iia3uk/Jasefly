@@ -33,6 +33,7 @@ Admin diagnostics: `/admin/system` shows `module_load_failures` and `module_safe
 
 - Module **update** failures after file copy restore the pre-update snapshot (files + `module_migrations` + file inventory), except health-check failures which leave files for diagnosis.
 - `db_rollback_available` is always `false` until true DB revert exists; `file_rollback_available` tracks snapshots.
+- ZIP enable SoT: `installed_modules.status` is canonical; `modules.is_enabled` is a derived mirror (`ModulePluginMirror`). Plugins toggle for package-backed modules delegates to `ModulePackageService::enable/disable`. Reconcile: `php backend/bin/modules.php reconcile-mirror [--apply]`.
 - Content pack wipe fails fast on table DELETE errors; CLI requires `--confirm`.
 - `PageScheduleService::promoteDue()` returns `{promoted, error}` and logs failures; admin page **show** also promotes due drafts.
 
@@ -53,7 +54,7 @@ Frozen identifiers (remove = fail tests; add = update snapshot intentionally):
 | `api-snapshot.v1.json` | `ApiSnapshot::diff()` in `ContractGovernanceTest` + CI `sdk.php api-diff` |
 | `capabilities.v1.json` | Core caps still in `CapabilityRegistry` |
 | `sdk-policy.json` ↔ `ServiceRegistry::PUBLIC_CATALOG` | Exact service id sync |
-| `permissions-core.v1.json` | Still in migrations + FE `rolePermissions.ts` |
+| `permissions-core.v1.json` | Still in migrations + FE `rolePermissions.ts` (includes `system.manage`) |
 | `events-core.v1.json` | Still `dispatch('…')` in backend |
 | `mcp-cms/manifest/mcp-tools.v1.json` | No MCP tool removals |
 | `builder/manifest/widget-types.v1.json` | No builder widget type removals (vitest) |

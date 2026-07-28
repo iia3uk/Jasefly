@@ -49,8 +49,8 @@ final class ContentModule extends AbstractModule
         $router->get($p('/experience'), [$public, 'experience']);
         $router->get($p('/education'), [$public, 'education']);
         $router->get($p('/skills'), [$public, 'skills']);
-        // Public + admin project routes stay on Content so a disabled Projects
-        // plugin does not 404 the SPA (dashboard content-health / PreferCmsLayout).
+        // Public project list/detail stay on Content (portfolio gate in PublicController).
+        // Admin projects CRUD lives on ProjectsModule with soft-disabled Design B.
         $router->get($p('/projects'), [$public, 'projects']);
         $router->get($p('/projects/{slug}'), [$public, 'projects']);
         $router->get($p('/services'), [$public, 'services']);
@@ -63,7 +63,7 @@ final class ContentModule extends AbstractModule
 
         $resources = [
             'social-links', 'statistics', 'experience', 'education', 'skill-categories', 'skills',
-            'projects', 'project-categories', 'blog-categories', 'blog-tags',
+            'blog-categories', 'blog-tags',
             'testimonials', 'navigation', 'homepage-sections', 'pages',
             'services',
         ];
@@ -77,8 +77,6 @@ final class ContentModule extends AbstractModule
             $router->delete("$base/{id}", fn(Request $r, $id) => $admin->delete($r, $resource, $id), $protected);
         }
 
-        $router->post($p('/admin/projects/{id}/publish'), fn(Request $r, $id) => $admin->publish($r, 'projects', $id), $protected);
-        $router->post($p('/admin/projects/reorder'), fn(Request $r) => $admin->reorder($r, 'projects'), $protected);
         $router->post($p('/admin/navigation/reorder'), fn(Request $r) => $admin->reorder($r, 'navigation'), $protected);
         $router->post($p('/admin/skills/reorder'), fn(Request $r) => $admin->reorder($r, 'skills'), $protected);
     }

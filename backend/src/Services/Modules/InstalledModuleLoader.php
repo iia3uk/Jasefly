@@ -45,8 +45,18 @@ final class InstalledModuleLoader
                 $msg = $e->getMessage();
                 @error_log('InstalledModuleLoader failed ' . $slug . ': ' . $msg);
                 $this->registry->setStatus($slug, 'failed', $msg, 'failed');
-                $this->safeMode->markFailed($slug, $msg);
+                // Record package load failure first — do not overwrite with mirror errors.
                 $registry->recordLoadFailure($slug, 'package_load', $msg);
+                try {
+                    (new ModulePluginMirror($this->db))->mirror($slug, false);
+                } catch (\Throwable $mirrorErr) {
+                    $registry->recordLoadFailure(
+                        $slug,
+                        'plugin_mirror',
+                        $mirrorErr->getMessage()
+                    );
+                }
+                $this->safeMode->markFailed($slug, $msg);
             }
         }
     }

@@ -14,6 +14,7 @@ declare(strict_types=1);
  *   php backend/bin/modules.php rollback demo-kit
  *   php backend/bin/modules.php migrations demo-kit
  *   php backend/bin/modules.php health demo-kit
+ *   php backend/bin/modules.php reconcile-mirror [--dry-run|--apply]
  */
 
 $root = dirname(__DIR__);
@@ -196,9 +197,13 @@ try {
             $health = new ModuleHealthService($repo, $paths, $migrations, $app);
             modules_cli_json($health->check($arg));
 
+        case 'reconcile-mirror':
+            $dryRun = !in_array('--apply', $argv, true);
+            modules_cli_json($svc->reconcilePluginMirror($dryRun));
+
         default:
             modules_cli_fail(
-                "Usage: php modules.php list|inspect <zip>|install <zip>|update <zip>|enable <slug>|disable <slug>|uninstall <slug>|rollback <slug>|migrations <slug>|health <slug>"
+                "Usage: php modules.php list|inspect <zip>|install <zip>|update <zip>|enable <slug>|disable <slug>|uninstall <slug>|rollback <slug>|migrations <slug>|health <slug>|reconcile-mirror [--dry-run|--apply]"
             );
     }
 } catch (Throwable $e) {

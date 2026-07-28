@@ -118,6 +118,14 @@ require_once "$root/tests/PermissionServiceTest.php";
 echo "Clean install / upgrade\n";
 require_once "$root/tests/CleanInstallSmokeTest.php";
 
+// —— Package enable sync (installed_modules ↔ modules mirror) ——
+echo "Package enable sync\n";
+require_once "$root/tests/PackageEnableSyncTest.php";
+
+// —— Projects soft API (Design B) ——
+echo "Projects soft API\n";
+require_once "$root/tests/ProjectsSoftApiTest.php";
+
 // —— Operation / schedule / snapshot integrity ——
 echo "Operation integrity\n";
 require_once "$root/tests/OperationIntegrityTest.php";
