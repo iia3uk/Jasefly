@@ -93,7 +93,9 @@ final class SqlTranspiler
         foreach (array_keys($this->triggerTables) as $table) {
             $t = $this->quoteIdent($table);
             if ($this->driver === 'sqlite') {
-                $out[] = "CREATE TRIGGER IF NOT EXISTS \"trg_{$table}_updated_at\" AFTER UPDATE ON {$t} FOR EACH ROW WHEN NEW.\"updated_at\" = OLD.\"updated_at\" BEGIN UPDATE {$t} SET \"updated_at\" = CURRENT_TIMESTAMP WHERE \"id\" = OLD.\"id\"; END";
+                // Use rowid — works for tables without an `id` column (settings_kv,
+                // modules, _migration_state, composite PKs).
+                $out[] = "CREATE TRIGGER IF NOT EXISTS \"trg_{$table}_updated_at\" AFTER UPDATE ON {$t} FOR EACH ROW WHEN NEW.\"updated_at\" = OLD.\"updated_at\" BEGIN UPDATE {$t} SET \"updated_at\" = CURRENT_TIMESTAMP WHERE rowid = OLD.rowid; END";
             } else {
                 $out[] = "DROP TRIGGER IF EXISTS trg_{$table}_updated_at";
                 $out[] = "CREATE TRIGGER trg_{$table}_updated_at BEFORE UPDATE ON {$t} FOR EACH ROW EXECUTE FUNCTION _cms_set_updated_at()";
@@ -204,6 +206,10 @@ final class SqlTranspiler
             $upper = strtoupper(ltrim($part));
             // Inline index definitions -> extracted to CREATE INDEX (sqlite/pg
             // don't allow inline INDEX in CREATE TABLE).
+            if (preg_match('/^(FULLTEXT\s+)?(UNIQUE\s+)?(KEY|INDEX)\s+/i', $part)) {
+                // Strip MySQL prefix lengths: `relative_path`(191) → `relative_path`
+                $part = preg_replace('/([`"]?[A-Za-z0-9_]+[`"]?)\(\d+\)/', '$1', $part) ?? $part;
+            }
             if (preg_match('/^(FULLTEXT\s+)?(UNIQUE\s+)?(KEY|INDEX)\s+[`"]?([A-Za-z0-9_]+)[`"]?\s*\(([^)]*)\)/i', $part, $idx)) {
                 $isUnique = !empty($idx[2]);
                 $colsQ = preg_replace_callback('/`([A-Za-z0-9_]+)`/', fn($x) => $this->quoteIdent($x[1]), $idx[5]) ?? $idx[5];
@@ -356,6 +362,18 @@ final class SqlTranspiler
                     $typePart = trim(preg_replace('/\s+(NOT\s+NULL|DEFAULT\b.*$)/i', '', $mm[2]) ?? $mm[2]);
                     $out[] = 'ALTER TABLE ' . $tableQ . ' ALTER COLUMN ' . $this->quoteIdent($mm[1]) . ' TYPE ' . $this->mapType($typePart);
                 }
+                // sqlite: cannot MODIFY COLUMN — no-op (MySQL-only widen/nullability).
+                continue;
+            }
+            // MySQL shorthand: MODIFY col_name ... (without COLUMN keyword)
+            if (preg_match('/^MODIFY\s+[`"]?([A-Za-z0-9_]+)[`"]?\s+/i', $c)) {
+                if ($this->driver === 'pgsql') {
+                    if (preg_match('/^MODIFY\s+[`"]?([A-Za-z0-9_]+)[`"]?\s+(.*)$/i', $c, $mm)) {
+                        $typePart = trim(preg_replace('/\s+(NOT\s+NULL|DEFAULT\b.*$)/i', '', $mm[2]) ?? $mm[2]);
+                        $out[] = 'ALTER TABLE ' . $tableQ . ' ALTER COLUMN ' . $this->quoteIdent($mm[1]) . ' TYPE ' . $this->mapType($typePart);
+                    }
+                }
+                // sqlite: cannot MODIFY — no-op
                 continue;
             }
             $out[] = 'ALTER TABLE ' . $tableQ . ' ' . $this->normalizeIdentifiers($c);

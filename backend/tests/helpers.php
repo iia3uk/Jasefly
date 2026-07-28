@@ -54,11 +54,34 @@ function jasefly_test_sqlite_boot(): array
         return $out;
     };
 
-    $applyFile = static function (string $file) use ($pdo, $transpiler, $splitSql): void {
+    $isIgnorable = static function (string $msg): bool {
+        $m = strtolower($msg);
+        return str_contains($m, 'duplicate column')
+            || str_contains($m, 'already exists')
+            || str_contains($m, 'duplicate key')
+            || str_contains($m, 'duplicate column name')
+            || str_contains($m, 'column already exists')
+            || str_contains($m, 'duplicate object')
+            || str_contains($m, '1050')
+            || str_contains($m, '1060')
+            || str_contains($m, '1061')
+            || str_contains($m, '1062')
+            || str_contains($m, 'unique constraint failed');
+    };
+
+    $applyFile = static function (string $file) use ($pdo, $transpiler, $splitSql, $isIgnorable): void {
         $transpiler->reset();
         foreach ($splitSql((string) file_get_contents($file)) as $statement) {
             foreach ($transpiler->transpile($statement) as $out) {
-                $pdo->exec($out);
+                try {
+                    $pdo->exec($out);
+                } catch (Throwable $e) {
+                    // Match MigrationService: redundant ADD COLUMN from historical overlap is OK.
+                    if ($isIgnorable($e->getMessage())) {
+                        continue;
+                    }
+                    throw $e;
+                }
             }
         }
         foreach ($transpiler->drainTriggers() as $tr) {

@@ -225,7 +225,7 @@ final class BlueprintMigrationService
         if ($this->dialect->name() === 'sqlite') {
             return ["CREATE TRIGGER IF NOT EXISTS " . $q->quoteIdent("trg_{$table}_updated_at")
                 . " AFTER UPDATE ON {$tq} FOR EACH ROW WHEN NEW." . $q->quoteIdent('updated_at') . " = OLD." . $q->quoteIdent('updated_at')
-                . " BEGIN UPDATE {$tq} SET " . $q->quoteIdent('updated_at') . " = CURRENT_TIMESTAMP WHERE " . $q->quoteIdent('id') . " = OLD." . $q->quoteIdent('id') . "; END"];
+                . " BEGIN UPDATE {$tq} SET " . $q->quoteIdent('updated_at') . " = CURRENT_TIMESTAMP WHERE rowid = OLD.rowid; END"];
         }
         // pgsql
         return [

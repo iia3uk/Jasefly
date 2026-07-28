@@ -106,6 +106,10 @@ require_once "$root/tests/PlatformPackageLifecycleTest.php";
 echo "Migration smoke (SQLite)\n";
 require_once "$root/tests/MigrationSmokeTest.php";
 
+// —— SQLite migration compat regressions (rowid triggers / MODIFY / mirror bootstrap) ——
+echo "Migration SQLite compat\n";
+require_once "$root/tests/MigrationSqliteCompatTest.php";
+
 // —— API route contracts (SQLite for controller ctor) ——
 echo "API route contracts\n";
 require_once "$root/tests/ApiRouteContractTest.php";
