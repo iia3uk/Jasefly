@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-07-28 — Fix admin-login page 404 noise
+
+- Create published admin-login system page (stops /pages/admin-login 404)
+- PreferCmsLayout: silent 404 for missing pages
+- admin-login/register seeds useOnSite so builder auth UI shows
+
 ## 2026-07-28 — Priority 1–7 harden + fix vitest tsc build
 
 - Priority 1–7 platform hardening (tests, contracts, SSRF, integrity)

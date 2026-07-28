@@ -404,7 +404,7 @@ final class SystemTemplates
     /** @return array<string, mixed> */
     private static function adminLoginLayout(): array
     {
-        return self::wrap([
+        $layout = self::wrap([
             [
                 'id' => 'w_auth_h',
                 'elType' => 'widget',
@@ -428,12 +428,15 @@ final class SystemTemplates
                 'elements' => [],
             ],
         ], 'auth');
+        // PreferCmsLayout shows this on /admin/login (classic form is fallback only).
+        $layout['meta'] = ['seed' => true, 'useOnSite' => true];
+        return $layout;
     }
 
     /** @return array<string, mixed> */
     private static function registerLayout(): array
     {
-        return self::wrap([
+        $layout = self::wrap([
             [
                 'id' => 'w_reg_h',
                 'elType' => 'widget',
@@ -457,6 +460,8 @@ final class SystemTemplates
                 'elements' => [],
             ],
         ], 'register');
+        $layout['meta'] = ['seed' => true, 'useOnSite' => true];
+        return $layout;
     }
 
     /** @return array<string, mixed> */
