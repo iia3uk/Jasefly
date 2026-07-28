@@ -96,6 +96,7 @@ final class Bootstrap
             $loader->loadEnabled($registry);
         } catch (\Throwable $e) {
             @error_log('InstalledModuleLoader: ' . $e->getMessage());
+            $registry->recordLoadFailure('package-loader', 'bootstrap', $e->getMessage());
         }
 
         $registry->boot();

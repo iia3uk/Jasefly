@@ -32,9 +32,9 @@ if (!fs.existsSync(src)) {
 
 const manifestPath = path.join(src, 'module.json')
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
+// Version bump applies only to the staged package (never mutates modules-src).
 if (versionArg) {
   manifest.version = versionArg
-  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n')
 }
 
 const stage = path.join(root, 'release', '.module-stage', `${slug}-${manifest.version}`)

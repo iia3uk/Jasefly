@@ -235,17 +235,33 @@ final class ModuleRegistryRepository
      */
     public function replaceModuleFiles(string $slug, array $files): void
     {
-        $this->clearModuleFiles($slug);
-        foreach ($files as $f) {
-            $this->db->run(
-                'INSERT INTO module_files (module_slug, relative_path, sha256, size_bytes) VALUES (?, ?, ?, ?)',
-                [
-                    $slug,
-                    $f['relative_path'],
-                    $f['sha256'],
-                    (int) $f['size_bytes'],
-                ]
-            );
+        $pdo = $this->db->pdo();
+        $started = false;
+        try {
+            if (!$pdo->inTransaction()) {
+                $pdo->beginTransaction();
+                $started = true;
+            }
+            $this->db->run('DELETE FROM module_files WHERE module_slug=?', [$slug]);
+            foreach ($files as $f) {
+                $this->db->run(
+                    'INSERT INTO module_files (module_slug, relative_path, sha256, size_bytes) VALUES (?, ?, ?, ?)',
+                    [
+                        $slug,
+                        (string) ($f['relative_path'] ?? ''),
+                        (string) ($f['sha256'] ?? ''),
+                        (int) ($f['size_bytes'] ?? 0),
+                    ]
+                );
+            }
+            if ($started) {
+                $pdo->commit();
+            }
+        } catch (\Throwable $e) {
+            if ($started && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
         }
     }
 
@@ -259,6 +275,50 @@ final class ModuleRegistryRepository
             );
         } catch (\Throwable) {
             return [];
+        }
+    }
+
+    /**
+     * Replace recorded module migrations with a snapshot batch (rollback consistency).
+     *
+     * @param list<array<string, mixed>> $rows
+     */
+    public function replaceModuleMigrations(string $slug, array $rows): void
+    {
+        $pdo = $this->db->pdo();
+        $started = false;
+        try {
+            if (!$pdo->inTransaction()) {
+                $pdo->beginTransaction();
+                $started = true;
+            }
+            $this->db->run('DELETE FROM module_migrations WHERE module_slug=?', [$slug]);
+            foreach ($rows as $row) {
+                $migration = (string) ($row['migration'] ?? '');
+                if ($migration === '') {
+                    continue;
+                }
+                $this->db->run(
+                    'INSERT INTO module_migrations (module_slug, migration, checksum, module_version, batch, applied_at)
+                     VALUES (?, ?, ?, ?, ?, ?)',
+                    [
+                        $slug,
+                        $migration,
+                        (string) ($row['checksum'] ?? ''),
+                        $row['module_version'] ?? null,
+                        (int) ($row['batch'] ?? 1),
+                        (string) ($row['applied_at'] ?? gmdate('Y-m-d H:i:s')),
+                    ]
+                );
+            }
+            if ($started) {
+                $pdo->commit();
+            }
+        } catch (\Throwable $e) {
+            if ($started && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
         }
     }
 

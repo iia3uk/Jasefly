@@ -42,9 +42,11 @@ final class InstalledModuleLoader
                 $this->loadOne($registry, $row, $router);
                 $this->safeMode->clear($slug);
             } catch (\Throwable $e) {
-                @error_log('InstalledModuleLoader failed ' . $slug . ': ' . $e->getMessage());
-                $this->registry->setStatus($slug, 'failed', $e->getMessage(), 'failed');
-                $this->safeMode->markFailed($slug, $e->getMessage());
+                $msg = $e->getMessage();
+                @error_log('InstalledModuleLoader failed ' . $slug . ': ' . $msg);
+                $this->registry->setStatus($slug, 'failed', $msg, 'failed');
+                $this->safeMode->markFailed($slug, $msg);
+                $registry->recordLoadFailure($slug, 'package_load', $msg);
             }
         }
     }

@@ -230,16 +230,6 @@ final class SchedulerModule extends AbstractModule
 
     private function redactPayload(string $json): mixed
     {
-        $data = json_decode($json, true);
-        if (!is_array($data)) {
-            return null;
-        }
-        $secretKeys = ['password', 'token', 'secret', 'api_key', 'authorization', 'bot_token'];
-        array_walk_recursive($data, static function (&$v, $k) use ($secretKeys): void {
-            if (is_string($k) && in_array(strtolower($k), $secretKeys, true)) {
-                $v = '***';
-            }
-        });
-        return $data;
+        return \App\Support\SecretRedactor::redactJson($json);
     }
 }

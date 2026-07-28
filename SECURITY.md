@@ -37,18 +37,21 @@
 - **A04 Insecure Design** — rate limit на login/2FA; challenge JWT с коротким TTL.
 - **A05 Security Misconfiguration** — убрать `install.php` после установки; `display_errors=Off` в prod.
 - **A06 Vulnerable Components** — обновлять PHP и зависимости.
-- **A07 Auth Failures** — сильные пароли + 2FA; refresh token rotation/revocation.
+- **A07 Auth Failures** — сильные пароли + 2FA; refresh token **rotation** on `/auth/refresh` + revocation on logout.
 - **A08 Data Integrity** — не доверять клиентским расширениям файлов; проверять MIME.
-- **A09 Logging/Monitoring** — activity log + `storage/logs`; не логировать пароли/токены.
-- **A10 SSRF** — не проксировать произвольные URL из user input without allowlist; Forms/Automation webhook handlers reject private hosts.
+- **A09 Logging/Monitoring** — activity log + `storage/logs`; не логировать пароли/токены (Automation `redact`).
+- **A10 SSRF** — `App\Support\SsrfGuard` на Forms/Automation/Webhooks outbound HTTP; private hosts rejected.
 
 ### Platform modules
 
-- Forms: honeypot, timing, IP/UA HMAC hashes, backend validation, CSV formula escape (`=+-@`).
+- Forms: honeypot, timing, IP/UA HMAC hashes, backend validation, CSV formula escape (`=+-@`), webhook SSRF via `SsrfGuard`.
 - Scheduler: token-gated HTTP tick; job payload secrets masked in admin.
-- Automation: no `eval`, recursion/max-steps guards, webhook SSRF checks.
+- Automation: no `eval`, recursion/max-steps guards, webhook SSRF via `SsrfGuard`.
 - Newsletter: HMAC unsubscribe/confirm tokens; double opt-in.
 - Analytics: hashed visitor/session by default; no raw IP storage unless explicitly configured.
 - Orders: server-side totals; public_id for non-enumerable public refs.
+- Webhooks plugin: SSRF on register/dispatch; HMAC signature header when secret is set.
+
+Regression proof: `php backend/tests/run.php` → `SecurityVerificationTest`.
 
 Подробности деплоя: `release/DEPLOYMENT-RU.md` рядом с ZIP после `build-hosting` (секция «Безопасность»).

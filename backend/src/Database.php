@@ -96,6 +96,35 @@ final class Database {
     public function id(): int { return (int)$this->pdo->lastInsertId(); }
 
     /**
+     * Run $fn inside a PDO transaction. Nested calls reuse the outer transaction
+     * (no savepoints — shared hosting PDO may lack them).
+     *
+     * @template T
+     * @param callable():T $fn
+     * @return T
+     */
+    public function transaction(callable $fn): mixed
+    {
+        $started = false;
+        if (!$this->pdo->inTransaction()) {
+            $this->pdo->beginTransaction();
+            $started = true;
+        }
+        try {
+            $result = $fn();
+            if ($started) {
+                $this->pdo->commit();
+            }
+            return $result;
+        } catch (\Throwable $e) {
+            if ($started && $this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
      * Driver-aware upsert. Inserts $data; on conflict over $uniqueCols, updates
      * the columns listed in $updateCols (defaults to all $data keys).
      *

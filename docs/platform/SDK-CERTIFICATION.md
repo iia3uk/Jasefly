@@ -61,7 +61,7 @@ JASEFLY_LIFECYCLE_DB=1 php backend/bin/certify-lifecycle.php
 Workflow: `.github/workflows/platform-sdk.yml`
 
 - **sdk job:** `run.php`, `api-diff`, certify demo-kit + forms-sdk-reference, frontend build, build-module
-- **lifecycle job:** optional MySQL service, `continue-on-error: true` (no secrets required; may skip if schema incomplete)
+- **lifecycle job:** MySQL service, applies `001_schema` + `migrate.php`, then `JASEFLY_LIFECYCLE_DB=1 php backend/bin/certify-lifecycle.php` (install→update→rollback→uninstall). Blocking (no `continue-on-error`).
 
 ## Limitations
 

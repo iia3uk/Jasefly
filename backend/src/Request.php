@@ -14,7 +14,18 @@ final class Request {
             $this->body = $_POST;
         }
     }
-    public static function fromGlobals(): self { $u=parse_url($_SERVER['REQUEST_URI'] ?? '/',PHP_URL_PATH) ?: '/'; return new self($_SERVER['REQUEST_METHOD'] ?? 'GET',$u); }
+    public static function fromGlobals(): self
+    {
+        $raw = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+        $path = is_string($raw) && $raw !== '' ? $raw : '/';
+        // Decode once for slug matching (%20 → space). Servers that already decode stay stable
+        // because rawurldecode of plain ASCII is a no-op.
+        $path = rawurldecode($path);
+        if ($path === '' || $path[0] !== '/') {
+            $path = '/' . ltrim($path, '/');
+        }
+        return new self($_SERVER['REQUEST_METHOD'] ?? 'GET', $path);
+    }
     public function input(string $key, mixed $default=null): mixed { return $this->body[$key] ?? $default; }
     public function all(): array { return $this->body; }
     /** Raw request body (needed for HMAC webhook signature verification). */

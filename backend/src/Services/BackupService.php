@@ -72,9 +72,12 @@ final class BackupService {
             $cipher = sodium_crypto_secretbox($plain, $nonce, $key);
             return 'PCMS1' . $nonce . $cipher; // version tag + nonce + ciphertext
         }
+        if (!function_exists('openssl_encrypt')) {
+            throw new \RuntimeException('Backup encryption requires ext-sodium or ext-openssl');
+        }
         $iv = random_bytes(12);
         $tag = '';
-        $cipher = openssl_encrypt($plain, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag, '', 16);
+        $cipher = \openssl_encrypt($plain, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag, '', 16);
         if ($cipher === false) {
             throw new \RuntimeException('Backup encryption failed');
         }
@@ -98,7 +101,7 @@ final class BackupService {
             $iv = substr($blob, 5, 12);
             $tag = substr($blob, 17, 16);
             $cipher = substr($blob, 33);
-            $plain = openssl_decrypt($cipher, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag);
+            $plain = \openssl_decrypt($cipher, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag);
             if ($plain === false) {
                 throw new \RuntimeException('Backup decrypt failed');
             }

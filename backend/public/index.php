@@ -144,4 +144,13 @@ foreach ($versions as $prefix) {
     $registry->registerRoutes($router, $prefix);
 }
 
-$router->dispatch(\App\Request::fromGlobals());
+$req = \App\Request::fromGlobals();
+// CORS preflight must run even when no route matches (otherwise browsers get 404 without ACAO).
+if (strtoupper($req->method) === 'OPTIONS') {
+    (new \App\Middleware\CorsMiddleware($app['cors_origins'] ?? []))(
+        $req,
+        static fn () => \App\Response::json(['ok' => true], 204)
+    );
+}
+
+$router->dispatch($req);

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "events": [
+    "module.boot",
+    "pages.seeded",
+    "plugin.enabled",
+    "plugin.disabled",
+    "migration.after",
+    "resource.beforeSave",
+    "resource.afterSave",
+    "resource.beforeDelete",
+    "resource.afterDelete",
+    "page.afterPublish",
+    "form.submitted"
+  ]
+}

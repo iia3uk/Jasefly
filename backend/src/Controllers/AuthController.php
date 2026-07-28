@@ -208,11 +208,19 @@ final class AuthController
             if (!$user) {
                 throw new \RuntimeException('User missing');
             }
+            // Rotate refresh token: revoke presented hash, issue a new refresh JWT.
+            $this->db->run('DELETE FROM refresh_tokens WHERE token_hash=?', [hash('sha256', $token)]);
+            $refresh = $this->token($user, $this->app['refresh_ttl'], 'refresh');
+            $this->db->run(
+                'INSERT INTO refresh_tokens(user_id, token_hash, expires_at) VALUES(?,?,DATE_ADD(NOW(), INTERVAL ? SECOND))',
+                [$user['id'], hash('sha256', $refresh), $this->app['refresh_ttl']]
+            );
             $access = $this->token($user, $this->app['jwt_ttl'], 'access');
             AuthCookie::set($access, (int) $this->app['jwt_ttl']);
             Response::json([
                 'data' => [
                     'access_token' => $access,
+                    'refresh_token' => $refresh,
                     'expires_in' => $this->app['jwt_ttl'],
                 ],
             ]);

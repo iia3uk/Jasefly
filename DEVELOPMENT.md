@@ -12,9 +12,69 @@
 | `migrate.php` | Incremental migrations for updates (includes plugin `modulesDir`) |
 | `bin/scheduler.php` | CLI job tick for shared-hosting cron |
 | `tests/run.php` | Lightweight PHP tests (no PHPUnit) |
+| `bin/certify-lifecycle.php` | Offline + optional DB lifecycle (install→update→rollback→uninstall) |
 | `config/app.php` | Defaults; secrets via `config.local.php` / `.env` |
 
 Autoload is custom (no Composer). Modules auto-discovered under `src/Modules/*/`.
+
+### Tests
+
+| Command | What it proves |
+| --- | --- |
+| `php backend/tests/run.php` | Forms/SDK/validator/paths/transpiler/diagnostics/contract-governance/security/maintainability + SQLite API/permissions/migrations/clean-install (when `pdo_sqlite`) |
+| `JASEFLY_LIFECYCLE_DB=1 php backend/bin/certify-lifecycle.php` | Package install → update → rollback → uninstall (needs MySQL + migrations) |
+| `cd frontend && npm test` | Vitest: `pluginGates`, `widgetRequiredPlugin`, `parseLayout`, widget-types freeze |
+| CI `.github/workflows/platform-sdk.yml` | `sdk` job (PHP+FE) + blocking `lifecycle` job |
+| MCP `cms_local_test` | lint + FE unit + PHP unit + ZIP PHP lint |
+
+Admin diagnostics: `/admin/system` shows `module_load_failures` and `module_safe_mode` from `SystemHealthService`.
+
+### Operation integrity (Priority 3)
+
+- Module **update** failures after file copy restore the pre-update snapshot (files + `module_migrations` + file inventory), except health-check failures which leave files for diagnosis.
+- `db_rollback_available` is always `false` until true DB revert exists; `file_rollback_available` tracks snapshots.
+- Content pack wipe fails fast on table DELETE errors; CLI requires `--confirm`.
+- `PageScheduleService::promoteDue()` returns `{promoted, error}` and logs failures; admin page **show** also promotes due drafts.
+
+### Core hardening (Priority 4)
+
+- `Router::match()` distinguishes **404** vs **405** (`Allow` header); path/params `rawurldecode`.
+- OPTIONS preflight handled before dispatch (CORS).
+- `RateLimitMiddleware` fail-open if `rate_limits` missing.
+- Package load failures recorded in `ModuleRegistry::loadFailures()`; `/health` reports `degraded` + failure count (still HTTP 200).
+- `Database::transaction()` helper for atomic multi-statement writes.
+
+### Contract governance (Priority 5)
+
+Frozen identifiers (remove = fail tests; add = update snapshot intentionally):
+
+| Snapshot | Guards |
+| --- | --- |
+| `api-snapshot.v1.json` | `ApiSnapshot::diff()` in `ContractGovernanceTest` + CI `sdk.php api-diff` |
+| `capabilities.v1.json` | Core caps still in `CapabilityRegistry` |
+| `sdk-policy.json` ↔ `ServiceRegistry::PUBLIC_CATALOG` | Exact service id sync |
+| `permissions-core.v1.json` | Still in migrations + FE `rolePermissions.ts` |
+| `events-core.v1.json` | Still `dispatch('…')` in backend |
+| `mcp-cms/manifest/mcp-tools.v1.json` | No MCP tool removals |
+| `builder/manifest/widget-types.v1.json` | No builder widget type removals (vitest) |
+| `content/content-pack.schema.json` | Schema smoke (version const, no extra props) |
+
+Regen helper: `node backend/tests/gen-contract-snapshots.js` (then `php backend/bin/sdk.php api-snapshot` for API surface).
+
+### Security verification (Priority 6)
+
+- Shared `App\Support\SsrfGuard` blocks localhost / private / reserved IPs (Forms webhooks, Automation, Webhooks plugin).
+- Outbound webhooks: SSRF check + `X-Jasefly-Signature: sha256=…` HMAC when secret set.
+- `AuthController::refresh` rotates refresh tokens (delete presented hash, issue new refresh + access).
+- `BackupService` requires `ext-sodium` or `ext-openssl`; openssl calls are fully-qualified (`\openssl_*`).
+- Regression suite: `backend/tests/SecurityVerificationTest.php` (TOTP, Password/Argon2id, JWT types, media MIME/SVG sanitize, path jail, log redaction).
+
+### Maintainability (Priority 7)
+
+- Shared helpers (no parallel copies): `SsrfGuard`, `OutboundHttp::postJson`, `SecretRedactor` (Automation + Scheduler).
+- API errors: prefer `Response::error($msg, $status, $errors = [], $extra = [])` — System plugin routes use this envelope (`success/error/errors/data`).
+- Tooling rename: `gen-contract-snapshots.js` (was `_gen_p5_snapshots.js`).
+- Do **not** split large modules opportunistically; extract only repeated mechanisms with a clear owner.
 
 ### Migrations
 
@@ -42,6 +102,7 @@ Do **not** put personal portfolio data in migrations.
 | `src/builder/` | Page builder widgets |
 | `src/components/` | Public layout / shared UI |
 | `src/lib/api.ts` | API client |
+| `*.test.ts` + `vitest.config.ts` | Unit tests (`npm test`) |
 
 ### Page builder widget
 

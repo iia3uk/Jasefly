@@ -49,8 +49,11 @@ final class ModuleSafeMode
     public function markFailed(string $slug, string $error): void
     {
         $data = $this->read();
+        $trimmed = trim($error);
         $data[$slug] = [
-            'error' => mb_substr(trim($error), 0, 2000),
+            'error' => function_exists('mb_substr')
+                ? mb_substr($trimmed, 0, 2000)
+                : substr($trimmed, 0, 2000),
             'at' => gmdate(DATE_ATOM),
         ];
         $this->write($data);

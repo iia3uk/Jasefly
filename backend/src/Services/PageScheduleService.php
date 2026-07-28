@@ -12,24 +12,43 @@ use Throwable;
  */
 final class PageScheduleService
 {
+    private ?string $lastError = null;
+
     public function __construct(private Database $db) {}
 
-    /** Promote all due drafts. Returns number of rows updated. */
-    public function promoteDue(): int
+    public function lastError(): ?string
     {
+        return $this->lastError;
+    }
+
+    /**
+     * Promote all due drafts.
+     *
+     * @return array{promoted:int, error:?string}
+     */
+    public function promoteDue(): array
+    {
+        $this->lastError = null;
+        $now = $this->sqlNow();
         try {
             $stmt = $this->db->run(
                 "UPDATE pages
                  SET status='published',
-                     published_at=COALESCE(published_at, NOW()),
+                     published_at=COALESCE(published_at, {$now}),
                      scheduled_at=NULL
                  WHERE status='draft'
                    AND scheduled_at IS NOT NULL
-                   AND scheduled_at <= NOW()"
+                   AND scheduled_at <= {$now}"
             );
-            return (int) $stmt->rowCount();
-        } catch (Throwable) {
-            return 0;
+            $n = (int) $stmt->rowCount();
+            if ($n > 0) {
+                @error_log('PageScheduleService: promoted ' . $n . ' due page(s)');
+            }
+            return ['promoted' => $n, 'error' => null];
+        } catch (Throwable $e) {
+            $this->lastError = $e->getMessage();
+            @error_log('PageScheduleService::promoteDue failed: ' . $e->getMessage());
+            return ['promoted' => 0, 'error' => $this->lastError];
         }
     }
 
@@ -40,24 +59,34 @@ final class PageScheduleService
      */
     public function publishedAfterPromote(string $slug): ?array
     {
+        $this->lastError = null;
+        $now = $this->sqlNow();
         try {
             $this->db->run(
                 "UPDATE pages
                  SET status='published',
-                     published_at=COALESCE(published_at, NOW()),
+                     published_at=COALESCE(published_at, {$now}),
                      scheduled_at=NULL
                  WHERE slug=?
                    AND status='draft'
                    AND scheduled_at IS NOT NULL
-                   AND scheduled_at <= NOW()",
+                   AND scheduled_at <= {$now}",
                 [$slug]
             );
             return $this->db->one(
                 "SELECT * FROM pages WHERE slug=? AND status='published'",
                 [$slug]
             );
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            $this->lastError = $e->getMessage();
+            @error_log('PageScheduleService::publishedAfterPromote failed: ' . $e->getMessage());
             return null;
         }
+    }
+
+    /** Driver-safe "current timestamp" SQL fragment (not user input). */
+    private function sqlNow(): string
+    {
+        return $this->db->driver() === 'sqlite' ? "datetime('now')" : 'NOW()';
     }
 }

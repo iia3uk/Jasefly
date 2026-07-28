@@ -101,7 +101,19 @@ $json = null;
 $source = '';
 
 if ($isCli) {
-    $cliPath = $argv[1] ?? $defaultPack;
+    $cliArgs = array_values(array_filter(
+        array_slice($argv, 1),
+        static fn(string $a): bool => !str_starts_with($a, '--')
+    ));
+    $confirmed = in_array('--confirm', $argv, true) || in_array('--yes', $argv, true);
+    if (!$confirmed) {
+        importRespond(
+            "Content pack import replaces site content.\nRe-run with: php import-content.php --confirm [path/to/pack.json]",
+            400,
+            true
+        );
+    }
+    $cliPath = $cliArgs[0] ?? $defaultPack;
     if (!is_file($cliPath)) {
         importRespond("Pack file not found: $cliPath", 404, true);
     }

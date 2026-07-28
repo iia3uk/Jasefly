@@ -79,7 +79,20 @@ if (is_file($condFile)) {
 }
 
 // —— Module package validator (no DB) ——
+echo "Module package validator\n";
 require_once "$root/tests/ModulePackageValidatorTest.php";
+
+// —— Module package paths (path jail) ——
+echo "Module package paths\n";
+require_once "$root/tests/ModulePackagePathsTest.php";
+
+// —— SqlTranspiler ——
+echo "SqlTranspiler\n";
+require_once "$root/tests/SqlTranspilerTest.php";
+
+// —— Diagnostics (safe-mode / loadFailures) ——
+echo "Diagnostics\n";
+require_once "$root/tests/DiagnosticsTest.php";
 
 // —— Platform SDK ——
 echo "Platform SDK\n";
@@ -88,6 +101,42 @@ require_once "$root/tests/PlatformSdkTest.php";
 // —— Platform package lifecycle (offline) ——
 echo "Platform package lifecycle\n";
 require_once "$root/tests/PlatformPackageLifecycleTest.php";
+
+// —— Core migration smoke (SQLite) ——
+echo "Migration smoke (SQLite)\n";
+require_once "$root/tests/MigrationSmokeTest.php";
+
+// —— API route contracts (SQLite for controller ctor) ——
+echo "API route contracts\n";
+require_once "$root/tests/ApiRouteContractTest.php";
+
+// —— Permission matrix (SQLite) ——
+echo "PermissionService\n";
+require_once "$root/tests/PermissionServiceTest.php";
+
+// —— Clean install + upgrade-from-previous (SQLite) ——
+echo "Clean install / upgrade\n";
+require_once "$root/tests/CleanInstallSmokeTest.php";
+
+// —— Operation / schedule / snapshot integrity ——
+echo "Operation integrity\n";
+require_once "$root/tests/OperationIntegrityTest.php";
+
+// —— Router / core hardening ——
+echo "Router / core\n";
+require_once "$root/tests/RouterTest.php";
+
+// —— Contract governance (API / caps / services / perms / events / MCP) ——
+echo "Contract governance\n";
+require_once "$root/tests/ContractGovernanceTest.php";
+
+// —— Security verification ——
+echo "Security verification\n";
+require_once "$root/tests/SecurityVerificationTest.php";
+
+// —— Maintainability (shared helpers / error envelope) ——
+echo "Maintainability\n";
+require_once "$root/tests/MaintainabilityTest.php";
 
 echo str_repeat('-', 40) . "\n";
 echo "Passed: $passed  Failed: $failed\n";

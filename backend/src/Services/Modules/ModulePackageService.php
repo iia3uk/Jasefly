@@ -287,6 +287,7 @@ final class ModulePackageService
             return ['ok' => true, 'slug' => $slug, 'status' => 'disabled'];
         } catch (\Throwable $e) {
             $this->registry->finishOperation($opId, 'failed', $e->getMessage());
+            $this->registry->setStatus($slug, 'failed', $e->getMessage(), 'failed');
             throw $e;
         }
     }
@@ -520,7 +521,9 @@ final class ModulePackageService
                 throw new \RuntimeException('Health check failed: ' . $msg);
             }
             $this->registry->setStatus($slug, $nextStatus, null, $healthStatus);
-            $this->registry->finishOperation($opId, 'success', null, $backupPath, $backupPath !== null, $migResult['applied'] !== []);
+            // File rollback is available when a snapshot was taken (update).
+            // DB migration revert is NOT implemented — never advertise db_rollback_available.
+            $this->registry->finishOperation($opId, 'success', null, $backupPath, $backupPath !== null, false);
 
             return [
                 'ok' => true,
@@ -531,9 +534,14 @@ final class ModulePackageService
                 'files' => count($fileInventory),
                 'health' => $health,
                 'backup_path' => $backupPath,
+                'file_rollback_available' => $backupPath !== null,
+                'db_rollback_available' => false,
             ];
         } catch (\Throwable $e) {
-            // After files are on disk, never wipe/restore — that hid the real bug (false health fail).
+            $isHealthFail = str_starts_with($e->getMessage(), 'Health check failed:');
+            // Pre-copy failures: restore snapshot (update) or wipe install.
+            // Post-copy update failures (except intentional health leave-in-place): restore snapshot
+            // so filesystem + module_migrations + inventory stay consistent.
             if (!$filesCommitted) {
                 if ($backupPath !== null && is_file($backupPath)) {
                     try {
@@ -544,6 +552,21 @@ final class ModulePackageService
                     }
                 } elseif ($operation === 'install') {
                     $this->removeInstalledFiles($slug);
+                }
+            } elseif (
+                $operation === 'update'
+                && !$isHealthFail
+                && $backupPath !== null
+                && is_file($backupPath)
+            ) {
+                try {
+                    $this->snapshots->restoreSnapshot($backupPath, $slug);
+                    $this->registry->appendOperationLog($opId, 'Restored snapshot after post-copy failure (update)');
+                } catch (\Throwable $restoreErr) {
+                    $this->registry->appendOperationLog(
+                        $opId,
+                        'Post-copy snapshot restore failed: ' . $restoreErr->getMessage() . ' — files left for diagnosis'
+                    );
                 }
             } else {
                 $this->registry->appendOperationLog($opId, 'Left module files in place after failure (no wipe)');

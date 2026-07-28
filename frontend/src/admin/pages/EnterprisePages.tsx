@@ -286,9 +286,21 @@ export function SystemStatusPage() {
   })
 
   const mcp = (data?.mcp && typeof data.mcp === 'object' ? data.mcp : null) as McpStatus | null
+  const loadFailures = Array.isArray(data?.module_load_failures)
+    ? (data.module_load_failures as Array<{ module?: string; stage?: string; error?: string }>)
+    : []
+  const safeMode = data?.module_safe_mode && typeof data.module_safe_mode === 'object' && !Array.isArray(data.module_safe_mode)
+    ? (data.module_safe_mode as Record<string, { error?: string; at?: string }>)
+    : {}
+  const safeModeEntries = Object.entries(safeMode)
   const healthRows = useMemo(() => {
     if (!data) return []
-    return Object.entries(data).filter(([key, value]) => key !== 'mcp' && (typeof value !== 'object' || value === null))
+    return Object.entries(data).filter(([key, value]) =>
+      key !== 'mcp'
+      && key !== 'module_load_failures'
+      && key !== 'module_safe_mode'
+      && (typeof value !== 'object' || value === null),
+    )
   }, [data])
 
   const copyText = async (key: string, text: string) => {
@@ -330,15 +342,56 @@ export function SystemStatusPage() {
       </div>
 
       {tab === 'health' ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {isLoading
-            ? Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-24" />)
-            : healthRows.map(([key, value]) => (
-              <GlassPanel key={key} className="p-5">
-                <p className="text-xs uppercase tracking-wider text-zinc-500">{fieldLabel(key)}</p>
-                <p className="mt-2 font-heading text-xl">{String(value)}</p>
-              </GlassPanel>
-            ))}
+        <div className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {isLoading
+              ? Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-24" />)
+              : healthRows.map(([key, value]) => (
+                <GlassPanel key={key} className="p-5">
+                  <p className="text-xs uppercase tracking-wider text-zinc-500">{fieldLabel(key)}</p>
+                  <p className="mt-2 font-heading text-xl">{String(value)}</p>
+                </GlassPanel>
+              ))}
+          </div>
+
+          {!isLoading && (loadFailures.length > 0 || safeModeEntries.length > 0) ? (
+            <GlassPanel className="space-y-4 border-amber-500/25 p-5">
+              <div>
+                <h2 className="font-heading text-lg text-amber-100">Диагностика модулей</h2>
+                <p className="mt-1 text-sm text-zinc-500">
+                  Ошибки загрузки bundled-модулей и пакетные модули в safe-mode.
+                </p>
+              </div>
+              {loadFailures.length > 0 ? (
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-zinc-500">Сбои загрузки</p>
+                  <ul className="mt-2 space-y-2 text-sm text-zinc-300">
+                    {loadFailures.map((row, i) => (
+                      <li key={`${row.module}-${row.stage}-${i}`} className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+                        <span className="font-medium text-white">{row.module ?? '?'}</span>
+                        <span className="text-zinc-500"> · {row.stage ?? '?'}</span>
+                        <p className="mt-1 font-mono text-xs text-amber-100/90">{row.error ?? ''}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {safeModeEntries.length > 0 ? (
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-zinc-500">Safe-mode пакеты</p>
+                  <ul className="mt-2 space-y-2 text-sm text-zinc-300">
+                    {safeModeEntries.map(([slug, entry]) => (
+                      <li key={slug} className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+                        <span className="font-medium text-white">{slug}</span>
+                        {entry.at ? <span className="text-zinc-500"> · {entry.at}</span> : null}
+                        <p className="mt-1 font-mono text-xs text-amber-100/90">{entry.error ?? ''}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </GlassPanel>
+          ) : null}
         </div>
       ) : (
         <div className="space-y-4">

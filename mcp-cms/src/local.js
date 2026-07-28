@@ -202,6 +202,17 @@ export function localTest() {
     return { ok: false, step: 'frontend_lint', checks, gate: readGate(), next: 'почини lint и снова cms_local_test' };
   }
 
+  const feTest = run(npmCmd(), ['test'], { cwd: frontend, timeoutMs: 5 * 60 * 1000 });
+  checks.push({
+    name: 'frontend_unit',
+    ok: feTest.ok,
+    detail: feTest.ok ? 'ok' : (feTest.stderr || feTest.stdout).slice(-2000),
+  });
+  if (!feTest.ok) {
+    markTest({ test_ok: false, test_log: JSON.stringify(checks) });
+    return { ok: false, step: 'frontend_unit', checks, gate: readGate(), next: 'почини frontend tests и снова cms_local_test' };
+  }
+
   const zip = String(gate.zip_path);
   if (!fs.existsSync(zip)) {
     markTest({ test_ok: false });
@@ -367,6 +378,18 @@ export function localTest() {
     checks.push({ name: 'php_lint_zip', ok: true, detail: `ok (${zipCritical.length} critical files from ZIP)` });
   } finally {
     try { fs.rmSync(tmpLint, { recursive: true, force: true }); } catch { /* ignore */ }
+  }
+
+  // PHP unit / smoke tests (same harness as CI job sdk)
+  const phpTests = run(phpBin, ['backend/tests/run.php'], { cwd: root, timeoutMs: 5 * 60 * 1000 });
+  checks.push({
+    name: 'php_unit',
+    ok: phpTests.ok,
+    detail: phpTests.ok ? 'ok' : (phpTests.stderr || phpTests.stdout).slice(-3000),
+  });
+  if (!phpTests.ok) {
+    markTest({ test_ok: false, test_log: JSON.stringify(checks) });
+    return { ok: false, step: 'php_unit', checks, gate: readGate(), next: 'почини php backend/tests/run.php и снова cms_local_test' };
   }
 
   markTest({ test_ok: true, test_log: 'ok' });

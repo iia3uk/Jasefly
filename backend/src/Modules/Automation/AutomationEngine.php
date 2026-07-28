@@ -273,24 +273,7 @@ final class AutomationEngine
 
     private function safeUrl(string $url): bool
     {
-        if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('#^https?://#i', $url)) {
-            return false;
-        }
-        $host = (string) parse_url($url, PHP_URL_HOST);
-        if ($host === '' || in_array(strtolower($host), ['localhost', '127.0.0.1', '::1'], true)) {
-            return false;
-        }
-        $records = dns_get_record($host, DNS_A | DNS_AAAA);
-        if (!$records) {
-            $records = [['ip' => gethostbyname($host)]];
-        }
-        foreach ($records as $record) {
-            $ip = $record['ip'] ?? $record['ipv6'] ?? '';
-            if ($ip === '' || !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                return false;
-            }
-        }
-        return true;
+        return \App\Support\SsrfGuard::isSafeHttpUrl($url);
     }
 
     private function pluginSettings(string $name): array
@@ -301,14 +284,7 @@ final class AutomationEngine
 
     private function redact(mixed $value): mixed
     {
-        if (!is_array($value)) {
-            return $value;
-        }
-        $secret = ['password', 'token', 'secret', 'api_key', 'authorization', 'bot_token'];
-        foreach ($value as $key => &$item) {
-            $item = in_array(strtolower((string) $key), $secret, true) ? '***' : $this->redact($item);
-        }
-        return $value;
+        return \App\Support\SecretRedactor::redact($value);
     }
 
     private function json(mixed $value): string

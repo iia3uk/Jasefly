@@ -58,12 +58,24 @@ Breaking = remove/rename public contract method, change signature, or drop SDK g
 
 Non-breaking: new optional methods, new capabilities, new service catalog entries.
 
+## Related freezes (Priority 5)
+
+Beyond contract methods, CI/`run.php` also guards:
+
+- Core **capabilities**, **permissions**, **events**
+- **ServiceRegistry** ↔ `sdk-policy.json` `allowed_service_ids`
+- **MCP** tool names (`mcp-cms/manifest/mcp-tools.v1.json`)
+- Builder **widget** type ids (`frontend/src/builder/manifest/widget-types.v1.json`)
+
+Removing a frozen id fails tests; adding requires regenerating the snapshot.
+
 ## Review checklist
 
 - [ ] Static analyzer clean (`certify`)
-- [ ] `api-diff` clean
+- [ ] `api-diff` clean (`ContractGovernanceTest` + CI)
 - [ ] Capability providers registered when adding `requires`
 - [ ] FE contract documented if `frontend/src/platform` changed
+- [ ] Update related freezes if MCP tools / widget types / core perms changed
 - [ ] `CMS_MAP.md` updated for new CLI/MCP tools
 
 See: `API-SNAPSHOT.md`, `SDK-VERSIONING.md`, `PUBLIC-API-POLICY.md`.

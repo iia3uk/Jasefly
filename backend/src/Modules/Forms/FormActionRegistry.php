@@ -76,31 +76,14 @@ final class FormActionRegistry
 
         self::register('send_webhook', static function (Database $db, array $form, array $submission, array $config): void {
             $url = (string) ($config['url'] ?? '');
-            if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('#^https?://#i', $url)) {
-                return;
-            }
-            $host = parse_url($url, PHP_URL_HOST);
-            if (!$host || self::isPrivateHost((string) $host)) {
-                return;
-            }
-            $ch = curl_init($url);
-            curl_setopt_array($ch, [
-                CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => json_encode([
-                    'event' => 'form.submitted',
-                    'form' => ['id' => $form['id'], 'slug' => $form['slug'], 'name' => $form['name']],
-                    'submission' => [
-                        'public_id' => $submission['public_id'] ?? null,
-                        'values' => $submission['values'] ?? [],
-                    ],
-                ], JSON_UNESCAPED_UNICODE),
-                CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT => 5,
-                CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            \App\Support\OutboundHttp::postJson($url, [
+                'event' => 'form.submitted',
+                'form' => ['id' => $form['id'], 'slug' => $form['slug'], 'name' => $form['name']],
+                'submission' => [
+                    'public_id' => $submission['public_id'] ?? null,
+                    'values' => $submission['values'] ?? [],
+                ],
             ]);
-            curl_exec($ch);
-            curl_close($ch);
         });
 
         self::register('create_notification', static function (Database $db, array $form, array $submission, array $config): void {
@@ -174,18 +157,6 @@ final class FormActionRegistry
             }
         }
         return $extra;
-    }
-
-    private static function isPrivateHost(string $host): bool
-    {
-        if (in_array(strtolower($host), ['localhost', '127.0.0.1', '::1'], true)) {
-            return true;
-        }
-        $ip = gethostbyname($host);
-        if ($ip === $host && !filter_var($host, FILTER_VALIDATE_IP)) {
-            return false;
-        }
-        return !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
     }
 
     /** @return array<string, mixed> */
