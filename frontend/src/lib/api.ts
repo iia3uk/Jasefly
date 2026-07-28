@@ -207,7 +207,8 @@ export const mediaUrl = (media?: MediaAsset | { id?: IDLike; media_id?: IDLike }
 }
 
 const list = async <T>(path: string): Promise<T[]> => unwrap(await api.get<ApiEnvelope<T[]> | T[]>(path))
-const one = async <T>(path: string): Promise<T> => unwrap(await api.get<ApiEnvelope<T> | T>(path))
+const one = async <T>(path: string, options?: RequestOptions): Promise<T> =>
+  unwrap(await api.get<ApiEnvelope<T> | T>(path, options))
 
 export type MigrationStatusPayload = {
   ok: boolean
@@ -239,7 +240,15 @@ export const endpoints = {
   services: () => list<Service>('/services'),
   testimonials: () => list<Testimonial>('/testimonials'),
   contactInfo: () => one<ContactInfo>('/contact-info'),
-  page: (slug: string) => one<Page>(`/pages/${slug}`),
+  /** Missing CMS page → null (PreferCmsLayout / optional system templates). */
+  page: async (slug: string): Promise<Page | null> => {
+    try {
+      return await one<Page>(`/pages/${slug}`, { silent: true })
+    } catch (err) {
+      if (err instanceof ApiRequestError && err.details.status === 404) return null
+      throw err
+    }
+  },
   products: (params?: Record<string, string | number | boolean | undefined>) => {
     const q = new URLSearchParams()
     if (params) {
