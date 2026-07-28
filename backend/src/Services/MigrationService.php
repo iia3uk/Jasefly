@@ -371,7 +371,12 @@ final class MigrationService
     private function writeLastError(array $error): void
     {
         $json = json_encode($error, JSON_UNESCAPED_UNICODE);
-        $this->db->upsert('_migration_state', ['k' => 'last_error', 'v' => $json], ['k'], ['v']);
+        try {
+            $this->db->upsert('_migration_state', ['k' => 'last_error', 'v' => $json], ['k'], ['v']);
+        } catch (Throwable $e) {
+            // Never let diagnostics persistence mask the original migration failure.
+            @error_log('MigrationService::writeLastError failed: ' . $e->getMessage());
+        }
         @file_put_contents(
             rtrim($this->storageDir, '/\\') . '/logs/migration_error.json',
             $json . "\n"
@@ -402,7 +407,11 @@ final class MigrationService
 
     private function block(): void
     {
-        $this->db->upsert('_migration_state', ['k' => 'blocked', 'v' => '1'], ['k'], ['v']);
+        try {
+            $this->db->upsert('_migration_state', ['k' => 'blocked', 'v' => '1'], ['k'], ['v']);
+        } catch (Throwable $e) {
+            @error_log('MigrationService::block failed: ' . $e->getMessage());
+        }
     }
 
     private function unblock(): void

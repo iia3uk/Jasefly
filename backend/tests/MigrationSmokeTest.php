@@ -109,7 +109,7 @@ assert_true(($second['ok'] ?? false) === true || empty($second['pending']), 'Mig
 assert_true(empty($second['error']), 'MigrationService re-run has no error');
 assert_true(empty($second['just_applied'] ?? []) || true, 'MigrationService re-run recorded');
 
-$critical = ['users', 'permissions', 'plugins', 'installed_modules'];
+$critical = ['users', 'permissions', 'modules', 'installed_modules'];
 foreach ($critical as $table) {
     $row = $pdo->query(
         "SELECT 1 FROM sqlite_master WHERE type='table' AND name=" . $pdo->quote($table)

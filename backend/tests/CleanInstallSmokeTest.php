@@ -21,7 +21,7 @@ $ctx = jasefly_test_sqlite_boot();
 try {
     jasefly_test_apply_core_schema($ctx);
     $pdo = $ctx['pdo'];
-    foreach (['users', 'permissions', 'roles', 'plugins', 'installed_modules', 'pages'] as $table) {
+    foreach (['users', 'permissions', 'roles', 'modules', 'installed_modules', 'pages'] as $table) {
         $ok = $pdo->query(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name=" . $pdo->quote($table)
         )->fetch();
