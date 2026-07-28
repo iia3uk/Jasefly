@@ -2,6 +2,12 @@ import { Link } from 'react-router-dom'
 import { useSiteContext } from '@/context/SiteContext'
 import { useCookieConsent, writeCookieConsent } from '@/lib/cookieConsent'
 
+function defaultCookieBannerText(analyticsEnabled: boolean): string {
+  return analyticsEnabled
+    ? 'Мы используем cookies для работы сайта и аналитики. Подробнее — в политике конфиденциальности.'
+    : 'Мы используем необходимые cookies для работы сайта. Подробнее — в политике конфиденциальности.'
+}
+
 /**
  * Bottom consent strip. Hidden when disabled in site settings or choice already stored.
  */
@@ -9,15 +15,20 @@ export function CookieBanner() {
   const { site } = useSiteContext()
   const consent = useCookieConsent()
   const settings = site?.site_settings
+  const seo = site?.seo
   const enabled = settings?.cookie_banner_enabled === undefined || settings?.cookie_banner_enabled === null
     ? true
     : Boolean(Number(settings.cookie_banner_enabled))
 
   if (!enabled || consent != null) return null
 
+  const analyticsEnabled = Boolean(
+    String(seo?.google_analytics_id || '').trim()
+    || String(seo?.google_tag_manager_id || '').trim(),
+  )
   const text = String(
     settings?.cookie_banner_text
-      || 'Мы используем cookies для работы сайта и аналитики. Подробнее — в политике конфиденциальности.',
+      || defaultCookieBannerText(analyticsEnabled),
   )
   const policyHref = String(settings?.cookie_policy_href || '/privacy')
 

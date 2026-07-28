@@ -262,8 +262,10 @@ final class PrerenderService
 
     private function isBlockedPath(string $path): bool
     {
+        // Block admin + API endpoints only — not public pages like /api-docs.
         return str_starts_with($path, '/admin')
-            || str_starts_with($path, '/api')
+            || $path === '/api'
+            || str_starts_with($path, '/api/')
             || $path === '/lazy-loader';
     }
 
