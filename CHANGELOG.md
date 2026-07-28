@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-07-28 — Документация CMS переписана по коду
+
+- Каноническое дерево docs/ по реализации (bootstrap, modules, packages, FE, deploy)
+- Старые MODULE-/platform-доки свёрнуты в stubs
+- Корневые README/ARCHITECTURE/DEVELOPMENT указывают на docs/README
+
+## 2026-07-28 — Лог активности и MCP-журнала по московскому времени
+
+- Админка показывает DATETIME без Z как московское wall-time, а не UTC+локаль
+- formatMoscowDateTime для Dashboard и Enterprise activity/MCP strip
+- APP_TIMEZONE по умолчанию Europe/Moscow + SET time_zone для MySQL
+- Тесты formatDateTime
+
+## 2026-07-28 — Lab reference experiment + package SoT / soft API / SQLite migrate
+
+- Restore Lab experiments/reference (gitignore /reference/ fix) for frontend CI build
+- Package enable SoT: installed_modules mirrored to modules.is_enabled
+- Soft plugin Projects API (409 plugin_disabled) + silent FE refresh
+- SQLite migration transpile: rowid triggers, MODIFY skip, index prefix strip
+
 ## 2026-07-28 — Admin /projects always on ContentModule — no 404 when plugin off
 
 - Move admin projects CRUD (+ publish/reorder) to ContentModule so GET /api/v1/admin/projects never 404s
