@@ -55,8 +55,11 @@
 
 | Файл | Роль |
 | --- | --- |
-| `.cursorrules` | этот файл — общие правила проекта |
-| `.cursor/rules/cms-map-first.mdc` | alwaysApply: карта + самообновление |
+| `.cursorrules` | этот файл — общие правила проекта (карта, деплой, стиль) |
+| `.cursor/rules/cms-map-first.mdc` | alwaysApply: карта первым + самообновление |
+| `.cursor/rules/architectural-review.mdc` | alwaysApply: §21–25 (review, priorities, stop, success bar) |
 | `CMS_MAP.md` | lookup путей |
 
 При конфликте приоритет: явная просьба пользователя → эти правила → карта.
+
+Полный текст Operating Instructions (§21–25) при необходимости — у пользователя; в правилах — сжатый checklist, раскрывающий все пункты.

@@ -1,0 +1,61 @@
+---
+description: §21–25 architectural review, priorities, decisions, stop conditions
+alwaysApply: true
+---
+
+# Architectural review (Operating Instructions §21–25)
+
+Before editing: review mentally (short plan for non-trivial work). Do not jump from “found the file” to a patch.
+
+## Pre-edit checklist (§21.20)
+
+1. **Task** — what behavior must change?
+2. **CMS_MAP** — which 1–3 mapped files; why?
+3. **Source of truth** — one authority (DB / manifest / registry / API / MCP live / config). Never invent a second. If sources conflict → say so; use canonical or propose sync; no silent pick.
+4. **Execution path** — entry → side effect (BE: request→router→middleware→handler→service→store→response; FE: screen→hook→state→registry→UI→mutation→refresh; Builder/package/MCP: full chain). Fix the root, not only the symptom.
+5. **Consumers** — static refs + dynamic (ModuleRegistry, events, manifests, widgets, MCP, migrations, tests, docs, release packages).
+6. **Compatibility** — routes, payloads, layout JSON, migrations, SDK, permissions, events, MCP tools. Prefer additive / defaults / adapters; never rename IDs for aesthetics.
+7. **Security & failure** — authz, validation, SQL allowlists, path jail, SSRF, secrets; success / partial / rollback / admin-visible diagnostics (not silent swallow).
+8. **Tests** — what proves the change? Bugfix incomplete if the class of bug can return unnoticed.
+
+## Architecture invariants
+
+- **One mechanism per responsibility** — extend existing client/registry/permission/deploy path; new abstraction only with clear ownership + why old is insufficient.
+- **Ownership** — Core = infra only (no domain); modules = domain; packages → Platform SDK only (never `App\Core\*` internals); FE packages → public platform APIs.
+- **Dependency direction** — UI→API; packages→SDK→Core; modules→Core contracts; Core↛feature modules.
+- **SRP** — one sentence responsibility; split only when reasons to change differ.
+- **Builder** — tolerate legacy settings; never remove widget type without migration/compat renderer; schema changes via versioned migration.
+- **DB** — never rewrite released migrations; add incremental; multi-driver; transactions + filesystem compensation.
+- **Packages** — validate ZIP → jail → manifest → deps → snapshot → install → perms → migrations → health → enable; rollback accurate; no success before stages complete.
+- **Hosting** — no Redis/daemons/Docker/root by default; prefer cron/scheduler/bounded batches.
+- **Observability** — admin/MCP must see cause; no secrets in logs.
+- **Debt** — Critical/High may expand task with explanation; Medium/Low do not hitchhike.
+- **No inflation** — smallest change that preserves integrity.
+
+## Priority program (§22)
+
+When asked to “improve / harden / production-ready”, work **in order**, do not scatter:
+
+1. Reliability & proof (tests, migrate, lifecycle, permissions, contracts, install/update/rollback)
+2. Operational diagnostics (load/safe-mode/health visible in admin)
+3. Transaction & state integrity (install/update, backup, imports, payments, schedules)
+4. Core hardening (router/middleware/DB helpers; shared-hosting safe)
+5. Contract governance (SDK/API/manifests/Builder/MCP snapshots)
+6. Security verification (authz, upload, ZIP, SSRF, 2FA, tokens, XSS, redaction → tests)
+7. Maintainability last (dedupe, boundaries, CMS_MAP tooling — no broad rewrites)
+
+## Decision rank (§23)
+
+Security/integrity → compatibility → architecture → diagnosability → testability → shared hosting → simplicity → performance → speed → cosmetics.
+
+## Stop & ask (§24)
+
+Public contract conflict; destructive migration; unclear data semantics; SDK break; need live MCP state; missing secret; conflicting sources of truth; undefined rollback; bypass deploy controls; scope too broad to verify.
+
+## Success bar (§25)
+
+Clean install + upgrade; preserve content/layouts/modules/contracts; fail safely; diagnosable; human- and AI-navigable; ordinary PHP hosting.
+
+## Post-edit (§21.21)
+
+Report: Changed (behavior) · Preserved · Tests run (never claim unrun) · Not tested · Risks · Docs/CMS_MAP · Deploy only if asked (`cms_release`).
