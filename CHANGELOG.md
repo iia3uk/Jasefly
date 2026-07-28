@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-07-28 — Stop admin/projects 404 debugger spam
+
+- Silence adminList/adminGet 404 (no API debugger for disabled plugins)
+- Alias portfolio↔projects so dashboard content-health does not hit /admin/projects when Portfolio/Projects is off
+- Re-sync plugin states after toggle; invalidate content-health
+
 ## 2026-07-28 — Fix admin-login page 404 noise
 
 - Create published admin-login system page (stops /pages/admin-login 404)

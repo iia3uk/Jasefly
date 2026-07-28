@@ -104,14 +104,18 @@ function scanPage(p: Page): HealthIssue[] {
 }
 
 export async function fetchContentHealth(): Promise<ContentHealthReport> {
+  // Projects admin routes exist only when ProjectsModule is on; Portfolio toggle
+  // also gates via PLUGIN_ALIASES (portfolio ↔ projects).
+  const projectsOn = isPluginEnabledReady('projects')
+  const blogOn = isPluginEnabledReady('blog')
   const [projects, posts, pages, media] = await Promise.all([
-    isPluginEnabledReady('projects')
-      ? endpoints.adminList<Project>('projects').catch(() => [] as Project[])
+    projectsOn
+      ? endpoints.adminList<Project>('projects')
       : Promise.resolve([] as Project[]),
-    isPluginEnabledReady('blog')
-      ? endpoints.adminList<BlogPost>('blog').catch(() => [] as BlogPost[])
+    blogOn
+      ? endpoints.adminList<BlogPost>('blog')
       : Promise.resolve([] as BlogPost[]),
-    endpoints.adminList<Page>('pages').catch(() => [] as Page[]),
+    endpoints.adminList<Page>('pages'),
     endpoints.mediaList({}).catch(() => [] as MediaAsset[]),
   ])
 
