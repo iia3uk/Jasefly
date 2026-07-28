@@ -20,6 +20,7 @@ import { useCookieConsent } from '@/lib/cookieConsent'
 import { AnalyticsBeacon } from '@/modules/analytics/AnalyticsBeacon'
 import { SiteBreadcrumbs } from '@/components/layout/SiteBreadcrumbs'
 import { useContactInfo } from '@/hooks/useApi'
+import { withSiteNameSuffix } from '@/lib/seoTitle'
 
 function parseJson<T>(value: unknown, fallback: T): T {
   if (value == null) return fallback
@@ -28,6 +29,8 @@ function parseJson<T>(value: unknown, fallback: T): T {
   }
   return value as T
 }
+
+export { withSiteNameSuffix } from '@/lib/seoTitle'
 
 export function ThemeApplier() {
   const { site } = useSiteContext()
@@ -88,7 +91,7 @@ export function SeoHead({
   const analyticsOk = !bannerOn || consent === 'all'
 
   const finalTitle = title
-    ? `${title}${siteName ? ` · ${siteName}` : ''}`
+    ? withSiteNameSuffix(title, siteName)
     : seo?.site_title || siteName || 'Jasefly CMS'
   const desc = description || seo?.site_description || ''
   const base = (seo?.canonical_base_url || (typeof window !== 'undefined' ? window.location.origin : '')).replace(/\/$/, '')

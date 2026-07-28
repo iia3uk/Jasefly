@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { api } from '@/lib/api'
+import { api, mediaUrl } from '@/lib/api'
 import {
   Container,
   EmptyState,
@@ -227,9 +227,15 @@ export function HomePage() {
   }
 
   if (useBuilderHome) {
+    const home = site?.home_page
     return (
       <>
-        <SeoHead path="/" />
+        <SeoHead
+          path="/"
+          title={home?.seo_title || home?.title}
+          description={home?.seo_description || undefined}
+          image={mediaUrl(home?.og_image_id ?? home?.og_image ?? null)}
+        />
         <LayoutRenderer layout={homeLayout!} />
       </>
     )
