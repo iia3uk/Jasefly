@@ -25,7 +25,7 @@ function assert_true(bool $cond, string $msg): void
     }
 }
 
-echo "Jasefly CMS tests\n" . str_repeat('-', 40) . "\n";
+echo "Jasefly tests\n" . str_repeat('-', 40) . "\n";
 
 // —— Forms unit (no DB) ——
 require_once "$root/src/Modules/Forms/ConditionalLogic.php";

@@ -1,6 +1,6 @@
 # Backend API
 
-PHP REST API for Jasefly CMS. No Composer — `App\Bootstrap` autoload.
+PHP REST API for the Jasefly framework. No Composer — `App\Bootstrap` autoload.
 
 ## Local server
 

@@ -42,7 +42,7 @@ final class MailModule extends AbstractModule
         return [
             ['key' => '_heading_smtp', 'label' => 'SMTP', 'type' => 'heading', 'default' => '',
                 'help' => 'Mail.ru, Яндекс 360, Mailgun, Brevo и любой SMTP. Функция mail() не используется.'],
-            ['key' => 'from_name', 'label' => 'Имя отправителя', 'type' => 'text', 'default' => 'Jasefly CMS'],
+            ['key' => 'from_name', 'label' => 'Имя отправителя', 'type' => 'text', 'default' => 'Jasefly'],
             ['key' => 'from_email', 'label' => 'Email отправителя', 'type' => 'text', 'default' => ''],
             ['key' => 'to_email', 'label' => 'Email получателя', 'type' => 'text', 'default' => '',
                 'help' => 'Куда приходят сообщения с формы'],
@@ -170,7 +170,7 @@ final class MailModule extends AbstractModule
                 $mailer = new Mailer($settings, $storage . '/logs');
                 $mailer->sendHtml(
                     to: $to,
-                    subject: 'Тест SMTP — Jasefly CMS',
+                    subject: 'Тест SMTP — Jasefly',
                     html: '<p>Если вы видите это письмо — SMTP плагина «Почта» настроен правильно.</p>',
                 );
                 Response::json(['success' => true, 'data' => ['message' => 'Тестовое письмо отправлено на ' . $to]]);
@@ -189,7 +189,7 @@ final class MailModule extends AbstractModule
             }
             try {
                 $tg = new TelegramNotifier($token, $chat, $storage . '/logs');
-                $tg->send("Тест Telegram — Jasefly CMS\nЕсли вы видите это сообщение, уведомления настроены.");
+                $tg->send("Тест Telegram — Jasefly\nЕсли вы видите это сообщение, уведомления настроены.");
                 Response::json(['success' => true, 'data' => ['message' => 'Тестовое сообщение отправлено в Telegram']]);
             } catch (\Throwable) {
                 Response::error('Не удалось отправить в Telegram. Проверьте token/chat_id и лог storage/logs/mail.log', 500);

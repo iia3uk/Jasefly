@@ -1,27 +1,27 @@
 import { describe, expect, it } from 'vitest'
-import { withSiteNameSuffix } from '@/lib/seoTitle'
+import { withSiteNameSuffix } from './seoTitle'
 
 describe('withSiteNameSuffix', () => {
   it('appends site name when missing', () => {
-    expect(withSiteNameSuffix('Возможности', 'Jasefly CMS')).toBe('Возможности · Jasefly CMS')
+    expect(withSiteNameSuffix('Возможности', 'Jasefly')).toBe('Возможности · Jasefly')
   })
 
-  it('does not duplicate when site name already present', () => {
-    expect(withSiteNameSuffix('Политика конфиденциальности — Jasefly CMS', 'Jasefly CMS')).toBe(
-      'Политика конфиденциальности — Jasefly CMS',
+  it('keeps title that already ends with site name (em dash)', () => {
+    expect(withSiteNameSuffix('Политика конфиденциальности — Jasefly', 'Jasefly')).toBe(
+      'Политика конфиденциальности — Jasefly',
     )
   })
 
-  it('is case-insensitive for the site name check', () => {
-    expect(withSiteNameSuffix('About JASEFLY CMS', 'Jasefly CMS')).toBe('About JASEFLY CMS')
+  it('keeps title that already contains site name case-insensitively', () => {
+    expect(withSiteNameSuffix('About JASEFLY', 'Jasefly')).toBe('About JASEFLY')
   })
 
-  it('trims whitespace before comparing', () => {
-    expect(withSiteNameSuffix('  Возможности  ', 'Jasefly CMS')).toBe('Возможности · Jasefly CMS')
-    expect(withSiteNameSuffix('Jasefly CMS — modular', '  Jasefly CMS  ')).toBe('Jasefly CMS — modular')
+  it('trims whitespace', () => {
+    expect(withSiteNameSuffix('  Возможности  ', 'Jasefly')).toBe('Возможности · Jasefly')
+    expect(withSiteNameSuffix('Jasefly — modular', '  Jasefly  ')).toBe('Jasefly — modular')
   })
 
-  it('returns site name when title is empty', () => {
-    expect(withSiteNameSuffix('   ', 'Jasefly CMS')).toBe('Jasefly CMS')
+  it('falls back to site name for empty title', () => {
+    expect(withSiteNameSuffix('   ', 'Jasefly')).toBe('Jasefly')
   })
 })

@@ -14,8 +14,8 @@ const SRC = {
   mini: '/brand/jasefly/logo_mini.svg',
 } as const
 
-/** Jasefly CMS brand mark — assets in public/brand/jasefly/ */
-export function BrandLogo({ variant = 'full', className = '', alt = 'Jasefly CMS' }: BrandLogoProps) {
+/** Jasefly brand mark — assets in public/brand/jasefly/ */
+export function BrandLogo({ variant = 'full', className = '', alt = 'Jasefly' }: BrandLogoProps) {
   return (
     <img
       src={withAssetVersion(SRC[variant])}

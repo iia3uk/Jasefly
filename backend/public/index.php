@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Jasefly CMS API front controller.
+ * Jasefly API front controller.
  * Deployed as public_html/api/public/index.php
  *
  * Tip: open /api/v1/health?debug=1 to see the real error message.

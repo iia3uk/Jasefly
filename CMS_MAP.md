@@ -1,6 +1,6 @@
 # CMS Map — читать первым
 
-**Бренд:** Jasefly CMS · **Стек:** React/Vite (`frontend/`) + PHP API (`backend/`) · **Деплой:** MCP `user-jasefly-cms` → `cms_release`
+**Бренд:** Jasefly (framework; CMS — часть админки) · **Стек:** React/Vite (`frontend/`) + PHP API (`backend/`) · **Деплой:** MCP `user-jasefly-cms` → `cms_release`
 
 **Правила агента:** `.cursorrules` + `.cursor/rules/*.mdc` (alwaysApply).
 

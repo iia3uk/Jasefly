@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Neutral base content for a clean Jasefly CMS install (no portfolio data).
+ * Neutral base content for a clean Jasefly install (no portfolio data).
  * Called when installer runs without demo checkbox.
  */
 function seedCleanInstall(PDO $pdo): void
@@ -15,7 +15,7 @@ function seedCleanInstall(PDO $pdo): void
     }
 
     $pdo->exec("UPDATE site_settings SET
-        site_name='Jasefly CMS',
+        site_name='Jasefly',
         maintenance_mode=0,
         timezone='UTC',
         locale='en',
@@ -24,23 +24,23 @@ function seedCleanInstall(PDO $pdo): void
       WHERE id=1");
 
     $pdo->exec("UPDATE seo_settings SET
-        site_title='Jasefly CMS',
-        site_description='Modular AI-ready CMS',
-        site_keywords='cms, jasefly, modular',
-        og_title='Jasefly CMS',
-        og_description='Modular AI-ready CMS',
+        site_title='Jasefly',
+        site_description='Modular PHP + React framework with built-in CMS admin',
+        site_keywords='jasefly, framework, modular, php, react',
+        og_title='Jasefly',
+        og_description='Modular PHP + React framework with built-in CMS admin',
         twitter_card='summary_large_image'
       WHERE id=1");
 
     $pdo->exec("UPDATE footer_settings SET
-        copyright_text='© {year} Jasefly CMS',
-        tagline='Modular AI-ready CMS',
+        copyright_text='© {year} Jasefly',
+        tagline='Modular PHP + React framework',
         show_social=0
       WHERE id=1");
 
     $pdo->exec("UPDATE hero_settings SET
-        headline='Jasefly CMS',
-        subheadline='Modular AI-ready CMS',
+        headline='Jasefly',
+        subheadline='Modular PHP + React framework',
         badge_text='',
         primary_cta_label='Get started',
         primary_cta_href='/about',
@@ -51,10 +51,10 @@ function seedCleanInstall(PDO $pdo): void
       WHERE id=1");
 
     $pdo->exec("UPDATE profile SET
-        name='Jasefly CMS',
-        job_title='Content management',
-        short_bio='Modular AI-ready CMS',
-        bio='<p>Welcome to Jasefly CMS. Edit this site from the admin panel.</p>',
+        name='Jasefly',
+        job_title='Framework',
+        short_bio='Modular PHP + React framework',
+        bio='<p>Welcome to Jasefly. Edit this site from the admin panel.</p>',
         location='',
         availability_status='',
         years_experience=0
@@ -69,7 +69,7 @@ function seedCleanInstall(PDO $pdo): void
     $pdo->exec("UPDATE email_settings SET
         mailer='php',
         from_email='noreply@example.com',
-        from_name='Jasefly CMS',
+        from_name='Jasefly',
         to_email=''
       WHERE id=1");
 
@@ -103,7 +103,7 @@ function seedCleanInstall(PDO $pdo): void
     try {
         $pdo->exec("INSERT INTO pages (title, slug, status, template, is_home, seo_title, seo_description)
             SELECT 'About', 'about', 'published', 'builder', 0,
-                   'About — Jasefly CMS', 'About this site'
+                   'About — Jasefly', 'About this site'
             WHERE NOT EXISTS (SELECT 1 FROM pages WHERE slug='about')");
     } catch (Throwable) {
     }

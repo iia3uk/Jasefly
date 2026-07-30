@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the terms this CMS uses in code and admin UI so Module, Plugin, and Package are not confused.
+Define the terms this framework uses in code and admin UI so Module, Plugin, and Package are not confused.
 
 ## How it works
 

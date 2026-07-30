@@ -1,4 +1,4 @@
--- Jasefly CMS Schema
+-- Jasefly Schema
 -- MySQL 8.0+ / MariaDB 10.5+
 -- Normalized with foreign keys
 
@@ -540,7 +540,7 @@ CREATE TABLE seo_settings (
 
 CREATE TABLE site_settings (
   id TINYINT UNSIGNED PRIMARY KEY DEFAULT 1,
-  site_name VARCHAR(200) NOT NULL DEFAULT 'Jasefly CMS',
+  site_name VARCHAR(200) NOT NULL DEFAULT 'Jasefly',
   logo_media_id INT UNSIGNED NULL,
   logo_dark_media_id INT UNSIGNED NULL,
   maintenance_mode TINYINT(1) NOT NULL DEFAULT 0,

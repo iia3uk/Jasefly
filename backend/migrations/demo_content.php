@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Optional DEMO dataset for Jasefly CMS (installer checkbox / seed-demo.php).
+ * Optional DEMO dataset for Jasefly (installer checkbox / seed-demo.php).
  * Clearly fictional “Jasefly Demo” content — safe to delete after exploring the admin.
  */
 function seedDemoContent(PDO $pdo): void
@@ -21,15 +21,15 @@ function seedDemoContent(PDO $pdo): void
     $pdo->exec("UPDATE profile SET
         name='Jasefly Demo',
         job_title='Demo profile (delete me)',
-        short_bio='[DEMO] Sample profile for exploring Jasefly CMS. Safe to replace or delete.',
-        bio='<p><strong>[DEMO]</strong> This is sample content shipped with Jasefly CMS. Replace it with your own from the admin panel.</p>',
+        short_bio='[DEMO] Sample profile for exploring Jasefly. Safe to replace or delete.',
+        bio='<p><strong>[DEMO]</strong> This is sample content shipped with Jasefly. Replace it with your own from the admin panel.</p>',
         location='Demo City',
         availability_status='Demo only',
         years_experience=1
       WHERE id=1");
 
     $pdo->exec("UPDATE hero_settings SET
-        headline='[DEMO] Welcome to Jasefly CMS',
+        headline='[DEMO] Welcome to Jasefly',
         subheadline='Sample homepage copy — replace from Site settings / Page builder.',
         badge_text='Demo content',
         primary_cta_label='About', primary_cta_href='/about',
@@ -38,15 +38,15 @@ function seedDemoContent(PDO $pdo): void
       WHERE id=1");
 
     $pdo->exec("UPDATE site_settings SET
-        site_name='Jasefly CMS (Demo)', maintenance_mode=0, timezone='UTC', locale='en',
+        site_name='Jasefly (Demo)', maintenance_mode=0, timezone='UTC', locale='en',
         posts_per_page=9, projects_per_page=12
       WHERE id=1");
 
     $pdo->exec("UPDATE seo_settings SET
-        site_title='Jasefly CMS — Demo',
-        site_description='[DEMO] Modular AI-ready CMS sample site.',
-        site_keywords='jasefly, cms, demo',
-        og_title='Jasefly CMS — Demo',
+        site_title='Jasefly — Demo',
+        site_description='[DEMO] Modular PHP + React framework sample site.',
+        site_keywords='jasefly, framework, demo',
+        og_title='Jasefly — Demo',
         og_description='[DEMO] Sample site. Replace with your content.',
         twitter_card='summary_large_image'
       WHERE id=1");
@@ -59,8 +59,8 @@ function seedDemoContent(PDO $pdo): void
       WHERE id=1");
 
     $pdo->exec("UPDATE footer_settings SET
-        copyright_text='© {year} Jasefly CMS — Demo content',
-        tagline='[DEMO] Modular AI-ready CMS',
+        copyright_text='© {year} Jasefly — Demo content',
+        tagline='[DEMO] Modular PHP + React framework',
         show_social=1
       WHERE id=1");
 
@@ -72,7 +72,7 @@ function seedDemoContent(PDO $pdo): void
       WHERE id=1");
 
     $pdo->exec("UPDATE email_settings SET
-        mailer='php', from_email='noreply@example.com', from_name='Jasefly CMS Demo',
+        mailer='php', from_email='noreply@example.com', from_name='Jasefly Demo',
         to_email='demo@example.com'
       WHERE id=1");
 

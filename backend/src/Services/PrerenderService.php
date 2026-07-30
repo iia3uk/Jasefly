@@ -1374,7 +1374,7 @@ HTML;
 
     private function spaSeoFallbackHtml(string $title, string $desc, string $path): string
     {
-        $h1 = $title !== '' ? $title : 'Jasefly CMS';
+        $h1 = $title !== '' ? $title : 'Jasefly';
         $p = $desc !== '' ? $desc : 'Модульная CMS на PHP и MySQL с Page Builder и MCP.';
         $links = [
             ['/', 'Главная'],

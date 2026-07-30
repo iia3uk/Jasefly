@@ -34,10 +34,10 @@ $svc = new MigrationService(
 
 if (PHP_SAPI !== 'cli') {
     header('Content-Type: text/html; charset=utf-8');
-    echo '<!doctype html><meta charset="utf-8"><title>Jasefly CMS migrate</title><pre style="font:14px/1.45 ui-monospace,monospace;padding:1.5rem">';
+    echo '<!doctype html><meta charset="utf-8"><title>Jasefly migrate</title><pre style="font:14px/1.45 ui-monospace,monospace;padding:1.5rem">';
 }
 
-echo "Jasefly CMS — incremental migrations\n";
+echo "Jasefly — incremental migrations\n";
 echo str_repeat('-', 40) . "\n";
 
 $result = $svc->status(true);

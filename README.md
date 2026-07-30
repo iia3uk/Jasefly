@@ -1,9 +1,10 @@
-# Jasefly CMS
+# Jasefly
 
-Modular CMS: PHP API (`backend/`), React SPA (`frontend/`), Page Builder, bundled modules + ZIP packages, MCP deploy/content tools (`mcp-cms/`).
+**Framework** on PHP + React: public site runtime, modular packages, Page Builder, MCP deploy/content tools.  
+A **CMS admin** is built into the control panel — it is part of the framework, not the product definition.
 
 **Docs (engineers):** start at [`docs/README.md`](docs/README.md).  
-**Agent path map:** [`CMS_MAP.md`](CMS_MAP.md).  
+**Agent path map:** [`CMS_MAP.md`](CMS_MAP.md) (filename is historical; product is the framework).  
 **Install:** [`INSTALL.md`](INSTALL.md).
 
 ## Repository layout

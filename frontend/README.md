@@ -1,6 +1,6 @@
 # Frontend
 
-React + TypeScript + Vite SPA for Jasefly CMS (public site + admin + page builder).
+React + TypeScript + Vite SPA for the Jasefly framework (public site + admin CMS + page builder).
 
 ## Commands
 

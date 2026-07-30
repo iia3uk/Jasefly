@@ -2,7 +2,7 @@
   "name": "@jasefly/mcp-cms",
   "version": "1.0.0",
   "private": true,
-  "description": "MCP server for Jasefly CMS — generate content locally, push to remote site",
+  "description": "MCP server for Jasefly — generate content locally, push to remote site",
   "type": "module",
   "bin": {
     "jasefly-mcp-cms": "./src/index.js"
