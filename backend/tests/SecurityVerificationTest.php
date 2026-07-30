@@ -78,7 +78,7 @@ if (!function_exists('sodium_crypto_secretbox') && !function_exists('openssl_enc
     $enc->setAccessible(true);
     $dec = $backupRef->getMethod('decrypt');
     $dec->setAccessible(true);
-    $plain = "-- Jasefly CMS backup\nSELECT 1;\n";
+    $plain = "-- Jasefly backup\nSELECT 1;\n";
     $blob = $enc->invoke($backup, $plain);
     assert_true(is_string($blob) && $blob !== $plain, 'backup encrypt changes payload');
     assert_true(str_starts_with($blob, 'PCMS1') || str_starts_with($blob, 'PCMS2'), 'backup uses versioned ciphertext');

@@ -349,7 +349,7 @@ export default function ProductLanding({
               aspectRatio="4/3"
               variant="hero"
               src={heroImg}
-              altHint="Конструктор Jasefly CMS с AI-агентом"
+              altHint="Конструктор Jasefly с AI-агентом"
             />
           </div>
         </div>
@@ -590,7 +590,7 @@ export default function ProductLanding({
             aspectRatio="16/9"
             className="mt-6"
             src={updatePipelineImg}
-            altHint="Пайплайн обновления Jasefly CMS"
+            altHint="Пайплайн обновления Jasefly"
           />
         </div>
       </RevealSection>
@@ -656,7 +656,7 @@ export default function ProductLanding({
             aspectRatio="16/10"
             className="mt-6"
             src={modulesImg}
-            altHint="Менеджер модулей Jasefly CMS"
+            altHint="Менеджер модулей Jasefly"
           />
         </div>
       </RevealSection>

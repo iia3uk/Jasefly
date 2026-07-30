@@ -575,7 +575,7 @@ final class PublicController
         // Подмешиваем старую таблицу email_settings, если плагин ещё не настроен
         $row = $this->db->one('SELECT * FROM email_settings LIMIT 1') ?: [];
         return [
-            'from_name' => $row['from_name'] ?? 'Jasefly CMS',
+            'from_name' => $row['from_name'] ?? 'Jasefly',
             'from_email' => $row['from_email'] ?? '',
             'to_email' => $row['to_email'] ?? '',
             'smtp_host' => $row['smtp_host'] ?? '',

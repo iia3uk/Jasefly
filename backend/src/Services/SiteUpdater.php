@@ -315,7 +315,7 @@ final class SiteUpdater
         }
 
         throw new \RuntimeException(
-            'В ZIP не найден пакет Jasefly CMS (ожидаются api/public/index.php или api/src/Bootstrap.php). '
+            'В ZIP не найден пакет Jasefly (ожидаются api/public/index.php или api/src/Bootstrap.php). '
             . 'Соберите архив: node scripts/build-hosting.js --mode=update'
         );
     }

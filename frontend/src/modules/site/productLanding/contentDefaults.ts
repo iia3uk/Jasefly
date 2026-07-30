@@ -6,7 +6,7 @@ export const PRODUCT_LANDING_DEFAULTS: Record<string, string | number | boolean>
   hero_title_1: 'Разрабатывайте сайты с AI.',
   hero_title_2: 'Разворачивайте без лишней инфраструктуры.',
   hero_body:
-    'Jasefly — модульная CMS с MCP-доступом, локальной сборкой и управляемыми обновлениями. Собирайте frontend на своей машине и публикуйте готовый проект на PHP/MySQL-хостинге.',
+    'Jasefly — модульный framework с встроенной CMS в админке, MCP-доступом, локальной сборкой и управляемыми обновлениями. Собирайте frontend на своей машине и публикуйте готовый проект на PHP/MySQL-хостинге.',
   hero_cta1_label: 'Начать работу',
   hero_cta1_href: '/docs',
   hero_cta2_label: 'Посмотреть, как это работает',
@@ -15,7 +15,7 @@ export const PRODUCT_LANDING_DEFAULTS: Record<string, string | number | boolean>
   hero_chip_1: 'MCP для AI-агентов',
   hero_chip_2: 'Update ZIP',
   hero_chip_3: 'Shared Hosting Ready',
-  hero_image_title: 'Интерфейс Jasefly CMS',
+  hero_image_title: 'Интерфейс Jasefly',
 
   how_title: 'От локальной разработки до production',
   how_subtitle: 'Сборка и проверки остаются на вашей машине. На сервер отправляется готовый пакет.',
@@ -36,7 +36,7 @@ export const PRODUCT_LANDING_DEFAULTS: Record<string, string | number | boolean>
   pipeline_4_desc: 'Пакет загружается через административную панель.',
   pipeline_5_badge: '6',
   pipeline_5_name: 'Ready',
-  pipeline_5_desc: 'CMS проверяет пакет, применяет миграции и возвращает сайт в рабочее состояние.',
+  pipeline_5_desc: 'Платформа проверяет пакет, применяет миграции и возвращает сайт в рабочее состояние.',
 
   compare_title: 'Не каждому сайту нужен отдельный application server',
   compare_subtitle:
@@ -50,7 +50,7 @@ export const PRODUCT_LANDING_DEFAULTS: Record<string, string | number | boolean>
   compare_left_5: 'Настройка deployment',
   compare_left_6: 'Резервное копирование',
   compare_left_7: 'Регулярное обслуживание сервера',
-  compare_right_title: 'Jasefly CMS',
+  compare_right_title: 'Jasefly',
   compare_right_0: 'Собрать проект локально',
   compare_right_1: 'Выполнить проверки',
   compare_right_2: 'Получить ZIP-пакет',
@@ -60,9 +60,9 @@ export const PRODUCT_LANDING_DEFAULTS: Record<string, string | number | boolean>
   compare_footnote:
     'VPS остаётся подходящим выбором для проектов со специальными требованиями к runtime, масштабированию и инфраструктуре.',
 
-  action_title: 'Не только CMS. Полный рабочий процесс.',
+  action_title: 'Framework с полным рабочим процессом.',
   showcase_0_title: 'Управляйте страницами визуально',
-  showcase_0_desc: 'Собирайте структуру страниц в Page Builder, редактируйте контент и сохраняйте изменения в CMS.',
+  showcase_0_desc: 'Собирайте структуру страниц в Page Builder, редактируйте контент и сохраняйте изменения в админке.',
   showcase_0_point_0: 'Секции, колонки и виджеты в одном редакторе',
   showcase_0_point_1: 'Настройки страницы и SEO рядом с контентом',
   showcase_0_point_2: 'Публикация и черновики без ручной правки файлов',
@@ -101,7 +101,7 @@ export const PRODUCT_LANDING_DEFAULTS: Record<string, string | number | boolean>
   feature_9_title: 'Hosting Guard',
   feature_9_desc: 'Ограничивайте нагрузку AI-агентов с помощью троттлинга и кэширования.',
 
-  mcp_title: 'CMS, спроектированная для совместной работы с AI',
+  mcp_title: 'Framework, спроектированный для совместной работы с AI',
   mcp_subtitle: 'Jasefly предоставляет AI-агентам управляемый доступ к структуре сайта, контенту и операциям.',
   mcp_flow_0: 'AI Agent',
   mcp_flow_1: 'MCP Client',
@@ -120,7 +120,7 @@ export const PRODUCT_LANDING_DEFAULTS: Record<string, string | number | boolean>
   mcp_cmd_1: 'get_page_digest',
   mcp_cmd_2: 'update_content',
   mcp_cmd_3: 'validate_update',
-  mcp_image_title: 'Инспектор MCP и операции CMS',
+  mcp_image_title: 'Инспектор MCP и операции админки',
 
   updates_title: 'Обновления без ручной замены проекта',
   updates_step_0: 'Build',
@@ -210,7 +210,7 @@ export const PRODUCT_LANDING_DEFAULTS: Record<string, string | number | boolean>
   cta_btn1_href: '/docs',
   cta_btn2_label: 'Открыть документацию',
   cta_btn2_href: '/docs',
-  cta_image_title: 'Jasefly CMS: разработка, управление и публикация',
+  cta_image_title: 'Jasefly: разработка, управление и публикация',
 }
 
 const LABELS: Record<string, string> = {

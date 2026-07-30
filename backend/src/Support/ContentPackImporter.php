@@ -8,7 +8,7 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Imports a versioned JSON content pack into Jasefly CMS tables.
+ * Imports a versioned JSON content pack into Jasefly tables.
  * Does not touch users or config.local.php.
  */
 final class ContentPackImporter

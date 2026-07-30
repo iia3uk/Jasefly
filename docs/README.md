@@ -1,8 +1,10 @@
-# Jasefly CMS documentation
+# Jasefly documentation
 
 ## Purpose
 
 Give a new engineer a reading order that matches how the runtime actually boots and extends.
+
+Jasefly is a **framework** (PHP API + React SPA + modules). The **CMS** surfaces (pages, media, content CRUD) live inside the admin — they are not the product name.
 
 ## How it works
 

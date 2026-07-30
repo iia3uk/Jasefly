@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Multi-step web installer for Jasefly CMS.
+ * Multi-step web installer for Jasefly.
  * Supports MySQL (default), SQLite and PostgreSQL drivers.
  * On success it self-deletes all installer files from the host.
  */
@@ -455,7 +455,7 @@ function renderWizard(): string
     $disabled = $allOk ? '' : 'disabled';
     return <<<HTML
 <!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Jasefly CMS — Установка</title>
+<title>Jasefly — Установка</title>
 <style>
 *{box-sizing:border-box}
 body{font-family:ui-sans-serif,system-ui;background:#06080c;color:#f4f6fa;margin:0;padding:24px;display:flex;justify-content:center;min-height:100vh}
@@ -485,7 +485,7 @@ ul{margin:0 0 12px;padding-left:0;list-style:none;font-size:13px}
 .driver-opt label:has(input:checked){border-color:#5b8cff;background:#11192a}
 </style></head><body>
 <form method="post" class="wiz" autocomplete="off" id="f">
-<h1>Установка Jasefly CMS</h1>
+<h1>Установка Jasefly</h1>
 <div class="steps"><div class="step active" id="bar1"></div><div class="step" id="bar2"></div><div class="step" id="bar3"></div></div>
 
 <div class="pane show" id="p1">
@@ -520,7 +520,7 @@ ul{margin:0 0 12px;padding-left:0;list-style:none;font-size:13px}
   <div class="row"><label>CORS origin (обычно = URL сайта)</label><input name="cors_origins" placeholder="https://example.com"></div>
   <div class="row"><label>Email администратора</label><input name="admin_email" type="email" placeholder="admin@example.com" required></div>
   <label class="check"><input type="checkbox" name="with_demo" value="1"> Загрузить демо-контент (Jasefly Demo — легко удалить)</label>
-  <p class="hint">По умолчанию ставится чистый сайт: Jasefly CMS, пустая главная, About и Privacy. Пароль администратора: <code>Admin123!</code> — смените после входа.</p>
+  <p class="hint">По умолчанию ставится чистый сайт: Jasefly, пустая главная, About и Privacy. Пароль администратора: <code>Admin123!</code> — смените после входа.</p>
   <div class="btns"><button type="button" class="btn-ghost" onclick="go(2)">← Назад</button><button type="submit" class="btn-primary">Установить</button></div>
 </div>
 

@@ -1,6 +1,8 @@
-# Установка и запуск Jasefly CMS
+# Установка и запуск Jasefly
 
 Полная инструкция: локальная разработка, чистая установка, shared-хостинг, обновления, MCP.
+
+Jasefly — **framework** (PHP API + React). CMS-функции (страницы, медиа, контент) встроены в админку.
 
 Секреты (`JWT_SECRET`, `MCP_API_TOKEN`, пароли БД, `config.local.php`) **никогда** не коммитьте. В репозитории только `*.example`.
 
@@ -257,5 +259,5 @@ CMS_REPO_ROOT=C:/path/to/jasefly
 
 ## 11. Лицензия и автор
 
-Jasefly CMS — IIA3UK.  
+Jasefly — IIA3UK.  
 Репозиторий публикуется **без** production-секретов и без чужих scraped-материалов.

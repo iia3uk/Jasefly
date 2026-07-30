@@ -5,7 +5,7 @@ $local = is_file(__DIR__ . '/config.local.php') ? require __DIR__ . '/config.loc
 $env = static fn(string $key, mixed $default = null): mixed => $_ENV[$key] ?? getenv($key) ?: ($local[$key] ?? $default);
 
 return [
-    'name' => (string) ($local['app_name'] ?? $env('APP_NAME', 'Jasefly CMS')),
+    'name' => (string) ($local['app_name'] ?? $env('APP_NAME', 'Jasefly')),
     'url' => rtrim((string) ($local['app_url'] ?? $env('APP_URL', 'http://localhost')), '/'),
     'env' => (string) ($local['app_env'] ?? $env('APP_ENV', 'production')),
     'timezone' => (string) ($local['timezone'] ?? $env('APP_TIMEZONE', 'Europe/Moscow')),

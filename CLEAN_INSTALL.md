@@ -1,4 +1,4 @@
-# Clean install — Jasefly CMS
+# Clean install — Jasefly
 
 ## 1. Prepare the host
 
@@ -35,8 +35,8 @@ Fill in:
 
 Leave **demo content** unchecked for a clean site:
 
-- Site name: **Jasefly CMS**
-- Description: **Modular AI-ready CMS**
+- Site name: **Jasefly**
+- Description: **Modular PHP + React framework**
 - Home, About, Privacy pages
 - Basic navigation
 - Empty projects / blog / products / media

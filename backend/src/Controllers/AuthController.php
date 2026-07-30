@@ -307,7 +307,7 @@ final class AuthController
         $secret = $this->totp()->generateSecret();
         // Stash pending secret briefly in JWT so enable can confirm without writing first.
         $pending = $this->token($user, 600, '2fa_setup', ['totp_secret' => $secret]);
-        $issuer = (string) ($this->app['name'] ?? 'Jasefly CMS');
+        $issuer = (string) ($this->app['name'] ?? 'Jasefly');
         Response::json([
             'data' => [
                 'secret' => $secret,

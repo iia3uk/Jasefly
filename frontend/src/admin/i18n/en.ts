@@ -1,8 +1,8 @@
-/** English labels for the admin CMS UI */
+/** English labels for the admin UI */
 
 export const t = {
   cms: 'Jasefly',
-  cmsFull: 'Jasefly CMS',
+  cmsFull: 'Jasefly',
   administrator: 'Administrator',
   contentWorkspace: 'Workspace',
   signOut: 'Sign out',

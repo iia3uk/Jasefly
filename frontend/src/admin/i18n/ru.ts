@@ -1,8 +1,8 @@
-/** Russian labels for the admin CMS UI */
+/** Russian labels for the admin UI */
 
 export const t = {
   cms: 'Jasefly',
-  cmsFull: 'Jasefly CMS',
+  cmsFull: 'Jasefly',
   administrator: 'Администратор',
   contentWorkspace: 'Рабочая область',
   signOut: 'Выйти',

@@ -1,6 +1,6 @@
 <?php
 /**
- * Example local config for Jasefly CMS.
+ * Example local config for Jasefly.
  * Copy to config.local.php and replace YOUR_* placeholders.
  * NEVER commit config.local.php.
  */

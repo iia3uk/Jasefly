@@ -1,4 +1,4 @@
-# Jasefly CMS — MCP
+# Jasefly — MCP
 
 Code deploy pipeline (authoritative): [`docs/deployment.md`](../docs/deployment.md). Engineer docs: [`docs/README.md`](../docs/README.md).
 

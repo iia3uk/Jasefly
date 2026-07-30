@@ -703,7 +703,7 @@ export function NotFoundPage() {
   return (
     <Section className="pt-16 sm:pt-24">
       <Container className="max-w-xl">
-        <SeoHead title="Страница не найдена — Jasefly CMS" description="Запрошенная страница не существует или была перемещена." path="/not-found" noIndex />
+        <SeoHead title="Страница не найдена — Jasefly" description="Запрошенная страница не существует или была перемещена." path="/not-found" noIndex />
         <h1 className="mt-3 font-heading text-[2.2rem] font-semibold tracking-[-0.05em] sm:text-5xl">Страница не найдена</h1>
         <p className="mt-3 text-sm text-[var(--muted)]">Возможно, адрес изменился, страница была удалена или в ссылке допущена ошибка.</p>
 

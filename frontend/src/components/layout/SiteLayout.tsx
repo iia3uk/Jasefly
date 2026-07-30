@@ -93,7 +93,7 @@ export function SeoHead({
 
   const finalTitle = title
     ? withSiteNameSuffix(title, siteName)
-    : seo?.site_title || siteName || 'Jasefly CMS'
+    : seo?.site_title || siteName || 'Jasefly'
   const desc = description || seo?.site_description || ''
   const base = (seo?.canonical_base_url || (typeof window !== 'undefined' ? window.location.origin : '')).replace(/\/$/, '')
   const canonical = base && path ? `${base}${path}` : undefined
