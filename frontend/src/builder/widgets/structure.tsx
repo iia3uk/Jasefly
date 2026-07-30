@@ -12,11 +12,18 @@ function fields(...items: SettingsField[]) {
   return items
 }
 
-type StepItem = { badge?: string; title?: string; text?: string }
+type StepItem = { badge?: string; title?: string; text?: string; body?: string }
 
 function asSteps(value: unknown): StepItem[] {
   if (!Array.isArray(value)) return []
-  return value.filter((x) => x && typeof x === 'object') as StepItem[]
+  // Content packs / MCP often write `body`; widget + ItemsEditor use `text`.
+  return value
+    .filter((x) => x && typeof x === 'object')
+    .map((raw) => {
+      const row = raw as StepItem
+      const text = row.text ?? row.body ?? ''
+      return { ...row, text: String(text) }
+    })
 }
 
 /** Selectable chrome (line etc.) without EditableShell's w-fit. */
@@ -116,10 +123,11 @@ function StepFieldEdit({
   }
 
   if (!ctx?.editMode) {
-    if (!value && !placeholder) return null
+    // Never paint builder placeholders on the live site.
+    if (!value) return null
     return (
       <Tag className={className} style={fieldCss}>
-        {value || placeholder}
+        {value}
       </Tag>
     )
   }
