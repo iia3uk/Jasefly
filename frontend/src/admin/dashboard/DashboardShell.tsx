@@ -13,6 +13,7 @@ function useUnavailableIds(): Set<DashboardWidgetId> {
   const forms = usePluginEnabled('forms')
   const orders = usePluginEnabled('orders')
   const scheduler = usePluginEnabled('scheduler')
+  const overload = usePluginEnabled('overload')
   const notifications = usePluginEnabled('notifications')
   const newsletter = usePluginEnabled('newsletter')
   const blog = usePluginEnabled('blog')
@@ -26,6 +27,7 @@ function useUnavailableIds(): Set<DashboardWidgetId> {
       forms,
       orders,
       scheduler,
+      overload,
       notifications,
       newsletter,
       blog,
@@ -41,6 +43,7 @@ function useUnavailableIds(): Set<DashboardWidgetId> {
     forms,
     orders,
     scheduler,
+    overload,
     notifications,
     newsletter,
     blog,

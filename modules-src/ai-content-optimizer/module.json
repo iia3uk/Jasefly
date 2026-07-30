@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "AI Content Optimizer",
+  "slug": "ai-content-optimizer",
+  "version": "1.0.1",
+  "description": "Автоматическое SEO-обновление опубликованных материалов через OpenRouter и языковые модели. Массовый рерайт, cron, резервные копии и журнал.",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": ["curl", "json"]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {
+      "scheduler": ">=1.0.0"
+    },
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "http.client",
+      "api.routes",
+      "admin.pages",
+      "permissions.check",
+      "settings.module",
+      "scheduler.jobs",
+      "storage.files"
+    ],
+    "provides": ["ai-content-optimizer.optimize"]
+  },
+  "entrypoints": {
+    "backend": "backend/AiContentOptimizerModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "ai-content-optimizer",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "ai-content-optimizer.view",
+    "ai-content-optimizer.manage",
+    "ai-content-optimizer.run"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  }
+}

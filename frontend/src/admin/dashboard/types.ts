@@ -16,6 +16,7 @@ export type DashboardWidgetId =
   | 'forms'
   | 'orders'
   | 'scheduler'
+  | 'overload'
   | 'notifications'
   | 'newsletter'
   | 'blog-pulse'

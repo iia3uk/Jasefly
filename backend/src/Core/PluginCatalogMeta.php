@@ -10,7 +10,7 @@ namespace App\Core;
 final class PluginCatalogMeta
 {
     public const CATEGORIES = [
-            'core' => 'Ядро',
+        'core' => 'Ядро',
         'content' => 'Контент',
         'commerce' => 'Коммерция',
         'comms' => 'Коммуникации',
@@ -19,17 +19,66 @@ final class PluginCatalogMeta
         'other' => 'Прочее',
     ];
 
+    private static string $locale = 'ru';
+
+    /** Set from Accept-Language / admin UI before building the plugins catalog. */
+    public static function setLocale(?string $locale): void
+    {
+        $locale = strtolower(trim((string) $locale));
+        self::$locale = str_starts_with($locale, 'en') ? 'en' : 'ru';
+    }
+
+    public static function locale(): string
+    {
+        return self::$locale;
+    }
+
+    /** Resolve locale from HTTP Accept-Language (first tag). */
+    public static function setLocaleFromAcceptLanguage(?string $header): void
+    {
+        $header = trim((string) $header);
+        if ($header === '') {
+            self::$locale = 'ru';
+            return;
+        }
+        $first = strtolower(trim(explode(',', $header)[0] ?? 'ru'));
+        $first = trim(explode(';', $first)[0] ?? 'ru');
+        self::setLocale($first);
+    }
+
     /**
      * @return array{category: string, description: string, long_description: string}
      */
     public static function get(string $name): array
     {
+        if (self::$locale === 'en') {
+            $en = PluginCatalogMetaEn::all();
+            if (isset($en[$name])) {
+                return $en[$name];
+            }
+        }
         $all = self::all();
         return $all[$name] ?? [
             'category' => 'other',
             'description' => '',
             'long_description' => '',
         ];
+    }
+
+    /** English-aware display label for admin lists. */
+    public static function displayLabel(string $name, string $fallback): string
+    {
+        if (self::$locale !== 'en') {
+            return $fallback;
+        }
+        if (isset(PluginCatalogMetaEn::LABELS[$name])) {
+            return PluginCatalogMetaEn::LABELS[$name];
+        }
+        // Avoid showing Cyrillic fallbacks when EN is requested.
+        if (preg_match('/\p{Cyrillic}/u', $fallback)) {
+            return ucfirst(str_replace(['-', '_'], ' ', $name));
+        }
+        return $fallback;
     }
 
     /**
@@ -120,6 +169,10 @@ final class PluginCatalogMeta
                 'requires' => ['system'],
                 'suggests' => [],
             ],
+            'overload' => [
+                'requires' => ['system'],
+                'suggests' => ['mail'],
+            ],
             'translate' => [
                 'requires' => ['system'],
                 'suggests' => [],
@@ -165,6 +218,9 @@ final class PluginCatalogMeta
 
     public static function categoryLabel(string $key): string
     {
+        if (self::$locale === 'en') {
+            return PluginCatalogMetaEn::CATEGORIES[$key] ?? PluginCatalogMetaEn::CATEGORIES['other'];
+        }
         return self::CATEGORIES[$key] ?? self::CATEGORIES['other'];
     }
 
@@ -335,6 +391,17 @@ final class PluginCatalogMeta
                     . "• Временные блокировки\n"
                     . "• Настройки порогов в админке\n\n"
                     . "Не заменяет WAF хостинга, но снижает простой флуд.",
+            ],
+            'overload' => [
+                'category' => 'security',
+                'description' => 'Мониторинг load average: 503, email и журнал перегрузок.',
+                'long_description' => "Защита и наблюдение перегрузок сервера.\n\n"
+                    . "• Следит за load average (1m / опционально 5m)\n"
+                    . "• При превышении может закрыть сайт с HTTP 503 и текстом ошибки\n"
+                    . "• Уведомления на несколько email (через плагин «Почта»)\n"
+                    . "• Режим «только зафиксировать» без действий\n"
+                    . "• Текущая нагрузка и журнал на дашборде и в админке\n\n"
+                    . "На Windows и части хостингов loadavg недоступен — плагин ничего не блокирует.",
             ],
             'translate' => [
                 'category' => 'integrations',

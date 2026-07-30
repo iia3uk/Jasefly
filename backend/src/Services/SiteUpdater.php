@@ -103,6 +103,9 @@ final class SiteUpdater
         @ini_set('max_execution_time', '300');
         ignore_user_abort(true);
 
+        // Soften overload false-positives while unpacking hundreds of files (MCP / panel ZIP).
+        $this->markOverloadQuiet();
+
         if (!class_exists(ZipArchive::class)) {
             throw new \RuntimeException('PHP-расширение ZipArchive недоступно на хостинге. Включите zip в php.ini.');
         }
@@ -209,6 +212,7 @@ final class SiteUpdater
                 'message' => 'Обновление установлено. Обновите админку (Ctrl+F5).',
             ];
             $this->writeLastResult($result);
+            $this->markOverloadQuiet();
             return $result;
         } catch (Throwable $e) {
             $fail = [
@@ -218,11 +222,30 @@ final class SiteUpdater
                 'at' => gmdate('c'),
             ];
             $this->writeLastResult($fail);
+            $this->markOverloadQuiet();
             throw $e;
         } finally {
             $this->rmTree($extractDir);
             @unlink($zipPath);
         }
+    }
+
+    /** Suppress overload trips while/after ZIP unpack (shared-host load spikes). */
+    private function markOverloadQuiet(): void
+    {
+        if (!class_exists(\App\Modules\Overload\OverloadService::class)) {
+            return;
+        }
+        $storage = (string) ($this->app['storage'] ?? ($this->apiRoot . '/storage'));
+        $sec = 600;
+        try {
+            if ($this->db) {
+                $settings = \App\Modules\Overload\OverloadService::loadSettings($this->db);
+                $sec = max(60, (int) ($settings['quiet_after_update_sec'] ?? 600));
+            }
+        } catch (Throwable) {
+        }
+        \App\Modules\Overload\OverloadService::markDeployQuiet($storage, $sec);
     }
 
     private function extractZip(string $zipPath, string $dest): void

@@ -154,6 +154,9 @@ require_once "$root/tests/MaintainabilityTest.php";
 echo "SiteUpdater assets prune\n";
 require_once "$root/tests/SiteUpdaterAssetsPruneTest.php";
 
+echo "Overload\n";
+require_once "$root/tests/OverloadServiceTest.php";
+
 echo str_repeat('-', 40) . "\n";
 echo "Passed: $passed  Failed: $failed\n";
 exit($failed > 0 ? 1 : 0);

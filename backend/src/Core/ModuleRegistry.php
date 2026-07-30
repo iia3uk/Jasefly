@@ -339,12 +339,13 @@ final class ModuleRegistry
      */
     public function catalog(): array
     {
+        $en = PluginCatalogMeta::locale() === 'en';
         $labels = [];
         foreach ($this->modules as $m) {
-            $labels[$m->name()] = $m->label();
+            $labels[$m->name()] = PluginCatalogMeta::displayLabel($m->name(), $m->label());
         }
 
-        return array_map(function (ModuleInterface $m) use ($labels) {
+        return array_map(function (ModuleInterface $m) use ($labels, $en) {
             $name = $m->name();
             $requires = $m->requires();
             $suggests = $m->suggests();
@@ -358,17 +359,20 @@ final class ModuleRegistry
 
             $blockDisable = null;
             if ($isCore) {
-                $blockDisable = 'Ядро нельзя отключить';
+                $blockDisable = $en ? 'Core plugins cannot be disabled' : 'Ядро нельзя отключить';
             } elseif ($on && $requiredBy !== []) {
-                $blockDisable = 'Сначала отключите: ' . implode(', ', array_map(
+                $list = implode(', ', array_map(
                     static fn(string $d) => $labels[$d] ?? $d,
                     $requiredBy,
                 ));
+                $blockDisable = $en
+                    ? ('Disable these first: ' . $list)
+                    : ('Сначала отключите: ' . $list);
             }
 
             return [
                 'name' => $name,
-                'label' => $m->label(),
+                'label' => PluginCatalogMeta::displayLabel($name, $m->label()),
                 'description' => $m->description(),
                 'long_description' => $m->longDescription(),
                 'category' => $m->category(),
@@ -396,10 +400,11 @@ final class ModuleRegistry
                 'can_enable' => $canEnable,
                 'can_disable' => $canDisable,
                 'block_enable_reason' => (!$on && $missing !== [])
-                    ? ('При включении также включатся: ' . implode(', ', array_map(
-                        static fn(string $d) => $labels[$d] ?? $d,
-                        $missing,
-                    )))
+                    ? (($en ? 'Enabling will also turn on: ' : 'При включении также включатся: ')
+                        . implode(', ', array_map(
+                            static fn(string $d) => $labels[$d] ?? $d,
+                            $missing,
+                        )))
                     : null,
                 'block_disable_reason' => $blockDisable,
                 'settings' => $this->state->getSettings($m),

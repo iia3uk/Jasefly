@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-07-30 — Admin EN for plugins/modules + English plugin catalog
+
+- FE i18n keys + Plugins/Modules/Overload pages wired to t()
+- Sidebar nav groups translated via translateNavGroup
+- BE PluginCatalogMetaEn + Accept-Language on /admin/plugins
+- api.ts sends Accept-Language from admin.locale
+
+## 2026-07-30 — Overload: per-CPU thresholds, sustained check, quiet after MCP update
+
+- OverloadService: normalize_by_cpu (default), require_sustained 1m+5m, quiet_until after SiteUpdater
+- Skip evaluate on /system/update; mark quiet on ZIP apply start/end
+- OverloadPage/Widget: show CPUs, load/core, absolute threshold, shared-host hint
+- Defaults threshold 2.5/core; stop false trips from host-wide load ~20 during MCP patches
+
+## 2026-07-30 — Plugins about/settings expand + notifications 401 gate
+
+- PluginsPage: fix about/settings panels clipped by overflow-hidden + h-full; tighter cards; items-start grid
+- AdminPageHero: hint on full width so text is not cut by stats
+- NotificationsBell/Widget: wait for token + plugins hydrate; silent unread-count; quiet 404/403
+
+## 2026-07-30 — Media unused cleanup + overload protection plugin
+
+- Медиатека: справка, режим «Неиспользуемые», сканер HTML/комментариев и битых файлов
+- Встроенный плагин overload: load average, режимы log/notify/503, email, журнал, виджет дашборда
+- Ранний 503 на публичном HTML (rootIndexPhp) при перегрузке
+- CMS_MAP: медиа unused + overload
+
+
 ## 2026-07-30 — Авто-перезагрузка при битых assets после деплоя
 
 - Inline-скрипт в shell: ошибка загрузки /assets/* → один hard-reload с обходом кэша HTML

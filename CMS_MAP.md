@@ -76,8 +76,9 @@
 | Установка пакета модуля | `ModulePackageService` (upload→inspect→install) + CLI `backend/bin/modules.php` + MCP `cms_module_*` |
 | FE runtime пакетных модулей | `packageModuleLoader.ts` + `GET /modules/runtime-assets` + `/modules/{slug}/` assets |
 | Отложенная публикация страниц | `PageScheduleService` (lazy publish) + `scheduled_at` в билдере |
-| Плагины вкл/выкл, гейты UI | `frontend/src/core/pluginGates.ts`, `components/RequirePlugin.tsx`, `admin/pages/PluginsPage.tsx` |
+| Плагины вкл/выкл, гейты UI | `frontend/src/core/pluginGates.ts`, `components/RequirePlugin.tsx`, `admin/pages/PluginsPage.tsx` (about/settings: не `h-full`+`overflow-hidden` — клиппает панели); EN: `admin/i18n` + BE `PluginCatalogMeta`/`PluginCatalogMetaEn` + `Accept-Language` |
 | Плагины: «О плагине»/настройки не видны | `PluginsPage` PluginCard: не ставить `h-full`+`overflow-hidden` — grid обрезает панели |
+| Админ RU/EN (плагины/модули) | `admin/i18n/{ru,en}.ts` + `translateNavGroup`; каталог плагинов EN в `PluginCatalogMetaEn.php`; `api.ts` шлёт `Accept-Language` |
 | Тесты / CI / cms_local_test | `backend/tests/run.php` (+ Permission/API/CleanInstall/…/PackageEnableSync/ProjectsSoftApi/MigrationSqliteCompat/ContractGovernance/…), `backend/bin/certify-lifecycle.php`, `mcp-cms/src/local.js`, `.github/workflows/platform-sdk.yml`, `frontend` vitest (`npm test`) |
 | Локально как GitHub sdk перед push | `node scripts/ci-sdk-check.js` (или `--fast`); pre-push: `git config core.hooksPath scripts/githooks` |
 | SQLite migrate: OLD.id / MODIFY / prefix(191) | `Core/Db/SqlTranspiler.php` (rowid triggers, skip MODIFY, strip index prefix lengths); smoke: `MigrationSmokeTest` / `MigrationSqliteCompatTest` |
@@ -107,13 +108,15 @@
 | Заказы / корзины / возвраты | `modules/orders/` ↔ `Modules/Orders/` + адаптер в `Payments/PaymentService.php` |
 | Комментарии / отзывы / рейтинги | `modules/comments/` ↔ `Modules/Comments/` + `builder/widgets/comments.tsx` |
 | Аналитика событий / целей | `modules/analytics/` (`AnalyticsAdminPage`, `AnalyticsCharts`, `DashboardAnalyticsWidget`) ↔ `Modules/Analytics/` + `beacon.ts` / `AnalyticsBeacon.tsx`; виджет дашборда `admin/dashboard/widgets/AnalyticsDashWidget.tsx` |
-| Медиа | `modules/media/` ↔ `Modules/Media/`, `Controllers/MediaController.php` |
+| Медиа / неиспользуемые / битые | `UtilityPages` `MediaLibraryPage` + справка; BE `MediaUsageService` (`/admin/media/unused`) + `MediaController` purge-missing |
+| Перегрузки / load average / 503 | FE `modules/overload` + `OverloadPage` + dashboard `OverloadWidget`; BE `Modules/Overload/` (`OverloadGuardMiddleware`, `OverloadService`: per-CPU + sustained + quiet after `SiteUpdater`); HTML early shed в `scripts/build-hosting.js` `rootIndexPhp` |
 | Auth / users / 2FA | `context/AuthContext.tsx`, `Modules/Users/`, `Controllers/AuthController.php` |
 | Миграции SQL | `backend/migrations/*.sql` (+ plugin migrations в `Modules/*/migrations/`) |
 | Module Package Manager (install/update ZIP) | `Modules/ModuleManager/ModuleManagerModule.php`, `Services/Modules/ModulePackageService.php`, `ModulePluginMirror.php`, `bin/modules.php` (`reconcile-mirror`), `Core/Modules/*`, `migrations/020_installed_modules.sql` |
 | ZIP enable SoT (installed_modules vs plugins) | Canonical: `installed_modules.status`; mirror: `modules.is_enabled` via `ModulePluginMirror`; Plugins toggle for packages → `ModulePackageService`; CLI `modules.php reconcile-mirror` |
 | Demo package module source | `modules-src/demo-kit/` |
 | Forms SDK certification reference | `modules-src/forms-sdk-reference/` |
+| AI Content Optimizer (ZIP, OpenRouter SEO-рерайт) | `modules-src/ai-content-optimizer/` → ZIP `release/modules/`; FE `frontend-dist/index.js` (профили/настройки OpenRouter/лог); job `ai-content-optimizer.tick` |
 | Журнал MCP / activity время не МСК | `admin/lib/formatDateTime.ts` (naive DATETIME = Moscow); Dashboard/Enterprise; BE `APP_TIMEZONE` + MySQL `SET time_zone` |
 | Контент на проде (текст/страницы) | MCP `cms_site_map` → `cms_get` / `cms_bulk` / `cms_put_singleton` |
 | Публичная API-документация (люди + агенты) | страница CMS `/api-docs` + `GET /api/v1/docs` ([backend/docs/openapi.php](backend/docs/openapi.php)); локальный черновик `content/jasefly-official/apply-api-docs.mjs` |
@@ -200,7 +203,7 @@ portfolio/
 | `orders/` | `Orders/` | корзины, заказы, статусы и возвраты |
 | `comments/` | `Comments/` | комментарии, отзывы и модерация |
 | `analytics/` | `Analytics/` | события, цели, агрегация и retention |
-| `mail/` `webhooks/` `ddos/` `system/` | одноимённые | интеграции |
+| `mail/` `webhooks/` `ddos/` `overload/` `system/` | одноимённые | интеграции / безопасность |
 
 Новый модуль: `docs/module-system.md` + `docs/extension-points.md` + зеркало в `frontend/src/modules/{name}/`.
 

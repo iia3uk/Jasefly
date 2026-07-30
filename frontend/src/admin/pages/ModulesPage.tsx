@@ -15,6 +15,7 @@ import { loadPackageModules, unloadPackageModule } from '@/core/packageModuleLoa
 import { Button, GhostButton, GlassPanel, Skeleton } from '@/shared/ui'
 import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { PageContext } from '@/admin/components/PageContext'
+import { t, useAdminLocale } from '@/admin/i18n'
 import { adminUrl } from '@/admin/adminBasePath'
 import clsx from 'clsx'
 
@@ -71,6 +72,8 @@ type Operation = {
 }
 
 export function ModulesPage() {
+  const { locale } = useAdminLocale()
+  void locale
   const [tab, setTab] = useState<'installed' | 'upload' | 'operations'>('installed')
   const [modules, setModules] = useState<InstalledModule[]>([])
   const [ops, setOps] = useState<Operation[]>([])
@@ -95,7 +98,7 @@ export function ModulesPage() {
       setModules(Array.isArray(list.data) ? list.data : [])
       setOps(Array.isArray(operations.data) ? operations.data : [])
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Не удалось загрузить модули')
+      setError(e instanceof Error ? e.message : t.modulesLoadFail)
     } finally {
       setLoading(false)
     }
@@ -113,7 +116,7 @@ export function ModulesPage() {
       await fn()
       await refresh()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка операции')
+      setError(e instanceof Error ? e.message : t.modulesOpFail)
     } finally {
       setBusy(null)
     }
@@ -146,12 +149,10 @@ export function ModulesPage() {
 
   const runRollback = async (slug: string, available: boolean) => {
     if (!available) {
-      setError(
-        'Откат недоступен: снимок создаётся только при обновлении модуля (update). После первой установки откатывать некуда.',
-      )
+      setError(t.modulesRollbackUnavailable)
       return
     }
-    const ok = window.confirm(`Откатить модуль ${slug} к предыдущему снимку файлов?`)
+    const ok = window.confirm(t.modulesRollbackConfirm(slug))
     if (!ok) return
     setBusy(`rb-${slug}`)
     setError('')
@@ -212,9 +213,9 @@ export function ModulesPage() {
   return (
     <>
       <AdminPageHero
-        title="Модули"
-        hint="Установка и обновление пакетов без пересборки CMS"
-        eyebrow="Система"
+        title={t.modulesTitle}
+        hint={t.modulesHint}
+        eyebrow={t.modulesEyebrow}
         accent="violet"
       >
         <PageContext contextKey="modules" />
@@ -224,12 +225,11 @@ export function ModulesPage() {
         <div className="flex gap-2">
           <ShieldAlert className="mt-0.5 shrink-0" size={18} />
           <div>
-            <b>Установка модуля = установка серверного ПО.</b> Используйте пакеты только из доверенных
-            источников. ZIP содержит исполняемый PHP-код.
+            <b>{t.modulesWarningTitle}</b> {t.modulesWarningBody}
             <div className="mt-2 text-xs text-amber-100/70">
-              Включение/настройки bundled-плагинов — в{' '}
+              {t.modulesWarningPlugins}{' '}
               <Link className="underline" to={adminUrl('/plugins')}>
-                Плагины
+                {t.pluginsTitle}
               </Link>
               .
             </div>
@@ -240,9 +240,9 @@ export function ModulesPage() {
       <div className="mb-5 flex flex-wrap gap-2">
         {(
           [
-            ['installed', 'Установленные'],
-            ['upload', 'Загрузить'],
-            ['operations', 'Операции'],
+            ['installed', t.modulesTabInstalled],
+            ['upload', t.modulesTabUpload],
+            ['operations', t.modulesTabOps],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -261,7 +261,7 @@ export function ModulesPage() {
         ))}
         <GhostButton type="button" className="ml-auto" disabled={!!busy} onClick={() => void refresh()}>
           <RefreshCw size={15} />
-          Обновить
+          {t.modulesRefresh}
         </GhostButton>
       </div>
 
@@ -280,7 +280,7 @@ export function ModulesPage() {
             <Skeleton className="h-40" />
           ) : modules.length === 0 ? (
             <GlassPanel className="p-10 text-center text-sm text-zinc-500">
-              Нет установленных package-модулей. Загрузите ZIP на вкладке «Загрузить».
+              {t.modulesEmpty}
             </GlassPanel>
           ) : (
             modules.map((m) => (
@@ -322,7 +322,7 @@ export function ModulesPage() {
                           })
                         }
                       >
-                        Включить
+                        {t.modulesEnable}
                       </Button>
                     ) : (
                       <GhostButton
@@ -335,7 +335,7 @@ export function ModulesPage() {
                           })
                         }
                       >
-                        Отключить
+                        {t.modulesDisable}
                       </GhostButton>
                     )}
                     <GhostButton
@@ -344,7 +344,7 @@ export function ModulesPage() {
                       onClick={() => void runHealth(m.slug)}
                     >
                       <CheckCircle2 size={15} />
-                      {busy === `health-${m.slug}` ? 'Проверка…' : 'Проверка'}
+                      {busy === `health-${m.slug}` ? t.modulesHealthBusy : t.modulesHealth}
                     </GhostButton>
                     <GhostButton
                       type="button"
@@ -389,7 +389,7 @@ export function ModulesPage() {
                       onClick={() => void runRollback(m.slug, !!m.rollback_available)}
                     >
                       <Download size={15} />
-                      Откат
+                      {t.modulesRollback}
                     </GhostButton>
                     <GhostButton
                       type="button"
@@ -397,8 +397,8 @@ export function ModulesPage() {
                       onClick={() => {
                         const remove = window.confirm(
                           keepData
-                            ? `Удалить модуль ${m.slug}, сохранив данные?`
-                            : `Удалить модуль ${m.slug} И данные? Это необратимо.`,
+                            ? t.modulesDeleteKeep(m.slug)
+                            : t.modulesDeleteWipe(m.slug),
                         )
                         if (!remove) return
                         void run(`un-${m.slug}`, () =>
@@ -409,17 +409,18 @@ export function ModulesPage() {
                       }}
                     >
                       <Trash2 size={15} />
-                      Удалить
+                      {t.modulesDelete}
                     </GhostButton>
                   </div>
                 </div>
                 {healthReport?.slug === m.slug ? (
                   <div className="mt-4 rounded-lg border border-white/10 bg-black/25 p-3 text-xs text-zinc-300">
                     <div className="mb-2 font-medium text-zinc-100">
-                      Результат проверки: <span className="uppercase">{healthReport.status}</span>
+                      {t.modulesHealthResult}{' '}
+                      <span className="uppercase">{healthReport.status}</span>
                     </div>
                     {healthReport.issues.length === 0 && healthReport.warnings.length === 0 ? (
-                      <p className="text-emerald-200/90">Проблем не найдено.</p>
+                      <p className="text-emerald-200/90">{t.modulesHealthOk}</p>
                     ) : null}
                     {healthReport.issues.length > 0 ? (
                       <ul className="mb-2 list-disc space-y-1 pl-4 text-red-300">
@@ -442,7 +443,7 @@ export function ModulesPage() {
           )}
           <label className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
             <input type="checkbox" checked={keepData} onChange={(e) => setKeepData(e.target.checked)} />
-            При удалении сохранять данные (таблицы / uploads)
+            {t.modulesKeepData}
           </label>
         </div>
       )}
@@ -452,7 +453,7 @@ export function ModulesPage() {
           <GlassPanel className="p-6">
             <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border border-dashed border-white/15 px-6 py-10 text-center hover:border-white/30">
               <Upload size={22} className="text-zinc-400" />
-              <span className="text-sm text-zinc-300">Выберите .zip / .jasefly-module.zip</span>
+              <span className="text-sm text-zinc-300">{t.modulesPickZip}</span>
               <input
                 type="file"
                 accept=".zip,application/zip"
@@ -472,7 +473,7 @@ export function ModulesPage() {
                   <AlertTriangle className="text-amber-400" size={18} />
                 )}
                 <b>
-                  {plan.operation === 'update' ? 'Обновление' : 'Установка'}: {String(plan.manifest?.name || plan.slug)}{' '}
+                  {plan.operation === 'update' ? t.modulesUpdate : t.modulesInstall}: {String(plan.manifest?.name || plan.slug)}{' '}
                   {plan.to_version}
                 </b>
               </div>
@@ -496,25 +497,25 @@ export function ModulesPage() {
               ) : null}
               {plan.dependency_plan ? (
                 <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-xs text-zinc-400">
-                  <div>Required missing: {plan.dependency_plan.missing.length || 'нет'}</div>
-                  <div>Conflicts: {plan.dependency_plan.conflicts.length || 'нет'}</div>
+                  <div>Required missing: {plan.dependency_plan.missing.length || t.modulesMissing}</div>
+                  <div>Conflicts: {plan.dependency_plan.conflicts.length || t.modulesMissing}</div>
                 </div>
               ) : null}
               <div className="flex flex-wrap items-center gap-3">
                 <label className="text-xs text-zinc-400">
-                  Контент:{' '}
+                  {t.modulesContent}{' '}
                   <select
                     className="rounded border border-white/10 bg-black/30 px-2 py-1"
                     value={contentMode}
                     onChange={(e) => setContentMode(e.target.value as typeof contentMode)}
                   >
-                    <option value="merge">модуль + настройки</option>
-                    <option value="skip">только модуль</option>
-                    <option value="replace">с демо-контентом (replace)</option>
+                    <option value="merge">{t.modulesContentMerge}</option>
+                    <option value="skip">{t.modulesContentSkip}</option>
+                    <option value="replace">{t.modulesContentReplace}</option>
                   </select>
                 </label>
                 <Button type="button" disabled={!plan.ok || !!busy} onClick={() => void confirmInstall()}>
-                  {busy === 'install' ? 'Установка…' : plan.operation === 'update' ? 'Обновить' : 'Установить'}
+                  {busy === 'install' ? t.modulesInstalling : plan.operation === 'update' ? t.modulesUpdate : t.modulesInstall}
                 </Button>
               </div>
             </GlassPanel>
@@ -525,7 +526,7 @@ export function ModulesPage() {
       {tab === 'operations' && (
         <div className="space-y-2">
           {ops.length === 0 ? (
-            <GlassPanel className="p-8 text-center text-sm text-zinc-500">Журнал операций пуст</GlassPanel>
+            <GlassPanel className="p-8 text-center text-sm text-zinc-500">{t.modulesOpsEmpty}</GlassPanel>
           ) : (
             ops.map((op) => (
               <GlassPanel key={op.id} className="p-4 text-sm">

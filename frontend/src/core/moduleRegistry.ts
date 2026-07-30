@@ -86,7 +86,7 @@ const PLUGIN_ALIASES: Record<string, string[]> = {
 const KNOWN_PLUGINS = [
   'system', 'users', 'content', 'site', 'media', 'portfolio', 'projects', 'blog',
   'services', 'seo', 'template', 'products', 'payments', 'mail', 'registration',
-  'ddos', 'webhooks', 'translate', 'support', 'lab', 'scheduler', 'forms',
+  'ddos', 'overload', 'webhooks', 'translate', 'support', 'lab', 'scheduler', 'forms',
   'automation', 'notifications', 'newsletter', 'orders', 'comments', 'analytics',
 ]
 
