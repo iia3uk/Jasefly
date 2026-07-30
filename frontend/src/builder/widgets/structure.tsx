@@ -134,26 +134,33 @@ function StepFieldEdit({
 
   return (
     <EditableShell field={field} label={label} block={multiline || Tag === 'p' || Tag === 'h3'}>
-      <Tag
-        ref={ref as never}
-        contentEditable
-        suppressContentEditableWarning
-        className={clsx('outline-none', className, !value && 'min-w-[2ch]')}
-        style={fieldCss}
-        onBlur={(e: FocusEvent<HTMLElement>) => {
-          const next = e.currentTarget.textContent?.trim() ?? ''
-          if (next !== value) patch(next)
-        }}
-        onInput={(e: FormEvent<HTMLElement>) => e.stopPropagation()}
-        onMouseDown={(e: MouseEvent<HTMLElement>) => {
-          e.stopPropagation()
-          ctx.onSelectElement(ctx.elementId, { part: field })
-        }}
-        onClick={(e: MouseEvent<HTMLElement>) => {
-          e.stopPropagation()
-          ctx.onSelectElement(ctx.elementId, { part: field })
-        }}
-      />
+      <span className={clsx('relative max-w-full', multiline || Tag === 'p' || Tag === 'h3' ? 'block w-fit max-w-full' : 'inline-block')}>
+        {!value && placeholder ? (
+          <span className="pointer-events-none absolute left-0 top-0 text-white/35" aria-hidden>
+            {placeholder}
+          </span>
+        ) : null}
+        <Tag
+          ref={ref as never}
+          contentEditable
+          suppressContentEditableWarning
+          className={clsx('relative outline-none', className, !value && 'min-w-[2ch]')}
+          style={fieldCss}
+          onBlur={(e: FocusEvent<HTMLElement>) => {
+            const next = e.currentTarget.textContent?.trim() ?? ''
+            if (next !== value) patch(next)
+          }}
+          onInput={(e: FormEvent<HTMLElement>) => e.stopPropagation()}
+          onMouseDown={(e: MouseEvent<HTMLElement>) => {
+            e.stopPropagation()
+            ctx.onSelectElement(ctx.elementId, { part: field })
+          }}
+          onClick={(e: MouseEvent<HTMLElement>) => {
+            e.stopPropagation()
+            ctx.onSelectElement(ctx.elementId, { part: field })
+          }}
+        />
+      </span>
     </EditableShell>
   )
 }
