@@ -106,14 +106,15 @@ export function EditableText({
   }, [value, ctx?.editMode, tagName])
 
   if (!ctx?.editMode) {
-    if (!value && !placeholder) return null
+    // Placeholders are builder-only hints — never render them as public copy.
+    if (!value) return null
     const pubStyles = readFieldStyles(ctx?.settings, field)
     return (
       <Tag
         className={clsx(className, fieldAlignClass(pubStyles))}
         style={{ ...style, ...stylesToCss(pubStyles) }}
       >
-        {value || placeholder}
+        {value}
       </Tag>
     )
   }
