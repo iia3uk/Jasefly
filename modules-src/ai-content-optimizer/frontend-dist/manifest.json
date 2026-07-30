@@ -1,0 +1,9 @@
+{
+  "slug": "ai-content-optimizer",
+  "version": "1.0.1",
+  "entry": "index.js",
+  "export": "JaseflyFrontendModule",
+  "assets": {
+    "js": ["index.js"]
+  }
+}

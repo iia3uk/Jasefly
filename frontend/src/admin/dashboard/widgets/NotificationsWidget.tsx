@@ -18,15 +18,18 @@ type NotificationRow = {
 
 export function NotificationsWidget() {
   const enabled = usePluginEnabled('notifications')
-  const { can } = useAuth()
-  const allowed = enabled && can('notifications.view')
+  const { can, token } = useAuth()
+  const allowed = !!token && enabled && can('notifications.view')
 
   const count = useQuery({
     queryKey: ['notifications-unread'],
     enabled: allowed,
     staleTime: 20_000,
     queryFn: async () => {
-      const res = await api.get<{ data: { count: number } } | { count: number }>('/admin/notifications/unread-count')
+      const res = await api.get<{ data: { count: number } } | { count: number }>(
+        '/admin/notifications/unread-count',
+        { silent: true },
+      )
       const data = unpack<{ count: number }>(res)
       return data.count
     },
@@ -37,7 +40,7 @@ export function NotificationsWidget() {
     queryKey: ['dashboard-widget', 'notifications'],
     enabled: allowed,
     staleTime: 20_000,
-    queryFn: async () => unpack<NotificationRow[]>(await api.get('/admin/notifications?unread=1')),
+    queryFn: async () => unpack<NotificationRow[]>(await api.get('/admin/notifications?unread=1', { silent: true })),
     retry: false,
   })
 

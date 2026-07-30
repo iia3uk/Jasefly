@@ -6,6 +6,7 @@ import {
 import { api } from '@/lib/api'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { AdminPageHero, AdminSectionLabel } from '@/admin/components/AdminPageHero'
+import { t, useAdminLocale } from '@/admin/i18n'
 import { setPluginEnabled, setPluginStates, type PluginState, type PluginSettingField } from '@/core/moduleRegistry'
 
 /** Core plugins that cannot be disabled (mirrors backend guard). */
@@ -13,14 +14,17 @@ const CORE_PLUGINS = new Set(['system', 'users'])
 
 const CATEGORY_ORDER = ['core', 'content', 'commerce', 'comms', 'security', 'integrations', 'other'] as const
 
-const CATEGORY_FALLBACK: Record<string, string> = {
-  core: 'Ядро',
-  content: 'Контент',
-  commerce: 'Коммерция',
-  comms: 'Коммуникации',
-  security: 'Безопасность',
-  integrations: 'Интеграции',
-  other: 'Прочее',
+function categoryFallback(key: string): string {
+  const map: Record<string, string> = {
+    core: t.pluginsCatCore,
+    content: t.pluginsCatContent,
+    commerce: t.pluginsCatCommerce,
+    comms: t.pluginsCatComms,
+    security: t.pluginsCatSecurity,
+    integrations: t.pluginsCatIntegrations,
+    other: t.pluginsCatOther,
+  }
+  return map[key] ?? key
 }
 
 /** Soft corner glow — not a solid header band (avoids muddy wash over text). */
@@ -48,8 +52,9 @@ type PluginsResponse = { data: PluginState[] }
 type StatusFilter = 'all' | 'on' | 'off'
 
 export function PluginsPage() {
+  const { locale } = useAdminLocale()
   const client = useQueryClient()
-  const queryKey = ['admin', 'plugins']
+  const queryKey = ['admin', 'plugins', locale]
   const { data, isLoading } = useQuery<PluginState[]>({
     queryKey,
     queryFn: async () => {
@@ -83,7 +88,7 @@ export function PluginsPage() {
       void client.invalidateQueries({ queryKey: ['dashboard'] })
     },
     onError: (err: unknown) => {
-      window.alert(err instanceof Error ? err.message : 'Не удалось переключить плагин')
+      window.alert(err instanceof Error ? err.message : t.pluginsToggleFail)
     },
   })
 
@@ -103,17 +108,18 @@ export function PluginsPage() {
       arr.push(p)
       byCat.set(cat, arr)
     }
+    const sortLocale = locale === 'en' ? 'en' : 'ru'
     for (const arr of byCat.values()) {
-      arr.sort((a, b) => (a.label || a.name).localeCompare(b.label || b.name, 'ru'))
+      arr.sort((a, b) => (a.label || a.name).localeCompare(b.label || b.name, sortLocale))
     }
     return CATEGORY_ORDER
       .filter((key) => (byCat.get(key)?.length ?? 0) > 0)
       .map((key) => ({
         key,
-        label: byCat.get(key)?.[0]?.category_label || CATEGORY_FALLBACK[key] || key,
+        label: byCat.get(key)?.[0]?.category_label || categoryFallback(key),
         plugins: byCat.get(key) ?? [],
       }))
-  }, [data])
+  }, [data, locale])
 
   const stats = useMemo(() => {
     const list = data ?? []
@@ -141,14 +147,14 @@ export function PluginsPage() {
   return (
     <div>
       <AdminPageHero
-        title="Плагины"
-        hint="Включайте нужные модули. Зависимости подтянутся сами; отключить нельзя, пока плагин нужен другим."
-        eyebrow="Модули CMS"
+        title={t.pluginsTitle}
+        hint={t.pluginsHint}
+        eyebrow={t.pluginsEyebrow}
         accent="teal"
         stats={[
-          { label: 'Всего', value: isLoading ? '—' : stats.total },
-          { label: 'Вкл.', value: isLoading ? '—' : stats.on, tone: 'text-emerald-300' },
-          { label: 'Выкл.', value: isLoading ? '—' : stats.off, tone: 'text-zinc-400' },
+          { label: t.pluginsStatTotal, value: isLoading ? '—' : stats.total },
+          { label: t.pluginsStatOn, value: isLoading ? '—' : stats.on, tone: 'text-emerald-300' },
+          { label: t.pluginsStatOff, value: isLoading ? '—' : stats.off, tone: 'text-zinc-400' },
         ]}
       />
 
@@ -160,17 +166,17 @@ export function PluginsPage() {
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Поиск по названию или slug…"
+            placeholder={t.pluginsSearch}
             className="w-full rounded-full border border-white/10 bg-zinc-900/80 py-2 pl-9 pr-3 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-teal-400/30 focus:outline-none"
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex gap-1 rounded-full border border-white/10 bg-black/30 p-0.5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="inline-flex w-fit gap-1 rounded-full border border-white/10 bg-black/30 p-0.5">
             {(
               [
-                ['all', 'Все'],
-                ['on', 'Включённые'],
-                ['off', 'Выключенные'],
+                ['all', t.pluginsFilterAll],
+                ['on', t.pluginsFilterOn],
+                ['off', t.pluginsFilterOff],
               ] as const
             ).map(([key, label]) => (
               <button
@@ -187,33 +193,35 @@ export function PluginsPage() {
               </button>
             ))}
           </div>
-          <div className="h-4 w-px bg-white/10" aria-hidden />
-          <button
-            type="button"
-            onClick={() => setCatFilter('all')}
-            className={
-              catFilter === 'all'
-                ? 'rounded-full border border-teal-400/30 bg-teal-500/10 px-3 py-1 text-xs text-teal-100'
-                : 'rounded-full border border-white/10 px-3 py-1 text-xs text-zinc-500 hover:text-zinc-300'
-            }
-          >
-            Все категории
-          </button>
-          {groups.map((g) => (
+          <div className="hidden h-4 w-px bg-white/10 sm:block" aria-hidden />
+          <div className="flex flex-wrap items-center gap-1.5">
             <button
-              key={g.key}
               type="button"
-              onClick={() => setCatFilter(g.key)}
+              onClick={() => setCatFilter('all')}
               className={
-                catFilter === g.key
+                catFilter === 'all'
                   ? 'rounded-full border border-teal-400/30 bg-teal-500/10 px-3 py-1 text-xs text-teal-100'
                   : 'rounded-full border border-white/10 px-3 py-1 text-xs text-zinc-500 hover:text-zinc-300'
               }
             >
-              {g.label}
-              <span className="ml-1.5 text-zinc-600">{g.plugins.length}</span>
+              {t.pluginsAllCategories}
             </button>
-          ))}
+            {groups.map((g) => (
+              <button
+                key={g.key}
+                type="button"
+                onClick={() => setCatFilter(g.key)}
+                className={
+                  catFilter === g.key
+                    ? 'rounded-full border border-teal-400/30 bg-teal-500/10 px-3 py-1 text-xs text-teal-100'
+                    : 'rounded-full border border-white/10 px-3 py-1 text-xs text-zinc-500 hover:text-zinc-300'
+                }
+              >
+                {g.label}
+                <span className="ml-1.5 text-zinc-600">{g.plugins.length}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -223,14 +231,14 @@ export function PluginsPage() {
         </div>
       ) : filteredGroups.length === 0 ? (
         <GlassPanel className="p-10 text-center text-sm text-zinc-500">
-          {data?.length ? 'Ничего не найдено по фильтру' : 'Плагины не обнаружены'}
+          {data?.length ? t.pluginsEmptyFilter : t.pluginsEmpty}
         </GlassPanel>
       ) : (
         <div className="space-y-8">
           {filteredGroups.map((group) => (
             <section key={group.key}>
               <AdminSectionLabel count={group.plugins.length}>{group.label}</AdminSectionLabel>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid items-start gap-3 sm:grid-cols-2">
                 {group.plugins.map((p) => {
                   const wide = expanded === p.name || aboutOpen === p.name
                   return (
@@ -241,8 +249,14 @@ export function PluginsPage() {
                         isCore={CORE_PLUGINS.has(p.name)}
                         expanded={expanded === p.name}
                         aboutOpen={aboutOpen === p.name}
-                        onExpand={() => setExpanded((cur) => (cur === p.name ? null : p.name))}
-                        onToggleAbout={() => setAboutOpen((cur) => (cur === p.name ? null : p.name))}
+                        onExpand={() => {
+                          setExpanded((cur) => (cur === p.name ? null : p.name))
+                          setAboutOpen((cur) => (cur === p.name ? null : cur))
+                        }}
+                        onToggleAbout={() => {
+                          setAboutOpen((cur) => (cur === p.name ? null : p.name))
+                          setExpanded((cur) => (cur === p.name ? null : cur))
+                        }}
                         onToggle={(enabled) => toggle.mutate({ name: p.name, enabled })}
                         toggling={toggle.isPending && toggle.variables?.name === p.name}
                         onSeedPages={() => seedPages.mutate(p.name)}
@@ -329,6 +343,8 @@ function PluginCard({
   seeding: boolean
   onSaved: () => void
 }) {
+  const { locale } = useAdminLocale()
+  void locale
   const hasSettings = (plugin.settings_schema?.length ?? 0) > 0
   const demoPages = plugin.demo_pages ?? []
   const hasDemoPages = demoPages.length > 0
@@ -339,6 +355,8 @@ function PluginCard({
   const requiredBy = plugin.required_by_labels ?? []
   const missing = new Set(plugin.missing_requires ?? [])
   const hasDepsInfo = requires.length > 0 || suggests.length > 0 || requiredBy.length > 0
+  const hasAbout = Boolean(long || short || hasDepsInfo)
+  const panelOpen = aboutOpen || expanded
   const canToggle = plugin.is_enabled
     ? (plugin.can_disable !== false && !isCore)
     : (plugin.can_enable !== false)
@@ -353,32 +371,31 @@ function PluginCard({
 
   return (
     <GlassPanel
-      // No h-full here: in a CSS grid stretch + overflow-hidden it eats 100% height
-      // and clips the «О плагине» / «Настройки» panels that sit below the header.
-      className={`relative overflow-hidden p-0 transition ${
-        plugin.is_enabled ? 'ring-1 ring-white/[0.08]' : ''
-      }`}
+      // No h-full: grid stretch + overflow-hidden clips «О плагине» / «Настройки».
+      className={`relative flex flex-col p-0 transition ${
+        panelOpen ? 'overflow-visible' : 'overflow-hidden'
+      } ${plugin.is_enabled ? 'ring-1 ring-white/[0.08]' : ''}`}
     >
       <div
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 rounded-[inherit]"
         style={{ background: glow }}
         aria-hidden
       />
-      <div className="relative flex flex-col p-5 sm:p-6">
+      <div className="relative flex flex-col gap-3 p-4 sm:p-5">
         <div className="flex items-start gap-3">
           <div
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${iconTone}`}
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${iconTone}`}
           >
-            <Puzzle size={18} aria-hidden />
+            <Puzzle size={17} aria-hidden />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5">
-              <h3 className="font-heading text-base text-zinc-50 sm:text-lg">
+              <h3 className="font-heading text-base text-zinc-50">
                 {plugin.label || plugin.name}
               </h3>
               {isCore && (
                 <span className="rounded-full border border-amber-400/35 bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-200">
-                  ядро
+                  {t.pluginsCoreBadge}
                 </span>
               )}
             </div>
@@ -398,37 +415,38 @@ function PluginCard({
             } ${!canToggle ? 'cursor-not-allowed opacity-45' : ''}`}
           >
             <Power size={13} aria-hidden />
-            {toggling ? '…' : plugin.is_enabled ? 'Вкл' : 'Выкл'}
+            {toggling ? '…' : plugin.is_enabled ? t.pluginsOn : t.pluginsOff}
           </button>
         </div>
 
-        <p className="mt-5 line-clamp-2 text-sm leading-relaxed text-zinc-400">
-          {short || (hasSettings ? `${plugin.settings_schema.length} настроек` : 'Без настроек')}
-          {!short && hasDemoPages ? ` · ${demoPages.length} демо-стр.` : ''}
+        <p className="line-clamp-2 text-sm leading-relaxed text-zinc-400">
+          {short || (hasSettings ? t.pluginsSettingsCount(plugin.settings_schema.length) : t.pluginsNoSettings)}
+          {!short && hasDemoPages ? ` · ${t.pluginsDemoPages(demoPages.length)}` : ''}
         </p>
 
         {(requires.length > 0 || (requiredBy.length > 0 && plugin.is_enabled)) && (
-          <div className="mt-4 space-y-1.5">
+          <div className="space-y-1.5">
             {requires.length > 0 && (
               <div className="flex flex-wrap items-center gap-1">
-                <span className="mr-0.5 text-[10px] uppercase tracking-wide text-zinc-600">Нужны</span>
+                <span className="mr-0.5 text-[10px] uppercase tracking-wide text-zinc-600">{t.pluginsNeeds}</span>
                 <DepChips items={requires} missing={missing} max={3} />
               </div>
             )}
             {requiredBy.length > 0 && plugin.is_enabled && (
               <div className="flex flex-wrap items-center gap-1">
-                <span className="mr-0.5 text-[10px] uppercase tracking-wide text-zinc-600">Для</span>
+                <span className="mr-0.5 text-[10px] uppercase tracking-wide text-zinc-600">{t.pluginsFor}</span>
                 <DepChips items={requiredBy} tone="sky" max={3} />
               </div>
             )}
           </div>
         )}
 
-        <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-4">
-          {(long || hasDepsInfo) ? (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {hasAbout ? (
             <button
               type="button"
               onClick={onToggleAbout}
+              aria-expanded={aboutOpen}
               className={`inline-flex h-8 items-center gap-1 rounded-lg border px-2.5 text-xs transition ${
                 aboutOpen
                   ? 'border-teal-400/30 bg-teal-500/10 text-teal-100'
@@ -436,7 +454,7 @@ function PluginCard({
               }`}
             >
               <Info size={13} />
-              О плагине
+              {t.pluginsAbout}
               <ChevronDown size={12} className={`transition ${aboutOpen ? 'rotate-180' : ''}`} />
             </button>
           ) : null}
@@ -445,6 +463,7 @@ function PluginCard({
             <button
               type="button"
               onClick={onExpand}
+              aria-expanded={expanded}
               className={`inline-flex h-8 items-center gap-1 rounded-lg border px-2.5 text-xs transition ${
                 expanded
                   ? 'border-teal-400/30 bg-teal-500/10 text-teal-100'
@@ -452,7 +471,7 @@ function PluginCard({
               }`}
             >
               <Settings2 size={13} />
-              Настройки
+              {t.pluginsSettings}
               <ChevronDown size={12} className={`transition ${expanded ? 'rotate-180' : ''}`} />
             </button>
           )}
@@ -462,45 +481,45 @@ function PluginCard({
               type="button"
               disabled={seeding}
               onClick={onSeedPages}
-              title={`Страницы: ${demoPages.map((d) => d.slug).join(', ')}`}
+              title={`${t.pluginsPages}: ${demoPages.map((d) => d.slug).join(', ')}`}
               className="inline-flex h-8 items-center gap-1 rounded-lg border border-white/10 px-2.5 text-xs text-zinc-400 hover:bg-white/5 hover:text-zinc-200 disabled:opacity-50"
             >
               <FilePlus2 size={13} />
-              {seeding ? 'Создание…' : 'Страницы'}
+              {seeding ? t.pluginsPagesCreating : t.pluginsPages}
             </button>
           )}
         </div>
       </div>
 
-      {aboutOpen && (long || hasDepsInfo) && (
-        <div className="relative border-t border-white/10 bg-black/35 px-4 py-4 sm:px-5">
-          {long ? (
+      {aboutOpen && hasAbout && (
+        <div className="relative shrink-0 border-t border-white/10 bg-black/40 px-4 py-4 sm:px-5">
+          {(long || short) ? (
             <>
-              <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">О плагине</p>
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">{t.pluginsAbout}</p>
               <div className="space-y-2 text-sm leading-relaxed text-zinc-300 whitespace-pre-line">
-                {long}
+                {long || short}
               </div>
             </>
           ) : null}
           {hasDepsInfo && (
-            <div className={`${long ? 'mt-4 border-t border-white/10 pt-3' : ''} space-y-2 text-sm text-zinc-400`}>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">Зависимости</p>
+            <div className={`${long || short ? 'mt-4 border-t border-white/10 pt-3' : ''} space-y-2 text-sm text-zinc-400`}>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{t.pluginsDeps}</p>
               {requires.length > 0 && (
                 <p>
-                  <span className="text-zinc-500">Обязательные: </span>
+                  <span className="text-zinc-500">{t.pluginsDepsRequired}</span>
                   {requires.map((d) => d.label).join(', ')}
-                  <span className="text-zinc-600"> — при включении подтянутся сами.</span>
+                  <span className="text-zinc-600">{t.pluginsDepsRequiredHint}</span>
                 </p>
               )}
               {suggests.length > 0 && (
                 <p>
-                  <span className="text-zinc-500">Рекомендуемые: </span>
+                  <span className="text-zinc-500">{t.pluginsDepsSuggested}</span>
                   {suggests.map((d) => d.label).join(', ')}
                 </p>
               )}
               {requiredBy.length > 0 && (
                 <p>
-                  <span className="text-zinc-500">Нужен для: </span>
+                  <span className="text-zinc-500">{t.pluginsDepsRequiredBy}</span>
                   {requiredBy.map((d) => d.label).join(', ')}
                 </p>
               )}
@@ -510,7 +529,7 @@ function PluginCard({
       )}
 
       {expanded && hasSettings && (
-        <div className="relative border-t border-white/10 bg-black/25 p-4 sm:p-5">
+        <div className="relative shrink-0 border-t border-white/10 bg-black/30 p-4 sm:p-5">
           <PluginSettingsForm plugin={plugin} onSaved={onSaved} />
         </div>
       )}
@@ -526,7 +545,7 @@ type SettingsSection = {
   enableKey?: string
 }
 
-function splitSettingsSections(schema: PluginSettingField[]): SettingsSection[] {
+function splitSettingsSections(schema: PluginSettingField[], defaultLabel: string): SettingsSection[] {
   const sections: SettingsSection[] = []
   let current: SettingsSection | null = null
   for (const field of schema) {
@@ -536,7 +555,7 @@ function splitSettingsSections(schema: PluginSettingField[]): SettingsSection[] 
       continue
     }
     if (!current) {
-      current = { key: '_general', label: 'Настройки', fields: [] }
+      current = { key: '_general', label: defaultLabel, fields: [] }
       sections.push(current)
     }
     current.fields.push(field)
@@ -548,9 +567,14 @@ function splitSettingsSections(schema: PluginSettingField[]): SettingsSection[] 
 }
 
 function PluginSettingsForm({ plugin, onSaved }: { plugin: PluginState; onSaved: () => void }) {
+  const { locale } = useAdminLocale()
+  void locale
   const [values, setValues] = useState<Record<string, unknown>>(() => ({ ...plugin.settings }))
   const [savedMsg, setSavedMsg] = useState('')
-  const sections = useMemo(() => splitSettingsSections(plugin.settings_schema), [plugin.settings_schema])
+  const sections = useMemo(
+    () => splitSettingsSections(plugin.settings_schema, t.pluginsSettingsHeading),
+    [plugin.settings_schema, locale],
+  )
   const useSplit = sections.length >= 2
   const [activeKey, setActiveKey] = useState(() => sections[0]?.key ?? '')
 
@@ -560,7 +584,7 @@ function PluginSettingsForm({ plugin, onSaved }: { plugin: PluginState; onSaved:
     mutationFn: (settings: Record<string, unknown>) =>
       api.put(`/admin/plugins/${plugin.name}/settings`, { settings }),
     onSuccess: () => {
-      setSavedMsg('Сохранено')
+      setSavedMsg(t.pluginsSaved)
       onSaved()
       setTimeout(() => setSavedMsg(''), 2000)
     },
@@ -572,7 +596,7 @@ function PluginSettingsForm({ plugin, onSaved }: { plugin: PluginState; onSaved:
     <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-3">
       <Button type="submit" className="admin-primary" disabled={save.isPending}>
         <Save size={15} className="mr-1.5" />
-        {save.isPending ? 'Сохранение…' : 'Сохранить'}
+        {save.isPending ? t.pluginsSaving : t.pluginsSave}
       </Button>
       {savedMsg && <span className="text-sm text-emerald-400">{savedMsg}</span>}
       {save.isError && <span className="text-sm text-red-400">{save.error?.message}</span>}
@@ -635,7 +659,7 @@ function PluginSettingsForm({ plugin, onSaved }: { plugin: PluginState; onSaved:
       <aside className="w-full shrink-0 lg:w-56 xl:w-64">
         <div className="rounded-xl border border-white/10 bg-black/30 lg:sticky lg:top-4">
           <p className="border-b border-white/10 px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-            Разделы
+            {t.pluginsSections}
           </p>
           <nav className="flex max-h-[min(28rem,60vh)] gap-1 overflow-x-auto overflow-y-auto p-1 lg:flex-col">
             {sections.map((section) => {

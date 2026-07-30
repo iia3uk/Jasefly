@@ -16,7 +16,7 @@ import { BrandLogo } from '@/components/BrandLogo'
 import { GlobalSearch } from '@/admin/components/GlobalSearch'
 import { ShortcutsHelp } from '@/admin/components/ShortcutsHelp'
 import { MigrationBanner } from '@/admin/components/MigrationBanner'
-import { t, useAdminLocale, resourceTitle } from '@/admin/i18n'
+import { t, useAdminLocale, resourceTitle, translateNavGroup } from '@/admin/i18n'
 import { AdminLocaleSwitcher } from '@/admin/components/AdminLocaleSwitcher'
 import { readPinnedNav, readSidebarCollapsed, writePinnedNav, writeSidebarCollapsed } from '@/admin/lib/prefs'
 import { getAdminNavGrouped, setPluginStates, subscribePluginState, type PluginState } from '@/core/moduleRegistry'
@@ -364,7 +364,7 @@ function AdminNav({
           return (
             <section key={group}>
               {!collapsed && (
-                <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">{group}</p>
+                <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">{translateNavGroup(group)}</p>
               )}
               {visible.map((it) => renderNavItem(it.path, it.label, it.icon, true))}
             </section>

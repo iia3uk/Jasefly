@@ -8,6 +8,10 @@ use App\Database;
 /**
  * Tracks which media IDs appear in content, and which are safe to stream
  * without authentication (published / public site surfaces only).
+ *
+ * Collectors are additive: column FKs, JSON layouts/galleries, then HTML/text
+ * bodies (blog, pages, comments). New sources can be registered in
+ * {@see collectFromHtmlBodies} without changing unused() callers.
  */
 final class MediaUsageService
 {
@@ -28,6 +32,7 @@ final class MediaUsageService
             $this->collectIds($ids, $sql);
         }
         $this->collectFromJsonColumns($ids, false);
+        $this->collectFromHtmlBodies($ids, false);
         return array_keys($ids);
     }
 
@@ -39,6 +44,7 @@ final class MediaUsageService
             $this->collectIds($ids, $sql);
         }
         $this->collectFromJsonColumns($ids, true);
+        $this->collectFromHtmlBodies($ids, true);
         return array_keys($ids);
     }
 
@@ -136,6 +142,73 @@ final class MediaUsageService
                 $this->extractIdsFromMixed($ids, $row['layout_json'] ?? null);
             }
         } catch (\Throwable) {
+        }
+    }
+
+    /**
+     * Scan HTML/text bodies for /media/{id} and media_id references
+     * (blog posts, page content, comments, product descriptions).
+     *
+     * @param array<int, true> $ids
+     */
+    private function collectFromHtmlBodies(array &$ids, bool $publicOnly): void
+    {
+        /** @var list<array{0: string, 1: string}> $sources sql => column */
+        $sources = [];
+
+        $sources[] = [
+            $publicOnly
+                ? "SELECT content FROM blog_posts WHERE content IS NOT NULL AND content!='' AND status='published' AND deleted_at IS NULL"
+                : "SELECT content FROM blog_posts WHERE content IS NOT NULL AND content!=''",
+            'content',
+        ];
+        $sources[] = [
+            $publicOnly
+                ? "SELECT content FROM pages WHERE content IS NOT NULL AND content!='' AND status='published'"
+                : "SELECT content FROM pages WHERE content IS NOT NULL AND content!=''",
+            'content',
+        ];
+        $sources[] = [
+            $publicOnly
+                ? "SELECT body FROM comments WHERE body IS NOT NULL AND body!='' AND status='approved' AND deleted_at IS NULL"
+                : "SELECT body FROM comments WHERE body IS NOT NULL AND body!='' AND deleted_at IS NULL",
+            'body',
+        ];
+        $sources[] = [
+            $publicOnly
+                ? "SELECT description FROM products WHERE description IS NOT NULL AND description!='' AND is_visible=1 AND deleted_at IS NULL"
+                : "SELECT description FROM products WHERE description IS NOT NULL AND description!=''",
+            'description',
+        ];
+
+        foreach ($sources as [$sql, $column]) {
+            try {
+                foreach ($this->db->all($sql) as $row) {
+                    $this->extractIdsFromHtml($ids, (string) ($row[$column] ?? ''));
+                }
+            } catch (\Throwable) {
+                // Table/column may be absent on partial installs.
+            }
+        }
+    }
+
+    /**
+     * @param array<int, true> $ids
+     */
+    private function extractIdsFromHtml(array &$ids, string $html): void
+    {
+        if ($html === '') {
+            return;
+        }
+        if (preg_match_all('#/(?:api/v1/)?media/(\d{1,10})\b#i', $html, $m)) {
+            foreach ($m[1] as $n) {
+                $ids[(int) $n] = true;
+            }
+        }
+        if (preg_match_all('#\bmedia_id["\']?\s*[:=]\s*["\']?(\d{1,10})\b#i', $html, $m2)) {
+            foreach ($m2[1] as $n) {
+                $ids[(int) $n] = true;
+            }
         }
     }
 

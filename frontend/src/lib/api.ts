@@ -167,6 +167,13 @@ async function request<T>(
   const headers: Record<string, string> = {}
   if (token) headers.Authorization = `Bearer ${token}`
   if (!isForm) headers['Content-Type'] = 'application/json'
+  // Admin UI locale → BE catalog / plugins copy (PluginCatalogMeta).
+  try {
+    const loc = localStorage.getItem('admin.locale')
+    headers['Accept-Language'] = loc === 'en' ? 'en' : 'ru'
+  } catch {
+    headers['Accept-Language'] = 'ru'
+  }
 
   const response = await fetch(`${API_BASE}${path}`, {
     method,
@@ -458,6 +465,7 @@ export const endpoints = {
     const query = qs.toString()
     return list<MediaAsset>(`/admin/media${query ? `?${query}` : ''}`)
   },
+  unusedMedia: () => list<MediaAsset>('/admin/media/unused'),
   mediaFolders: () => list<MediaFolder>('/admin/media/folders'),
   createMediaFolder: async (name: string, parentId?: IDLike | null) => {
     const res = await api.post<ApiEnvelope<MediaFolder>>('/admin/media/folders', {

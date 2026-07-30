@@ -15,6 +15,7 @@ import { SchedulerWidget } from './widgets/SchedulerWidget'
 import { NotificationsWidget } from './widgets/NotificationsWidget'
 import { NewsletterWidget } from './widgets/NewsletterWidget'
 import { BlogPulseWidget } from './widgets/BlogPulseWidget'
+import { OverloadWidget } from './widgets/OverloadWidget'
 
 /** Default visual order on a fresh dashboard. */
 export const DASHBOARD_WIDGETS: DashboardWidgetDef[] = [
@@ -133,6 +134,15 @@ export const DASHBOARD_WIDGETS: DashboardWidgetDef[] = [
     span: 'half',
     defaultVisible: false,
     Component: SchedulerWidget,
+  },
+  {
+    id: 'overload',
+    title: 'Нагрузка сервера',
+    hint: 'Load average и перегрузки',
+    plugin: 'overload',
+    span: 'half',
+    defaultVisible: true,
+    Component: OverloadWidget,
   },
   {
     id: 'newsletter',

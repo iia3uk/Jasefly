@@ -90,7 +90,12 @@ final class MediaController
 
     public function unused(Request $r): never
     {
-        Response::json(['data' => (new MediaUsageService($this->db))->unused()]);
+        $rows = (new MediaUsageService($this->db))->unused();
+        foreach ($rows as &$row) {
+            $row = $this->media->withDiskStatus($row);
+        }
+        unset($row);
+        Response::json(['data' => $rows]);
     }
 
     public function missing(Request $r): never

@@ -51,6 +51,18 @@ export const resources: Record<string, string> = new Proxy({} as Record<string, 
   },
 })
 
+export const navGroupLabels: Record<string, string> = new Proxy({} as Record<string, string>, {
+  get(_target, prop) {
+    if (typeof prop !== 'string') return undefined
+    return (activePack as Pack & { navGroupLabels?: Record<string, string> }).navGroupLabels?.[prop]
+  },
+})
+
+export function translateNavGroup(group: string): string {
+  const pack = activePack as Pack & { navGroupLabels?: Record<string, string> }
+  return pack.navGroupLabels?.[group] ?? group
+}
+
 export function resourceTitle(key: string): string {
   return activePack.resourceTitle(key)
 }

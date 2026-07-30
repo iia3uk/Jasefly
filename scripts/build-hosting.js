@@ -867,6 +867,15 @@ try {
     require __DIR__ . '/api/src/Bootstrap.php';
     [$app, $db] = Bootstrap::init();
 
+    // Overload protection: shed public HTML early (before prerender/SPA work).
+    try {
+        if (class_exists(\\App\\Modules\\Overload\\OverloadService::class)) {
+            \\App\\Modules\\Overload\\OverloadService::enforceDocumentRoot($db, $app);
+        }
+    } catch (\\Throwable) {
+        // fail-open
+    }
+
     $uri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
     $reqPath = parse_url($uri, PHP_URL_PATH);
     $reqPath = is_string($reqPath) && $reqPath !== '' ? $reqPath : '/';

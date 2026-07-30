@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCheck, Download, FolderPlus, MailOpen, Trash2, Upload, RefreshCw } from 'lucide-react'
+import { BookOpen, CheckCheck, ChevronDown, Download, FolderPlus, MailOpen, Trash2, Upload, RefreshCw } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { api, endpoints, mediaUrl } from '@/lib/api'
 import { copyToClipboard } from '@/lib/clipboard'
@@ -11,6 +11,56 @@ import { PageContext } from '@/admin/components/PageContext'
 import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { t } from '@/admin/i18n'
 import clsx from 'clsx'
+
+function MediaLibraryHelp() {
+  const [open, setOpen] = useState(false)
+  return (
+    <GlassPanel className="mb-4 overflow-hidden p-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-white/[0.02]"
+      >
+        <span className="inline-flex items-center gap-2 text-sm font-medium text-zinc-100">
+          <BookOpen className="h-4 w-4 text-teal-400" />
+          {t.mediaHelpTitle}
+        </span>
+        <ChevronDown className={`h-4 w-4 text-zinc-500 transition ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open ? (
+        <div className="space-y-4 border-t border-zinc-800 px-4 py-4 text-sm leading-relaxed text-zinc-300">
+          <p>
+            Выявляет и позволяет быстро удалить изображения, которые не использованы ни в одном типе контента
+            и комментариях.
+          </p>
+          <p className="text-zinc-400">
+            Архитектура модульная: сканер ссылок складывается из отдельных источников (поля FK, layout JSON,
+            HTML-тела блога/страниц/товаров, комментарии) — новый тип контента можно добавить без переписывания
+            всей медиатеки.
+          </p>
+          <section className="space-y-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Полный обход контента</h2>
+            <p>
+              Используйте режим <strong className="font-medium text-zinc-100">«Неиспользуемые»</strong> (полный
+              обход контента) всегда, кроме случая, если у вас очень много контента и очень мало изображений
+              (примерно 100 к 1), или вы проверяете одну малочисленную группу — тогда удобнее смотреть папку
+              или фильтр, а не весь список неиспользуемых.
+            </p>
+            <p>
+              Кроме того, медиатека находит изображения, которые учтены в базе, но{' '}
+              <strong className="font-medium text-zinc-100">физически отсутствуют</strong> на диске
+              (бейдж «битые» / кнопка «Очистить битые»).
+            </p>
+          </section>
+          <p className="rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-amber-100/90">
+            Используйте с осторожностью, чтобы не удалить изображения из нестандартных компонентов, кастомного
+            HTML или внешних вставок, которые сканер ещё не учитывает.
+          </p>
+        </div>
+      ) : null}
+    </GlassPanel>
+  )
+}
 
 function Header({ title, contextKey, subtitle }: { title: string; contextKey: string; subtitle?: string }) {
   return (
@@ -34,6 +84,7 @@ export function MediaLibraryPage() {
   const [folder, setFolder] = useState<FolderFilter>('all')
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [unusedOnly, setUnusedOnly] = useState(false)
   const [missingAltOnly, setMissingAltOnly] = useState(() => {
     try {
       return new URLSearchParams(window.location.search).get('missing_alt') === '1'
@@ -54,16 +105,24 @@ export function MediaLibraryPage() {
       folder_id: folder === 'all' ? undefined : folder,
       q: query.trim() || undefined,
     }),
+    enabled: !unusedOnly,
+  })
+  const unusedQuery = useQuery({
+    queryKey: ['admin', 'media', 'unused'],
+    queryFn: endpoints.unusedMedia,
+    enabled: unusedOnly,
   })
 
   const folders = foldersQuery.data ?? []
-  const mediaAll = mediaQuery.data ?? []
+  const mediaAll = (unusedOnly ? unusedQuery.data : mediaQuery.data) ?? []
   const media = missingAltOnly
     ? mediaAll.filter((m) => !String(m.alt_text || '').trim())
     : mediaAll
   const missingAltCount = mediaAll.filter((m) => !String(m.alt_text || '').trim()).length
   const uploadFolderId = folder === 'all' || folder === 'root' ? null : folder
   const missingCount = mediaAll.filter((m) => m.missing).length
+  const listLoading = unusedOnly ? unusedQuery.isLoading : mediaQuery.isLoading
+  const unusedCount = unusedOnly ? mediaAll.length : null
 
   const folderButtons = useMemo(() => ([
     { id: 'all' as const, label: t.folderAll },
@@ -72,7 +131,8 @@ export function MediaLibraryPage() {
   ]), [folders])
 
   const refresh = async () => {
-    await mediaQuery.refetch()
+    if (unusedOnly) await unusedQuery.refetch()
+    else await mediaQuery.refetch()
     await foldersQuery.refetch()
     void client.invalidateQueries({ queryKey: ['admin', 'media'] })
   }
@@ -162,6 +222,7 @@ export function MediaLibraryPage() {
   return (
     <>
       <Header title={t.mediaLibrary} contextKey="media" />
+      <MediaLibraryHelp />
       <div className="grid gap-6 lg:grid-cols-[14rem_1fr]">
         <aside className="space-y-1">
           <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">{t.folders}</p>
@@ -169,9 +230,12 @@ export function MediaLibraryPage() {
             <button
               key={String(item.id)}
               type="button"
-              onClick={() => setFolder(item.id)}
+              onClick={() => {
+                setUnusedOnly(false)
+                setFolder(item.id)
+              }}
               className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${
-                String(folder) === String(item.id) ? 'bg-white/10 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+                !unusedOnly && String(folder) === String(item.id) ? 'bg-white/10 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-white'
               }`}
             >
               <span className="truncate">{item.label}</span>
@@ -198,10 +262,26 @@ export function MediaLibraryPage() {
 
         <div>
           <div className="mb-4 flex flex-wrap gap-3">
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.searchFiles} className="min-w-0 flex-1" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t.searchFiles}
+              className="min-w-0 flex-1"
+              disabled={unusedOnly}
+            />
             <input ref={file} type="file" className="hidden" multiple accept="image/*,application/pdf,video/mp4" onChange={(e) => uploadFiles(e.target.files)} />
-            <Button type="button" disabled={uploading} onClick={() => file.current?.click()}>
+            <Button type="button" disabled={uploading || unusedOnly} onClick={() => file.current?.click()}>
               <Upload size={16} />{uploading ? t.uploading : t.uploadMedia}
+            </Button>
+            <Button
+              type="button"
+              className={unusedOnly ? 'border-teal-400/40 text-teal-200' : ''}
+              onClick={() => {
+                setUnusedOnly((v) => !v)
+                setMissingAltOnly(false)
+              }}
+            >
+              {t.unusedMedia}{unusedCount != null ? ` (${unusedCount})` : ''}
             </Button>
             <Button
               type="button"
@@ -217,12 +297,23 @@ export function MediaLibraryPage() {
             )}
           </div>
           <p className="mb-4 text-xs text-zinc-500">
-            {folder === 'all' ? t.folderUploadHintAll : folder === 'root' ? t.folderUploadHintRoot : t.folderUploadHintFolder}
+            {unusedOnly
+              ? t.unusedMediaHint
+              : folder === 'all'
+                ? t.folderUploadHintAll
+                : folder === 'root'
+                  ? t.folderUploadHintRoot
+                  : t.folderUploadHintFolder}
           </p>
+          {unusedQuery.isError && (
+            <p className="mb-4 text-sm text-red-400">
+              {unusedQuery.error instanceof Error ? unusedQuery.error.message : t.unusedMediaFail}
+            </p>
+          )}
           {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {mediaQuery.isLoading
+            {listLoading
               ? Array.from({ length: 10 }, (_, i) => <Skeleton key={i} className="aspect-square" />)
               : media.map((asset) => (
                 <GlassPanel className={`group overflow-hidden ${asset.missing ? 'ring-1 ring-amber-500/40' : ''}`} key={String(asset.id)}>
@@ -287,8 +378,10 @@ export function MediaLibraryPage() {
                 </GlassPanel>
               ))}
           </div>
-          {!mediaQuery.isLoading && !media.length && (
-            <p className="py-16 text-center text-sm text-zinc-500">{t.folderEmpty}</p>
+          {!listLoading && !media.length && (
+            <p className="py-16 text-center text-sm text-zinc-500">
+              {unusedOnly ? t.unusedMediaEmpty : t.folderEmpty}
+            </p>
           )}
         </div>
       </div>

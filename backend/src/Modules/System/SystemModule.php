@@ -81,7 +81,10 @@ final class SystemModule extends AbstractModule
         }, $protected);
 
         // Plugins management: list / toggle / configure.
-        $router->get($p('/admin/plugins'), function () {
+        $router->get($p('/admin/plugins'), function (Request $r) {
+            \App\Core\PluginCatalogMeta::setLocaleFromAcceptLanguage(
+                (string) ($r->header('Accept-Language') ?? ($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'ru'))
+            );
             /** @var ModuleRegistry $registry */
             $registry = Container::getInstance()->get(ModuleRegistry::class);
             Response::json(['data' => $registry->catalog()]);
