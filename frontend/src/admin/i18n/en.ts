@@ -63,6 +63,9 @@ export const t = {
   save: 'Save',
   saveChanges: 'Save changes',
   saving: 'Saving…',
+  savedOverlay: 'Saved',
+  orderSaved: 'Order saved',
+  publishSaved: 'Published',
   saveDraft: 'Save draft',
   publish: 'Publish',
   newItem: 'New item',
@@ -342,7 +345,7 @@ export const navGroups = [
     ['/admin/trash', 'Trash'],
   ]],
   ['Site', [
-    ['/admin/hero', 'Hero block'],
+    ['/admin/hero', 'Appearance'],
     ['/admin/homepage', 'Homepage'],
     ['/admin/navigation', 'Navigation'],
     ['/admin/footer', 'Footer'],

@@ -92,10 +92,12 @@ final class TranslateSync
             return;
         }
         if (is_string($node)) {
+            // Keep HTML split rules identical to TranslateCorpus::ingest.
             $raw = $node;
             if (str_contains($raw, '<')) {
                 $raw = preg_replace('/<br\s*\/?>/iu', "\n", $raw) ?? $raw;
-                $raw = preg_replace('/<\/(p|li|div|h[1-6]|tr|td|th|blockquote)>/iu', "\n", $raw) ?? $raw;
+                $raw = preg_replace('/<\/(p|li|div|h[1-6]|tr|td|th|blockquote|section|article|figcaption)>/iu', "\n", $raw) ?? $raw;
+                $raw = preg_replace('/<(p|li|div|h[1-6]|tr|td|th|blockquote|section|article)\b[^>]*>/iu', "\n", $raw) ?? $raw;
             }
             $text = html_entity_decode(strip_tags($raw), ENT_QUOTES | ENT_HTML5, 'UTF-8');
             foreach (preg_split('/[\r\n]+/u', $text) ?: [$text] as $part) {

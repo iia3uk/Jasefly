@@ -1,0 +1,40 @@
+---
+description: Platform Audit Mode — systems review before any improve/harden work
+alwaysApply: true
+---
+
+# Platform Audit Mode (§ audit protocol)
+
+Triggers: review / audit / analyze / improve / harden / prepare for production / look deeper / weak points / similar.
+
+**Do NOT propose or start code changes first.** Understand the platform; report with evidence.
+
+## How to review
+
+1. **Systems, not files** — reconstruct the full subsystem (auth, builder, packages, etc.) end-to-end including FE, MCP, scheduler, tests. Never stop after one file.
+2. **Architecture over bugs** — hunt: duplicate mechanisms, second SoT, ownership leaks, Core↔domain bleed, missing/broken contracts, silent failures, weak transactions, reverse deps, hacks-as-architecture.
+3. **Docs vs code** — verify `CMS_MAP`, `ARCHITECTURE`, `SECURITY`, SDK/governance/cert/Builder docs against implementation; report drift. Docs are not truth.
+4. **Drift** — Core feature-aware? packages isolated? SDK clean? Builder special-cases? compatibility layers multiplying?
+5. **Public contracts** — API, SDK, Builder JSON, manifests, capabilities, permissions, events, MCP, snapshots: stable / versioned / compatible / consistent; obey governance if present.
+6. **Observability** — can admin, MCP, logs, health, rollback explain failure? Invisible failure = architecture bug.
+7. **Lifecycle** — create/update/delete/enable/disable/install/upgrade/rollback/restore/backup/import/export: half-failure state + consistency restore.
+8. **Production maturity** — tests, CI, migrations, security regressions, diagnostics, deploy, freezes, hosting, offline tools, release verify. Label: implemented / documented / **actually verified**.
+9. **Proof** — claims like secure/compatible/rollback-safe need tests, snapshots, validation, CI. Comments ≠ evidence.
+
+## Report shape (required)
+
+Strengths · Architectural risks · Technical debt · Production readiness · Security · Contracts · Compatibility · Testing · Recommended priorities · Must NOT refactor · Future bottlenecks.
+
+Every finding: **Critical / High / Medium / Low**. No mixing cleanup into critical work.
+
+## Philosophy
+
+Prefer extension, isolation, verification, contracts, tests, diagnostics, compatibility. Replace only when the subsystem cannot safely evolve. Evidence-first: no speculation, no praise/criticism without implementation proof.
+
+## Continuous scores (justify each)
+
+Core · Module isolation · Builder · SDK · Package lifecycle · Security · Observability · Contract governance · Testing · Production readiness · Maintainability.
+
+## Objective
+
+Not make Jasefly larger — make it safely evolvable for years. Every recommendation must reduce long-term architectural entropy.

@@ -1,7 +1,8 @@
 import { Link, NavLink } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { Menu, X } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import clsx from 'clsx'
 import { Container } from '@/components/ui'
 import { useSiteContext } from '@/context/SiteContext'
 import { useAuth } from '@/context/AuthContext'
@@ -147,20 +148,88 @@ export function Header() {
   const { site, loading } = useSiteContext()
   const { token } = useAuth()
   const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const headerRef = useRef<HTMLElement>(null)
   const nav = site?.navigation ?? []
   const name = site?.site_settings?.site_name
   const links = nav.filter((item) => !isHeaderCta(item))
   const ctas = nav.filter((item) => isHeaderCta(item))
   const primaryCta = ctas[ctas.length - 1]
+  // Default = overlay (transparent until first scroll) — основной шаблон.
+  const overlay = String(site?.theme?.header_style || 'overlay') !== 'solid'
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
+    const snap = document.getElementById('cms-snap-scroller')
+    const prevOverflow = snap?.style.overflow ?? ''
+    if (snap && open) snap.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+      if (snap) snap.style.overflow = prevOverflow
+    }
   }, [open])
+
+  useEffect(() => {
+    if (!overlay) {
+      setScrolled(false)
+      return
+    }
+    const readY = () => {
+      const snap = document.getElementById('cms-snap-scroller')
+      if (snap && snap.scrollHeight > snap.clientHeight + 4) return snap.scrollTop
+      return window.scrollY || document.documentElement.scrollTop || 0
+    }
+    const onScroll = () => setScrolled(readY() > 12)
+    onScroll()
+    const snap = document.getElementById('cms-snap-scroller')
+    snap?.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      snap?.removeEventListener('scroll', onScroll)
+      window.removeEventListener('scroll', onScroll)
+    }
+  }, [overlay])
+
+  // Hero/snap viewport: overlay → full screen under admin bar; solid → minus header.
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const root = document.documentElement
+    const measure = () => {
+      const h = Math.round(el.getBoundingClientRect().height)
+      root.style.setProperty('--cms-header-h', `${h}px`)
+      const heroVh = overlay
+        ? 'calc(100dvh - var(--admin-bar-h, 0px))'
+        : `calc(100dvh - ${h}px - var(--admin-bar-h, 0px))`
+      root.style.setProperty('--cms-hero-vh', heroVh)
+      root.style.setProperty('--cms-snap-vh', heroVh)
+      root.dataset.headerStyle = overlay ? 'overlay' : 'solid'
+    }
+    measure()
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null
+    ro?.observe(el)
+    window.addEventListener('resize', measure)
+    return () => {
+      ro?.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [open, token, overlay])
+
+  const solidBar = !overlay || scrolled || open
 
   return (
     <header
-      className="sticky z-50 border-b border-white/[0.06] bg-[color:var(--background)]/75 backdrop-blur-xl"
+      ref={headerRef}
+      data-cms-header
+      data-style={overlay ? 'overlay' : 'solid'}
+      data-scrolled={solidBar ? '1' : '0'}
+      className={clsx(
+        'z-50 transition-[background-color,border-color,backdrop-filter,box-shadow] duration-300',
+        overlay ? 'fixed inset-x-0' : 'sticky',
+        solidBar
+          ? 'border-b border-white/[0.06] bg-[color:var(--background)]/80 shadow-[0_8px_32px_rgb(0_0_0/0.25)] backdrop-blur-xl'
+          : 'border-b border-transparent bg-transparent',
+      )}
       style={{ top: token ? 'var(--admin-bar-h, 36px)' : 0 }}
     >
       <Container className="flex h-14 items-center justify-between gap-4 sm:h-[4.25rem]">
@@ -208,7 +277,10 @@ export function Header() {
           }
         >
           <button type="button" className="absolute inset-0 bg-black/65" aria-label="Закрыть" onClick={() => setOpen(false)} />
-          <nav className="absolute inset-x-0 top-0 max-h-[min(70dvh,calc(100dvh-3.5rem))] overflow-y-auto overscroll-contain border-b border-white/[0.08] bg-[color:var(--background)] px-4 py-2 shadow-2xl sm:max-h-[min(70dvh,calc(100dvh-4.25rem))] sm:px-6" aria-label="Мобильная навигация">
+          <nav
+            className="absolute inset-x-0 top-0 max-h-[min(70dvh,calc(100dvh-3.5rem-env(safe-area-inset-bottom,0px)))] overflow-y-auto overscroll-contain border-b border-white/[0.08] bg-[color:var(--background)] px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] shadow-2xl sm:max-h-[min(70dvh,calc(100dvh-4.25rem-env(safe-area-inset-bottom,0px)))] sm:px-6"
+            aria-label="Мобильная навигация"
+          >
             {links.map((item) => (
               <NavLink
                 key={String(item.id)}
@@ -241,7 +313,10 @@ export function Footer() {
   const { site } = useSiteContext()
   const { data: contact } = useContactInfo()
   const year = new Date().getFullYear()
-  const copyright = (site?.footer?.copyright_text || '').replace('{year}', String(year))
+  const copyrightHtml = sanitizeHtml(
+    (site?.footer?.copyright_text || '').replace('{year}', String(year)),
+  )
+  const taglineHtml = sanitizeHtml(site?.footer?.tagline || '')
   const columns = parseJson(site?.footer?.columns_json, [] as Array<{ title?: string; links?: Array<{ label: string; href: string }> }>)
   const footerNav = site?.footer_nav ?? []
   const social = site?.social ?? []
@@ -261,9 +336,12 @@ export function Footer() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr]">
           <div className="sm:col-span-2 lg:col-span-1">
             <p className="font-heading text-lg font-semibold">{site?.site_settings?.site_name}</p>
-            {site?.footer?.tagline && (
-              <p className="mt-3 max-w-sm text-sm leading-6 text-[var(--muted)]">{site.footer.tagline}</p>
-            )}
+            {taglineHtml ? (
+              <p
+                className="mt-3 max-w-sm text-sm leading-6 text-[var(--muted)] [&_a]:text-[var(--accent)] [&_a]:underline-offset-2 hover:[&_a]:underline"
+                dangerouslySetInnerHTML={{ __html: taglineHtml }}
+              />
+            ) : null}
             {(email || phone || address) ? (
               <address className="mt-4 space-y-1 text-sm not-italic leading-6 text-[var(--muted)]">
                 {email ? <div><a className="link-text" href={`mailto:${email}`}>{email}</a></div> : null}
@@ -329,7 +407,12 @@ export function Footer() {
             </div>
           )}
         </div>
-        <p className="mt-10 text-sm text-[var(--muted)] sm:mt-12">{copyright}</p>
+        {copyrightHtml ? (
+          <p
+            className="mt-10 text-sm text-[var(--muted)] sm:mt-12 [&_a]:text-[var(--accent)] [&_a]:underline-offset-2 hover:[&_a]:underline"
+            dangerouslySetInnerHTML={{ __html: copyrightHtml }}
+          />
+        ) : null}
       </Container>
     </footer>
   )
@@ -339,6 +422,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
   const { site } = useSiteContext()
   const { token } = useAuth()
   const customHtml = site?.theme?.custom_html?.trim()
+  const overlayNav = String(site?.theme?.header_style || 'overlay') !== 'solid'
 
   return (
     <>
@@ -347,13 +431,17 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       <AdminBar />
       <div style={token ? { paddingTop: 'var(--admin-bar-h, 36px)' } : undefined}>
         <Header />
-        <SiteBreadcrumbs />
         {/* Only this node scrolls when page snap is on (html/body overflow hidden). */}
-        <div id="cms-snap-scroller" className="min-w-0">
+        <div
+          id="cms-snap-scroller"
+          className={clsx('min-w-0', overlayNav && 'cms-nav-overlay-scroll')}
+        >
+          <SiteBreadcrumbs />
           {customHtml ? (
             <div
               id="site-template-custom-html"
               className="site-template-custom-html"
+              data-translate-root
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(customHtml) }}
             />
           ) : null}

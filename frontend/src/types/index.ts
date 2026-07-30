@@ -53,6 +53,8 @@ export interface ThemeSettings {
   font_body?: string
   border_radius?: string
   glass_opacity?: number | string
+  /** overlay = transparent until scroll (default); solid = classic sticky bar */
+  header_style?: 'overlay' | 'solid' | string
   custom_css?: string
   custom_html?: string
   custom_js?: string
@@ -106,7 +108,8 @@ export interface NavItem {
   label: string
   href: string
   target?: '_self' | '_blank'
-  location?: string
+  parent_id?: ID | null
+  location?: 'header' | 'footer' | 'both' | string
   sort_order?: number
   is_visible?: boolean | number
 }
@@ -498,6 +501,7 @@ export interface SitePayload {
 export interface TranslateSiteSettings {
   widget_enabled?: boolean
   auto_warmup?: boolean
+  geo_auto_lang?: boolean
   source_lang?: string
   languages?: string[]
   position?: string
@@ -505,6 +509,9 @@ export interface TranslateSiteSettings {
   cache_ready?: boolean
   content_hash?: string
   mode?: string
+  visitor_country?: string | null
+  suggested_lang?: string
+  geo_via?: string
 }
 
 export interface AuthResponse {

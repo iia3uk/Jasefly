@@ -58,7 +58,17 @@ function Select({
   )
 }
 function Check({ label, checked, onChange }: { label: string; checked?: unknown; onChange: (v: boolean) => void }) { return <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={Boolean(checked)} onChange={e => onChange(e.target.checked)} />{label}</label> }
-function SaveBar({ saving, error, onSave, label = t.saveChanges, children }: { saving?: boolean; error?: string; onSave: () => void; label?: string; children?: ReactNode }) { return <div className="sticky bottom-4 z-20 mt-8 flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-[#151518]/95 p-3 backdrop-blur"><Button type="button" disabled={saving} onClick={onSave}>{saving ? t.saving : label}</Button>{children}{error && <span className="text-sm text-red-400">{error}</span>}</div> }
+function SaveBar({ saving, error, onSave, label = t.saveChanges, children }: { saving?: boolean; error?: string; onSave: () => void; label?: string; children?: ReactNode }) {
+  return (
+    <div className="sticky bottom-0 z-20 mt-8 border-t border-white/10 bg-[#0a0a0b]/92 px-0 py-3 backdrop-blur-md supports-[backdrop-filter]:bg-[#0a0a0b]/80">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-[#151518] p-3 shadow-[0_-8px_32px_rgb(0_0_0/0.35)]">
+        <Button type="button" disabled={saving} onClick={onSave}>{saving ? t.saving : label}</Button>
+        {children}
+        {error && <span className="text-sm text-red-400">{error}</span>}
+      </div>
+    </div>
+  )
+}
 
 function listItemTitle(item: Data): string {
   const primary = item.title ?? item.name ?? item.company ?? item.institution ?? item.author_name ?? item.label ?? item.platform ?? item.section_key
@@ -128,15 +138,25 @@ function useDirtyForm(form: Data, baseline: Data | null) {
 
 function PluginOffNotice({ plugin }: { plugin: string }) {
   return (
-    <GlassPanel className="p-10 text-center">
-      <h1 className="font-heading text-xl">{resourceTitle(plugin)}</h1>
-      <p className="mt-2 text-sm text-zinc-500">
-        Плагин «{plugin}» выключен — раздел недоступен. Включите его в{' '}
-        <Link to={adminUrl('/plugins')} className="text-[var(--accent)] underline-offset-2 hover:underline">
-          Плагинах
-        </Link>
-        .
-      </p>
+    <GlassPanel className="relative overflow-hidden p-10 text-center">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 65% 90% at 50% 0%, rgb(251 191 36 / 0.1), transparent 55%)',
+        }}
+        aria-hidden
+      />
+      <div className="relative">
+        <h1 className="font-heading text-xl text-zinc-100">{resourceTitle(plugin)}</h1>
+        <p className="mt-2 text-sm text-zinc-500">
+          Плагин «{plugin}» выключен — раздел недоступен. Включите его в{' '}
+          <Link to={adminUrl('/plugins')} className="text-teal-300 underline-offset-2 hover:underline">
+            Плагинах
+          </Link>
+          .
+        </p>
+      </div>
     </GlassPanel>
   )
 }
@@ -257,7 +277,7 @@ export function CrudListPage({ resource, basePath }: { resource: string; basePat
             </p>
           ) : (
             <input
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm"
+              className="w-full rounded-full border border-white/10 bg-zinc-900/80 px-4 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-teal-400/30 focus:outline-none"
               placeholder={t.filterList}
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
@@ -433,7 +453,7 @@ export function CrudEditPage({ resource, basePath }: { resource: string; basePat
       form={
         <>
           {bannerNode}
-          <GlassPanel className={adminFormGridClass}>
+          <GlassPanel className={`${adminFormGridClass} pb-4`}>
             {(() => {
               // Blueprint-driven fields take precedence when a blueprint is
               // registered for this resource; otherwise fall back to the

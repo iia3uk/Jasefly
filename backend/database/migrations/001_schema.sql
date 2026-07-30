@@ -566,6 +566,7 @@ CREATE TABLE theme_settings (
   font_body VARCHAR(80) NOT NULL DEFAULT 'DM Sans',
   border_radius VARCHAR(20) NOT NULL DEFAULT '14px',
   glass_opacity DECIMAL(3,2) NOT NULL DEFAULT 0.08,
+  header_style VARCHAR(20) NOT NULL DEFAULT 'overlay',
   custom_css TEXT NULL,
   custom_html TEXT NULL,
   custom_js TEXT NULL,

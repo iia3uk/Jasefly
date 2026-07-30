@@ -677,7 +677,6 @@ export function TermsPage() {
 }
 
 export function NotFoundPage() {
-  const { data } = useSite()
   const [q, setQ] = useState('')
   const [debounced, setDebounced] = useState('')
 
@@ -704,10 +703,9 @@ export function NotFoundPage() {
   return (
     <Section className="pt-16 sm:pt-24">
       <Container className="max-w-xl">
-        <SeoHead title="Не найдено" path="/not-found" noIndex />
-        <p className="text-[var(--muted)]">404</p>
-        <h1 className="mt-3 font-heading text-[2.2rem] font-semibold tracking-[-0.05em] sm:text-5xl">Такой страницы нет.</h1>
-        <p className="mt-3 text-sm text-[var(--muted)]">Попробуйте найти нужный раздел или вернитесь на главную.</p>
+        <SeoHead title="Страница не найдена — Jasefly CMS" description="Запрошенная страница не существует или была перемещена." path="/not-found" noIndex />
+        <h1 className="mt-3 font-heading text-[2.2rem] font-semibold tracking-[-0.05em] sm:text-5xl">Страница не найдена</h1>
+        <p className="mt-3 text-sm text-[var(--muted)]">Возможно, адрес изменился, страница была удалена или в ссылке допущена ошибка.</p>
 
         <label className="mt-8 block space-y-2">
           <span className="sr-only">Поиск по сайту</span>
@@ -745,9 +743,14 @@ export function NotFoundPage() {
           </div>
         )}
 
-        <Link to="/" className="button mt-8 inline-flex">
-          На главную{data?.site_settings?.site_name ? ` · ${data.site_settings.site_name}` : ''}
-        </Link>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link to="/" className="button inline-flex">
+            Перейти на главную
+          </Link>
+          <Link to="/docs" className="button inline-flex border border-white/15 bg-transparent text-[var(--text)] hover:bg-white/5">
+            Открыть документацию
+          </Link>
+        </div>
       </Container>
     </Section>
   )

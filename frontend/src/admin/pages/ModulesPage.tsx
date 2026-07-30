@@ -13,6 +13,7 @@ import {
 import { api } from '@/lib/api'
 import { loadPackageModules, unloadPackageModule } from '@/core/packageModuleLoader'
 import { Button, GhostButton, GlassPanel, Skeleton } from '@/shared/ui'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { PageContext } from '@/admin/components/PageContext'
 import { adminUrl } from '@/admin/adminBasePath'
 import clsx from 'clsx'
@@ -210,11 +211,14 @@ export function ModulesPage() {
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="font-heading text-3xl">Модули</h1>
-        <p className="mt-1 text-sm text-zinc-500">Установка и обновление пакетов без пересборки CMS</p>
+      <AdminPageHero
+        title="Модули"
+        hint="Установка и обновление пакетов без пересборки CMS"
+        eyebrow="Система"
+        accent="violet"
+      >
         <PageContext contextKey="modules" />
-      </div>
+      </AdminPageHero>
 
       <GlassPanel className="mb-5 border-amber-400/30 bg-amber-500/[0.06] p-4 text-sm text-amber-50/90">
         <div className="flex gap-2">

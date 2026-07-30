@@ -1,17 +1,16 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Check, Plus, Trash2 } from 'lucide-react'
-import { useAdminItem, useAdminList, useAdminSingleton, useCrud, useSingletonSave } from '@/hooks/useApi'
-import { api } from '@/lib/api'
-import type { HomepageSection, ThemeSettings } from '@/types'
+import { Check } from 'lucide-react'
+import { useAdminItem, useAdminList, useAdminSingleton, useCrud, useSingletonSave, useSite } from '@/hooks/useApi'
+import { api, endpoints } from '@/lib/api'
+import type { PageLayout, ThemeSettings } from '@/types'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { MediaPicker } from '@/admin/components/MediaPicker'
 import { RichTextEditor } from '@/admin/components/RichTextEditor'
 import { AdminSplitLayout, adminFormFullClass, adminFormGridClass } from '@/admin/components/AdminSplitLayout'
-import { HeroPreview, HomepageSectionPreview, ListContextPreview, SingletonPreview, ThemePreview } from '@/admin/preview'
+import { HeroPreview, HomepageSectionPreview, SingletonPreview, ThemePreview } from '@/admin/preview'
 import { t, fieldLabel } from '@/admin/i18n'
-import { getContext } from '@/admin/context/registry'
 import {
   applySiteTemplate,
   CUSTOM_TEMPLATE_ID,
@@ -24,6 +23,7 @@ import { useAdminRouteParams } from '@/admin/AdminRouteParams'
 import { HeroEditor } from '@/admin/components/HeroEditor'
 import { adminUrl, normalizeAdminBase, setAdminBaseFromSite } from '@/admin/adminBasePath'
 import { useAuth } from '@/context/AuthContext'
+import { layoutHeroMediaId, pushHeroMediaToHomeLayout } from '@/builder/editor/cmsSync'
 
 type Data = Record<string, any>
 function Field({ label, value, set, type = 'text' }: { label: string; value?: any; set: (v: any) => void; type?: string }) {
@@ -36,9 +36,11 @@ function Field({ label, value, set, type = 'text' }: { label: string; value?: an
 }
 function Save({ run, saving, error }: { run: () => void; saving?: boolean; error?: string }) {
   return (
-    <div className="sticky bottom-4 z-20 mt-8 flex items-center gap-3 rounded-xl border border-white/10 bg-[#151518]/95 p-3">
-      <Button type="button" onClick={run} disabled={saving}>{saving ? t.saving : t.saveChanges}</Button>
-      {error && <span className="text-sm text-red-400">{error}</span>}
+    <div className="sticky bottom-0 z-20 mt-8 border-t border-white/10 bg-[#0a0a0b]/92 px-0 py-3 backdrop-blur-md supports-[backdrop-filter]:bg-[#0a0a0b]/80">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-[#151518] p-3 shadow-[0_-8px_32px_rgb(0_0_0/0.35)]">
+        <Button type="button" onClick={run} disabled={saving}>{saving ? t.saving : t.saveChanges}</Button>
+        {error && <span className="text-sm text-red-400">{error}</span>}
+      </div>
     </div>
   )
 }
@@ -71,6 +73,7 @@ const pathToContextKey: Record<string, string> = {
 
 export function SingletonPage({ path, title }: { path: string; title: string }) {
   const { data, isLoading } = useAdminSingleton<Data>(path)
+  const { data: site } = useSite()
   const save = useSingletonSave(path)
   const nav = useNavigate()
   const qc = useQueryClient()
@@ -80,6 +83,27 @@ export function SingletonPage({ path, title }: { path: string; title: string }) 
   const mediaField = path === 'hero' ? 'background_media_id' : path === 'seo' ? 'og_image_id' : path === 'site-settings' ? 'logo_media_id' : undefined
   const fields = singletonFields[path] ?? Object.keys(form).filter(k => k !== 'id' && k !== 'updated_at' && k !== 'created_at')
   const contextKey = pathToContextKey[path] ?? path
+  const heroMediaHealed = useRef(false)
+
+  // Builder home uses hero-block.media_id — heal empty Admin Hero from layout once.
+  useEffect(() => {
+    if (path !== 'hero' || !data || heroMediaHealed.current) return
+    const cmsMedia = data.background_media_id ?? data.background?.id
+    if (cmsMedia != null && cmsMedia !== '' && cmsMedia !== 0) return
+    const layout = site?.home_page?.layout as PageLayout | undefined
+    if (!layout) return
+    const layoutMedia = layoutHeroMediaId(layout)
+    if (layoutMedia == null || layoutMedia === '' || layoutMedia === 0) return
+    heroMediaHealed.current = true
+    setForm((prev) => ({ ...prev, background_media_id: layoutMedia }))
+    setBaseline((prev) => (prev ? { ...prev, background_media_id: layoutMedia } : prev))
+    void endpoints.adminSingletonSave('hero', { background_media_id: layoutMedia })
+      .then(() => {
+        void qc.invalidateQueries({ queryKey: ['admin-singleton', 'hero'] })
+        void qc.invalidateQueries({ queryKey: ['site'] })
+      })
+      .catch(() => { /* non-fatal */ })
+  }, [path, data, site?.home_page?.layout, setForm, setBaseline, qc])
 
   const baselineJson = useMemo(() => (baseline ? JSON.stringify(baseline) : null), [baseline])
   const dirty = baselineJson != null && JSON.stringify(form) !== baselineJson
@@ -96,6 +120,17 @@ export function SingletonPage({ path, title }: { path: string; title: string }) 
       onSuccess: (saved) => {
         clearDraftLocal()
         setBaseline(form)
+        if (path === 'hero') {
+          void pushHeroMediaToHomeLayout(form.background_media_id ?? null, site)
+            .then((changed) => {
+              if (changed) {
+                void qc.invalidateQueries({ queryKey: ['site'] })
+                void qc.invalidateQueries({ queryKey: ['admin', 'pages'] })
+              }
+            })
+            .catch(() => { /* non-fatal: singleton already saved */ })
+          void qc.invalidateQueries({ queryKey: ['site'] })
+        }
         if (path === 'site-settings') {
           const nextBase = normalizeAdminBase(
             (saved as Data)?.admin_base_path ?? form.admin_base_path,
@@ -108,7 +143,7 @@ export function SingletonPage({ path, title }: { path: string; title: string }) 
         }
       },
     })
-  }, [save, form, clearDraftLocal, path, baseline?.admin_base_path, nav, qc, setBaseline, isSuperAdmin])
+  }, [save, form, clearDraftLocal, path, baseline?.admin_base_path, nav, qc, setBaseline, isSuperAdmin, site])
   useAdminSaveHotkey(onSave)
 
   const formBody = path === 'hero' ? (
@@ -129,15 +164,36 @@ export function SingletonPage({ path, title }: { path: string; title: string }) 
       {bannerNode}
       {isLoading ? <Skeleton className="h-80" /> : (
         <GlassPanel className={adminFormGridClass}>
-          {fields.map(key => (
-            <Field
-              key={key}
-              label={fieldLabel(key)}
-              value={form[key]}
-              type={key.includes('port') || key.includes('per_page') ? 'number' : 'text'}
-              set={v => set(key, v)}
-            />
-          ))}
+          {fields.map(key => {
+            if (path === 'footer' && (key === 'tagline' || key === 'copyright_text')) {
+              return (
+                <label key={key} className={`${adminFormFullClass} block space-y-2 text-sm`}>
+                  <span>{fieldLabel(key)}</span>
+                  <textarea
+                    className="min-h-[5.5rem] w-full rounded-lg border border-white/10 bg-[#10141c] px-3 py-2 font-mono text-sm"
+                    value={String(form[key] ?? '')}
+                    onChange={(e) => set(key, e.target.value)}
+                  />
+                  <span className="block text-xs text-zinc-500">
+                    Можно HTML (ссылки):{' '}
+                    <code className="text-zinc-400">
+                      {'<a href="https://iia3uk.ru" target="_blank" rel="noopener">IIA3UK</a>'}
+                    </code>
+                    . Опасные теги отфильтруются на сайте.
+                  </span>
+                </label>
+              )
+            }
+            return (
+              <Field
+                key={key}
+                label={fieldLabel(key)}
+                value={form[key]}
+                type={key.includes('port') || key.includes('per_page') ? 'number' : 'text'}
+                set={v => set(key, v)}
+              />
+            )
+          })}
           {path === 'seo' && (
             <>
               <div className={`${adminFormFullClass} space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-4`}>
@@ -215,10 +271,19 @@ export function SingletonPage({ path, title }: { path: string; title: string }) 
             </>
           )}
           {path === 'footer' && (
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={Boolean(form.show_social)} onChange={e => set('show_social', e.target.checked)} />
-              {t.showSocial}
-            </label>
+            <div className="space-y-2 sm:col-span-2">
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={Boolean(form.show_social)} onChange={e => set('show_social', e.target.checked)} />
+                {t.showSocial}
+              </label>
+              <p className="text-xs text-zinc-500">
+                Сами ссылки — во вкладке{' '}
+                <Link to={adminUrl('/social-links')} className="text-teal-300/90 underline-offset-2 hover:underline">
+                  Соцсети
+                </Link>
+                {' '}(ядро CMS, не модуль Portfolio).
+              </p>
+            </div>
           )}
           {path === 'site-settings' && (
             <>
@@ -456,6 +521,23 @@ export function ThemeSettingsPage() {
             </div>
           </GlassPanel>
 
+          <GlassPanel className="mt-6 p-6">
+            <label className="block space-y-2 text-sm">
+              <span>Шапка (navbar)</span>
+              <select
+                className="w-full"
+                value={String(form.header_style || 'overlay')}
+                onChange={(e) => setForm((p) => ({ ...p, header_style: e.target.value }))}
+              >
+                <option value="overlay">Прозрачная до скролла (основной)</option>
+                <option value="solid">Сплошная (классическая)</option>
+              </select>
+            </label>
+            <p className="mt-2 text-xs text-zinc-500">
+              Прозрачная шапка лежит поверх Hero на весь экран; после первого скролла становится плотной.
+            </p>
+          </GlassPanel>
+
           {isCustom ? (
             <GlassPanel className="mt-6 p-6">
               <div className="flex flex-wrap gap-2">
@@ -539,43 +621,51 @@ export function ThemeSettingsPage() {
   )
 }
 
+/**
+ * Appearance → «Главная» used to list legacy `homepage_sections`.
+ * Live home content is in `pages.layout_json` (Page Builder) — redirect there.
+ */
 export function HomepagePage() {
-  const { data = [], isLoading } = useAdminList<HomepageSection>('homepage-sections')
-  const { remove } = useCrud('homepage-sections')
-  const ctx = getContext('homepage')
+  const nav = useNavigate()
+  const pages = useAdminList<{
+    id: number | string
+    is_home?: boolean | number
+    title?: string
+    template?: string
+  }>('pages')
+  const homePage = (pages.data ?? []).find((p) => Number(p.is_home) === 1 || p.is_home === true)
+  const builderHref = homePage ? adminUrl(`/pages/${homePage.id}/builder`) : null
+
+  useEffect(() => {
+    if (builderHref) nav(builderHref, { replace: true })
+  }, [builderHref, nav])
+
+  if (pages.isLoading) {
+    return <Skeleton className="h-40" />
+  }
+
+  if (!builderHref) {
+    return (
+      <GlassPanel className="p-8 text-center text-sm text-zinc-400">
+        Страница «Главная» не найдена в <code className="text-zinc-300">pages</code>.
+        <div className="mt-4">
+          <Link to={adminUrl('/pages')}>
+            <Button type="button">К списку страниц</Button>
+          </Link>
+        </div>
+      </GlassPanel>
+    )
+  }
 
   return (
-    <AdminSplitLayout
-      title={t.homepageSections}
-      contextKey="homepage"
-      actions={<Link to="/admin/homepage/new"><Button><Plus size={16} />{t.newSection}</Button></Link>}
-      form={
-        <GlassPanel className="divide-y divide-white/10">
-          {isLoading ? <Skeleton className="h-64" /> : data.map(section => (
-            <div className="flex items-center justify-between gap-4 p-4" key={String(section.id)}>
-              <Link className="min-w-0 flex-1 rounded-lg py-0.5 hover:bg-white/[0.03]" to={adminUrl(`/homepage/${section.id}`)}>
-                <b className={!section.title && !section.section_key ? 'text-zinc-400' : undefined}>
-                  {section.title || section.section_key || `${t.untitled} #${section.id}`}
-                </b>
-                {section.subtitle && <p className="truncate text-sm text-zinc-500">{section.subtitle}</p>}
-              </Link>
-              <Button
-                type="button"
-                className="px-2 text-red-300"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  if (confirm(t.deleteConfirm)) remove.mutate(section.id)
-                }}
-              >
-                <Trash2 size={16} />
-              </Button>
-            </div>
-          ))}
-        </GlassPanel>
-      }
-      preview={<ListContextPreview where={ctx.where} sampleTitle={data[0]?.title ?? data[0]?.section_key} />}
-    />
+    <GlassPanel className="p-8 text-center text-sm text-zinc-400">
+      Переходим в билдер главной…
+      <div className="mt-4">
+        <Link to={builderHref}>
+          <Button type="button" className="admin-primary">Открыть билдер</Button>
+        </Link>
+      </div>
+    </GlassPanel>
   )
 }
 

@@ -129,6 +129,7 @@ export function SnapSectionRail() {
   return (
     <nav
       aria-label="Секции страницы"
+      data-translate-root
       className={clsx('cms-snap-rail', open && 'cms-snap-rail--open')}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}

@@ -19,15 +19,16 @@ final class TranslateCorpus
     {
         $bag = [];
 
-        $this->addScalarRows($bag, 'pages', ['title', 'slug', 'seo_title', 'seo_description', 'content'], $max);
+        // Skip slug — URL tokens, not overlay copy (aligned with TranslateSync).
+        $this->addScalarRows($bag, 'pages', ['title', 'seo_title', 'seo_description', 'content'], $max);
         $this->addJsonColumn($bag, 'pages', 'layout_json', $max);
 
-        $this->addScalarRows($bag, 'blog_posts', ['title', 'slug', 'excerpt', 'seo_title', 'seo_description', 'content'], $max);
-        $this->addScalarRows($bag, 'projects', ['title', 'slug', 'short_description', 'description', 'content', 'seo_title', 'seo_description', 'role'], $max);
-        $this->addScalarRows($bag, 'services', ['title', 'slug', 'short_description', 'description', 'content', 'price_label'], $max);
+        $this->addScalarRows($bag, 'blog_posts', ['title', 'excerpt', 'seo_title', 'seo_description', 'content'], $max);
+        $this->addScalarRows($bag, 'projects', ['title', 'short_description', 'description', 'content', 'seo_title', 'seo_description', 'role'], $max);
+        $this->addScalarRows($bag, 'services', ['title', 'short_description', 'description', 'content', 'price_label'], $max);
         $this->addScalarRows($bag, 'testimonials', ['author_name', 'author_role', 'author_company', 'content'], $max);
         $this->addScalarRows($bag, 'navigation_items', ['label'], $max);
-        $this->addScalarRows($bag, 'products', ['title', 'slug', 'short_description', 'description'], $max);
+        $this->addScalarRows($bag, 'products', ['title', 'short_description', 'description'], $max);
 
         foreach (['hero_settings', 'footer_settings', 'contact_info', 'site_settings', 'seo_settings'] as $table) {
             $this->addSingletonRow($bag, $table, $max);
@@ -111,11 +112,25 @@ final class TranslateCorpus
             return;
         }
         foreach ($row as $key => $val) {
-            if (in_array($key, ['id', 'created_at', 'updated_at', 'logo_media_id', 'og_image_id', 'background_media_id'], true)) {
+            if (in_array($key, ['id', 'created_at', 'updated_at', 'logo_media_id', 'og_image_id', 'background_media_id', 'slug'], true)) {
                 continue;
             }
             if (str_ends_with((string) $key, '_id') || str_ends_with((string) $key, '_at')) {
                 continue;
+            }
+            // Opaque JSON blobs → walk leaves (columns_json, theme maps, etc.).
+            if (is_string($val)) {
+                $trim = ltrim($val);
+                if ($trim !== '' && ($trim[0] === '{' || $trim[0] === '[')) {
+                    $decoded = json_decode($val, true);
+                    if (is_array($decoded)) {
+                        $this->walkJson($bag, $decoded, $max);
+                        if (count($bag) >= $max) {
+                            return;
+                        }
+                        continue;
+                    }
+                }
             }
             $this->ingest($bag, $val, $max);
             if (count($bag) >= $max) {

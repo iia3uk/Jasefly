@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Sparkles } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { api } from '@/lib/api'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { adminUrl } from '@/admin/adminBasePath'
@@ -69,21 +70,19 @@ function LabListInner() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold flex items-center gap-2 text-white">
-            <Sparkles className="h-6 w-6" /> Jasefly Lab
-          </h1>
-          <p className="text-sm text-zinc-400 mt-1">
-            Изолированные эксперименты на /lab/:slug — без влияния на тему и Page Builder.
-          </p>
-        </div>
-        <RequirePermission permission="lab.create">
-          <Button onClick={() => create.mutate()} disabled={create.isPending}>
-            <Plus className="h-4 w-4" /> Создать
-          </Button>
-        </RequirePermission>
-      </div>
+      <AdminPageHero
+        title="Jasefly Lab"
+        hint="Изолированные эксперименты на /lab/:slug — без влияния на тему и Page Builder."
+        eyebrow="Эксперименты"
+        accent="violet"
+        actions={
+          <RequirePermission permission="lab.create">
+            <Button onClick={() => create.mutate()} disabled={create.isPending}>
+              <Plus className="h-4 w-4" /> Создать
+            </Button>
+          </RequirePermission>
+        }
+      />
 
       <GlassPanel className="overflow-hidden">
         {q.isLoading ? (

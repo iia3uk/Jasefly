@@ -4,8 +4,9 @@ import { SingletonPage, ThemeSettingsPage, HomepagePage, HomepageEditPage } from
 import { ContactMessagesPage } from '@/admin/pages/UtilityPages'
 import { PagesListPage } from '@/admin/pages/PagesAdmin'
 import { CrudListPage, CrudEditPage } from '@/admin/pages/AdminPages'
+import { NavigationBuilderPage } from '@/modules/site/NavigationBuilderPage'
 
-// Core CMS site module — owns page builder, homepage, navigation, footer, contact.
+// Core CMS site module — owns page builder, homepage, navigation, footer, social, contact.
 registerModule({
   name: 'site',
   label: 'Сайт',
@@ -19,9 +20,11 @@ registerModule({
     { path: 'hero', label: 'Hero-блок', group: 'Сайт', element: createElement(SingletonPage, { path: 'hero', title: 'Hero-блок' }) },
     { path: 'homepage', label: 'Главная', group: 'Сайт', element: createElement(HomepagePage) },
     { path: 'homepage/:id', label: 'Редактирование секции', group: 'Сайт', element: createElement(HomepageEditPage) },
-    { path: 'navigation', label: 'Навигация', group: 'Сайт', element: createElement(CrudListPage, { resource: 'navigation' }) },
+    { path: 'navigation', label: 'Навигация', group: 'Сайт', element: createElement(NavigationBuilderPage) },
     { path: 'navigation/:id', label: 'Редактирование пункта', group: 'Сайт', element: createElement(CrudEditPage, { resource: 'navigation' }) },
     { path: 'footer', label: 'Подвал', group: 'Сайт', element: createElement(SingletonPage, { path: 'footer', title: 'Подвал' }) },
+    { path: 'social-links', label: 'Соцсети', group: 'Сайт', element: createElement(CrudListPage, { resource: 'social-links' }) },
+    { path: 'social-links/:id', label: 'Редактирование соцсети', group: 'Сайт', element: createElement(CrudEditPage, { resource: 'social-links' }) },
     { path: 'contact-info', label: 'Контакты', group: 'Сайт', element: createElement(SingletonPage, { path: 'contact-info', title: 'Контакты' }) },
     { path: 'messages', label: 'Сообщения', group: 'Сайт', element: createElement(ContactMessagesPage) },
     { path: 'theme', label: 'Шаблон сайта', group: 'Сайт', element: createElement(ThemeSettingsPage) },

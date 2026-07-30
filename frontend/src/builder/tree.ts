@@ -82,12 +82,21 @@ export function cloneElementDeep(el: BuilderElementDTO): BuilderElementDTO {
   }
 }
 
-/** Parent may accept this child type (section→root, column→section, widget→column). */
+/** Parent may accept this child type (section→root, column→section, widget→column, container-widget→widget). */
 export function canAcceptChild(parent: BuilderElementDTO | null, child: BuilderElementDTO): boolean {
   if (!parent) return child.elType === 'section'
   if (parent.elType === 'section') return child.elType === 'column'
   if (parent.elType === 'column') return child.elType === 'widget'
+  if (parent.elType === 'widget' && child.elType === 'widget') {
+    const def = getWidget(parent.widgetType ?? '')
+    return Boolean(def?.acceptsChildren)
+  }
   return false
+}
+
+export function widgetAcceptsChildren(el: BuilderElementDTO | null | undefined): boolean {
+  if (!el || el.elType !== 'widget') return false
+  return Boolean(getWidget(el.widgetType ?? '')?.acceptsChildren)
 }
 
 function containsId(el: BuilderElementDTO, id: string): boolean {
@@ -151,9 +160,14 @@ export function reduceLayout(layout: PageLayout, op: TreeOp): PageLayout {
     case 'updateSettings': {
       return {
         ...layout,
-        elements: mapTree(layout.elements, (el) =>
-          el.id === op.id ? { ...el, settings: { ...el.settings, ...op.settings } } : el,
-        ),
+        elements: mapTree(layout.elements, (el) => {
+          if (el.id !== op.id) return el
+          const merged: Record<string, unknown> = { ...(el.settings ?? {}), ...op.settings }
+          for (const [k, v] of Object.entries(op.settings)) {
+            if (v === undefined) delete merged[k]
+          }
+          return { ...el, settings: merged }
+        }),
       }
     }
     case 'remove': {

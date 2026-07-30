@@ -154,6 +154,13 @@ final class TranslateModule extends AbstractModule
                 'help' => 'Фоном догоняет кэш, пока не станет ready. Не крутится заново без смены контента.',
             ],
             [
+                'key' => 'geo_auto_lang',
+                'label' => 'Авто-язык по стране посетителя',
+                'type' => 'checkbox',
+                'default' => true,
+                'help' => 'Если пользователь ещё не выбирал язык: страна → язык виджета; если языка нет в списке — нейтральный English. Ручной выбор в виджете всегда важнее.',
+            ],
+            [
                 'key' => 'content_hash',
                 'label' => 'Хеш контента (служебное)',
                 'type' => 'text',
@@ -317,7 +324,8 @@ final class TranslateModule extends AbstractModule
             }
 
             $allowed = $this->allowedTargets($settings);
-            if ($target === '' || (!in_array($target, $allowed, true) && $target !== $source)) {
+            // Neutral English always allowed for geo fallback / overlay.
+            if ($target === '' || (!in_array($target, $allowed, true) && $target !== $source && $target !== 'en')) {
                 Response::error('Unsupported target language', 422);
             }
 
@@ -339,9 +347,11 @@ final class TranslateModule extends AbstractModule
                 Response::json(['data' => ['translations' => [], 'cached' => 0, 'fetched' => 0, 'missing' => 0]]);
             }
 
-            // Public overlay is cache-only → near-instant; MT only via admin/auto warmup.
+            // Cache-first; optional soft live-fill for visitor-selected language (capped).
+            $fillMisses = (bool) ($r->input('fill_misses') ?? false);
+            $fillCap = $fillMisses ? 12 : 0;
             $svc = new TranslateService($settings, $db);
-            $result = $svc->translateBatch($texts, $source, $target, true);
+            $result = $svc->translateBatch($texts, $source, $target, true, $fillCap);
             Response::json(['data' => $result]);
         }, [$batchRate]);
 
@@ -648,16 +658,27 @@ final class TranslateModule extends AbstractModule
     public function publicConfig(): array
     {
         $s = $this->resolvedSettings();
+        $source = (string) ($s['source_lang'] ?? 'ru');
+        $targets = $this->allowedTargets($s);
+        $geoOn = (bool) ($s['geo_auto_lang'] ?? true);
+        $geo = $geoOn
+            ? TranslateGeo::suggest($source, $targets, Request::fromGlobals())
+            : ['country' => null, 'suggested_lang' => $source, 'via' => 'off'];
+
         return [
             'widget_enabled' => (bool) ($s['widget_enabled'] ?? true),
             'auto_warmup' => (bool) ($s['auto_warmup'] ?? true),
-            'source_lang' => (string) ($s['source_lang'] ?? 'ru'),
-            'languages' => $this->allowedTargets($s),
+            'geo_auto_lang' => $geoOn,
+            'source_lang' => $source,
+            'languages' => $targets,
             'position' => (string) ($s['position'] ?? 'bottom-right'),
             'provider' => (string) ($s['provider'] ?? 'mymemory'),
             'cache_ready' => (bool) ($s['cache_ready'] ?? false),
             'content_hash' => (string) ($s['content_hash'] ?? ''),
             'mode' => 'cache',
+            'visitor_country' => $geo['country'],
+            'suggested_lang' => $geo['suggested_lang'],
+            'geo_via' => $geo['via'],
         ];
     }
 

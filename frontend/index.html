@@ -2,6 +2,63 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
+    <!--
+      Inline (not type=module): after deploy a cached shell may point at pruned /assets/*.
+      If a script/link fails, force one hard navigation so visitors get the new HTML
+      without knowing about Ctrl+F5. Must run before module scripts.
+    -->
+    <script>
+      (function () {
+        var KEY = 'jasefly_stale_asset_reload';
+        function bust() {
+          try {
+            if (sessionStorage.getItem(KEY)) return;
+            sessionStorage.setItem(KEY, '1');
+          } catch (e) {}
+          try {
+            var u = new URL(location.href);
+            u.searchParams.set('_', Date.now().toString(36));
+            location.replace(u.toString());
+          } catch (e2) {
+            location.reload();
+          }
+        }
+        function isAssetUrl(url) {
+          if (!url) return false;
+          try {
+            var path = new URL(url, location.origin).pathname;
+            return path.indexOf('/assets/') === 0;
+          } catch (e) {
+            return /\/assets\//.test(String(url));
+          }
+        }
+        window.addEventListener(
+          'error',
+          function (e) {
+            var t = e && e.target;
+            if (!t || t === window) return;
+            var tag = (t.tagName || '').toLowerCase();
+            if (tag !== 'script' && tag !== 'link') return;
+            var src = t.src || t.href || '';
+            if (isAssetUrl(src)) bust();
+          },
+          true,
+        );
+        window.addEventListener('unhandledrejection', function (e) {
+          var reason = e && e.reason;
+          var msg = String(
+            (reason && (reason.message || reason)) || reason || '',
+          );
+          if (
+            /Failed to fetch dynamically imported module|Loading chunk|Importing a module script failed|error loading dynamically imported module|MIME type|Expected a JavaScript/i.test(
+              msg,
+            )
+          ) {
+            bust();
+          }
+        });
+      })();
+    </script>
     <!-- PNG first (transparent + padded). No tall SVG — it letterboxes in tab. -->
     <link rel="icon" type="image/png" href="/favicon.png?v=5" sizes="32x32" />
     <link rel="icon" href="/favicon.ico?v=5" sizes="any" />

@@ -1,6 +1,7 @@
 import type { ApiEnvelope, AuthResponse, BlogPost, ContactInfo, DashboardData, Education, Experience, MediaAsset, MediaFolder, Page, Product, Profile, Project, Service, SitePayload, SkillCategory, Statistic, Testimonial } from '@/types'
 import { emitSessionExpired } from '@/lib/authStorage'
 import { adminLoginUrl, adminUrl, isAdminPathname } from '@/admin/adminBasePath'
+import { emitAdminSaved, shouldAnnounceAdminSave } from '@/admin/feedback/saveFeedback'
 
 /** Empty = same-origin relative `/api/v1`. Set VITE_API_URL to site origin (e.g. https://example.com) for absolute URLs. */
 const API_ORIGIN = String(import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
@@ -211,6 +212,9 @@ async function request<T>(
       emitApiError(details)
     }
     throw new ApiRequestError(details)
+  }
+  if (shouldAnnounceAdminSave(path, method, { silent })) {
+    emitAdminSaved({ path, method })
   }
   if (response.status === 204) return undefined as T
   return response.json() as Promise<T>

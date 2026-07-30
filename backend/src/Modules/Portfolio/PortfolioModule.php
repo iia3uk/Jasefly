@@ -49,7 +49,6 @@ final class PortfolioModule extends AbstractModule
         // the Projects plugin is enabled; otherwise the SPA gets a hard 404.
         return [
             ['group' => 'Контент', 'path' => '/admin/profile', 'label' => 'Профиль'],
-            ['group' => 'Контент', 'path' => '/admin/social-links', 'label' => 'Соцсети'],
             ['group' => 'Контент', 'path' => '/admin/statistics', 'label' => 'Статистика'],
             ['group' => 'Контент', 'path' => '/admin/experience', 'label' => 'Опыт'],
             ['group' => 'Контент', 'path' => '/admin/education', 'label' => 'Образование'],
@@ -106,7 +105,6 @@ final class PortfolioModule extends AbstractModule
     {
         return [
             ['key' => 'profile', 'table' => 'profile', 'soft_delete' => false],
-            ['key' => 'social-links', 'table' => 'social_links', 'soft_delete' => false],
             ['key' => 'statistics', 'table' => 'statistics', 'soft_delete' => false],
             ['key' => 'experience', 'table' => 'experience', 'soft_delete' => true],
             ['key' => 'education', 'table' => 'education', 'soft_delete' => true],
@@ -122,22 +120,6 @@ final class PortfolioModule extends AbstractModule
     public function blueprints(): array
     {
         return [
-            [
-                'key' => 'social-links',
-                'table' => 'social_links',
-                'label' => 'Соцсети',
-                'group' => 'Контент',
-                'orderable' => true,
-                'icon' => 'globe',
-                'columns' => [
-                    'platform' => ['type' => 'string', 'widget' => 'text', 'required' => true, 'label' => 'Платформа'],
-                    'label' => ['type' => 'string', 'widget' => 'text', 'label' => 'Название'],
-                    'url' => ['type' => 'string', 'widget' => 'url', 'required' => true, 'label' => 'URL'],
-                    'icon' => ['type' => 'string', 'widget' => 'text', 'label' => 'Иконка'],
-                    'sort_order' => ['type' => 'int', 'widget' => 'number', 'default' => 0, 'label' => 'Порядок'],
-                ],
-                'permissions' => ['content.view', 'content.edit'],
-            ],
             [
                 'key' => 'statistics',
                 'table' => 'statistics',

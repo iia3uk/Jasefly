@@ -47,7 +47,7 @@ export function SiteBreadcrumbs() {
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
-      <nav aria-label="Хлебные крошки" className="border-b border-white/[0.04] bg-black/10">
+      <nav aria-label="Хлебные крошки" data-translate-root className="border-b border-white/[0.04] bg-black/10">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-2 text-xs text-[var(--muted)] sm:px-6">
           <Link to="/" className="link-text hover:text-[var(--text)]">Главная</Link>
           <span aria-hidden>/</span>

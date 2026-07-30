@@ -196,9 +196,7 @@ export function EditableButton({
     return <span className={clsx(btnClass, className, alignCls)} style={fieldCss}>{label}</span>
   }
 
-  if (!label && !href) return null
-
-  // Match public layout: inline CTA side-by-side — no under-button href chrome.
+  // Edit mode: always show a shell so empty CTAs can be seeded on canvas.
   return (
     <EditableShell
       field={labelField}
@@ -206,7 +204,7 @@ export function EditableButton({
       className={clsx('shrink-0 max-sm:w-full', alignCls)}
     >
       <span
-        className={clsx(btnClass, className, 'pointer-events-none select-none')}
+        className={clsx(btnClass, className, 'pointer-events-none select-none', !label && 'opacity-60')}
         style={fieldCss}
         aria-hidden
         onDoubleClick={(e) => {

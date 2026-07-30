@@ -83,13 +83,13 @@ final class ContentModule extends AbstractModule
 
     public function adminNav(): array
     {
-        // Portfolio content items are owned by PortfolioModule; this module
-        // only contributes site-structure navigation.
+        // Site chrome + structure. Portfolio-specific items stay on PortfolioModule.
         return [
             ['group' => 'Site', 'path' => '/admin/navigation', 'label' => 'Navigation'],
             ['group' => 'Site', 'path' => '/admin/homepage', 'label' => 'Homepage'],
             ['group' => 'Site', 'path' => '/admin/hero', 'label' => 'Hero'],
             ['group' => 'Site', 'path' => '/admin/footer', 'label' => 'Footer'],
+            ['group' => 'Site', 'path' => '/admin/social-links', 'label' => 'Social links'],
             ['group' => 'Site', 'path' => '/admin/contact-info', 'label' => 'Contact info'],
             ['group' => 'Site', 'path' => '/admin/messages', 'label' => 'Messages'],
         ];
@@ -98,6 +98,7 @@ final class ContentModule extends AbstractModule
     public function resources(): array
     {
         return [
+            ['key' => 'social-links', 'table' => 'social_links', 'soft_delete' => false],
             ['key' => 'experience', 'table' => 'experience', 'soft_delete' => true],
             ['key' => 'skills', 'table' => 'skills', 'soft_delete' => true],
             ['key' => 'services', 'table' => 'services', 'soft_delete' => true, 'sluggable' => true],
@@ -109,6 +110,23 @@ final class ContentModule extends AbstractModule
     public function blueprints(): array
     {
         return [
+            [
+                'key' => 'social-links',
+                'table' => 'social_links',
+                'label' => 'Соцсети',
+                'group' => 'Site',
+                'orderable' => true,
+                'icon' => 'globe',
+                'columns' => [
+                    'platform' => ['type' => 'string', 'widget' => 'text', 'required' => true, 'label' => 'Платформа'],
+                    'label' => ['type' => 'string', 'widget' => 'text', 'label' => 'Название'],
+                    'url' => ['type' => 'string', 'widget' => 'url', 'required' => true, 'label' => 'URL'],
+                    'icon' => ['type' => 'string', 'widget' => 'text', 'label' => 'Иконка'],
+                    'sort_order' => ['type' => 'int', 'widget' => 'number', 'default' => 0, 'label' => 'Порядок'],
+                    'is_visible' => ['type' => 'bool', 'widget' => 'toggle', 'default' => true, 'label' => 'Видим'],
+                ],
+                'permissions' => ['content.view', 'content.edit'],
+            ],
             [
                 'key' => 'services',
                 'table' => 'services',

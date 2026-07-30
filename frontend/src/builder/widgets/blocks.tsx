@@ -3,7 +3,7 @@
  * Reusable on any page — not tied to the official marketing home.
  */
 import clsx from 'clsx'
-import type { CSSProperties, SyntheticEvent } from 'react'
+import { Children, type CSSProperties, type ReactNode, type SyntheticEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { registerWidget } from '@/builder/registry'
 import type { SettingsField } from '@/builder/types'
@@ -13,6 +13,7 @@ import { useBuilderEdit } from '@/builder/context/BuilderEditContext'
 import { readFieldStyles, readStyles, stylesToCss } from '@/builder/edit/StyleFields'
 import { mediaUrl } from '@/lib/api'
 import { AppIcon } from '@/shared/icons'
+import { isVideoFileUrl } from '@/builder/lib/videoEmbed'
 
 function fields(...items: SettingsField[]) {
   return items
@@ -28,9 +29,9 @@ function asRows(value: unknown): Row[] {
 const chipClass =
   'inline-flex rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-[color:var(--muted)]'
 const ctaPrimary =
-  'inline-flex rounded-[var(--radius)] bg-[color:var(--primary)] px-5 py-3 text-sm font-semibold text-[color:var(--background)] transition-opacity hover:opacity-90'
+  'inline-flex min-h-11 w-full items-center justify-center rounded-[var(--radius)] bg-[color:var(--primary)] px-5 py-3 text-sm font-semibold text-[color:var(--background)] transition-opacity hover:opacity-90 sm:w-auto'
 const ctaGhost =
-  'inline-flex rounded-[var(--radius)] border border-white/15 px-5 py-3 text-sm font-semibold text-[color:var(--text)] transition-colors hover:bg-white/5'
+  'inline-flex min-h-11 w-full items-center justify-center rounded-[var(--radius)] border border-white/15 px-5 py-3 text-sm font-semibold text-[color:var(--text)] transition-colors hover:bg-white/5 sm:w-auto'
 
 function mediaAspect(ratio?: string) {
   if (ratio === 'square' || ratio === '1/1') return '1'
@@ -40,7 +41,162 @@ function mediaAspect(ratio?: string) {
   return '16/9'
 }
 
-/** Side media or full-bleed background; sizes come from settings + fieldStyles.media_id. */
+/** Высота hero на фоне: шаблоны; основной = весь доступный экран под шапкой. */
+export const HERO_HEIGHT_PRESETS = {
+  viewport: {
+    label: 'На весь экран',
+    minHeight: 'var(--cms-hero-vh, var(--cms-snap-vh, calc(100dvh - var(--admin-bar-h, 0px))))',
+    bleedY: '0px',
+    /** В превью билдера vh = окно браузера, не рамка устройства. */
+    editMinHeight: 'min(36rem, 92cqi)',
+  },
+  tall: {
+    label: 'Высокий',
+    minHeight: 'min(100dvh, 56rem)',
+    bleedY: '3rem',
+    editMinHeight: 'min(28rem, 85cqi)',
+  },
+  compact: {
+    label: 'Компактный',
+    minHeight: 'min(72vh, 36rem)',
+    bleedY: '2rem',
+    editMinHeight: 'min(22rem, 70cqi)',
+  },
+} as const
+
+function resolveHeroHeight(settings: Record<string, unknown>, editMode?: boolean): { minH: string; bleedY: string } {
+  const hasPreset = Object.prototype.hasOwnProperty.call(settings, 'height_preset')
+  const hasLegacyMin = Object.prototype.hasOwnProperty.call(settings, 'media_min_height')
+  // Legacy без height_preset сохраняет media_min_height; новый дефолт = viewport.
+  const presetRaw = hasPreset
+    ? String(settings.height_preset || 'viewport')
+    : hasLegacyMin
+      ? 'custom'
+      : 'viewport'
+
+  if (presetRaw === 'custom') {
+    const minH = String(settings.media_min_height || HERO_HEIGHT_PRESETS.viewport.minHeight)
+    const bleedY = editMode ? '0px' : String(settings.media_bleed_y || '0px')
+    if (editMode && /(d?vh|dvw)/i.test(minH)) {
+      return { minH: HERO_HEIGHT_PRESETS.viewport.editMinHeight, bleedY }
+    }
+    return { minH, bleedY }
+  }
+
+  const key = (presetRaw in HERO_HEIGHT_PRESETS
+    ? presetRaw
+    : 'viewport') as keyof typeof HERO_HEIGHT_PRESETS
+  const conf = HERO_HEIGHT_PRESETS[key]
+  return {
+    minH: editMode ? conf.editMinHeight : conf.minHeight,
+    bleedY: editMode ? '0px' : conf.bleedY,
+  }
+}
+
+/** Full-bleed media behind hero content — always cover-zooms to the content box. */
+function HeroBackgroundFill({
+  mediaId,
+  url,
+  alt,
+  editMode,
+  objectPosition,
+}: {
+  mediaId?: unknown
+  url?: string
+  alt?: string
+  editMode?: boolean
+  objectPosition?: string
+}) {
+  const ctx = useBuilderEdit()
+  const src = mediaUrl(mediaId as never) || String(url || '').trim()
+  const pos = String(objectPosition || 'center center')
+  const selected = Boolean(
+    editMode && ctx && ctx.selectedId === ctx.elementId && ctx.selectedPart === 'media_id',
+  )
+
+  const selectMedia = (e: SyntheticEvent) => {
+    if (!editMode || !ctx) return
+    e.preventDefault()
+    e.stopPropagation()
+    ctx.onSelectElement(ctx.elementId, { part: 'media_id' })
+  }
+
+  const mediaStyle: CSSProperties = {
+    objectFit: 'cover',
+    objectPosition: pos,
+    width: '100%',
+    height: '100%',
+    minWidth: '100%',
+    minHeight: '100%',
+  }
+
+  const media = !src ? (
+    <div className="flex h-full w-full items-center justify-center bg-white/[0.03] text-sm text-[color:var(--muted)]">
+      {editMode ? 'Выберите фото или видео для фона' : null}
+    </div>
+  ) : isVideoFileUrl(src) ? (
+    <video
+      src={src}
+      autoPlay
+      muted
+      loop
+      playsInline
+      className="pointer-events-none h-full w-full"
+      style={mediaStyle}
+      aria-label={alt || undefined}
+    />
+  ) : (
+    <img
+      src={src}
+      alt={alt || ''}
+      className="pointer-events-none h-full w-full"
+      style={mediaStyle}
+    />
+  )
+
+  if (!editMode) {
+    return (
+      <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden>
+        {media}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      data-builder-editable
+      data-field="media_id"
+      role="button"
+      tabIndex={0}
+      title="Фон — клик чтобы сменить медиа"
+      onMouseDown={selectMedia}
+      onClick={selectMedia}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') selectMedia(e)
+      }}
+      className={clsx(
+        'absolute inset-0 z-0 overflow-hidden outline-none',
+        selected
+          ? 'ring-2 ring-[var(--accent,#8eb6ff)] ring-inset'
+          : 'hover:ring-1 hover:ring-inset hover:ring-white/30',
+      )}
+    >
+      {media}
+      <span
+        className={clsx(
+          'pointer-events-none absolute right-3 top-3 z-10 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+          selected
+            ? 'bg-[var(--accent,#8eb6ff)] text-black'
+            : 'bg-black/55 text-zinc-200 ring-1 ring-white/15',
+        )}
+      >
+        Фон
+      </span>
+    </div>
+  )
+}
+
+/** Side media (or non-fill); sizes from settings + fieldStyles.media_id. */
 function MediaBox({
   mediaId,
   url,
@@ -64,7 +220,6 @@ function MediaBox({
   editMode?: boolean
   settings?: Record<string, unknown>
   fieldKey?: string
-  /** Absolute cover behind content (hero background mode). */
   fill?: boolean
   width?: string
   height?: string
@@ -110,6 +265,24 @@ function MediaBox({
         {editMode ? <p className="mt-1 text-xs">Медиа / URL в инспекторе · клик — размеры</p> : null}
       </div>
     </div>
+  ) : isVideoFileUrl(src) ? (
+    <video
+      src={src}
+      autoPlay
+      muted
+      loop
+      playsInline
+      className={clsx(
+        fill
+          ? 'pointer-events-none absolute inset-0 h-full w-full'
+          : clsx('rounded-[var(--radius)]', !hasBoxSize && 'w-full'),
+        className,
+      )}
+      style={fill
+        ? { objectFit: (fit || 'cover') as CSSProperties['objectFit'], objectPosition: String(merged.objectPosition || 'center') }
+        : merged}
+      aria-label={alt || undefined}
+    />
   ) : (
     <img
       src={src}
@@ -221,21 +394,40 @@ function MediaPlaceholderRender({ settings, editMode }: { settings: Record<strin
   )
 }
 
-function HeroBlockRender({ settings, editMode }: { settings: Record<string, unknown>; editMode?: boolean }) {
+function HeroBlockRender({
+  settings,
+  editMode,
+  children,
+}: {
+  settings: Record<string, unknown>
+  editMode?: boolean
+  children?: ReactNode
+}) {
   const styles = stylesToCss(readStyles(settings))
   const layout = String(settings.layout || 'split')
-  const mediaMode = String(settings.media_mode || 'side')
+  const mediaMode = String(settings.media_mode || 'background')
   const chips = asRows(settings.chips)
   const reverse = settings.image_position === 'left'
   const align = String(settings.align || 'left')
   const overlayRaw = settings.media_overlay
   const overlay = overlayRaw === '' || overlayRaw == null
-    ? 0.22
+    ? 0.35
     : Number(overlayRaw)
-  const overlaySafe = Number.isFinite(overlay) ? Math.min(1, Math.max(0, overlay)) : 0.22
+  const overlaySafe = Number.isFinite(overlay) ? Math.min(1, Math.max(0, overlay)) : 0.35
   // В билдере чуть светлее — чтобы фон был виден при правках
   const overlayStrength = editMode ? Math.min(overlaySafe, 0.28) * 0.55 : overlaySafe
-  const minH = String(settings.media_min_height || 'min(72vh, 36rem)')
+  const { minH, bleedY } = resolveHeroHeight(settings, editMode)
+  const nestedKids = Children.toArray(children)
+  const hasNested = nestedKids.length > 0
+  const showBuiltIn = editMode || Boolean(
+    settings.badge
+    || settings.title_1
+    || settings.title_2
+    || settings.body
+    || settings.cta1_label
+    || settings.cta2_label
+    || chips.length,
+  )
 
   const copy = (
     <div className={clsx(align === 'center' && 'text-center mx-auto')}>
@@ -273,7 +465,7 @@ function HeroBlockRender({ settings, editMode }: { settings: Record<string, unkn
           placeholder="Описание"
         />
       ) : null}
-      <div className={clsx('mt-8 flex flex-wrap gap-3', align === 'center' && 'justify-center')}>
+      <div className={clsx('mt-8 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap', align === 'center' && 'sm:justify-center')}>
         <Cta label={String(settings.cta1_label || '')} href={String(settings.cta1_href || '#')} variant="solid" editMode={editMode} field="cta1_label" />
         <Cta label={String(settings.cta2_label || '')} href={String(settings.cta2_href || '#')} variant="ghost" editMode={editMode} field="cta2_label" />
       </div>
@@ -300,26 +492,52 @@ function HeroBlockRender({ settings, editMode }: { settings: Record<string, unkn
     objectFit: settings.media_object_fit ? String(settings.media_object_fit) : undefined,
   }
 
+  const inner = (
+    <div className={clsx('w-full space-y-6', align === 'center' && 'flex flex-col items-center')}>
+      {showBuiltIn ? copy : null}
+      {hasNested ? <div className="w-full space-y-4">{nestedKids}</div> : null}
+      {editMode && !hasNested ? (
+        <p className="rounded-xl border border-dashed border-white/20 bg-black/20 px-4 py-6 text-center text-xs text-zinc-400">
+          Карточка-контейнер: перетащите сюда heading / text / button — или правьте поля слева
+        </p>
+      ) : null}
+    </div>
+  )
+
   if (mediaMode === 'background') {
     return (
       <div
-        style={{ ...styles, minHeight: minH }}
-        className="relative flex items-center overflow-hidden rounded-[var(--radius)]"
+        style={{
+          ...styles,
+          minHeight: minH,
+          marginTop: bleedY === '0px' || bleedY === '0' ? undefined : `calc(-1 * ${bleedY})`,
+          marginBottom: bleedY === '0px' || bleedY === '0' ? undefined : `calc(-1 * ${bleedY})`,
+        }}
+        className="cms-hero-bleed relative flex w-full items-center overflow-hidden"
       >
-        <div className="absolute inset-0 z-0">
-          <MediaBox {...mediaProps} fill />
-        </div>
+        <HeroBackgroundFill
+          mediaId={settings.media_id}
+          url={String(settings.media_url || '')}
+          alt={String(settings.media_alt || '')}
+          editMode={editMode}
+          objectPosition={String(settings.media_object_position || 'center center')}
+        />
         {overlayStrength > 0.01 ? (
           <div
             className="pointer-events-none absolute inset-0 z-[1]"
             style={{
-              background: `linear-gradient(90deg, rgb(0 0 0 / ${overlayStrength * 0.7}) 0%, rgb(0 0 0 / ${overlayStrength * 0.28}) 48%, rgb(0 0 0 / ${overlayStrength * 0.08}) 100%)`,
+              background: `linear-gradient(105deg, rgb(0 0 0 / ${overlayStrength * 0.82}) 0%, rgb(0 0 0 / ${overlayStrength * 0.45}) 42%, rgb(0 0 0 / ${overlayStrength * 0.18}) 100%)`,
             }}
             aria-hidden
           />
         ) : null}
-        <div className={clsx('relative z-10 w-full px-4 py-12 sm:px-8 sm:py-16 lg:px-12', align === 'center' && 'flex justify-center')}>
-          {copy}
+        <div
+          className={clsx(
+            'cms-hero-inner relative z-10 mx-auto w-full max-w-[var(--container,72rem)] px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-20',
+            align === 'center' && 'flex justify-center',
+          )}
+        >
+          {inner}
         </div>
       </div>
     )
@@ -330,7 +548,7 @@ function HeroBlockRender({ settings, editMode }: { settings: Record<string, unkn
   if (layout === 'stack') {
     return (
       <div style={styles} className="space-y-10">
-        {copy}
+        {inner}
         {media}
       </div>
     )
@@ -344,7 +562,7 @@ function HeroBlockRender({ settings, editMode }: { settings: Record<string, unkn
         reverse && 'lg:[&>*:first-child]:order-2',
       )}
     >
-      {copy}
+      {inner}
       {media}
     </div>
   )
@@ -485,7 +703,7 @@ function CtaBlockRender({ settings, editMode }: { settings: Record<string, unkno
         label="Заголовок"
         value={String(settings.title || '')}
         as="h2"
-        className="font-[family-name:var(--font-heading)] text-3xl font-semibold tracking-[-0.03em] md:text-4xl"
+        className="break-words font-[family-name:var(--font-heading)] text-[clamp(1.5rem,6vw,2.25rem)] font-semibold tracking-[-0.03em] md:text-4xl"
         placeholder="CTA"
       />
       <EditableText
@@ -494,10 +712,10 @@ function CtaBlockRender({ settings, editMode }: { settings: Record<string, unkno
         value={String(settings.subtitle || '')}
         as="p"
         multiline
-        className="mt-4 max-w-xl text-base leading-7 text-[color:var(--muted)]"
+        className="mt-4 max-w-xl text-sm leading-6 text-[color:var(--muted)] sm:text-base sm:leading-7"
         placeholder="Текст"
       />
-      <div className="mt-8 flex flex-wrap gap-3">
+      <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap">
         <Cta label={String(settings.cta1_label || '')} href={String(settings.cta1_href || '#')} variant="solid" editMode={editMode} field="cta1_label" />
         <Cta label={String(settings.cta2_label || '')} href={String(settings.cta2_href || '#')} variant="ghost" editMode={editMode} field="cta2_label" />
       </div>
@@ -575,6 +793,7 @@ export function registerBlockWidgets() {
     type: 'hero-block',
     label: 'Hero-блок',
     category: 'landing',
+    acceptsChildren: true,
     defaultSettings: {
       badge: 'Product · Platform · AI',
       title_1: 'Собирайте страницы без кода.',
@@ -587,7 +806,8 @@ export function registerBlockWidgets() {
       layout: 'split',
       align: 'left',
       image_position: 'right',
-      media_mode: 'side',
+      media_mode: 'background',
+      height_preset: 'viewport',
       media_id: null,
       media_url: '',
       media_alt: '',
@@ -595,8 +815,10 @@ export function registerBlockWidgets() {
       media_width: '',
       media_height: '',
       media_object_fit: 'cover',
-      media_overlay: '0.22',
-      media_min_height: 'min(72vh, 36rem)',
+      media_object_position: 'center center',
+      media_overlay: '0.35',
+      media_min_height: HERO_HEIGHT_PRESETS.viewport.minHeight,
+      media_bleed_y: '0px',
       media_placeholder: 'Hero visual',
       chips: [{ label: 'Page Builder' }, { label: 'MCP' }, { label: 'Shared Hosting' }],
     },
@@ -609,34 +831,42 @@ export function registerBlockWidgets() {
       { key: 'cta1_href', label: 'Ссылка 1', type: 'url' },
       { key: 'cta2_label', label: 'Кнопка 2', type: 'text' },
       { key: 'cta2_href', label: 'Ссылка 2', type: 'url' },
-      { key: 'layout', label: 'Компоновка', type: 'select', options: [
+      { key: 'layout', label: 'Компоновка (если медиа сбоку)', type: 'select', options: [
         { value: 'split', label: 'Текст + медиа' }, { value: 'stack', label: 'Стек' },
       ] },
       { key: 'align', label: 'Выравнивание текста', type: 'select', options: [
         { value: 'left', label: 'Слева' }, { value: 'center', label: 'По центру' },
       ] },
       { key: 'media_mode', label: 'Роль медиа', type: 'select', options: [
+        { value: 'background', label: 'Фон на всё пространство' },
         { value: 'side', label: 'Сбоку / в колонке' },
-        { value: 'background', label: 'Фон блока' },
+      ] },
+      { key: 'height_preset', label: 'Высота (шаблон)', type: 'select', options: [
+        { value: 'viewport', label: 'На весь экран (основной)' },
+        { value: 'tall', label: 'Высокий' },
+        { value: 'compact', label: 'Компактный' },
+        { value: 'custom', label: 'Свой размер' },
       ] },
       { key: 'image_position', label: 'Позиция (если сбоку)', type: 'select', options: [
         { value: 'right', label: 'Справа' }, { value: 'left', label: 'Слева' },
       ] },
-      { key: 'media_id', label: 'Медиа', type: 'media' },
-      { key: 'media_url', label: 'Или URL', type: 'url' },
+      { key: 'media_id', label: 'Фон: фото или видео', type: 'media' },
+      { key: 'media_url', label: 'Или URL (jpg/mp4/…)', type: 'url' },
       { key: 'media_alt', label: 'Alt', type: 'text' },
       { key: 'media_ratio', label: 'Пропорции (сбоку)', type: 'select', options: [
         { value: '16/9', label: '16:9' }, { value: '4/3', label: '4:3' }, { value: 'square', label: '1:1' }, { value: 'auto', label: 'Авто (по файлу)' },
       ] },
       { key: 'media_width', label: 'Ширина медиа (100% / 28rem)', type: 'text' },
       { key: 'media_height', label: 'Высота медиа (auto / 320px)', type: 'text' },
-      { key: 'media_object_fit', label: 'Object-fit', type: 'select', options: [
+      { key: 'media_object_fit', label: 'Object-fit (режим сбоку)', type: 'select', options: [
         { value: 'cover', label: 'Cover (обрезать)' },
         { value: 'contain', label: 'Contain (вписать)' },
         { value: 'fill', label: 'Fill (растянуть)' },
         { value: 'none', label: 'None' },
       ] },
-      { key: 'media_min_height', label: 'Min-height (режим фон)', type: 'text' },
+      { key: 'media_object_position', label: 'Позиция фона (center / top / 70% center)', type: 'text' },
+      { key: 'media_min_height', label: 'Свой min-height (шаблон «Свой»)', type: 'text' },
+      { key: 'media_bleed_y', label: 'Bleed по вертикали (шаблон «Свой»)', type: 'text' },
       { key: 'media_overlay', label: 'Затемнение фона 0–1 (0 = без затемнения)', type: 'text' },
       {
         key: 'chips',

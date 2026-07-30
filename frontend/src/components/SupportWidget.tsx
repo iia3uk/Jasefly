@@ -39,9 +39,10 @@ type ChatMessage = {
 }
 
 function positionClass(pos: string): string {
+  const fabBottom = 'bottom-[max(1rem,calc(env(safe-area-inset-bottom,0px)+var(--cms-fab-lift,0px)))]'
   return pos === 'bottom-right'
-    ? 'right-4 bottom-4 sm:right-6 sm:bottom-6'
-    : 'left-4 bottom-4 sm:left-6 sm:bottom-6'
+    ? `right-[max(1rem,env(safe-area-inset-right,0px))] ${fabBottom} sm:right-6`
+    : `left-[max(1rem,env(safe-area-inset-left,0px))] ${fabBottom} sm:left-6`
 }
 
 function readCookie(name: string): string {

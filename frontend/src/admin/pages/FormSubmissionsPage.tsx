@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Inbox, Trash2 } from 'lucide-react'
 import { api } from '@/lib/api'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { useAuth } from '@/context/AuthContext'
@@ -112,18 +113,17 @@ function FormSubmissionsInner() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl text-white">Заявки форм</h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            Отправки виджета «Форма» и других форм плагина Forms.
-            {formId > 0 ? ` · фильтр form_id=${formId}` : ''}
-          </p>
-        </div>
-        <Link to={adminUrl('forms')} className="text-sm text-zinc-300 underline hover:text-white">
-          К формам
-        </Link>
-      </div>
+      <AdminPageHero
+        title="Заявки форм"
+        hint={`Отправки виджета «Форма» и других форм плагина Forms.${formId > 0 ? ` · фильтр form_id=${formId}` : ''}`}
+        eyebrow="Контент"
+        accent="teal"
+        actions={
+          <Link to={adminUrl('forms')} className="text-sm text-zinc-300 underline hover:text-white">
+            К формам
+          </Link>
+        }
+      />
 
       <div className="flex flex-wrap gap-2">
         {statusFilters.map((s) => (

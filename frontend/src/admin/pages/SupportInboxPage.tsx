@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Loader2, MessageCircle, Send } from 'lucide-react'
 import { api } from '@/lib/api'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { adminUrl } from '@/admin/adminBasePath'
@@ -204,35 +205,35 @@ function SupportInboxInner() {
 
   return (
     <div className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl text-white">Поддержка</h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            Inbox тикетов. Пока страница открыта — вы «онлайн». Звук при новых сообщениях посетителя.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            className="text-sm text-zinc-300 underline hover:text-white"
-            onClick={() => {
-              void api.post('/admin/support/test-telegram', {}).then(() => {
-                window.alert('Тест отправлен в Telegram (если настроен бот в Support или Почте).')
-              }).catch((e: unknown) => {
-                const msg = e && typeof e === 'object' && 'message' in e
-                  ? String((e as { message: string }).message)
-                  : 'Не удалось'
-                window.alert(msg)
-              })
-            }}
-          >
-            Тест Telegram
-          </button>
-          <Link to={adminUrl('support/faq')} className="text-sm text-zinc-300 underline hover:text-white">
-            FAQ бота
-          </Link>
-        </div>
-      </div>
+      <AdminPageHero
+        title="Поддержка"
+        hint="Inbox тикетов. Пока страница открыта — вы «онлайн». Звук при новых сообщениях посетителя."
+        eyebrow="Коммуникации"
+        accent="emerald"
+        actions={
+          <>
+            <button
+              type="button"
+              className="text-sm text-zinc-300 underline hover:text-white"
+              onClick={() => {
+                void api.post('/admin/support/test-telegram', {}).then(() => {
+                  window.alert('Тест отправлен в Telegram (если настроен бот в Support или Почте).')
+                }).catch((e: unknown) => {
+                  const msg = e && typeof e === 'object' && 'message' in e
+                    ? String((e as { message: string }).message)
+                    : 'Не удалось'
+                  window.alert(msg)
+                })
+              }}
+            >
+              Тест Telegram
+            </button>
+            <Link to={adminUrl('support/faq')} className="text-sm text-zinc-300 underline hover:text-white">
+              FAQ бота
+            </Link>
+          </>
+        }
+      />
 
       <div className="flex flex-wrap gap-2">
         {statusFilters.map((s) => (

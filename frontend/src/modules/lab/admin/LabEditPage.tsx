@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, Field, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { adminUrl } from '@/admin/adminBasePath'
@@ -161,47 +162,50 @@ function LabEditInner() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link to={adminUrl('/lab')} className="text-sm text-zinc-400 hover:underline">← К списку</Link>
-          <h1 className="text-2xl font-semibold mt-1 text-white">{isNew ? 'Новый эксперимент' : name || 'Эксперимент'}</h1>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {!isNew && can('lab.preview') ? (
-            <Link to={adminUrl(`/lab/${id}/preview`)}>
-              <GhostButton type="button">Preview</GhostButton>
-            </Link>
-          ) : null}
-          {!isNew && slug ? (
-            <a href={`/lab/${slug}`} target="_blank" rel="noreferrer">
-              <GhostButton type="button">Open public page</GhostButton>
-            </a>
-          ) : null}
-          {!isNew && can('lab.publish') && !deleted ? (
-            <>
-              <Button type="button" onClick={() => act.mutate('activate')} disabled={act.isPending}>Activate</Button>
-              <GhostButton type="button" onClick={() => act.mutate('disable')} disabled={act.isPending}>Disable</GhostButton>
-              <GhostButton type="button" onClick={() => act.mutate('archive')} disabled={act.isPending}>Архив</GhostButton>
-            </>
-          ) : null}
-          {!isNew && can('lab.create') && !deleted ? (
-            <GhostButton type="button" onClick={() => act.mutate('duplicate')} disabled={act.isPending}>Duplicate</GhostButton>
-          ) : null}
-          {!isNew && can('lab.update') && !deleted ? (
-            <GhostButton type="button" onClick={() => {
-              if (confirm('Сбросить content_json и settings_json к дефолту entry?')) act.mutate('reset-content')
-            }} disabled={act.isPending}>Reset content</GhostButton>
-          ) : null}
-          {!isNew && can('lab.delete') && !deleted ? (
-            <GhostButton type="button" onClick={() => {
-              if (confirm('Удалить эксперимент (soft delete)?')) act.mutate('delete')
-            }} disabled={act.isPending}>Delete</GhostButton>
-          ) : null}
-          {!isNew && can('lab.delete') && deleted ? (
-            <Button type="button" onClick={() => act.mutate('restore')} disabled={act.isPending}>Восстановить</Button>
-          ) : null}
-        </div>
-      </div>
+      <AdminPageHero
+        title={isNew ? 'Новый эксперимент' : name || 'Эксперимент'}
+        eyebrow="Эксперименты"
+        accent="violet"
+        actions={
+          <div className="flex flex-wrap gap-2">
+            {!isNew && can('lab.preview') ? (
+              <Link to={adminUrl(`/lab/${id}/preview`)}>
+                <GhostButton type="button">Preview</GhostButton>
+              </Link>
+            ) : null}
+            {!isNew && slug ? (
+              <a href={`/lab/${slug}`} target="_blank" rel="noreferrer">
+                <GhostButton type="button">Open public page</GhostButton>
+              </a>
+            ) : null}
+            {!isNew && can('lab.publish') && !deleted ? (
+              <>
+                <Button type="button" onClick={() => act.mutate('activate')} disabled={act.isPending}>Activate</Button>
+                <GhostButton type="button" onClick={() => act.mutate('disable')} disabled={act.isPending}>Disable</GhostButton>
+                <GhostButton type="button" onClick={() => act.mutate('archive')} disabled={act.isPending}>Архив</GhostButton>
+              </>
+            ) : null}
+            {!isNew && can('lab.create') && !deleted ? (
+              <GhostButton type="button" onClick={() => act.mutate('duplicate')} disabled={act.isPending}>Duplicate</GhostButton>
+            ) : null}
+            {!isNew && can('lab.update') && !deleted ? (
+              <GhostButton type="button" onClick={() => {
+                if (confirm('Сбросить content_json и settings_json к дефолту entry?')) act.mutate('reset-content')
+              }} disabled={act.isPending}>Reset content</GhostButton>
+            ) : null}
+            {!isNew && can('lab.delete') && !deleted ? (
+              <GhostButton type="button" onClick={() => {
+                if (confirm('Удалить эксперимент (soft delete)?')) act.mutate('delete')
+              }} disabled={act.isPending}>Delete</GhostButton>
+            ) : null}
+            {!isNew && can('lab.delete') && deleted ? (
+              <Button type="button" onClick={() => act.mutate('restore')} disabled={act.isPending}>Восстановить</Button>
+            ) : null}
+          </div>
+        }
+      >
+        <Link to={adminUrl('/lab')} className="text-sm text-zinc-400 hover:underline">← К списку</Link>
+      </AdminPageHero>
 
       {deleted ? (
         <div className="rounded-lg bg-amber-500/15 text-amber-200 px-4 py-3 text-sm">

@@ -31,7 +31,6 @@ export const ADMIN_HUBS: AdminHub[] = [
     icon: 'users',
     tabs: [
       { path: '/admin/profile', label: 'Профиль', match: ['/admin/profile'] },
-      { path: '/admin/social-links', label: 'Соцсети', match: ['/admin/social-links'] },
       { path: '/admin/statistics', label: 'Статистика', match: ['/admin/statistics'] },
       { path: '/admin/experience', label: 'Опыт', match: ['/admin/experience'] },
       { path: '/admin/education', label: 'Образование', match: ['/admin/education'] },
@@ -50,6 +49,7 @@ export const ADMIN_HUBS: AdminHub[] = [
       { path: '/admin/homepage', label: 'Главная', match: ['/admin/homepage'] },
       { path: '/admin/navigation', label: 'Навигация', match: ['/admin/navigation'] },
       { path: '/admin/footer', label: 'Подвал', match: ['/admin/footer'] },
+      { path: '/admin/social-links', label: 'Соцсети', match: ['/admin/social-links'] },
       { path: '/admin/contact-info', label: 'Контакты', match: ['/admin/contact-info'] },
     ],
   },
@@ -106,6 +106,28 @@ export function findHubByPath(pathname: string): AdminHub | undefined {
   return ADMIN_HUBS.find((hub) =>
     hub.tabs.some((tab) => tab.match.some((m) => pathMatches(pathname, m))),
   )
+}
+
+/** Hub whose sidebar entry is this path (parent item, not a deep tab). */
+export function findHubByNavPath(navPath: string): AdminHub | undefined {
+  const canon = toCanonicalAdminPath(navPath)
+  return ADMIN_HUBS.find((h) => toCanonicalAdminPath(h.navPath) === canon)
+}
+
+/** Tabs visible for the current plugin enablement (same rules as AdminHubTabs). */
+export function visibleHubTabs(
+  hub: AdminHub,
+  flags: { products?: boolean; payments?: boolean; orders?: boolean },
+): AdminHubTab[] {
+  return hub.tabs.filter((tab) => {
+    const canon = tab.path
+    if (canon.startsWith('/admin/products')) return !!flags.products
+    if (canon === '/admin/payments' || canon.startsWith('/admin/payments/')) return !!flags.payments
+    if (canon === '/admin/orders' || canon.startsWith('/admin/orders/')) {
+      return !!flags.orders || !!flags.payments
+    }
+    return true
+  })
 }
 
 export function findActiveHubTab(hub: AdminHub, pathname: string): AdminHubTab | undefined {

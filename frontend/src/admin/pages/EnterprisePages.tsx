@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Bot, Check, Copy, RotateCcw, Trash2 } from 'lucide-react'
 import { endpoints } from '@/lib/api'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { PageContext } from '@/admin/components/PageContext'
 import { t, resources, fieldLabel } from '@/admin/i18n'
@@ -47,26 +48,28 @@ export function TrashPage() {
 
   return (
     <div>
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl">{t.trash}</h1>
-          <p className="mt-1 text-sm text-zinc-500">{t.trashHint}</p>
-        </div>
-        <Button
-          type="button"
-          className="button-ghost border border-red-500/30 text-red-300"
-          onClick={() => {
-            if (confirm === 'all' || window.confirm(t.emptyAllConfirm)) {
-              emptyAll.mutate()
-              setConfirm(null)
-            } else {
-              setConfirm('all')
-            }
-          }}
-        >
-          {t.emptyAllTrash}
-        </Button>
-      </div>
+      <AdminPageHero
+        title={t.trash}
+        hint={t.trashHint}
+        eyebrow="Система"
+        accent="rose"
+        actions={
+          <Button
+            type="button"
+            className="button-ghost border border-red-500/30 text-red-300"
+            onClick={() => {
+              if (confirm === 'all' || window.confirm(t.emptyAllConfirm)) {
+                emptyAll.mutate()
+                setConfirm(null)
+              } else {
+                setConfirm('all')
+              }
+            }}
+          >
+            {t.emptyAllTrash}
+          </Button>
+        }
+      />
 
       <PageContext contextKey="trash" className="mb-6" />
 
@@ -157,10 +160,12 @@ export function ActivityPage() {
 
   return (
     <div>
-      <h1 className="font-heading text-3xl">{t.activityLog}</h1>
-      <p className="mt-1 text-sm text-zinc-500">
-        {tab === 'mcp' ? t.activityMcpHint : t.activityHint}
-      </p>
+      <AdminPageHero
+        title={t.activityLog}
+        hint={tab === 'mcp' ? t.activityMcpHint : t.activityHint}
+        eyebrow="Система"
+        accent="cyan"
+      />
       <PageContext contextKey="activity" className="mt-4 mb-4" />
 
       <div className="mb-4 flex flex-wrap gap-2">
@@ -321,8 +326,12 @@ export function SystemStatusPage() {
 
   return (
     <div>
-      <h1 className="font-heading text-3xl">{t.systemStatus}</h1>
-      <p className="mt-1 text-sm text-zinc-500">{t.systemHint}</p>
+      <AdminPageHero
+        title={t.systemStatus}
+        hint={t.systemHint}
+        eyebrow="Система"
+        accent="teal"
+      />
       <PageContext contextKey="system" className="mt-4 mb-4" />
 
       <div className="mb-6 flex flex-wrap gap-2">

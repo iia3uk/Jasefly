@@ -4,6 +4,7 @@ import { useAuth, STAFF_ROLES } from '@/context/AuthContext'
 import { AdminShell, DashboardPage, LoginPage } from '@/admin/AdminApp'
 import { AdminScreenResolver } from '@/admin/adminRoutes'
 import { ApiErrorDebugger } from '@/admin/components/ApiErrorDebugger'
+import { SaveFeedbackOverlay } from '@/admin/feedback/SaveFeedbackOverlay'
 import { PageBuilderPage } from '@/builder/editor/PageBuilderPage'
 import { CmsPageBySlug, LazyLoaderFallback, PreferCmsLayout } from '@/builder/public/CmsPages'
 import { SiteLayout } from '@/components/layout/SiteLayout'
@@ -47,6 +48,7 @@ function RequireAuth() {
     <>
       <Outlet />
       <ApiErrorDebugger />
+      <SaveFeedbackOverlay />
     </>
   )
 }

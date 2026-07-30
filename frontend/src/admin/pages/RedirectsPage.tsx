@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2 } from 'lucide-react'
 import { api } from '@/lib/api'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
 
 type PathRedirect = {
@@ -105,12 +106,12 @@ export function RedirectsPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="font-heading text-3xl">Редиректы</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          Ручные 301/302 и авто-записи при смене slug страниц/проектов/постов.
-        </p>
-      </div>
+      <AdminPageHero
+        title="Редиректы"
+        hint="Ручные 301/302 и авто-записи при смене slug страниц/проектов/постов."
+        eyebrow="Система"
+        accent="cyan"
+      />
 
       <GlassPanel className="mb-6 space-y-4 p-5">
         <h2 className="text-sm font-semibold text-zinc-200">Добавить вручную</h2>

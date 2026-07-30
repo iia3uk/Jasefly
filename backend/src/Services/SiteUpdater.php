@@ -188,6 +188,9 @@ final class SiteUpdater
                 }
             }
 
+            // Vite hashed chunks accumulate forever unless pruned to the current package set.
+            $prune = $this->pruneStaleFrontendAssets($files);
+
             $migrations = $this->runMigrations();
 
             $result = [
@@ -196,6 +199,9 @@ final class SiteUpdater
                 'files_skipped_protected' => count($skipped),
                 'skipped_sample' => array_slice($skipped, 0, 20),
                 'warnings' => array_slice($warnings, 0, 30),
+                'assets_pruned' => $prune['removed'],
+                'assets_pruned_bytes' => $prune['bytes'],
+                'assets_pruned_sample' => $prune['sample'],
                 'migrations' => $migrations,
                 'package' => $name,
                 'hosting_layout' => $this->hostingLayout,
@@ -413,6 +419,99 @@ final class SiteUpdater
         }
 
         return null;
+    }
+
+    /**
+     * After a package that includes Vite assets/, delete any older hashed files
+     * still on disk under webRoot/assets that are not in this package.
+     *
+     * @param list<string> $packageFiles relative paths from package root
+     * @return array{removed:int,bytes:int,sample:list<string>,skipped:bool,reason?:string}
+     */
+    private function pruneStaleFrontendAssets(array $packageFiles): array
+    {
+        $keep = [];
+        foreach ($packageFiles as $rel) {
+            $rel = ltrim(str_replace('\\', '/', $rel), '/');
+            if (str_starts_with($rel, 'assets/')) {
+                $keep[$rel] = true;
+            }
+        }
+        if ($keep === []) {
+            return [
+                'removed' => 0,
+                'bytes' => 0,
+                'sample' => [],
+                'skipped' => true,
+                'reason' => 'package has no assets/ (api-only update)',
+            ];
+        }
+
+        $assetsRoot = $this->hostingLayout
+            ? ($this->webRoot . DIRECTORY_SEPARATOR . 'assets')
+            : (dirname($this->apiRoot) . DIRECTORY_SEPARATOR . 'frontend' . DIRECTORY_SEPARATOR . 'dist' . DIRECTORY_SEPARATOR . 'assets');
+
+        if (!is_dir($assetsRoot)) {
+            return ['removed' => 0, 'bytes' => 0, 'sample' => [], 'skipped' => true, 'reason' => 'assets dir missing'];
+        }
+
+        $assetsReal = realpath($assetsRoot);
+        if ($assetsReal === false) {
+            return ['removed' => 0, 'bytes' => 0, 'sample' => [], 'skipped' => true, 'reason' => 'assets realpath failed'];
+        }
+
+        $removed = 0;
+        $bytes = 0;
+        $sample = [];
+        $emptyDirs = [];
+
+        $it = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($assetsReal, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($it as $item) {
+            /** @var \SplFileInfo $item */
+            $full = $item->getPathname();
+            $fullNorm = str_replace('\\', '/', $full);
+            $baseNorm = str_replace('\\', '/', $assetsReal);
+            $relInside = ltrim(substr($fullNorm, strlen($baseNorm)), '/');
+            if ($relInside === '' || str_contains($relInside, '..')) {
+                continue;
+            }
+            $packageRel = 'assets/' . $relInside;
+
+            if ($item->isDir()) {
+                $emptyDirs[] = $full;
+                continue;
+            }
+            if (isset($keep[$packageRel])) {
+                continue;
+            }
+            $size = (int) @$item->getSize();
+            if (@unlink($full)) {
+                $removed++;
+                $bytes += max(0, $size);
+                if (count($sample) < 25) {
+                    $sample[] = $packageRel;
+                }
+            }
+        }
+
+        // Remove emptied subfolders (deepest first).
+        rsort($emptyDirs);
+        foreach ($emptyDirs as $dir) {
+            if (is_dir($dir)) {
+                @rmdir($dir);
+            }
+        }
+
+        return [
+            'removed' => $removed,
+            'bytes' => $bytes,
+            'sample' => $sample,
+            'skipped' => false,
+        ];
     }
 
     /** @return array<string, mixed> */

@@ -22,6 +22,7 @@ import {
   ensureColumnForDrop,
   isBuilderHidden,
   pasteNode,
+  widgetAcceptsChildren,
 } from '@/builder/tree'
 import { defaultLayoutForPage, isShellLayout, isSparseSeedLayout } from '@/builder/migrateHome'
 import { readStyles, readFieldStyles, StyleFields } from '@/builder/edit/StyleFields'
@@ -30,6 +31,12 @@ import { PRODUCT_BIND_OPTIONS } from '@/builder/bind/resolveBound'
 import { ProductEntityProvider } from '@/builder/context/ProductEntityContext'
 import { resolveEditorSettings, bakeLayoutContent, layoutContentChanged } from '@/builder/editor/resolveEditorSettings'
 import { pullCmsIntoLayout, pushLayoutToCms, layoutHeroShouldHealCms } from '@/builder/editor/cmsSync'
+import {
+  flushInlineEdits,
+  parseStepField,
+  patchStepItem,
+  stepPartLabel,
+} from '@/builder/editor/flushInlineEdits'
 import { readBuilderClipboard, writeBuilderClipboard } from '@/builder/editor/clipboard'
 import { BuilderContextMenu, type BuilderContextMenuState } from '@/builder/editor/BuilderContextMenu'
 import { MediaPicker } from '@/admin/components/MediaPicker'
@@ -111,6 +118,7 @@ export function PageBuilderPage() {
   const [scheduledAt, setScheduledAt] = useState('')
   const [isHome, setIsHome] = useState(false)
   const [dirty, setDirty] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
   const [hydratedFor, setHydratedFor] = useState<string | null>(null)
   const [paletteQuery, setPaletteQuery] = useState('')
   const [ctxMenu, setCtxMenu] = useState<BuilderContextMenuState | null>(null)
@@ -120,6 +128,8 @@ export function PageBuilderPage() {
   const futureRef = useRef<PageLayout[]>([])
   const layoutRef = useRef(layout)
   layoutRef.current = layout
+  /** JSON snapshot of last successful save / hydrate (for dirty after undo). */
+  const savedSnapshotRef = useRef<string>('')
   const pulledCmsFor = useRef<string | null>(null)
   const canvasScrollRef = useRef<HTMLElement | null>(null)
   /** Mobile: which bottom-sheet is open. Desktop ignores this. */
@@ -128,11 +138,17 @@ export function PageBuilderPage() {
   const { data: profile } = useProfile()
   useUnsavedGuard(dirty)
 
+  const layoutSnapshot = (l: PageLayout) => JSON.stringify(l)
+  const markDirtyFromLayout = (l: PageLayout) => {
+    setDirty(layoutSnapshot(l) !== savedSnapshotRef.current)
+  }
+
   useEffect(() => {
     setHydratedFor(null)
     pulledCmsFor.current = null
     pastRef.current = []
     futureRef.current = []
+    setNotice(null)
     setHistoryTick((n) => n + 1)
   }, [id])
 
@@ -173,23 +189,31 @@ export function PageBuilderPage() {
     setSeoDescription(data.seo_description || '')
     setOgImageId(data.og_image_id ?? null)
     setScheduledAt(data.scheduled_at ? String(data.scheduled_at).slice(0, 16).replace(' ', 'T') : '')
-    setIsHome(Boolean(data.is_home))
+    setIsHome(data.is_home === true || Number(data.is_home) === 1)
     const incoming = data.layout ?? (typeof data.layout_json === 'string' && data.layout_json
       ? JSON.parse(data.layout_json) as PageLayout
       : null)
     if (incoming?.elements?.length && !isShellLayout(incoming) && !isSparseSeedLayout(incoming)) {
       setLayout(incoming)
+      savedSnapshotRef.current = layoutSnapshot(incoming)
       setDirty(false)
     } else {
-      const rich = defaultLayoutForPage({ isHome: Boolean(data.is_home), slug: data.slug })
+      const rich = defaultLayoutForPage({
+        isHome: data.is_home === true || Number(data.is_home) === 1,
+        slug: data.slug,
+      })
       if (rich) {
         setLayout(rich)
+        savedSnapshotRef.current = ''
         setDirty(true)
       } else if (incoming?.elements?.length) {
         setLayout(incoming)
+        savedSnapshotRef.current = layoutSnapshot(incoming)
         setDirty(false)
       } else {
-        setLayout(emptyLayout())
+        const empty = emptyLayout()
+        setLayout(empty)
+        savedSnapshotRef.current = layoutSnapshot(empty)
         setDirty(false)
       }
     }
@@ -205,7 +229,7 @@ export function PageBuilderPage() {
     setLayout((prev) => {
       const baked = bakeLayoutContent(prev, { site, profile: profile ?? null })
       if (!layoutContentChanged(prev, baked)) return prev
-      setDirty(true)
+      // Silent heal — do not mark dirty (re-open recovers bake from CMS seeds).
       return baked
     })
   }, [data?.id, site, profile, hydratedFor])
@@ -242,7 +266,7 @@ export function PageBuilderPage() {
     if (!prev) return
     futureRef.current.push(layoutRef.current)
     setLayout(prev)
-    setDirty(true)
+    markDirtyFromLayout(prev)
     setHistoryTick((n) => n + 1)
   }, [])
 
@@ -251,7 +275,7 @@ export function PageBuilderPage() {
     if (!next) return
     pastRef.current.push(layoutRef.current)
     setLayout(next)
-    setDirty(true)
+    markDirtyFromLayout(next)
     setHistoryTick((n) => n + 1)
   }, [])
 
@@ -261,10 +285,18 @@ export function PageBuilderPage() {
   const markDirty = () => setDirty(true)
 
   const save = useCallback((status?: string) => {
-    if (!id || id === 'new') return
+    if (!id || id === 'new') {
+      setNotice('Сначала создайте страницу в списке страниц — у черновика «new» ещё нет id.')
+      return
+    }
     const cleanSlug = slug.trim().replace(/^\/+/, '').replace(/\s+/g, '-') || `page-${id}`
-    // Bake CMS leftovers into settings, then mark layout as live on the public site.
-    const baked = bakeLayoutContent(layout, { site: site ?? null, profile: profile ?? null })
+    // Flush caret text → layoutRef, then bake CMS leftovers and mark layout live.
+    const flushed = flushInlineEdits(layoutRef.current)
+    if (flushed !== layoutRef.current) {
+      layoutRef.current = flushed
+      setLayout(flushed)
+    }
+    const baked = bakeLayoutContent(flushed, { site: site ?? null, profile: profile ?? null })
     const layoutToSave: PageLayout = {
       ...baked,
       meta: {
@@ -294,8 +326,11 @@ export function PageBuilderPage() {
       id,
     }, {
       onSuccess: () => {
+        layoutRef.current = layoutToSave
+        savedSnapshotRef.current = layoutSnapshot(layoutToSave)
         setLayout(layoutToSave)
         setDirty(false)
+        setNotice(null)
         void qc.invalidateQueries({ queryKey: ['admin', 'pages', id, 'revisions'] })
         // Builder → Admin: mirror hero + homepage section titles into CMS.
         if (isHome) {
@@ -306,7 +341,7 @@ export function PageBuilderPage() {
               void qc.invalidateQueries({ queryKey: ['admin', 'homepage-sections'] })
             })
             .catch(() => {
-              /* non-fatal — page layout already saved */
+              setNotice('Страница сохранена, но зеркало Hero/секций в админке не обновилось.')
             })
         }
       },
@@ -314,7 +349,7 @@ export function PageBuilderPage() {
         // Детали уже открываются в ApiErrorDebugger (правый нижний угол).
       },
     })
-  }, [id, title, slug, seoTitle, seoDescription, ogImageId, scheduledAt, layout, data, crud.save, isHome, site, profile, qc])
+  }, [id, title, slug, seoTitle, seoDescription, ogImageId, scheduledAt, data, crud.save, isHome, site, profile, qc])
 
   useAdminSaveHotkey(() => save())
 
@@ -382,8 +417,18 @@ export function PageBuilderPage() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement)?.isContentEditable) return
+      const t = e.target as HTMLElement | null
+      const typing = Boolean(
+        t instanceof HTMLInputElement
+        || t instanceof HTMLTextAreaElement
+        || t instanceof HTMLSelectElement
+        || t?.isContentEditable
+        || t?.closest?.('input, textarea, select, [contenteditable="true"]'),
+      )
+      if (typing) return
       const mod = e.ctrlKey || e.metaKey
+      const sel = window.getSelection()
+      const hasTextSel = Boolean(sel && !sel.isCollapsed && (sel.toString() || '').length > 0)
       if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault()
         setHelpOpen((v) => !v)
@@ -413,16 +458,20 @@ export function PageBuilderPage() {
         return
       }
       if (mod && e.code === 'KeyC' && selectedId) {
+        // Let the OS handle real text selections (inspector labels, canvas chrome).
+        if (hasTextSel) return
         e.preventDefault()
         copySelected(selectedId)
         return
       }
       if (mod && e.code === 'KeyV') {
+        if (hasTextSel) return
         e.preventDefault()
         pasteClipboard()
         return
       }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+      // Backspace never deletes widgets (too easy while navigating). Delete only.
+      if (e.key === 'Delete' && selectedId && !hasTextSel) {
         e.preventDefault()
         removeSelected(selectedId)
         return
@@ -440,6 +489,13 @@ export function PageBuilderPage() {
     if (parentId) {
       apply(reduceLayout(layout, { type: 'addWidget', parentId, widgetType }))
       return
+    }
+    if (selectedId) {
+      const sel = findElement(layout, selectedId)
+      if (sel && widgetAcceptsChildren(sel)) {
+        apply(reduceLayout(layout, { type: 'addWidget', parentId: selectedId, widgetType }))
+        return
+      }
     }
     const ensured = ensureColumnForDrop(layout)
     const next = reduceLayout(ensured.layout, { type: 'addWidget', parentId: ensured.columnId, widgetType })
@@ -696,7 +752,8 @@ export function PageBuilderPage() {
   const canvas = (
     <div
       className="admin-preview-surface mx-auto w-full rounded-none border-0 shadow-none transition-[max-width] lg:rounded-xl lg:border lg:border-white/[0.06] lg:shadow-2xl"
-      style={{ maxWidth: deviceWidth[device], ...canvasThemeStyle }}
+      data-builder-device={device}
+      style={{ maxWidth: deviceWidth[device], width: '100%', ...canvasThemeStyle }}
       onContextMenu={(e) => {
         const target = (e.target as HTMLElement).closest('[data-builder-id]') as HTMLElement | null
         const elId = target?.getAttribute('data-builder-id') || selectedId
@@ -847,11 +904,21 @@ export function PageBuilderPage() {
             className="button admin-primary !min-h-10 !px-3"
             disabled={crud.save.isPending}
             onClick={() => save('published')}
+            title={published ? 'Сохранить и оставить опубликованной' : 'Сохранить и опубликовать'}
           >
-            {published ? 'OK' : 'Публ.'}
+            {crud.save.isPending ? '…' : published ? 'Сохранить' : 'Публ.'}
           </button>
         </div>
       </header>
+
+      {notice && (
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-amber-400/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+          <span>{notice}</span>
+          <button type="button" className="shrink-0 text-amber-200/80 hover:text-white" onClick={() => setNotice(null)} aria-label="Закрыть">
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {(selectedId || selectedPart) && (
         <div className="builder-breadcrumb flex h-8 shrink-0 items-center gap-2 overflow-x-auto border-b border-white/[0.06] px-3 text-xs text-zinc-400">
@@ -875,7 +942,7 @@ export function PageBuilderPage() {
             <>
               <span className="text-zinc-600">›</span>
               <span className="rounded bg-[var(--accent,#8eb6ff)]/15 px-1.5 py-0.5 font-medium text-[var(--accent,#8eb6ff)]">
-                {PART_LABELS[selectedPart] ?? selectedPart}
+                {parseStepField(selectedPart) ? stepPartLabel(selectedPart) : (PART_LABELS[selectedPart] ?? selectedPart)}
               </span>
             </>
           )}
@@ -1065,8 +1132,8 @@ export function PageBuilderPage() {
                 ['Ctrl+S', 'Сохранить'],
                 ['Ctrl+Z / Ctrl+Y', 'Отменить / повторить'],
                 ['Ctrl+D', 'Дублировать'],
-                ['Ctrl+C / Ctrl+V', 'Копировать / вставить'],
-                ['Delete', 'Удалить блок'],
+                ['Ctrl+C / Ctrl+V', 'Копировать / вставить блок (не текст)'],
+                ['Delete', 'Удалить блок (не Backspace)'],
                 ['Alt+↑ / Alt+↓', 'Порядок среди соседей'],
                 ['Esc', 'Снять выделение'],
                 ['?', 'Эта справка'],
@@ -1543,7 +1610,7 @@ function StructureTree({
           )
         })()}
         {els.map((el, i) => {
-          const canNest = el.elType === 'section' || el.elType === 'column'
+          const canNest = el.elType === 'section' || el.elType === 'column' || widgetAcceptsChildren(el)
           const parts = widgetParts(el)
           const hasKids = canNest || parts.length > 0 || Boolean(el.elements?.length)
           const isCollapsed = collapsed[el.id]
@@ -1860,7 +1927,20 @@ function SettingsFieldControl({
           <MediaPicker
             label={field.label}
             value={value as string | number | null | undefined}
-            onChange={(v) => onChange({ [field.key]: v })}
+            onChange={(v) => {
+              const patch: Record<string, unknown> = { [field.key]: v }
+              // Clear dual-source fallbacks so «Убрать» actually removes the image.
+              if (v == null || v === '') {
+                if (field.key === 'media_id') {
+                  patch.media_url = ''
+                  patch.url = ''
+                }
+                if (field.key === 'background_media_id') {
+                  patch.background = null
+                }
+              }
+              onChange(patch)
+            }}
           />
         ) : (
           <p className="text-xs text-zinc-500">{field.label}: из поля товара</p>
@@ -1998,8 +2078,13 @@ const PART_FIELD_GROUPS: Record<string, string[]> = {
   secondary_cta_href: ['secondary_cta_label', 'secondary_cta_href'],
   cta_label: ['cta_label', 'cta_href'],
   cta_href: ['cta_label', 'cta_href'],
+  cta1_label: ['cta1_label', 'cta1_href'],
+  cta1_href: ['cta1_label', 'cta1_href'],
+  cta2_label: ['cta2_label', 'cta2_href'],
+  cta2_href: ['cta2_label', 'cta2_href'],
   label: ['label', 'href'],
   href: ['label', 'href'],
+  media_id: ['media_id', 'media_url'],
 }
 
 function ElementSettings({
@@ -2034,9 +2119,9 @@ function ElementSettings({
     const seeded: Record<string, unknown> = { ...rawSettings }
     for (const [k, v] of Object.entries(settings)) {
       if (k === 'styles') continue
-      // Only seed keys never written — do not refill cleared ''.
-      if (Object.prototype.hasOwnProperty.call(rawSettings, k) && rawSettings[k] != null) continue
-      if (!(k in rawSettings) && v != null && !(typeof v === 'string' && v.trim() === '')) {
+      // Owned keys (incl. null/'' clear) win — never refill from resolved/CMS.
+      if (Object.prototype.hasOwnProperty.call(rawSettings, k)) continue
+      if (v != null && !(typeof v === 'string' && v.trim() === '')) {
         seeded[k] = v
       }
     }
@@ -2207,14 +2292,88 @@ function ElementSettings({
   }
 
   const widgetLabel = def?.label ?? element.widgetType ?? 'Виджет'
+  const stepParsed = parseStepField(selectedPart)
   const partLabel = selectedPart
-    ? (PART_LABELS[selectedPart]
-      ?? allFields.find((f) => f.key === selectedPart)?.label
-      ?? selectedPart)
+    ? (stepParsed
+      ? stepPartLabel(selectedPart)
+      : (PART_LABELS[selectedPart]
+        ?? allFields.find((f) => f.key === selectedPart)?.label
+        ?? selectedPart))
     : null
 
   // Focused part inspector — only the selected object inside the widget.
   if (selectedPart) {
+    // steps-row canvas fields (step_0_text) live in items[], not flat settingsFields.
+    if (stepParsed) {
+      const items = Array.isArray(settings.items)
+        ? (settings.items as Record<string, unknown>[]).map((row) => ({ ...row }))
+        : []
+      while (items.length <= stepParsed.index) items.push({})
+      const row = items[stepParsed.index] ?? {}
+      const stepFields: Array<{ key: string; label: string; multiline?: boolean }> = [
+        { key: 'badge', label: 'Номер' },
+        { key: 'title', label: 'Имя' },
+        { key: 'text', label: 'Текст', multiline: true },
+      ]
+      const setCell = (itemKey: string, value: string) => {
+        commit(patchStepItem(rawSettings, stepParsed.index, itemKey, value))
+      }
+      return (
+        <div className="space-y-4">
+          <div>
+            <button
+              type="button"
+              className="mb-2 text-[11px] text-zinc-500 hover:text-[var(--accent,#8eb6ff)]"
+              onClick={onClearPart}
+            >
+              ← {widgetLabel}
+            </button>
+            <h3 className="font-heading text-sm font-semibold text-white">
+              {partLabel}
+            </h3>
+            <p className="mt-1 text-[11px] text-zinc-500">Шаг {stepParsed.index + 1} в списке items</p>
+          </div>
+          {stepFields.map((f) => (
+            <label key={f.key} className={fieldClass(`step_${stepParsed.index}_${f.key}`)}>
+              {f.label}
+              {f.multiline ? (
+                <textarea
+                  className="w-full"
+                  rows={3}
+                  value={String(row[f.key] ?? row.body ?? '')}
+                  onChange={(e) => setCell(f.key, e.target.value)}
+                />
+              ) : (
+                <input
+                  className="w-full"
+                  value={String(row[f.key] ?? '')}
+                  onChange={(e) => setCell(f.key, e.target.value)}
+                />
+              )}
+            </label>
+          ))}
+          <StyleFields
+            title="Стили поля"
+            variant="text"
+            styles={readFieldStyles(rawSettings, `step_${stepParsed.index}_${stepParsed.itemKey}`)}
+            onChange={(patch) => {
+              const styleKey = `step_${stepParsed.index}_${stepParsed.itemKey}`
+              const prev = readFieldStyles(rawSettings, styleKey)
+              const bag = (rawSettings.fieldStyles && typeof rawSettings.fieldStyles === 'object')
+                ? { ...(rawSettings.fieldStyles as Record<string, unknown>) }
+                : {}
+              commit({
+                fieldStyles: {
+                  ...bag,
+                  [styleKey]: { ...prev, ...patch },
+                },
+              })
+            }}
+          />
+        </div>
+      )
+    }
+
     const isMedia = focusedFields.some((f) => f.type === 'media') || selectedPart.includes('background') || selectedPart.includes('media')
     // Prefer content field over href for styles (button text, not link URL).
     const styleKey = (partKeys ?? [selectedPart]).find((k) => !k.includes('href')) ?? selectedPart

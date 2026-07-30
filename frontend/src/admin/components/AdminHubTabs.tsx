@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { findActiveHubTab, findHubByPath } from '@/admin/adminHubs'
+import { findActiveHubTab, findHubByPath, visibleHubTabs } from '@/admin/adminHubs'
 import { adminUrl } from '@/admin/adminBasePath'
 import { usePluginEnabled } from '@/hooks/useApi'
 
@@ -13,12 +13,10 @@ export function AdminHubTabs() {
 
   if (!hub || hub.tabs.length < 2) return null
 
-  const tabs = hub.tabs.filter((tab) => {
-    const canon = tab.path
-    if (canon.startsWith('/admin/products')) return productsOn
-    if (canon === '/admin/payments' || canon.startsWith('/admin/payments/')) return paymentsOn
-    if (canon === '/admin/orders' || canon.startsWith('/admin/orders/')) return ordersOn || paymentsOn
-    return true
+  const tabs = visibleHubTabs(hub, {
+    products: productsOn,
+    payments: paymentsOn,
+    orders: ordersOn,
   })
   if (tabs.length < 2) return null
 

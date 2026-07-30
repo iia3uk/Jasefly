@@ -342,6 +342,60 @@ select option:checked {
   background: var(--background);
   color: var(--text);
   font-family: var(--font-body);
+  /* Device frame = container for hero bleed (tablet/mobile max-width). */
+  container-type: inline-size;
+  container-name: cms-preview;
+  overflow-x: clip;
+}
+
+/* Hero background: public = edge-to-edge without 100vw (avoids body safe-area overflow). */
+.cms-hero-bleed {
+  width: calc(100% + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px));
+  max-width: none;
+  margin-left: calc(-1 * env(safe-area-inset-left, 0px));
+  margin-right: calc(-1 * env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+}
+.admin-preview-surface .cms-hero-bleed {
+  width: 100cqi;
+  max-width: 100cqi;
+  margin-left: calc(50% - 50cqi);
+  margin-right: calc(50% - 50cqi);
+}
+.cms-hero-bleed > [data-field="media_id"],
+.cms-hero-bleed > .absolute.inset-0 {
+  inset: 0;
+}
+.cms-hero-bleed img,
+.cms-hero-bleed video {
+  object-fit: cover !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100%;
+  min-height: 100%;
+}
+
+/* Overlay navbar: offset content under fixed header unless first screen is full-bleed hero. */
+.cms-nav-overlay-scroll:not(:has(.cms-hero-bleed)) {
+  padding-top: var(--cms-header-h, 4.25rem);
+}
+/* Hero copy sits under fixed overlay header — keep text below chrome. */
+html[data-header-style="overlay"] .cms-hero-bleed > .cms-hero-inner {
+  padding-top: max(2.5rem, calc(var(--cms-header-h, 4.25rem) + 0.75rem));
+}
+@media (min-width: 640px) {
+  html[data-header-style="overlay"] .cms-hero-bleed > .cms-hero-inner {
+    padding-top: max(3.5rem, calc(var(--cms-header-h, 4.25rem) + 1rem));
+  }
+}
+/* Lift translate/support FABs above cookie consent strip */
+html[data-cookie-banner="1"] {
+  --cms-fab-lift: 5.75rem;
+}
+@media (min-width: 640px) {
+  html[data-cookie-banner="1"] {
+    --cms-fab-lift: 4.5rem;
+  }
 }
 /* Page builder chrome — slim toolbar controls (canvas resets below) */
 .builder-shell .button {
@@ -638,6 +692,18 @@ select option:checked {
   from { transform: translateY(12%); opacity: .85; }
   to { transform: translateY(0); opacity: 1; }
 }
+
+/* Admin: global save success overlay */
+@keyframes admin-save-feedback-in {
+  from { transform: translateY(10px) scale(0.94); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.admin-save-feedback {
+  animation: admin-save-feedback-in 0.22s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-save-feedback { animation: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   .builder-mobile-sheet { animation: none; }
 }
@@ -715,6 +781,14 @@ html.cms-snap-proximity .cms-snap-section {
   background-color: var(--background);
   padding-top: clamp(2.5rem, 5vh, 4rem) !important;
   padding-bottom: clamp(2.5rem, 5vh, 4rem) !important;
+}
+/* Full-bleed hero section: no snap padding (inline 0 was overridden by !important). */
+html.cms-snap-paging .cms-snap-section:has(.cms-hero-bleed),
+html.cms-snap-proximity .cms-snap-section:has(.cms-hero-bleed) {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  justify-content: stretch !important;
+  overflow: hidden;
 }
 html.cms-snap-paging .cms-snap-section [data-builder-widgets] {
   display: flex;
@@ -830,10 +904,19 @@ html.cms-snap-proximity .cms-snap-footer {
 }
 @media (max-width: 900px) {
   .cms-snap-rail {
-    right: 0.3rem;
+    right: max(0.25rem, env(safe-area-inset-right, 0px));
+    padding: 0.35rem 0.28rem;
   }
   .cms-snap-rail__label {
     display: none;
+  }
+}
+@media (max-width: 640px) {
+  .cms-snap-rail {
+    /* Keep dots clear of translate/support FABs on the right */
+    top: auto;
+    bottom: max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 4.75rem));
+    transform: none;
   }
 }
 

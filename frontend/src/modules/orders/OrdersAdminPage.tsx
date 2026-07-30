@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, GhostButton, GlassPanel } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { usePluginEnabled } from '@/hooks/useApi'
@@ -38,8 +39,13 @@ function OrdersInner() {
     try { await api.download('/admin/orders/export', 'orders.csv') }
     finally { setExporting(false) }
   }
-  return <div className="space-y-4"><div className="flex flex-wrap items-end justify-between gap-3"><div><h1 className="font-heading text-2xl">Заказы</h1><p className="text-sm text-zinc-400">Статусы, состав, заметки и возвраты.</p></div>
-    <div className="flex gap-2"><select value={filter} onChange={(e)=>setFilter(e.target.value)} className="rounded-lg border border-white/10 bg-zinc-900 p-2"><option value="">Все статусы</option>{statuses.map((s)=><option key={s}>{s}</option>)}</select><GhostButton onClick={()=>void exportCsv()} disabled={exporting}>{exporting?'CSV…':'CSV'}</GhostButton></div></div>
+  return <div className="space-y-4"><AdminPageHero
+    title="Заказы"
+    hint="Статусы, состав, заметки и возвраты."
+    eyebrow="Коммерция"
+    accent="emerald"
+    actions={<div className="flex gap-2"><select value={filter} onChange={(e)=>setFilter(e.target.value)} className="rounded-lg border border-white/10 bg-zinc-900 p-2"><option value="">Все статусы</option>{statuses.map((s)=><option key={s}>{s}</option>)}</select><GhostButton onClick={()=>void exportCsv()} disabled={exporting}>{exporting?'CSV…':'CSV'}</GhostButton></div>}
+  />
     <div className="grid gap-4 lg:grid-cols-[360px_1fr]"><GlassPanel className="max-h-[75vh] overflow-auto p-2">{!rows.data?.length?<p className="p-4 text-sm text-zinc-500">Заказов пока нет</p>:rows.data.map((o)=><button key={o.id} onClick={()=>setSelected(o.id)} className={`mb-1 w-full rounded-lg p-3 text-left ${selected===o.id?'bg-white/10':'hover:bg-white/5'}`}><div className="flex justify-between"><strong>{o.number}</strong><span>{o.status}</span></div><div className="text-xs text-zinc-400">{o.customer_name||o.email||'Без клиента'} · {Number(o.grand_total||o.amount).toFixed(2)} {o.currency}</div></button>)}</GlassPanel>
       <GlassPanel className="space-y-4 p-5">{!detail.data?<p className="text-zinc-500">Выберите заказ</p>:<><div className="flex flex-wrap justify-between gap-2"><div><h2 className="text-xl font-semibold">{detail.data.number}</h2><p className="text-sm text-zinc-400">{detail.data.customer_name} · {detail.data.email}</p></div><select value={detail.data.status} onChange={(e)=>status.mutate(e.target.value)} className="rounded-lg border border-white/10 bg-zinc-900 p-2">{statuses.map((s)=><option key={s}>{s}</option>)}</select></div>
         <div className="grid gap-2 sm:grid-cols-3"><div>Оплата: {detail.data.payment_status}</div><div>Доставка: {detail.data.fulfillment_status}</div><div className="font-semibold">{Number(detail.data.grand_total||detail.data.amount).toFixed(2)} {detail.data.currency}</div></div>

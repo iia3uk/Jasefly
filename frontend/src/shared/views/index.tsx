@@ -6,6 +6,7 @@ import { Container, MediaImage, RichText, Section, SurfacePanel } from '@/compon
 import { ProjectGallery } from '@/modules/projects/components/ProjectGallery'
 import { projectStatusLabel } from '@/modules/projects/projectStatus'
 import { AppIcon } from '@/shared/icons'
+import { sanitizeHtml } from '@/shared/sanitize'
 import { mediaUrl } from '@/lib/api'
 import { skillRankFromPercent, SKILL_SEGMENTS } from '@/shared/skillRank'
 import type { BlogPost, Experience, HeroSettings, Profile, Project, Service, Testimonial } from '@/types'
@@ -496,13 +497,24 @@ export function SocialLinkView({ form }: { form: Record<string, unknown> }) {
 
 export function FooterPreviewView({ form }: { form: Record<string, unknown> }) {
   const year = new Date().getFullYear()
-  const copyright = String(form.copyright_text || '© {year}').replace('{year}', String(year))
+  const copyright = sanitizeHtml(String(form.copyright_text || '© {year}').replace('{year}', String(year)))
+  const tagline = sanitizeHtml(String(form.tagline || ''))
   return (
     <footer className="border-t border-white/[0.06] pt-12 pb-8">
       <Container>
-        {form.tagline ? <p className="max-w-sm text-sm leading-6 text-[var(--muted)]">{String(form.tagline)}</p> : null}
+        {tagline ? (
+          <p
+            className="max-w-sm text-sm leading-6 text-[var(--muted)] [&_a]:text-[var(--accent)]"
+            dangerouslySetInnerHTML={{ __html: tagline }}
+          />
+        ) : null}
         {form.show_social ? <p className="mt-4 text-xs text-[var(--accent)]">Соцсети: показаны</p> : null}
-        <p className="mt-10 text-sm text-[var(--muted)]">{copyright}</p>
+        {copyright ? (
+          <p
+            className="mt-10 text-sm text-[var(--muted)] [&_a]:text-[var(--accent)]"
+            dangerouslySetInnerHTML={{ __html: copyright }}
+          />
+        ) : null}
       </Container>
     </footer>
   )

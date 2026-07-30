@@ -83,10 +83,18 @@ export function resolveEditorSettings(
   if (widgetType === 'hero') {
     const hero = (ctx.site?.hero ?? {}) as HeroSettings
     const take = (key: string, cms: unknown, ...fallbacks: unknown[]) => {
-      const rawVal = Object.prototype.hasOwnProperty.call(raw, key) ? raw[key] : undefined
-      const cmsReal = !isPlaceholderText(cms)
-      if (cmsReal && (rawVal == null || isPlaceholderText(rawVal))) return cms
-      return pickOwned(raw, key, ...fallbacks, cmsReal ? cms : undefined)
+      if (Object.prototype.hasOwnProperty.call(raw, key)) {
+        const rawVal = raw[key]
+        // Explicit null/'' = cleared (MediaPicker «Убрать»). Must not re-fill from CMS.
+        if (rawVal == null || (typeof rawVal === 'string' && rawVal.trim() === '')) {
+          return rawVal ?? null
+        }
+        // Stub text in layout → prefer real CMS copy when available.
+        if (isPlaceholderText(rawVal) && !isPlaceholderText(cms)) return cms
+        return rawVal
+      }
+      if (!isPlaceholderText(cms)) return cms
+      return pickOwned(raw, key, ...fallbacks)
     }
     return {
       ...base,
@@ -103,6 +111,23 @@ export function resolveEditorSettings(
         defaults.background_media_id,
       ),
     }
+  }
+
+  // Landing hero-block: seed media from Admin Hero when layout never set media_id.
+  if (widgetType === 'hero-block') {
+    const hero = (ctx.site?.hero ?? {}) as HeroSettings
+    const cmsMedia = hero.background_media_id ?? hero.background?.id
+    if (Object.prototype.hasOwnProperty.call(raw, 'media_id')) {
+      const rawVal = raw.media_id
+      if (rawVal == null || (typeof rawVal === 'string' && rawVal.trim() === '')) {
+        return { ...base, media_id: rawVal ?? null }
+      }
+      return base
+    }
+    if (cmsMedia != null && String(cmsMedia).trim() !== '') {
+      return { ...base, media_id: cmsMedia }
+    }
+    return base
   }
 
   if (widgetType === 'profile-card') {
@@ -133,13 +158,14 @@ export function resolveEditorSettings(
   return { ...defaults, ...base }
 }
 
-/** Missing from layout (never written). Empty string is intentional — do not bake over it. */
+/** Missing from layout (never written). null/'' when key exists = intentional clear — do not bake over it. */
 function isMissingSetting(raw: Record<string, unknown>, key: string): boolean {
-  return !Object.prototype.hasOwnProperty.call(raw, key) || raw[key] == null
+  return !Object.prototype.hasOwnProperty.call(raw, key)
 }
 
 function isHeroStubValue(key: string, v: unknown): boolean {
-  if (key === 'background_media_id') return v == null || v === ''
+  // Media clear (null/'') is owned — never treat as stub to re-bake from CMS.
+  if (key === 'background_media_id' || key === 'media_id') return false
   // Hrefs like "/" are valid; only treat empty as missing for links.
   if (key.endsWith('_href') || key === 'href') return v == null || String(v).trim() === ''
   return isPlaceholderText(v)

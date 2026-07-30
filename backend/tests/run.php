@@ -150,6 +150,10 @@ require_once "$root/tests/SecurityVerificationTest.php";
 echo "Maintainability\n";
 require_once "$root/tests/MaintainabilityTest.php";
 
+// —— SiteUpdater Vite assets prune ——
+echo "SiteUpdater assets prune\n";
+require_once "$root/tests/SiteUpdaterAssetsPruneTest.php";
+
 echo str_repeat('-', 40) . "\n";
 echo "Passed: $passed  Failed: $failed\n";
 exit($failed > 0 ? 1 : 0);

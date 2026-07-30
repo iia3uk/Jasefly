@@ -59,6 +59,23 @@ final class NotificationsModule extends AbstractModule
             Response::json(['data' => ['count' => (new NotificationService($db))->markAllRead($uid($r))]]);
         }, $protected);
 
+        // Manual smoke-test so admins can verify inbox + channels without waiting for a form.
+        $router->post($p('/admin/notifications/test'), function (Request $r) use ($perms, $db) {
+            $perms->require($r->user, 'notifications.manage');
+            $title = trim((string) ($r->input('title') ?? 'Тестовое уведомление'));
+            $body = trim((string) ($r->input('body') ?? 'Если вы это видите — канал «Уведомления» работает. Дальше настройте Автоматизацию или действие формы create_notification.'));
+            if ($title === '') {
+                $title = 'Тестовое уведомление';
+            }
+            $id = (new NotificationService($db))->notifyAdmins(
+                'system.test',
+                $title,
+                $body !== '' ? $body : 'Канал уведомлений работает.',
+                ['action_url' => '/admin/notifications', 'priority' => 'normal']
+            );
+            Response::json(['data' => ['id' => $id, 'ok' => true]]);
+        }, $protected);
+
         $router->get($p('/admin/notification-templates'), function (Request $r) use ($db, $perms) {
             $perms->require($r->user, 'notifications.manage');
             Response::json(['data' => $db->all('SELECT * FROM notification_templates ORDER BY id DESC')]);
