@@ -2,6 +2,12 @@ const SIDEBAR_KEY = 'admin.sidebarCollapsed'
 const PINS_KEY = 'admin.pinnedNav'
 const DRAFT_PREFIX = 'admin.draft:'
 const LOCALE_KEY = 'admin.locale'
+const DASHBOARD_LAYOUT_KEY = 'admin.dashboard.layout.v1'
+
+export type DashboardLayoutStored = {
+  order: string[]
+  hidden: string[]
+}
 
 export type AdminLocale = 'ru' | 'en'
 
@@ -98,5 +104,37 @@ export function readStoredDraft<T = Record<string, unknown>>(resource: string, i
     return parsed
   } catch {
     return null
+  }
+}
+
+export function readDashboardLayout(): DashboardLayoutStored | null {
+  try {
+    const raw = localStorage.getItem(DASHBOARD_LAYOUT_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as DashboardLayoutStored
+    if (!parsed || typeof parsed !== 'object') return null
+    if (!Array.isArray(parsed.order) || !Array.isArray(parsed.hidden)) return null
+    return {
+      order: parsed.order.filter((x) => typeof x === 'string'),
+      hidden: parsed.hidden.filter((x) => typeof x === 'string'),
+    }
+  } catch {
+    return null
+  }
+}
+
+export function writeDashboardLayout(layout: DashboardLayoutStored) {
+  try {
+    localStorage.setItem(DASHBOARD_LAYOUT_KEY, JSON.stringify(layout))
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearDashboardLayout() {
+  try {
+    localStorage.removeItem(DASHBOARD_LAYOUT_KEY)
+  } catch {
+    /* ignore */
   }
 }

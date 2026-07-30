@@ -1,5 +1,230 @@
 # Changelog
 
+## 2026-07-30 — Авто-перезагрузка при битых assets после деплоя
+
+- Inline-скрипт в shell: ошибка загрузки /assets/* → один hard-reload с обходом кэша HTML
+- То же для failed dynamic import / vite:preloadError
+- После успешного старта флаг сбрасывается, ?_= убирается из URL — посетителю не нужен Ctrl+F5
+
+## 2026-07-30 — Фикс stale assets: 404 вместо SPA HTML
+
+- Отсутствующие /assets/* и *.js/*.css больше не отдают index.php (MIME text/html)
+- Кэш HTML shell сокращён до 60s — меньше залипания старых хешей после деплоя
+- После деплоя: жёсткое обновление Ctrl+Shift+R / Ctrl+F5
+
+## 2026-07-30 — Фикс: сетка иконок больше не под SaveBar
+
+- IconPicker открывается через portal над sticky-баром сохранения
+- Панель иконок позиционируется fixed и не клипается GlassPanel
+- SaveBar — отдельная полоса у низа без наезда на дропдаун
+
+## 2026-07-30 — Соцсети вынесены из Portfolio в ядро CMS
+
+- Админ «Соцсети» — модуль site / hub Оформление (рядом с Подвалом)
+- BE: resource/blueprint из PortfolioModule → ContentModule
+- Публичный /site.social больше не зависит от плагина Portfolio
+- В настройках Подвала — ссылка на управление соцсетями
+
+## 2026-07-30 — Оверлей «Сохранено» по всей админке
+
+- После успешного сохранения (PUT/POST /admin) — центрированный оверлей с галочкой
+- Отдельные тексты для порядка и публикации
+- Работает в обычных экранах и в Page Builder
+- Без шума на destructive/silent запросы
+
+## 2026-07-30 — Навигация: редактор выезжает снизу
+
+- Панель правки пункта — bottom sheet вместо третьей колонки
+- Шапка и подвал остаются на всю ширину
+- Закрытие по Escape / клику по фону / Отмена
+
+## 2026-07-30 — Билдер навигации: шапка/подвал с превью и DnD
+
+- Админ «Навигация» — полноценный билдер вместо плоского CRUD-списка
+- Две зоны (шапка / подвал), живое превью chrome сайта
+- Drag-and-drop порядок без отдельного режима, панель правки пункта
+- location header/footer/both, видимость, дублирование и удаление на месте
+
+## 2026-07-30 — Appearance Homepage tab redirects to Page Builder
+
+- /admin/homepage opens home page builder (pages.layout_json)
+- No more empty homepage_sections list — that table is not where live home lives
+
+## 2026-07-30 — Homepage sections empty-state: point to Page Builder
+
+- Explain empty homepage_sections vs builder home layout
+- CTA link to home page builder from /admin/homepage
+
+## 2026-07-30 — Footer tagline/copyright allow safe HTML links
+
+- Public footer renders tagline/copyright via sanitizeHtml
+- Admin footer fields: textarea + HTML hint for links
+- Updated live tagline with IIA3UK → iia3uk.ru link
+
+## 2026-07-30 — Admin UI refresh: shared AdminPageHero
+
+- AdminPageHero + AdminSectionLabel shared chrome kit
+- AdminSplitLayout / UtilityPages Header use hero (CRUD, media, singletons)
+- Standalone admin + module pages headers aligned; Plugins/Analytics/Dashboard too
+
+## 2026-07-30 — Plugins cards: soft glow + spacing
+
+- Remove muddy header band; soft corner glow by category
+- More padding so glow/header does not crowd description text
+
+## 2026-07-30 — Plugins page visual redesign
+
+- Plugins: hero stats, search + category/status filters, 2-col card grid
+- Compact dependency chips (+N), category accent gradients, cleaner toggle
+
+## 2026-07-30 — Customizable admin dashboard widgets
+
+- Dashboard: reorder/hide widgets (localStorage), customize drawer + drag handles
+- Extracted existing sections into admin/dashboard/widgets registry
+- New module widgets: support, forms, orders, scheduler, notifications, newsletter, blog-pulse (analytics-style)
+
+## 2026-07-30 — Analytics redesign + dashboard pulse widget
+
+- Analytics admin: area chart, sparklines, presets 7/30/90d, bar rows for events/pages
+- Dashboard: «Пульс сайта» widget (14d chart, KPIs, top pages)
+- Shared SVG charts in AnalyticsCharts (no chart lib)
+
+## 2026-07-30 — Admin help panels collapsed by default
+
+- Планировщик / Автоматизация / Уведомления: справка свёрнута по умолчанию
+
+## 2026-07-30 — Notifications admin: help + test send
+
+- Справка почему пусто и откуда приходят уведомления
+- Кнопка «Отправить тест» (POST /admin/notifications/test)
+- Пустое состояние со ссылками на Автоматизации/Формы/Плагины
+
+## 2026-07-30 — Automation admin: help, event select, action presets
+
+- Справка «Как это работает» на странице Автоматизация
+- Выбор триггера из списка + статусы по-русски
+- Пресеты действий: уведомление / форма→email / пауза
+- Таблица actions и примеры условий
+
+## 2026-07-30 — Scheduler admin: help how to use and enqueue jobs
+
+- На странице Планировщик — блок «Как пользоваться»
+- Откуда задачи, таблица handlers, пример JobQueue/SDK
+- Уточнены подписи Handlers и заголовок страницы
+
+## 2026-07-30 — Translate: auto language by visitor country
+
+- TranslateGeo: CF/CDN/Accept-Language → suggested_lang, fallback en
+- Настройка geo_auto_lang в плагине (вкл по умолчанию)
+- TranslateWidget применяет suggested_lang если нет выбора в localStorage
+- Batch разрешает нейтральный en
+
+## 2026-07-30 — Translate: stop language flicker on switch
+
+- Один full apply без серии restore RU↔EN
+- Patch/MO без полного сброса в оригинал
+- Cooldown + settledNorm против циклов retry
+- Partial miss-fill только patch, max 3
+
+## 2026-07-30 — Translate: full DOM capture + soft miss-fill
+
+- TranslateWidget: data-translate-root, attrs, title, MutationObserver, normalize, fill_misses
+- Chrome: breadcrumbs/cookie/rail/custom_html marked for translate
+- POST /translate/batch fill_misses capped live MT (12)
+- Corpus/Sync HTML-split aligned; singleton JSON walk; no slug in corpus
+
+## 2026-07-30 — Mobile adaptive: hero overlay/safe-area, menu lock, FAB offsets
+
+- Hero: без 100vw overflow, padding под overlay header, snap-секция без лишнего padding
+- Мобильное меню: lock #cms-snap-scroller + safe-area
+- Cookie/Translate/Support: safe-area + подъём над cookie-баннером
+- CTA full-width на телефонах, Grid 1-col mobile, snap-rail выше FAB
+
+## 2026-07-30 — Очистка накопившихся Vite assets на хостинге
+
+- Повторный деплой: применить pruneStaleFrontendAssets на хостинге (прошлый прогон ещё был на старом SiteUpdater в opcache/памяти)
+
+## 2026-07-30 — Деплой: автоочистка старых Vite assets на хостинге
+
+- SiteUpdater после деплоя чистит assets/: оставляет только файлы из текущего ZIP
+- Старые Vite-хеши (PublicPages-*.js и т.п.) удаляются автоматически
+- В ответе деплоя: assets_pruned / assets_pruned_bytes
+- Тест SiteUpdaterAssetsPruneTest
+
+## 2026-07-30 — Миграция header_style navbar
+
+- MigrationService: зарегистрирован 023_theme_header_style.sql
+- theme_settings.header_style для сохранения шаблона navbar
+
+## 2026-07-30 — Navbar: прозрачный до скролла — основной шаблон
+
+- theme_settings.header_style: overlay (основной) | solid
+- Navbar прозрачный до первого скролла, поверх full-screen hero; после скролла — плотный
+- Админка «Шаблон сайта»: выбор стиля шапки
+- Hero viewport учитывает overlay (--cms-hero-vh)
+
+## 2026-07-30 — Hero-блок: основной шаблон — на весь экран
+
+- hero-block: шаблон высоты «На весь экран» — основной дефолт (доступный viewport под шапкой)
+- Пресеты: viewport / tall / compact / custom в инспекторе
+- Header замеряет --cms-header-h / --cms-snap-vh для точной высоты
+- Главная: height_preset=viewport
+
+## 2026-07-30 — Синк фона Hero: админка ↔ билдер hero-block
+
+- cmsSync: hero-block.media_id ↔ hero_settings.background_media_id (pull/push/heal)
+- Admin Hero: при пустом фоне подтягивает media_id с главной; сохранение пишет обратно в layout
+- resolveEditorSettings: seed media_id для hero-block из CMS
+- На проде сразу выставлен background_media_id=10 из layout
+
+## 2026-07-30 — Админка: хаб «Оформление» с вложенным меню
+
+- Пункт меню переименован с «Hero-блок» на «Оформление» (hub.navLabel)
+- В сайдбаре — шеврон и вложенные ссылки: Hero, Главная, Навигация, Подвал, Контакты
+- Автораскрытие при активном хабе; resourceTitle больше не подменяет подпись хаба
+
+## 2026-07-30 — Hero media cover-zoom fills entire content height
+
+- Hero background always object-fit:cover — zooms any image/video to fill full content box
+- Dedicated HeroBackgroundFill layer; media_object_position control
+
+## 2026-07-30 — Fix hero preview: follow desktop/tablet/mobile frame
+
+- Hero bleed uses container query (cqi) inside builder preview — respects tablet/mobile frame
+- No more 100vw locking desktop width in device preview
+- Section with background hero auto full-bleed (no Container) + zero pad
+
+## 2026-07-30 — Hero-block background fills full section space
+
+- hero-block background: full-bleed 100vw, no inset card chrome
+- eats section paddingY via media_bleed_y; taller default min-height
+
+## 2026-07-30 — Hero-block as background media card with nestable widgets
+
+- hero-block: media_mode background as card with photo/video fill
+- acceptsChildren — nest heading/text/button/etc inside hero card
+- MediaBox plays mp4/webm as background video
+- Tree/canvas drop into container widget; default media_mode=background
+
+## 2026-07-30 — Builder reliability: save steps/items, hero media clear, dirty/hotkeys, CTA, CMS mirror banner
+
+- flushInlineEdits merges step_* into items[]; step inspector
+- Hero background clear without legacy fallback; media_id clear also clears media_url
+- Bake-on-open without false dirty; undo vs save baseline
+- Hotkeys: text selection native copy; Delete-only widget remove; notice on id=new
+- Empty EditableButton in edit mode; cta1/cta2 PART_FIELD_GROUPS
+- Banner when pushLayoutToCms fails after home save
+- AdminController revision snapshot try/catch; steps-row body alias; local ci-sdk-check script
+
+## 2026-07-28 — Fix public redirects and SEO rendering for visitor blockers
+
+- /modules exact redirect to /cms-modules before DirectorySlash
+- Home builder SEO title/description in SeoHead
+- SeoHead site-name suffix deduplication
+- Cookie banner analytics wording only when GA/GTM configured
+- /api-docs prerender no longer blocked as /api path
+- CMS map note for cms-modules public route
+
 ## 2026-07-28 — Документация CMS переписана по коду
 
 - Каноническое дерево docs/ по реализации (bootstrap, modules, packages, FE, deploy)

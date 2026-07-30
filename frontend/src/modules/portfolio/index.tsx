@@ -40,8 +40,6 @@ registerModule({
   blueprints: [testimonialsBlueprint],
   adminScreens: [
     { path: 'profile', label: 'Профиль', group: 'Контент', element: createElement(ProfilePage) },
-    { path: 'social-links', label: 'Соцсети', group: 'Контент', element: createElement(CrudListPage, { resource: 'social-links' }) },
-    { path: 'social-links/:id', label: 'Редактирование', group: 'Контент', element: createElement(CrudEditPage, { resource: 'social-links' }) },
     { path: 'statistics', label: 'Статистика', group: 'Контент', element: createElement(CrudListPage, { resource: 'statistics' }) },
     { path: 'statistics/:id', label: 'Редактирование', group: 'Контент', element: createElement(CrudEditPage, { resource: 'statistics' }) },
     { path: 'experience', label: 'Опыт', group: 'Контент', element: createElement(CrudListPage, { resource: 'experience' }) },

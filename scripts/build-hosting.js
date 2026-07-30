@@ -364,6 +364,15 @@ function rootHtaccess() {
     'RewriteCond %{REQUEST_URI} !\\.(js|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|map)$ [NC]',
     'RewriteRule ^(.*)$ prerender.php?path=/$1&prerender=1 [L,QSA]',
     '',
+    '# Missing hashed Vite assets must 404 — never SPA HTML (stale tab → MIME errors).',
+    'RewriteCond %{REQUEST_FILENAME} !-f',
+    'RewriteCond %{REQUEST_URI} ^/assets/ [NC]',
+    'RewriteRule ^ - [R=404,L]',
+    '',
+    'RewriteCond %{REQUEST_FILENAME} !-f',
+    'RewriteCond %{REQUEST_URI} \\.(?:js|css|mjs|map|woff2?|ttf)$ [NC]',
+    'RewriteRule ^ - [R=404,L]',
+    '',
     '# React SPA fallback → index.php (SEO-enriched shell)',
     'RewriteCond %{REQUEST_FILENAME} !-f',
     'RewriteCond %{REQUEST_FILENAME} !-d',
@@ -393,14 +402,15 @@ function rootHtaccess() {
     // HTML shell only. /api/* rewrites to api/public/index.php — must NOT inherit
     // public max-age (stale admin lists: contact-messages mark-read looked "frozen").
     '  SetEnvIf Request_URI "^/api/" IS_API',
+    // Short shell cache: after deploy old HTML must not keep pointing at pruned hashes.
     '  <Files "index.php">',
-    '    Header set Cache-Control "public, max-age=300, must-revalidate" env=!IS_API',
+    '    Header set Cache-Control "public, max-age=60, must-revalidate" env=!IS_API',
     '  </Files>',
     '  <Files "spa.html">',
-    '    Header set Cache-Control "public, max-age=300, must-revalidate"',
+    '    Header set Cache-Control "public, max-age=60, must-revalidate"',
     '  </Files>',
     '  <Files "prerender.php">',
-    '    Header set Cache-Control "public, max-age=300, must-revalidate"',
+    '    Header set Cache-Control "public, max-age=60, must-revalidate"',
     '  </Files>',
     '</IfModule>',
     '',
@@ -871,7 +881,7 @@ try {
     $svc = new PrerenderService($db, $app);
 
     $sendCacheHeaders = static function (PrerenderService $svc, string $path): void {
-        header('Cache-Control: public, max-age=300, must-revalidate');
+        header('Cache-Control: public, max-age=60, must-revalidate');
         $lm = $svc->lastModifiedUnix($path);
         if ($lm !== null) {
             header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $lm) . ' GMT');

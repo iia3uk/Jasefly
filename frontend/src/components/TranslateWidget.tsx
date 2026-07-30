@@ -23,7 +23,20 @@ const LANG_LABELS: Record<string, string> = {
 }
 
 const STORAGE_KEY = 'site.translate.lang'
-const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'CODE', 'PRE', 'TEXTAREA', 'INPUT', 'SELECT', 'OPTION', 'SVG', 'MATH', 'KBD', 'SAMP'])
+
+function hasStoredLang(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY) != null && localStorage.getItem(STORAGE_KEY) !== ''
+  } catch {
+    return false
+  }
+}
+const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'CODE', 'PRE', 'SVG', 'MATH', 'KBD', 'SAMP'])
+/** Tags whose text children are skipped, but attributes may still be translated. */
+const SKIP_TEXT_TAGS = new Set([...SKIP_TAGS, 'TEXTAREA', 'INPUT', 'SELECT', 'OPTION'])
+const ATTR_NAMES = ['placeholder', 'aria-label', 'title', 'alt'] as const
+const TITLE_KEY = '__document_title__'
+const PUNCT_ONLY = /^[\s\d\-–—.,:;!?/\\|@#$%^&*()[\]{}+=~`"']+$/
 
 type TranslateConfig = {
   widget_enabled?: boolean
@@ -34,6 +47,10 @@ type TranslateConfig = {
   cache_ready?: boolean
   content_hash?: string
   mode?: string
+  geo_auto_lang?: boolean
+  visitor_country?: string | null
+  suggested_lang?: string
+  geo_via?: string
 }
 
 type BatchResponse = {
@@ -42,10 +59,15 @@ type BatchResponse = {
     cached?: number
     missing?: number
     throttled?: boolean
+    partial?: boolean
+    fetched?: number
   }
   translations?: string[]
   throttled?: boolean
+  partial?: boolean
 }
+
+type AttrTarget = { el: Element; attr: string; key: string }
 
 function readStoredLang(source: string): string {
   try {
@@ -64,10 +86,38 @@ function writeStoredLang(lang: string) {
   }
 }
 
-function shouldSkipNode(node: Node): boolean {
+/** Match BE ingest: trim + collapse whitespace for cache key. */
+function normalizeText(raw: string): string {
+  return raw.trim().replace(/\s+/gu, ' ')
+}
+
+function isUrlLike(t: string): boolean {
+  return /^(https?:\/\/|mailto:|\/|tel:|#)/i.test(t.trim())
+}
+
+function isSkippableText(raw: string): boolean {
+  const t = raw.trim()
+  if (!t) return true
+  if (PUNCT_ONLY.test(t)) return true
+  if (isUrlLike(t)) return true
+  return false
+}
+
+function shouldSkipElement(el: Element | null): boolean {
+  if (!el) return true
+  let cur: Element | null = el
+  while (cur) {
+    if (SKIP_TAGS.has(cur.tagName)) return true
+    if (cur.closest('[data-no-translate], .translate-widget, .admin-bar, [contenteditable="true"]')) return true
+    cur = cur.parentElement
+  }
+  return false
+}
+
+function shouldSkipTextNode(node: Node): boolean {
   let el: Element | null = node.parentElement
   while (el) {
-    if (SKIP_TAGS.has(el.tagName)) return true
+    if (SKIP_TEXT_TAGS.has(el.tagName)) return true
     if (el.closest('[data-no-translate], .translate-widget, .admin-bar, [contenteditable="true"]')) return true
     el = el.parentElement
   }
@@ -79,11 +129,8 @@ function collectTextNodes(root: ParentNode): Text[] {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       const text = node.nodeValue ?? ''
-      if (!text.trim()) return NodeFilter.FILTER_REJECT
-      if (shouldSkipNode(node)) return NodeFilter.FILTER_REJECT
-      if (/^[\s\d\-–—.,:;!?/\\|@#$%^&*()[\]{}+=~`"']+$/.test(text.trim())) {
-        return NodeFilter.FILTER_REJECT
-      }
+      if (isSkippableText(text)) return NodeFilter.FILTER_REJECT
+      if (shouldSkipTextNode(node)) return NodeFilter.FILTER_REJECT
       return NodeFilter.FILTER_ACCEPT
     },
   })
@@ -95,24 +142,71 @@ function collectTextNodes(root: ParentNode): Text[] {
   return out
 }
 
-function positionClass(pos: string): string {
-  switch (pos) {
-    case 'bottom-left':
-      return 'left-4 bottom-4 sm:left-6 sm:bottom-6'
-    case 'top-right':
-      return 'right-4 top-4 sm:right-6 sm:top-6'
-    default:
-      return 'right-4 bottom-4 sm:right-6 sm:bottom-6'
+function collectAttrTargets(root: ParentNode): AttrTarget[] {
+  const out: AttrTarget[] = []
+  if (!(root instanceof Element) && root !== document.body && !(root instanceof DocumentFragment)) {
+    return out
   }
+  const scope = root instanceof Element ? root : document.body
+  const nodes = [scope, ...Array.from(scope.querySelectorAll('*'))]
+  for (const el of nodes) {
+    if (shouldSkipElement(el)) continue
+    const path = elementPath(el)
+    for (const attr of ATTR_NAMES) {
+      if (!el.hasAttribute(attr)) continue
+      const val = el.getAttribute(attr) ?? ''
+      if (isSkippableText(val)) continue
+      out.push({ el, attr, key: `${path}@${attr}` })
+    }
+  }
+  return out
 }
 
 function translationRoots(): ParentNode[] {
-  const roots: ParentNode[] = []
-  for (const sel of ['main', 'header', 'footer']) {
-    document.querySelectorAll(sel).forEach((el) => roots.push(el))
+  const seen = new Set<ParentNode>()
+  const add = (el: ParentNode) => {
+    if (seen.has(el)) return
+    // Skip nested roots already covered by an ancestor root
+    for (const r of seen) {
+      if (r instanceof Node && el instanceof Node && r.contains(el)) return
+    }
+    // Drop children if we add a parent
+    for (const r of [...seen]) {
+      if (r instanceof Node && el instanceof Node && el.contains(r)) seen.delete(r)
+    }
+    seen.add(el)
   }
-  if (!roots.length) roots.push(document.body)
-  return roots
+  for (const sel of ['main', 'header', 'footer', '[data-translate-root]']) {
+    document.querySelectorAll(sel).forEach((el) => add(el))
+  }
+  if (!seen.size) add(document.body)
+  return [...seen]
+}
+
+function elementPath(el: Element): string {
+  const parts: string[] = []
+  let cur: Element | null = el
+  while (cur && cur !== document.body) {
+    const tag = cur.tagName.toLowerCase()
+    const owner: Element | null = cur.parentElement
+    let idx = 0
+    if (owner) idx = Array.prototype.indexOf.call(owner.children, cur)
+    parts.push(`${tag}[${idx}]`)
+    cur = owner
+  }
+  return parts.join('>')
+}
+
+function textNodeKey(node: Text): string {
+  const parent = node.parentElement
+  if (!parent) return `orphan:${(node.nodeValue ?? '').slice(0, 40)}`
+  let tIdx = 0
+  for (let i = 0; i < parent.childNodes.length; i++) {
+    const c = parent.childNodes[i]
+    if (c === node) break
+    if (c.nodeType === Node.TEXT_NODE) tIdx++
+  }
+  return `${elementPath(parent)}#t${tIdx}`
 }
 
 function withPreservedSpace(original: string, translated: string): string {
@@ -121,9 +215,21 @@ function withPreservedSpace(original: string, translated: string): string {
   return `${m[1]}${translated}${m[3]}`
 }
 
+function positionClass(pos: string): string {
+  const fabBottom = 'bottom-[max(1rem,calc(env(safe-area-inset-bottom,0px)+var(--cms-fab-lift,0px)))]'
+  switch (pos) {
+    case 'bottom-left':
+      return `left-[max(1rem,env(safe-area-inset-left,0px))] ${fabBottom} sm:left-6`
+    case 'top-right':
+      return 'right-[max(1rem,env(safe-area-inset-right,0px))] top-[max(1rem,env(safe-area-inset-top,0px))] sm:right-6 sm:top-6'
+    default:
+      return `right-[max(1rem,env(safe-area-inset-right,0px))] ${fabBottom} sm:right-6`
+  }
+}
+
 /**
- * Cache-only overlay: applies translations from DB cache (no live MT).
- * Near-instant when warmup has filled the cache.
+ * Cache-first overlay with soft miss-fill when the visitor picks a language.
+ * Covers text nodes, common attributes, document.title; re-applies via timers + MutationObserver.
  */
 export function TranslateWidget() {
   const { site } = useSiteContext()
@@ -138,100 +244,170 @@ export function TranslateWidget() {
   }, [cfg?.languages, source])
 
   const [open, setOpen] = useState(false)
-  const [lang, setLang] = useState(() => readStoredLang(source))
+  const [lang, setLang] = useState(() => (hasStoredLang() ? readStoredLang(source) : source))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const geoAppliedRef = useRef(false)
 
   const sourceByKey = useRef(new Map<string, string>())
+  /** Normalized source strings already batch-requested for current lang (prevents retry loops / flicker). */
+  const settledNorm = useRef(new Set<string>())
   const abortRef = useRef(0)
   const langRef = useRef(lang)
   langRef.current = lang
-
-  const nodeKey = (node: Text): string => {
-    const parent = node.parentElement
-    if (!parent) return `orphan:${(node.nodeValue ?? '').slice(0, 40)}`
-    const parts: string[] = []
-    let el: Element | null = parent
-    while (el && el !== document.body) {
-      const tag = el.tagName.toLowerCase()
-      const owner: Element | null = el.parentElement
-      let idx = 0
-      if (owner) idx = Array.prototype.indexOf.call(owner.children, el)
-      parts.push(`${tag}[${idx}]`)
-      el = owner
-    }
-    let tIdx = 0
-    for (let i = 0; i < parent.childNodes.length; i++) {
-      const c = parent.childNodes[i]
-      if (c === node) break
-      if (c.nodeType === Node.TEXT_NODE) tIdx++
-    }
-    return `${parts.join('>')}#t${tIdx}`
-  }
+  const applyingRef = useRef(false)
+  const quietUntilRef = useRef(0)
+  const moTimerRef = useRef(0)
+  const partialRetriesRef = useRef(0)
+  const applyFnRef = useRef<(target: string, mode?: 'full' | 'patch') => Promise<void>>(async () => {})
 
   const restoreToSource = useCallback(() => {
-    for (const root of translationRoots()) {
-      for (const node of collectTextNodes(root)) {
-        const key = nodeKey(node)
-        const orig = sourceByKey.current.get(key)
-        if (orig != null) node.nodeValue = orig
+    applyingRef.current = true
+    quietUntilRef.current = Date.now() + 600
+    try {
+      for (const root of translationRoots()) {
+        for (const node of collectTextNodes(root)) {
+          const key = textNodeKey(node)
+          const orig = sourceByKey.current.get(key)
+          if (orig != null) node.nodeValue = orig
+        }
+        for (const { el, attr, key } of collectAttrTargets(root)) {
+          const orig = sourceByKey.current.get(key)
+          if (orig != null) el.setAttribute(attr, orig)
+        }
       }
+      const titleOrig = sourceByKey.current.get(TITLE_KEY)
+      if (titleOrig != null) document.title = titleOrig
+      document.documentElement.lang = source
+    } finally {
+      window.setTimeout(() => {
+        applyingRef.current = false
+      }, 80)
     }
-    document.documentElement.lang = source
   }, [source])
 
   const abortAll = useCallback(() => {
     abortRef.current += 1
+    applyingRef.current = false
     setBusy(false)
   }, [])
 
-  const applyFromCache = useCallback(async (target: string) => {
+  type ApplyMode = 'full' | 'patch'
+
+  const applyFromCache = useCallback(async (target: string, mode: ApplyMode = 'full') => {
     if (target === source) {
       abortAll()
       restoreToSource()
       return
     }
 
+    // One in-flight apply at a time — overlapping full restores cause RU↔EN flicker.
+    if (applyingRef.current && mode === 'patch') return
+
     const ticket = ++abortRef.current
     setError('')
     setBusy(true)
+    applyingRef.current = true
+    quietUntilRef.current = Date.now() + 10_000
+
+    type Job =
+      | { kind: 'text'; node: Text; key: string; original: string }
+      | { kind: 'attr'; el: Element; attr: string; key: string; original: string }
+      | { kind: 'title'; key: string; original: string }
 
     try {
-      restoreToSource()
+      if (mode === 'full') {
+        // Reset to source once, then translate — never do this on patch/MO.
+        for (const root of translationRoots()) {
+          for (const node of collectTextNodes(root)) {
+            const key = textNodeKey(node)
+            const orig = sourceByKey.current.get(key)
+            if (orig != null) node.nodeValue = orig
+          }
+          for (const { el, attr, key } of collectAttrTargets(root)) {
+            const orig = sourceByKey.current.get(key)
+            if (orig != null) el.setAttribute(attr, orig)
+          }
+        }
+        const titleOrig = sourceByKey.current.get(TITLE_KEY)
+        if (titleOrig != null) document.title = titleOrig
+        settledNorm.current.clear()
+        partialRetriesRef.current = 0
+      }
 
-      const nodes: Text[] = []
-      const originals: string[] = []
+      const jobs: Job[] = []
 
       for (const root of translationRoots()) {
         for (const n of collectTextNodes(root)) {
-          const key = nodeKey(n)
+          const key = textNodeKey(n)
           const current = n.nodeValue ?? ''
-          if (!sourceByKey.current.has(key)) {
-            sourceByKey.current.set(key, current)
-          }
+          const known = sourceByKey.current.has(key)
+          if (!known) sourceByKey.current.set(key, current)
           const orig = sourceByKey.current.get(key) ?? current
-          if (n.nodeValue !== orig) n.nodeValue = orig
-          nodes.push(n)
-          originals.push(orig)
+          const norm = normalizeText(orig)
+          if (mode === 'patch') {
+            // Only new nodes or nodes still showing source that we haven't settled yet.
+            const stillSource = normalizeText(current) === norm
+            if (known && (!stillSource || settledNorm.current.has(norm))) continue
+          } else if (n.nodeValue !== orig) {
+            n.nodeValue = orig
+          }
+          jobs.push({ kind: 'text', node: n, key, original: orig })
         }
+        for (const t of collectAttrTargets(root)) {
+          const current = t.el.getAttribute(t.attr) ?? ''
+          const known = sourceByKey.current.has(t.key)
+          if (!known) sourceByKey.current.set(t.key, current)
+          const orig = sourceByKey.current.get(t.key) ?? current
+          const norm = normalizeText(orig)
+          if (mode === 'patch') {
+            const stillSource = normalizeText(current) === norm
+            if (known && (!stillSource || settledNorm.current.has(norm))) continue
+          } else if (t.el.getAttribute(t.attr) !== orig) {
+            t.el.setAttribute(t.attr, orig)
+          }
+          jobs.push({ kind: 'attr', el: t.el, attr: t.attr, key: t.key, original: orig })
+        }
+      }
+
+      const titleCurrent = document.title
+      if (titleCurrent.trim() && !isSkippableText(titleCurrent)) {
+        const known = sourceByKey.current.has(TITLE_KEY)
+        if (!known) sourceByKey.current.set(TITLE_KEY, titleCurrent)
+        const titleOrig = sourceByKey.current.get(TITLE_KEY) ?? titleCurrent
+        const norm = normalizeText(titleOrig)
+        if (mode === 'patch') {
+          const stillSource = normalizeText(titleCurrent) === norm
+          if (!known || (stillSource && !settledNorm.current.has(norm))) {
+            jobs.push({ kind: 'title', key: TITLE_KEY, original: titleOrig })
+          }
+        } else {
+          if (document.title !== titleOrig) document.title = titleOrig
+          jobs.push({ kind: 'title', key: TITLE_KEY, original: titleOrig })
+        }
+      }
+
+      if (jobs.length === 0) {
+        document.documentElement.lang = target
+        return
       }
 
       const unique: string[] = []
       const indexOf = new Map<string, number>()
-      const mapNode: number[] = []
-      for (const raw of originals) {
-        const key = raw.trim()
+      const mapJob: number[] = []
+      for (const job of jobs) {
+        const key = normalizeText(job.original)
         let idx = indexOf.get(key)
         if (idx === undefined) {
           idx = unique.length
           indexOf.set(key, idx)
           unique.push(key)
         }
-        mapNode.push(idx)
+        mapJob.push(idx)
       }
 
-      // Cache-only API — fewer large chunks; soft-throttle retries quietly.
       const translated = new Array<string>(unique.length)
+      let needsPartialRetry = false
       const chunkSize = 200
       for (let i = 0; i < unique.length; i += chunkSize) {
         if (ticket !== abortRef.current || langRef.current === source) return
@@ -244,12 +420,14 @@ export function TranslateWidget() {
               source,
               target,
               texts: slice,
+              fill_misses: true,
             }, { silent: true })
             const payload = res?.data ?? res
             if (payload?.throttled) {
               await new Promise((r) => setTimeout(r, 800 * (attempt + 1)))
               continue
             }
+            if (payload?.partial) needsPartialRetry = true
             list = payload?.translations ?? []
             break
           } catch (e) {
@@ -266,31 +444,81 @@ export function TranslateWidget() {
         for (let j = 0; j < slice.length; j++) {
           const got = typeof list[j] === 'string' ? list[j] : ''
           translated[i + j] = got.trim() !== '' ? got : slice[j]
+          // Mark settled even if translation equals source (brand / untranslatable).
+          settledNorm.current.add(slice[j])
         }
       }
 
       if (ticket !== abortRef.current || langRef.current === source) {
-        restoreToSource()
+        if (ticket === abortRef.current) restoreToSource()
         return
       }
 
-      nodes.forEach((node, i) => {
-        const t = translated[mapNode[i]]
-        if (typeof t === 'string' && node.isConnected) {
-          node.nodeValue = withPreservedSpace(originals[i], t)
+      jobs.forEach((job, i) => {
+        const t = translated[mapJob[i]]
+        if (typeof t !== 'string') return
+        if (job.kind === 'text') {
+          if (job.node.isConnected) {
+            job.node.nodeValue = withPreservedSpace(job.original, t)
+          }
+        } else if (job.kind === 'attr') {
+          if (job.el.isConnected) job.el.setAttribute(job.attr, t)
+        } else {
+          document.title = t
         }
       })
       document.documentElement.lang = target
+
+      // Soft miss-fill: patch only (no restore flash), capped retries.
+      if (
+        needsPartialRetry
+        && ticket === abortRef.current
+        && langRef.current === target
+        && partialRetriesRef.current < 3
+      ) {
+        partialRetriesRef.current += 1
+        // Unsettle only strings that came back identical (still pending live fill).
+        for (let i = 0; i < unique.length; i++) {
+          if (normalizeText(translated[i] || '') === unique[i]) {
+            settledNorm.current.delete(unique[i])
+          }
+        }
+        window.setTimeout(() => {
+          if (langRef.current === target) void applyFnRef.current(target, 'patch')
+        }, 1100)
+      }
     } catch (e) {
       if (ticket === abortRef.current) {
         setError(e instanceof Error ? e.message : 'Не удалось перевести')
         restoreToSource()
       }
     } finally {
-      if (ticket === abortRef.current) setBusy(false)
+      if (ticket === abortRef.current) {
+        setBusy(false)
+        quietUntilRef.current = Date.now() + 1200
+        window.setTimeout(() => {
+          if (ticket === abortRef.current) applyingRef.current = false
+        }, 100)
+      }
     }
   }, [abortAll, restoreToSource, source])
 
+  applyFnRef.current = applyFromCache
+
+  // Auto language from visitor country (BE suggested_lang). Manual localStorage choice wins.
+  useEffect(() => {
+    if (!enabledPlugin || !(cfg?.widget_enabled ?? true)) return
+    if (!(cfg?.geo_auto_lang ?? true)) return
+    if (hasStoredLang() || geoAppliedRef.current) return
+    const suggested = String(cfg?.suggested_lang || 'en').toLowerCase().replace(/[^a-z\-]/g, '')
+    if (!suggested) return
+    geoAppliedRef.current = true
+    if (suggested === langRef.current) return
+    langRef.current = suggested
+    setLang(suggested)
+  }, [enabledPlugin, cfg?.widget_enabled, cfg?.geo_auto_lang, cfg?.suggested_lang])
+
+  // Lang change: one full apply + one quiet patch for late paint (no overlapping restores).
   useEffect(() => {
     if (!enabledPlugin || !(cfg?.widget_enabled ?? true)) return
     if (lang === source) {
@@ -298,29 +526,70 @@ export function TranslateWidget() {
       restoreToSource()
       return
     }
-    const id = window.setTimeout(() => void applyFromCache(lang), 80)
-    // One catch-up after late widgets — still cache-only / fast.
+    partialRetriesRef.current = 0
+    settledNorm.current.clear()
+    const id1 = window.setTimeout(() => {
+      if (langRef.current !== source) void applyFromCache(langRef.current, 'full')
+    }, 80)
     const id2 = window.setTimeout(() => {
-      if (langRef.current !== source) void applyFromCache(langRef.current)
-    }, 700)
+      if (langRef.current !== source) void applyFromCache(langRef.current, 'patch')
+    }, 1400)
     return () => {
-      window.clearTimeout(id)
+      window.clearTimeout(id1)
       window.clearTimeout(id2)
     }
   }, [lang, source, enabledPlugin, cfg?.widget_enabled, applyFromCache, abortAll, restoreToSource])
 
+  // SPA navigation: clear identity map and re-apply once.
   useEffect(() => {
     sourceByKey.current.clear()
+    settledNorm.current.clear()
+    partialRetriesRef.current = 0
     if (!enabledPlugin || !(cfg?.widget_enabled ?? true)) return
     if (langRef.current === source) {
       restoreToSource()
       return
     }
     const id = window.setTimeout(() => {
-      if (langRef.current !== source) void applyFromCache(langRef.current)
-    }, 100)
+      if (langRef.current !== source) void applyFromCache(langRef.current, 'full')
+    }, 120)
     return () => window.clearTimeout(id)
   }, [pathname, enabledPlugin, cfg?.widget_enabled, applyFromCache, restoreToSource, source])
+
+  // MutationObserver: patch only new/unsettled nodes; ignore our own writes + cooldown.
+  useEffect(() => {
+    if (!enabledPlugin || !(cfg?.widget_enabled ?? true)) return
+    if (typeof MutationObserver === 'undefined') return
+
+    const schedule = () => {
+      if (applyingRef.current) return
+      if (Date.now() < quietUntilRef.current) return
+      if (langRef.current === source) return
+      window.clearTimeout(moTimerRef.current)
+      moTimerRef.current = window.setTimeout(() => {
+        if (applyingRef.current || Date.now() < quietUntilRef.current) return
+        if (langRef.current === source) return
+        void applyFromCache(langRef.current, 'patch')
+      }, 350)
+    }
+
+    const mo = new MutationObserver((mutations) => {
+      if (applyingRef.current || Date.now() < quietUntilRef.current) return
+      if (langRef.current === source) return
+      // Ignore pure characterData/attr churn from our overlay — react to added nodes.
+      const hasAdd = mutations.some((m) => m.type === 'childList' && m.addedNodes.length > 0)
+      if (!hasAdd) return
+      schedule()
+    })
+    mo.observe(document.body, {
+      childList: true,
+      subtree: true,
+    })
+    return () => {
+      mo.disconnect()
+      window.clearTimeout(moTimerRef.current)
+    }
+  }, [enabledPlugin, cfg?.widget_enabled, applyFromCache, source])
 
   if (!enabledPlugin || !cfg || !(cfg.widget_enabled ?? true) || targets.length === 0) {
     return null

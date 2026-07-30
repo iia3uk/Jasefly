@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Activity, AlertTriangle, Loader2, Play, RefreshCw, RotateCcw, XCircle } from 'lucide-react'
+import { Activity, AlertTriangle, BookOpen, ChevronDown, Loader2, Play, RefreshCw, RotateCcw, XCircle } from 'lucide-react'
 import { api } from '@/lib/api'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { useAuth } from '@/context/AuthContext'
 import { usePluginEnabled } from '@/hooks/useApi'
+import { Link } from 'react-router-dom'
+import { adminUrl } from '@/admin/adminBasePath'
 
 type JobRow = {
   id: number
@@ -44,6 +47,183 @@ const STATUS_LABEL: Record<string, string> = {
   completed: 'Готово',
   failed: 'Ошибка',
   cancelled: 'Отменено',
+}
+
+/** Known job types → human explanation (admin help). */
+const HANDLER_HELP: Record<string, { title: string; source: string }> = {
+  'scheduler.noop': {
+    title: 'Пустая проверка (noop)',
+    source: 'Служебно / тест пульса очереди',
+  },
+  'scheduler.cleanup': {
+    title: 'Очистка старых записей очереди',
+    source: 'Сам планировщик (по cron / tick)',
+  },
+  'platform.event.dispatch': {
+    title: 'Отложенное событие платформы',
+    source: 'SDK EventsAdapter::publishLater',
+  },
+  'automation.resume': {
+    title: 'Продолжить сценарий после паузы',
+    source: 'Модуль Автоматизации (шаг delay)',
+  },
+  'analytics.retention': {
+    title: 'Удалить устаревшие события аналитики',
+    source: 'Модуль Аналитика',
+  },
+  'analytics.aggregate': {
+    title: 'Собрать дневную сводку аналитики',
+    source: 'Модуль Аналитика',
+  },
+  'newsletter.campaign.send': {
+    title: 'Отправка кампании рассылки',
+    source: 'Модуль Newsletter',
+  },
+}
+
+function SchedulerHelp({ handlers }: { handlers: string[] }) {
+  const [open, setOpen] = useState(false)
+  const known = handlers.length
+    ? handlers
+    : Object.keys(HANDLER_HELP)
+
+  return (
+    <GlassPanel className="overflow-hidden p-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-white/[0.02]"
+      >
+        <span className="inline-flex items-center gap-2 text-sm font-medium text-zinc-100">
+          <BookOpen className="h-4 w-4 text-emerald-400" />
+          Как пользоваться планировщиком
+        </span>
+        <ChevronDown className={`h-4 w-4 text-zinc-500 transition ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open ? (
+        <div className="space-y-5 border-t border-zinc-800 px-4 py-4 text-sm leading-relaxed text-zinc-300">
+          <section className="space-y-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Зачем он</h2>
+            <p>
+              Это <strong className="font-medium text-zinc-100">очередь фоновых задач</strong>, а не календарь
+              «создай напоминание». Модули кладут работу «на потом» (пауза в автоматизации, рассылка, очистка),
+              а <strong className="font-medium text-zinc-100">tick</strong> периодически забирает и выполняет порцию.
+            </p>
+            <p className="text-zinc-400">
+              Пустой список задач при Cron health OK — нормально: сейчас просто нечего выполнять.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Как работать из этой страницы</h2>
+            <ol className="list-decimal space-y-1.5 pl-5 text-zinc-300">
+              <li>
+                Смотрите <strong className="text-zinc-100">Cron health</strong>: OK и свежий last tick — очередь крутится.
+                Stale — задачи копятся, настройте cron или жмите «Tick сейчас».
+              </li>
+              <li>
+                <strong className="text-zinc-100">Tick сейчас</strong> — ручной прогон (до ~10 задач). Удобно на shared-хостинге без cron.
+              </li>
+              <li>
+                Откройте задачу слева → справа детали, payload, ошибка.
+                При ошибке: <strong className="text-zinc-100">Retry</strong> или <strong className="text-zinc-100">Cancel</strong>.
+              </li>
+              <li>
+                Фильтры статусов — очередь / ошибки / готовые.
+              </li>
+            </ol>
+            <p className="rounded-lg border border-zinc-700/80 bg-zinc-900/60 px-3 py-2 font-mono text-xs text-zinc-400">
+              php api/bin/scheduler.php run --limit=20
+              <span className="mt-1 block font-sans text-zinc-500">
+                Рекомендуемый cron на хостинге: раз в 1–5 минут. Без cron tick бывает при заходе в админку (lazy).
+              </span>
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Откуда берутся задачи</h2>
+            <p>
+              <strong className="text-zinc-100">Вручную из этого экрана создать задачу нельзя</strong> — здесь только мониторинг.
+              Задачи появляются сами, когда модули или SDK кладут их в очередь:
+            </p>
+            <ul className="list-disc space-y-1.5 pl-5">
+              <li>
+                <Link to={adminUrl('/automations')} className="text-emerald-400 hover:underline">Автоматизации</Link>
+                {' '}— шаг с задержкой → тип <code className="text-zinc-200">automation.resume</code>
+              </li>
+              <li>
+                <Link to={adminUrl('/newsletter/campaigns')} className="text-emerald-400 hover:underline">Рассылки</Link>
+                {' '}→ <code className="text-zinc-200">newsletter.campaign.send</code> (если модуль включён)
+              </li>
+              <li>
+                Аналитика / платформа / пакетные модули — сами вызывают очередь при своих сценариях
+              </li>
+              <li>
+                Таблица <code className="text-zinc-200">cron_schedules</code> — периодические задания (если строки добавлены в БД)
+              </li>
+            </ul>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Типы задач (handlers)</h2>
+            <p className="text-zinc-400">
+              Блок Handlers выше — не «ваши задания», а типы, которые система <em>умеет</em> выполнять прямо сейчас
+              (зависит от включённых модулей).
+            </p>
+            <div className="overflow-x-auto rounded-lg border border-zinc-800">
+              <table className="w-full min-w-[36rem] text-left text-xs">
+                <thead className="bg-zinc-900/80 text-zinc-500">
+                  <tr>
+                    <th className="px-3 py-2 font-medium">Тип</th>
+                    <th className="px-3 py-2 font-medium">Что делает</th>
+                    <th className="px-3 py-2 font-medium">Откуда</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {known.map((type) => {
+                    const meta = HANDLER_HELP[type]
+                    return (
+                      <tr key={type} className="border-t border-zinc-800/80">
+                        <td className="px-3 py-2 font-mono text-emerald-300/90">{type}</td>
+                        <td className="px-3 py-2 text-zinc-300">{meta?.title || 'Обработчик модуля / пакета'}</td>
+                        <td className="px-3 py-2 text-zinc-500">{meta?.source || 'Зарегистрирован при boot модуля'}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Как писать свои задачи (для разработчика)</h2>
+            <p>
+              1) Зарегистрировать handler при boot модуля.
+              2) Положить job в очередь через <code className="text-zinc-200">JobQueue</code> или Platform SDK.
+            </p>
+            <pre className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-3 font-mono text-[11px] leading-5 text-zinc-300">{`// 1) В Module::boot()
+JobHandlerRegistry::register('my.module.work', static function (array $payload): void {
+    // ваша логика; $payload — JSON из очереди
+});
+
+// 2) Когда нужна фоновая работа
+$queue = new JobQueue($db);
+$queue->push('my.module.work', ['id' => 42]);           // сразу
+$queue->delay('my.module.work', ['id' => 42], 300);     // через 5 минут
+
+// Platform SDK (пакетный модуль)
+$scheduler->enqueue('my.module.work', ['id' => 42]);`}</pre>
+            <p className="text-xs text-zinc-500">
+              Файлы: <code className="text-zinc-400">backend/src/Modules/Scheduler/JobQueue.php</code>,{' '}
+              <code className="text-zinc-400">JobHandlerRegistry.php</code>, CLI{' '}
+              <code className="text-zinc-400">api/bin/scheduler.php</code>. Документация:{' '}
+              <code className="text-zinc-400">docs/modules/scheduler.md</code>.
+            </p>
+          </section>
+        </div>
+      ) : null}
+    </GlassPanel>
+  )
 }
 
 export function SchedulerPage() {
@@ -114,34 +294,34 @@ function SchedulerInner() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl text-white">Планировщик</h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            Очередь фоновых задач. Cron: CLI или lazy tick при входе в админку.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <GhostButton
-            type="button"
-            onClick={() => void qc.invalidateQueries({ queryKey: ['admin', 'scheduler'] })}
-          >
-            <RefreshCw className="mr-1.5 h-4 w-4" />
-            Обновить
-          </GhostButton>
-          {canManage ? (
-            <Button
+      <AdminPageHero
+        title="Планировщик"
+        hint="Диспетчерская фоновых задач: мониторинг очереди и tick. Создавать задачи здесь нельзя — их кладут модули."
+        eyebrow="Система"
+        accent="amber"
+        actions={
+          <>
+            <GhostButton
               type="button"
-              className="admin-primary"
-              disabled={tick.isPending}
-              onClick={() => tick.mutate()}
+              onClick={() => void qc.invalidateQueries({ queryKey: ['admin', 'scheduler'] })}
             >
-              {tick.isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Play className="mr-1.5 h-4 w-4" />}
-              Tick сейчас
-            </Button>
-          ) : null}
-        </div>
-      </div>
+              <RefreshCw className="mr-1.5 h-4 w-4" />
+              Обновить
+            </GhostButton>
+            {canManage ? (
+              <Button
+                type="button"
+                className="admin-primary"
+                disabled={tick.isPending}
+                onClick={() => tick.mutate()}
+              >
+                {tick.isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Play className="mr-1.5 h-4 w-4" />}
+                Tick сейчас
+              </Button>
+            ) : null}
+          </>
+        }
+      />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <GlassPanel className="p-4">
@@ -179,9 +359,12 @@ function SchedulerInner() {
         </GlassPanel>
       </div>
 
+      <SchedulerHelp handlers={stats.data?.handlers ?? []} />
+
       {stats.data?.handlers?.length ? (
         <GlassPanel className="p-4">
-          <p className="text-xs uppercase tracking-wider text-zinc-500">Handlers</p>
+          <p className="text-xs uppercase tracking-wider text-zinc-500">Handlers (зарегистрированы сейчас)</p>
+          <p className="mt-1 text-xs text-zinc-500">Типы, которые система умеет выполнять — не список ваших заданий в очереди.</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {stats.data.handlers.map((h) => (
               <code key={h} className="rounded bg-zinc-900 px-2 py-0.5 text-xs text-zinc-300">{h}</code>

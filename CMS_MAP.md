@@ -13,25 +13,33 @@
 | Симптом / задача | Файл(ы) |
 | --- | --- |
 | Клик/выбор блока, инспектор, дерево | `frontend/src/builder/editor/PageBuilderPage.tsx`, `render/LayoutRenderer.tsx`, `edit/Editable.tsx` |
+| Билдер «не сохраняет» правки текста | `PageBuilderPage.save` → `flushInlineEdits` (плоские поля + `step_*` → `items[]`); `AdminController` snapshot в try/catch |
+| Hero «Убрать» фон не сбрасывается | `resolveEditorSettings` take/bake + `cmsSync` pull/push — owned `null`/`''` не затирать CMS `background_media_id`; `portfolio` не fallback на legacy `background`; MediaPicker clear `media_id` → ещё `media_url`/`url` |
+| Admin Hero без превью, на сайте есть | `cmsSync`: `hero-block.media_id` ↔ `hero_settings.background_media_id`; heal в `SitePages` + push при сохранении Admin Hero |
+| Билдер: ложный dirty / hotkeys | bake-on-open без dirty; undo к baseline save; Ctrl+C/V не перехватывают text selection; Delete (не Backspace) удаляет виджет |
 | Иконки палитры билдера | `builder/lib/widgetIcons.tsx` + CSS `.builder-palette-tile` в `frontend/src/index.css` |
 | Виджет (heading/text/hero/…) | `builder/widgets/{basic,structure,blocks,portfolio,landing,commerce,auth}.tsx`; универсальные: `hero-block` `showcase-block` `compare-block` `cta-block` `steps-row` `media-placeholder` `stat-row`; секции: glow/overlay/animation/responsive в `lib/sectionEffects.tsx` |
 | Mobile: шаги пайплайна «плывут» | `widgets/structure.tsx` → `steps-row` (1/2 col → N на lg); `panels.tsx` pipeline scroll |
+| Mobile адаптив / safe-area / FAB | `index.css` (`.cms-hero-bleed`, overlay pad, snap rail); `SiteLayout` menu lock; `CookieBanner` / `TranslateWidget` / `SupportWidget` |
 | steps-row на проде «Описание», в билдере нет | `structure.tsx` `asSteps`: в данных `body`, виджет ждал `text`; public не должен рисовать placeholder |
 | Snap-скролл / перелистывание секций | `snapPageController.ts` + `sectionEffects.tsx` / `#cms-snap-scroller` / `SnapSectionRail.tsx` |
 | UI-панели лендинга (модули/pipeline/MCP) | `builder/widgets/panels.tsx` → `module-toggles` `pipeline-panel` `mcp-inspector` |
-| Hero медиа размер / фон | `builder/widgets/blocks.tsx` → `media_mode` side\|background + `media_width/height/object_fit`; клик по картинке → fieldStyles |
+| Hero медиа размер / фон | `builder/widgets/blocks.tsx` → `hero-block`: `height_preset` viewport\|tall\|compact\|custom (основной = весь экран); `media_mode` background\|side; `acceptsChildren` |
+| Деплой раздувает `assets/` на хостинге | `SiteUpdater::pruneStaleFrontendAssets` — после update ZIP удаляет хеши не из пакета |
 | Галерея фото+видео | `modules/projects/components/ProjectGallery.tsx` + виджет `image-gallery` в `builder/widgets/landing.tsx` |
 | Lightbox картинок (блог обложка/контент) | `shared/ui/ImageLightbox.tsx` + `MediaImage lightbox` / `RichText` в `shared/ui/index.tsx`, `BlogPostView` |
 | Иконки карточек (features-grid, ?) | `shared/icons.tsx` + `shared/techBrandIcons.ts` (Lucide + Simple Icons) |
 | Переводчик / auto-warmup 429 | `TranslateAutoWarmup.tsx` + `SoftRateLimitMiddleware` + `TranslateModule` (batch тоже soft) |
-| Переводчик не весь DOM (списки) | `TranslateWidget.tsx` + `TranslateCorpus.php` (split HTML li/p) |
-| Переводчик статичный (только кэш) | `TranslateService` cacheOnly + `TranslateWidget` / warmup по `content_hash` |
+| Переводчик не весь DOM / attrs / chrome | `TranslateWidget.tsx`: корни `main/header/footer/[data-translate-root]`, attrs placeholder/aria-label/title/alt, `document.title`, MutationObserver; chrome: breadcrumbs/cookie/rail/custom_html |
+| Переводчик кэш + soft miss-fill | `POST /translate/batch` `fill_misses` → `TranslateService::translateBatch(..., fillMissCap=12)`; warmup/corpus для полноты |
+| Переводчик авто-язык по стране | `TranslateGeo.php` (CF/CDN/Accept-Language) → `publicConfig.suggested_lang`; FE `TranslateWidget` если нет localStorage; fallback `en` |
+| Переводчик corpus ≠ DOM | `TranslateCorpus::ingest` = `TranslateSync` HTML-split; singleton JSON → walkJson; без slug |
 | Переводчик фейки / синк контента | `TranslateCache::purgeInvalid` + `TranslateSync` (resource.afterSave) + админка «Очистить фейки» |
 | Google / LibreTranslate / MyMemory / DeepL | `TranslateService` + настройки плагина `provider` (default google) |
 | Тикеты / live chat / FAQ-бот | `modules/support/` ↔ `Modules/Support/` + `SupportWidget.tsx` |
 | Формы / заявки / виджет form | `modules/forms/` ↔ `Modules/Forms/` + `builder/widgets/forms.tsx` |
-| Планировщик / cron jobs | `modules/scheduler/` ↔ `Modules/Scheduler/` + `admin/pages/SchedulerPage.tsx` |
-| Автоматизации / уведомления / рассылки | `modules/{automation,notifications,newsletter}/` ↔ `Modules/{Automation,Notifications,Newsletter}/` |
+| Планировщик / cron jobs | `modules/scheduler/` ↔ `Modules/Scheduler/` + `admin/pages/SchedulerPage.tsx` (справка «Как пользоваться» на странице) |
+| Автоматизации / уведомления / рассылки | `modules/{automation,notifications,newsletter}/` ↔ `Modules/{Automation,Notifications,Newsletter}/`; справки в `AutomationAdminPage` / `NotificationsPage` (+ POST `/admin/notifications/test`) |
 | Jasefly Lab / эксперименты | `modules/lab/` ↔ `Modules/Lab/` + `/lab/:slug` (вне SiteLayout); entries: `starter`, `reference` |
 | FAQ клик в чате | `POST /support/faq/{id}/ask` + чипы в `SupportWidget` |
 | Support poll 429 | `SoftRateLimit` на GET messages + backoff в `SupportWidget`; DDoS skip `/support/` |
@@ -40,12 +48,15 @@
 | Стили/цвет/шрифт/градиент текста | `builder/edit/StyleFields.tsx`, `ColorControl.tsx`, `colorUtils.ts`, `lib/googleFonts.ts` |
 | Seed-лейауты страниц (home/about/…) | `frontend/src/builder/migrateHome.ts` |
 | Публичный рендер страницы из layout | `builder/public/CmsPages.tsx`, `builder/public/parseLayout.ts`, `builder/render/LayoutRenderer.tsx` |
+| «Сайт не из pages / не из БД» | `isSeedLayout` (`CmsPages.tsx`): seed/пусто → classic `HomePage` из `hero_settings`+секций; `useOnSite:true` → `pages.layout_json`. Файлы `content/jasefly-official/` только apply в БД, не runtime |
+| Админ «Главная» / Оформление | Редирект в билдер `pages` is_home (`SitePages.HomepagePage`). Не путать с пустой `homepage_sections` — контент в `pages.layout_json` |
 | Черновик на живом URL (только админ) | `backend/.../PublicController.php` → `page()` + `CmsPages.tsx` баннер |
 | SEO страницы (title/desc/OG/расписание) | `builder/editor/PageBuilderPage.tsx` → `PageSettings`; `SeoHead` в `SiteLayout.tsx` |
 | SEO целевые рынки (CIS/EU/USA/ASIA, areaServed) | `/admin/seo` → `seo_settings.target_regions` + `PrerenderService` JSON-LD |
 | SEO боты / пустой `#root` / Яндекс | корневой `index.php` + `spa.html` + `PrerenderService` / `.htaccess` (`?prerender=1`) |
 | Beget analyzer / H1 в shell | `PrerenderService::enrichSpaHtml` (seo-fallback) + расширенные BOT_MARKERS / UA в `.htaccess` |
-| Last-Modified / HTML cache | `scripts/build-hosting.js` → `rootIndexPhp()` + Cache-Control 300s |
+| Last-Modified / HTML cache | `scripts/build-hosting.js` → `rootIndexPhp()` + Cache-Control 60s; missing `/assets/*` → 404 (не SPA HTML) |
+| После деплоя белый экран / MIME assets | Inline recovery в `frontend/index.html` + `main.tsx` `vite:preloadError`: один hard-reload с `?_=` |
 | Breadcrumbs | `SiteBreadcrumbs.tsx` + JSON-LD / prerender `BreadcrumbList` |
 | Privacy / Terms | `/privacy`, `/terms` + footer columns |
 | Canonical host / HTTPS / www 301 | `scripts/build-hosting.js` → `rootHtaccess()` + `frontend/public/.htaccess` |
@@ -67,6 +78,7 @@
 | Отложенная публикация страниц | `PageScheduleService` (lazy publish) + `scheduled_at` в билдере |
 | Плагины вкл/выкл, гейты UI | `frontend/src/core/pluginGates.ts`, `components/RequirePlugin.tsx`, `admin/pages/PluginsPage.tsx` |
 | Тесты / CI / cms_local_test | `backend/tests/run.php` (+ Permission/API/CleanInstall/…/PackageEnableSync/ProjectsSoftApi/MigrationSqliteCompat/ContractGovernance/…), `backend/bin/certify-lifecycle.php`, `mcp-cms/src/local.js`, `.github/workflows/platform-sdk.yml`, `frontend` vitest (`npm test`) |
+| Локально как GitHub sdk перед push | `node scripts/ci-sdk-check.js` (или `--fast`); pre-push: `git config core.hooksPath scripts/githooks` |
 | SQLite migrate: OLD.id / MODIFY / prefix(191) | `Core/Db/SqlTranspiler.php` (rowid triggers, skip MODIFY, strip index prefix lengths); smoke: `MigrationSmokeTest` / `MigrationSqliteCompatTest` |
 | Contract governance (snapshots) | `Platform/Manifest/{api-snapshot,capabilities,permissions-core,events-core}.v1.json` · `mcp-cms/manifest/mcp-tools.v1.json` · `builder/manifest/widget-types.v1.json` · `ContractGovernanceTest.php` · vitest `widget-types.test.ts` · regen: `node backend/tests/gen-contract-snapshots.js` |
 | Security verification (SSRF/2FA/upload) | `Support/SsrfGuard.php` · `SecurityVerificationTest.php` · `TotpService` · `BackupService` · `MediaService` · `AuthController::refresh` (rotation) · `WebhooksModule` (HMAC + SSRF) |
@@ -79,14 +91,21 @@
 | `/admin/{resource}` 404 при выкл. плагине | `ADMIN_RESOURCE_PLUGINS` + `useAdminResourceEnabled`; `PLUGIN_ALIASES` portfolio↔projects; `adminList`/`adminGet` silent 404→[]; Dashboard `contentHealth` gated; PluginsPage re-sync `setPluginStates` |
 | Билдер-страницы без Portfolio (about/contact/cta) | `pluginGates` + `widgetRequiredPlugin` (`cta-banner`/`blog-list`/`contact-form` ≠ portfolio) |
 | Админ-роуты / CRUD экраны | `admin/adminRoutes.tsx`, `core/moduleRegistry.ts`, `admin/pages/*` |
+| Дашборд / настраиваемые виджеты | `admin/dashboard/` (`DashboardShell`, `widgetRegistry`, `useDashboardLayout`) + prefs `admin.dashboard.layout.v1`; страница `admin/pages/DashboardPage.tsx` |
+| Админ chrome / hero вкладок | `admin/components/AdminPageHero.tsx` (+ `AdminSectionLabel`); через `AdminSplitLayout` / `UtilityPages` Header и standalone pages |
+| IconPicker перекрыт SaveBar | `IconPicker` → portal на `document.body` (z выше sticky); SaveBar в `AdminPages`/`SitePages` |
+| Оверлей «Сохранено» по всей админке | `admin/feedback/SaveFeedbackOverlay.tsx` + `saveFeedback.ts`; emit из `lib/api.ts` request на успешный PUT/POST `/admin/*` |
 | Публичные роуты | `frontend/src/routes/AppRouter.tsx`, `pages/PublicPages.tsx` |
 | API-клиент фронта | `frontend/src/lib/api.ts`, `hooks/useApi.ts` |
 | Тема / site settings / nav | `modules/site/`, `context/SiteContext.tsx`, backend `Modules/System`, `Modules/Content` |
+| Админ «Навигация» (билдер шапка/подвал) | `modules/site/NavigationBuilderPage.tsx` (+ `CrudEditPage` на `navigation/:id`); публичный рендер `SiteLayout` Header/Footer |
+| Подвал слоган/копирайт HTML | `SiteLayout` Footer + `sanitizeHtml`; админ textarea в `SitePages` path=`footer` |
+| Соцсети (ядро, не Portfolio) | FE `modules/site` + hub Оформление; BE `ContentModule` resources/blueprints; `PublicController.site.social` без portfolio-gate; таблица `social_links` |
 | Проекты / блог / услуги | `modules/projects|blog|services/` ↔ `backend/src/Modules/{Projects,Blog,Content}/` |
 | Товары / оплата | `modules/products|payments/` ↔ `Modules/Products|Payments/` |
 | Заказы / корзины / возвраты | `modules/orders/` ↔ `Modules/Orders/` + адаптер в `Payments/PaymentService.php` |
 | Комментарии / отзывы / рейтинги | `modules/comments/` ↔ `Modules/Comments/` + `builder/widgets/comments.tsx` |
-| Аналитика событий / целей | `modules/analytics/` ↔ `Modules/Analytics/` + `beacon.ts` / `AnalyticsBeacon.tsx` (в SiteLayout) |
+| Аналитика событий / целей | `modules/analytics/` (`AnalyticsAdminPage`, `AnalyticsCharts`, `DashboardAnalyticsWidget`) ↔ `Modules/Analytics/` + `beacon.ts` / `AnalyticsBeacon.tsx`; виджет дашборда `admin/dashboard/widgets/AnalyticsDashWidget.tsx` |
 | Медиа | `modules/media/` ↔ `Modules/Media/`, `Controllers/MediaController.php` |
 | Auth / users / 2FA | `context/AuthContext.tsx`, `Modules/Users/`, `Controllers/AuthController.php` |
 | Миграции SQL | `backend/migrations/*.sql` (+ plugin migrations в `Modules/*/migrations/`) |
@@ -192,7 +211,7 @@ portfolio/
 | --- | --- |
 | Shell админки | `admin/AdminApp.tsx` |
 | Роутинг экранов | `admin/adminRoutes.tsx` |
-| Хабы меню | `admin/adminHubs.ts` |
+| Хабы меню | `admin/adminHubs.ts` + вложенные пункты в `AdminApp` |
 | Страницы CMS (list/builder entry) | `admin/pages/PagesAdmin.tsx` |
 | Site / theme / nav singletons | `admin/pages/SitePages.tsx` |
 | Редиректы 301/302 | `admin/pages/RedirectsPage.tsx` |
@@ -221,6 +240,7 @@ portfolio/
 | Инструмент | Когда |
 | --- | --- |
 | **`cms_release`** | Любая заливка кода (build→test→changelog→deploy→verify) |
+| Не те модули / старая админка после «успешного» деплоя | Проверь `release/jasefly-cms-update-*.zip` (не legacy `portfolio-hosting-update-*`); `mcp-cms/src/local.js` → `findLatestUpdateZip`; явный `cms_deploy_update(zip_path=…)` |
 | `cms_site_map` | Карта живого сайта перед правками контента |
 | `cms_pages_digest` / `cms_page_digest` | Короткие выжимки страниц |
 | `cms_list` / `cms_get` / `cms_update` / `cms_bulk` | CRUD ресурсов (bulk ≤25) |

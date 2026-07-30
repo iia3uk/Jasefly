@@ -21,9 +21,9 @@ export const Grid = ({ className, cols = 2, ...props }: HTMLAttributes<HTMLDivEl
     className={cn(
       'grid gap-6',
       cols === 1 && 'grid-cols-1',
-      cols === 2 && 'grid-cols-2',
-      cols === 3 && 'grid-cols-2 md:grid-cols-3',
-      cols === 4 && 'grid-cols-2 lg:grid-cols-4',
+      cols === 2 && 'grid-cols-1 sm:grid-cols-2',
+      cols === 3 && 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
+      cols === 4 && 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
       className,
     )}
     {...props}

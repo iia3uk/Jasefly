@@ -5,6 +5,7 @@ import { Copy, ExternalLink, Eye, EyeOff, Home, LayoutTemplate, Paintbrush, Plus
 import { useAdminList, useCrud } from '@/hooks/useApi'
 import { api } from '@/lib/api'
 import type { ID, Page } from '@/types'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { emptyLayout } from '@/builder/types'
 import { SLUG_PLUGIN_GATES } from '@/core/pluginGates'
@@ -178,25 +179,28 @@ export function PagesListPage() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl">Страницы и шаблоны</h1>
-          <p className="mt-1 max-w-3xl text-sm text-zinc-500">
-            <b className="font-medium text-zinc-300">{t.pagesSeed}</b> — заготовка в билдере с виджетами (превью).
-            Пока seed, на сайте остаётся классическая страница с живыми данными.
-            После первого «Сохранить» в билдере шаблон становится основной страницей на сайте.
-            Шаблоны портфолио скрываются, если плагин Portfolio выключен.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" disabled={busy} onClick={() => void ensureTemplates()}>
-            <Wand2 size={16} /> Создать / обновить шаблоны
-          </Button>
-          <Button type="button" onClick={() => void createPage()}>
-            <Plus size={16} /> Новая страница
-          </Button>
-        </div>
-      </div>
+      <AdminPageHero
+        title="Страницы и шаблоны"
+        eyebrow="Контент"
+        accent="sky"
+        actions={
+          <>
+            <Button type="button" disabled={busy} onClick={() => void ensureTemplates()}>
+              <Wand2 size={16} /> Создать / обновить шаблоны
+            </Button>
+            <Button type="button" onClick={() => void createPage()}>
+              <Plus size={16} /> Новая страница
+            </Button>
+          </>
+        }
+      >
+        <p className="max-w-3xl text-sm text-zinc-500">
+          <b className="font-medium text-zinc-300">{t.pagesSeed}</b> — заготовка в билдере с виджетами (превью).
+          Пока seed, на сайте остаётся классическая страница с живыми данными.
+          После первого «Сохранить» в билдере шаблон становится основной страницей на сайте.
+          Шаблоны портфолио скрываются, если плагин Portfolio выключен.
+        </p>
+      </AdminPageHero>
 
       {msg && <p className="mb-4 text-sm text-zinc-400">{msg}</p>}
 

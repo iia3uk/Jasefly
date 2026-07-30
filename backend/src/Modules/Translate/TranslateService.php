@@ -28,13 +28,15 @@ final class TranslateService
 
     /**
      * @param list<string> $texts
-     * @return array{translations: list<string>, cached: int, fetched: int, provider: string, missing: int, failed: int}
+     * @param int $fillMissCap When cacheOnly: live-MT at most this many unique misses (0 = none).
+     * @return array{translations: list<string>, cached: int, fetched: int, provider: string, missing: int, failed: int, partial: bool, quota_hit: bool}
      */
-    public function translateBatch(array $texts, string $source, string $target, bool $cacheOnly = false): array
+    public function translateBatch(array $texts, string $source, string $target, bool $cacheOnly = false, int $fillMissCap = 0): array
     {
         $source = strtolower(trim($source));
         $target = strtolower(trim($target));
         $provider = (string) ($this->settings['provider'] ?? 'google');
+        $fillMissCap = max(0, min(24, $fillMissCap));
 
         if ($source === '' || $target === '' || $source === $target || $texts === []) {
             return [
@@ -43,6 +45,8 @@ final class TranslateService
                 'fetched' => 0,
                 'missing' => 0,
                 'failed' => 0,
+                'partial' => false,
+                'quota_hit' => false,
                 'provider' => $provider,
             ];
         }
@@ -69,38 +73,73 @@ final class TranslateService
         $fetched = 0;
         $failed = 0;
         $quotaHit = false;
+        $partial = false;
         if ($missTexts !== []) {
-            if ($cacheOnly) {
+            if ($cacheOnly && $fillMissCap <= 0) {
                 foreach ($missIndex as $i) {
                     $out[$i] = $texts[$i];
                 }
                 $failed = count($missTexts);
             } else {
-                $fresh = match ($provider) {
-                    'google' => $this->viaGoogle($missTexts, $source, $target),
-                    'libretranslate' => $this->viaLibreTranslate($missTexts, $source, $target),
-                    'deepl' => $this->viaDeepL($missTexts, $source, $target),
-                    'mymemory' => $this->viaMyMemory($missTexts, $source, $target),
-                    default => $this->viaGoogle($missTexts, $source, $target),
-                };
-                foreach ($missIndex as $j => $i) {
-                    $translated = $fresh[$j] ?? null;
-                    if ($translated === '__QUOTA__') {
-                        $quotaHit = true;
-                        $out[$i] = $texts[$i];
+                // Unique misses (preserve first-seen order) for live MT.
+                $uniqueMiss = [];
+                $uniqueSeen = [];
+                foreach ($missTexts as $t) {
+                    if (!isset($uniqueSeen[$t])) {
+                        $uniqueSeen[$t] = true;
+                        $uniqueMiss[] = $t;
+                    }
+                }
+
+                $toFetch = $uniqueMiss;
+                if ($cacheOnly && $fillMissCap > 0 && count($uniqueMiss) > $fillMissCap) {
+                    $toFetch = array_slice($uniqueMiss, 0, $fillMissCap);
+                    $partial = true;
+                }
+
+                $freshMap = [];
+                if ($toFetch !== []) {
+                    $fresh = match ($provider) {
+                        'google' => $this->viaGoogle($toFetch, $source, $target),
+                        'libretranslate' => $this->viaLibreTranslate($toFetch, $source, $target),
+                        'deepl' => $this->viaDeepL($toFetch, $source, $target),
+                        'mymemory' => $this->viaMyMemory($toFetch, $source, $target),
+                        default => $this->viaGoogle($toFetch, $source, $target),
+                    };
+                    foreach ($toFetch as $j => $srcText) {
+                        $translated = $fresh[$j] ?? null;
+                        if ($translated === '__QUOTA__') {
+                            $quotaHit = true;
+                            continue;
+                        }
+                        if (!is_string($translated) || !self::isAcceptable($source, $target, $srcText, $translated)) {
+                            continue;
+                        }
+                        $freshMap[$srcText] = $translated;
+                        if ($this->cache) {
+                            $this->cache->put($source, $target, $srcText, $translated, $provider);
+                        }
+                        $fetched++;
+                    }
+                }
+
+                foreach ($missIndex as $i) {
+                    $srcText = $texts[$i];
+                    if (isset($freshMap[$srcText])) {
+                        $out[$i] = $freshMap[$srcText];
+                    } else {
+                        $out[$i] = $srcText;
                         $failed++;
-                        continue;
                     }
-                    if (!is_string($translated) || !self::isAcceptable($source, $target, $texts[$i], $translated)) {
-                        $out[$i] = $texts[$i];
-                        $failed++;
-                        continue;
+                }
+                // Still missing after fill attempt → FE should retry.
+                if ($cacheOnly && $fillMissCap > 0) {
+                    foreach ($uniqueMiss as $t) {
+                        if (!isset($freshMap[$t])) {
+                            $partial = true;
+                            break;
+                        }
                     }
-                    $out[$i] = $translated;
-                    if ($this->cache) {
-                        $this->cache->put($source, $target, $texts[$i], $translated, $provider);
-                    }
-                    $fetched++;
                 }
             }
         }
@@ -112,6 +151,7 @@ final class TranslateService
             'fetched' => $fetched,
             'missing' => count($missTexts),
             'failed' => $failed,
+            'partial' => $partial,
             'quota_hit' => $quotaHit,
             'provider' => $provider,
         ];

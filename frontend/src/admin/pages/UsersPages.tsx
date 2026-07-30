@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2, X } from 'lucide-react'
 import { api } from '@/lib/api'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { useAuth } from '@/context/AuthContext'
 import { RequirePermission } from '@/admin/components/RequirePermission'
@@ -59,12 +60,17 @@ export function UsersPage() {
   return (
     <RequirePermission permission="users.manage">
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-heading text-3xl">{t.usersTitle}</h1>
-        <Button type="button" onClick={() => setShowCreate((v) => !v)}>
-          <Plus size={16} /> {t.usersNew}
-        </Button>
-      </div>
+      <AdminPageHero
+        title={t.usersTitle}
+        hint="Учётные записи, роли и доступ к админке."
+        eyebrow="Система"
+        accent="violet"
+        actions={
+          <Button type="button" onClick={() => setShowCreate((v) => !v)}>
+            <Plus size={16} /> {t.usersNew}
+          </Button>
+        }
+      />
 
       {showCreate && (
         <GlassPanel className="mt-6 p-5">
@@ -217,7 +223,12 @@ export function RolesPage() {
 
   return (
     <div>
-      <h1 className="font-heading text-3xl">Роли и права</h1>
+      <AdminPageHero
+        title="Роли и права"
+        hint="Назначение прав доступа для каждой роли."
+        eyebrow="Система"
+        accent="violet"
+      />
       <div className="mt-6 grid gap-6 lg:grid-cols-[18rem_1fr]">
         <GlassPanel className="h-fit p-3">
           {rolesLoading ? (

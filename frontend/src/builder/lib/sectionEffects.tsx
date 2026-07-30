@@ -273,10 +273,12 @@ export function useLayoutScrollSnap(
     const measure = () => {
       const h = header instanceof HTMLElement ? header.getBoundingClientRect().height : 68
       root.style.setProperty('--cms-header-h', `${Math.round(h)}px`)
-      root.style.setProperty(
-        '--cms-snap-vh',
-        `calc(100dvh - ${Math.round(h)}px - var(--admin-bar-h, 0px))`,
-      )
+      const overlay = root.dataset.headerStyle === 'overlay'
+      const snapVh = overlay
+        ? 'calc(100dvh - var(--admin-bar-h, 0px))'
+        : `calc(100dvh - ${Math.round(h)}px - var(--admin-bar-h, 0px))`
+      root.style.setProperty('--cms-snap-vh', snapVh)
+      root.style.setProperty('--cms-hero-vh', snapVh)
     }
     measure()
     root.classList.add(mode === 'mandatory' ? 'cms-snap-paging' : 'cms-snap-proximity')

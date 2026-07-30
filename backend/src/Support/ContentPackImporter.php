@@ -186,7 +186,7 @@ final class ContentPackImporter
             'theme_settings' => [
                 'preset', 'primary_color', 'accent_color', 'background_color',
                 'surface_color', 'text_color', 'muted_color',
-                'font_display', 'font_body', 'border_radius', 'glass_opacity', 'custom_css',
+                'font_display', 'font_body', 'border_radius', 'glass_opacity', 'header_style', 'custom_css',
                 'custom_html', 'custom_js',
             ],
             'email_settings' => [

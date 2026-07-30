@@ -4,7 +4,8 @@ import {
   FileText, FolderKanban, Image, LayoutDashboard, LogOut, Settings, Users, BriefcaseBusiness,
   GraduationCap, Wrench, MessageSquare, MessageCircle, HelpCircle, PanelTop, Mail, Palette, Database, KeyRound, Globe,
   Menu, Trash2, Activity, HeartPulse, X, Layers, ExternalLink, PanelLeftClose, PanelLeft, Pin, PinOff, Keyboard,
-  LayoutTemplate, Webhook, ShoppingCart, CreditCard, Shield, RefreshCw, Bell, Workflow, Send, type LucideIcon,
+  LayoutTemplate, Webhook, ShoppingCart, CreditCard, Shield, RefreshCw, Bell, Workflow, Send, ChevronDown,
+  type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { Button, Container } from '@/components/ui'
@@ -19,10 +20,18 @@ import { t, useAdminLocale, resourceTitle } from '@/admin/i18n'
 import { AdminLocaleSwitcher } from '@/admin/components/AdminLocaleSwitcher'
 import { readPinnedNav, readSidebarCollapsed, writePinnedNav, writeSidebarCollapsed } from '@/admin/lib/prefs'
 import { getAdminNavGrouped, setPluginStates, subscribePluginState, type PluginState } from '@/core/moduleRegistry'
-import { findHubByPath, isHubNavActive, resolveHubPin } from '@/admin/adminHubs'
+import {
+  findHubByNavPath,
+  findHubByPath,
+  isHubNavActive,
+  resolveHubPin,
+  visibleHubTabs,
+  type AdminHub,
+} from '@/admin/adminHubs'
 import { AdminHubTabs } from '@/admin/components/AdminHubTabs'
 import { adminUrl, getAdminBase, isAdminPathname, toCanonicalAdminPath } from '@/admin/adminBasePath'
 import { api, endpoints } from '@/lib/api'
+import { usePluginEnabled } from '@/hooks/useApi'
 import { NotificationsBell } from '@/modules/notifications/NotificationsBell'
 
 // Icon registry — maps manifest icon keys to lucide components.
@@ -124,6 +133,15 @@ function AdminNav({
   const { locale } = useAdminLocale()
   const location = useLocation()
   const pinSet = useMemo(() => new Set(pinned), [pinned])
+  const productsOn = usePluginEnabled('products')
+  const paymentsOn = usePluginEnabled('payments')
+  const ordersOn = usePluginEnabled('orders')
+  const pluginFlags = useMemo(
+    () => ({ products: productsOn, payments: paymentsOn, orders: ordersOn }),
+    [productsOn, paymentsOn, ordersOn],
+  )
+  /** Manual expand/collapse for hubs that are not the active route. */
+  const [hubOpenManual, setHubOpenManual] = useState<Record<string, boolean>>({})
 
   // Re-read nav whenever a plugin is toggled (registry is a module-level Set;
   // without a subscription the sidebar would stay frozen after first paint).
@@ -149,15 +167,21 @@ function AdminNav({
       collapsed ? 'justify-center px-2' : ''
     } ${isActive ? 'bg-white/10 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-white'}`
 
+  const resolveDisplayLabel = (to: string, label: string) => {
+    const hub = findHubByNavPath(to)
+    if (hub) return hub.navLabel
+    const canon = toCanonicalAdminPath(to)
+    const seg = canon.replace(/^\/admin\/?/, '').split('/')[0] || ''
+    const translated = seg ? resourceTitle(seg) : label
+    return translated !== seg.replace(/-/g, ' ') ? translated : label
+  }
+
   const renderLink = (to: string, label: string, iconKey?: string, showPin?: boolean, pinPath?: string) => {
     const href = adminUrl(to)
     const Icon = resolveIcon(to, iconKey)
     const pinKey = pinPath ?? to
     const isPinned = pinSet.has(toCanonicalAdminPath(pinKey)) || pinSet.has(pinKey)
-    const canon = toCanonicalAdminPath(to)
-    const seg = canon.replace(/^\/admin\/?/, '').split('/')[0] || ''
-    const translated = seg ? resourceTitle(seg) : label
-    const displayLabel = translated !== seg.replace(/-/g, ' ') ? translated : label
+    const displayLabel = resolveDisplayLabel(to, label)
     return (
       <div key={pinKey} className={`group relative mb-1 flex items-center ${collapsed ? '' : 'gap-0.5'}`}>
         <NavLink
@@ -190,6 +214,111 @@ function AdminNav({
     )
   }
 
+  const renderHubNav = (hub: AdminHub, iconKey?: string, showPin?: boolean) => {
+    const tabs = visibleHubTabs(hub, pluginFlags)
+    if (tabs.length < 2) {
+      return renderLink(hub.navPath, hub.navLabel, iconKey ?? hub.icon, showPin)
+    }
+
+    const hubActive = isHubNavActive(hub.navPath, location.pathname)
+    const open = collapsed ? false : (hubOpenManual[hub.id] ?? hubActive)
+    const Icon = resolveIcon(hub.navPath, iconKey ?? hub.icon)
+    const pinKey = hub.navPath
+    const isPinned = pinSet.has(toCanonicalAdminPath(pinKey)) || pinSet.has(pinKey)
+    const href = adminUrl(hub.navPath)
+
+    return (
+      <div key={hub.id} className="mb-1">
+        <div className={`group relative flex items-center ${collapsed ? '' : 'gap-0.5'}`}>
+          <NavLink
+            to={href}
+            onClick={() => {
+              if (!open) {
+                setHubOpenManual((prev) => ({ ...prev, [hub.id]: true }))
+              }
+              onNavigate?.()
+            }}
+            title={collapsed ? hub.navLabel : undefined}
+            className={({ isActive }) =>
+              `${linkClass({ isActive: isActive || hubActive })} ${collapsed ? '' : 'min-w-0 flex-1'}`
+            }
+            end={false}
+          >
+            <Icon size={16} className="shrink-0" />
+            {!collapsed && <span className="min-w-0 truncate">{hub.navLabel}</span>}
+          </NavLink>
+          {!collapsed && (
+            <button
+              type="button"
+              title={open ? 'Свернуть раздел' : 'Показать разделы'}
+              aria-label={open ? 'Свернуть раздел' : 'Показать разделы'}
+              aria-expanded={open}
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-500 hover:bg-white/5 hover:text-zinc-300"
+              onClick={(e) => {
+                e.preventDefault()
+                setHubOpenManual((prev) => ({
+                  ...prev,
+                  [hub.id]: !(prev[hub.id] ?? hubActive),
+                }))
+              }}
+            >
+              <ChevronDown
+                size={14}
+                className={`transition ${open ? 'rotate-0' : '-rotate-90'}`}
+              />
+            </button>
+          )}
+          {!collapsed && showPin && (
+            <button
+              type="button"
+              title={isPinned ? t.unpinSection : t.pinSection}
+              aria-label={isPinned ? t.unpinSection : t.pinSection}
+              className="invisible inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-600 opacity-0 transition group-hover:visible group-hover:opacity-100 hover:bg-white/5 hover:text-zinc-300"
+              onClick={(e) => {
+                e.preventDefault()
+                onTogglePin(toCanonicalAdminPath(pinKey))
+              }}
+            >
+              {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+            </button>
+          )}
+        </div>
+        {open && (
+          <div className="ml-3 space-y-0.5 border-l border-white/10 pl-2">
+            {tabs.map((tab) => {
+              const tabHref = adminUrl(tab.path)
+              const tabCanon = toCanonicalAdminPath(location.pathname)
+              const tabActive =
+                tabCanon === tab.path || tabCanon.startsWith(`${tab.path}/`)
+              return (
+                <NavLink
+                  key={tab.path}
+                  to={tabHref}
+                  onClick={onNavigate}
+                  className={`mb-0.5 block rounded-lg px-3 py-1.5 text-[13px] transition ${
+                    tabActive
+                      ? 'bg-white/10 text-white'
+                      : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'
+                  }`}
+                >
+                  {tab.label}
+                </NavLink>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const renderNavItem = (to: string, label: string, iconKey?: string, showPin?: boolean, pinPath?: string) => {
+    const hub = findHubByNavPath(to)
+    if (hub && visibleHubTabs(hub, pluginFlags).length >= 2) {
+      return renderHubNav(hub, iconKey, showPin)
+    }
+    return renderLink(to, label, iconKey, showPin, pinPath)
+  }
+
   return (
     <>
       <Link
@@ -219,13 +348,13 @@ function AdminNav({
             )}
             {pinned.map((to) => {
               const navItem = findNavEntry(groupedNav, to)
-              if (navItem) return renderLink(navItem.path, navItem.label, navItem.icon, true, to)
+              if (navItem) return renderNavItem(navItem.path, navItem.label, navItem.icon, true, to)
               // Legacy deep pin under a hub — only if that hub's plugin is still in nav.
               const hub = findHubByPath(to)
               if (!hub || !findNavEntry(groupedNav, hub.navPath)) return null
               const hubPin = resolveHubPin(to)
               if (!hubPin) return null
-              return renderLink(hubPin.path, hubPin.label, hubPin.icon, true, to)
+              return renderNavItem(hubPin.path, hubPin.label, hubPin.icon, true, to)
             })}
           </section>
         )}
@@ -237,7 +366,7 @@ function AdminNav({
               {!collapsed && (
                 <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">{group}</p>
               )}
-              {visible.map((it) => renderLink(it.path, it.label, it.icon, true))}
+              {visible.map((it) => renderNavItem(it.path, it.label, it.icon, true))}
             </section>
           )
         })}

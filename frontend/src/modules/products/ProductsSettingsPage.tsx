@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, ExternalLink, Save } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '@/lib/api'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { usePluginEnabled, usePluginsHydrated } from '@/hooks/useApi'
 import { adminUrl } from '@/admin/adminBasePath'
@@ -173,13 +174,12 @@ export function ProductsSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl font-semibold">Шаблоны витрины</h1>
-        <p className="mt-1 max-w-2xl text-sm text-zinc-400">
-          Выберите layout страницы товара. От шаблона зависят поля в карточке товара и вид{' '}
-          <code className="text-zinc-300">/products/&#123;slug&#125;</code>.
-        </p>
-      </div>
+      <AdminPageHero
+        title="Шаблоны витрины"
+        hint="Выберите layout страницы товара — от него зависят поля карточки и вид /products/{slug}."
+        eyebrow="Коммерция"
+        accent="emerald"
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {data.templates.map((t) => {

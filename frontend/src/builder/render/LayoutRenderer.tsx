@@ -70,6 +70,7 @@ function WidgetNode({
   onSelect,
   onSelectPart,
   onPatchSettings,
+  onDropWidget,
 }: {
   el: BuilderElementDTO
   editMode?: boolean
@@ -78,6 +79,7 @@ function WidgetNode({
   onSelect?: (id: string, opts?: { part?: string | null }) => void
   onSelectPart?: (part: string | null) => void
   onPatchSettings?: (id: string, patch: Record<string, unknown>) => void
+  onDropWidget?: (parentId: string, widgetType: string) => void
 }) {
   const { site } = useSiteContext()
   const widgetType = el.widgetType ?? ''
@@ -97,6 +99,8 @@ function WidgetNode({
   )
   const isPackage = isPackageWidgetType(widgetType, def?.plugin ?? requiredPlugin)
   const packageUnavailable = Boolean(widgetType && isPackage && (!def || pluginOff))
+  const acceptsKids = Boolean(def?.acceptsChildren)
+  const nested = acceptsKids ? visibleChildren(el.elements, editMode) : []
 
   const body = packageUnavailable ? (
     <div className="rounded-lg border border-dashed border-amber-500/40 bg-amber-500/[0.04] p-4 text-sm text-amber-100/90">
@@ -121,7 +125,21 @@ function WidgetNode({
         onPatch: (patch) => onPatchSettings?.(el.id, patch),
       }}
     >
-      <def.Render settings={el.settings ?? {}} editMode={editMode} />
+      <def.Render settings={el.settings ?? {}} editMode={editMode}>
+        {nested.map((child) => (
+          <WidgetNode
+            key={child.id}
+            el={child}
+            editMode={editMode}
+            selectedId={selectedId}
+            selectedPart={selectedPart}
+            onSelect={onSelect}
+            onSelectPart={onSelectPart}
+            onPatchSettings={onPatchSettings}
+            onDropWidget={onDropWidget}
+          />
+        ))}
+      </def.Render>
     </BuilderEditProvider>
   ) : (
     <div className="rounded-lg border border-dashed border-amber-500/40 bg-amber-500/[0.04] p-4 text-sm text-amber-100/90">
@@ -160,6 +178,7 @@ function WidgetNode({
       data-builder-id={el.id}
       data-builder-widget
       data-builder-hidden={hidden ? '1' : undefined}
+      data-builder-container={acceptsKids ? '1' : undefined}
       tabIndex={0}
       onMouseDown={(e) => {
         if (e.button !== 0) return
@@ -173,6 +192,19 @@ function WidgetNode({
           onSelect?.(el.id)
         }
       }}
+      onDragOver={editMode && acceptsKids ? (e) => {
+        if (!e.dataTransfer.types.includes('application/x-builder-widget')) return
+        e.preventDefault()
+        e.stopPropagation()
+        e.dataTransfer.dropEffect = 'copy'
+      } : undefined}
+      onDrop={editMode && acceptsKids ? (e) => {
+        const type = e.dataTransfer.getData('application/x-builder-widget')
+        if (!type) return
+        e.preventDefault()
+        e.stopPropagation()
+        onDropWidget?.(el.id, type)
+      } : undefined}
       className={clsx(
         'builder-node relative w-full scroll-mt-6 cursor-pointer rounded-sm transition-[box-shadow,outline-color] duration-200',
         hidden && 'opacity-45 outline outline-1 outline-dashed outline-zinc-500/50',
@@ -278,6 +310,7 @@ function ColumnNode({
             onSelect={onSelect}
             onSelectPart={onSelectPart}
             onPatchSettings={onPatchSettings}
+            onDropWidget={onDropWidget}
           />
         ))}
       </div>
@@ -314,9 +347,19 @@ function SectionNode({
   const styleCss = stylesToCss(readStyles(el.settings))
   const defaultPad = pageSnap !== 'none' ? 'clamp(2.5rem, 5vh, 4rem)' : '3rem'
   const tint = el.settings?.background ? String(el.settings.background) : ''
+  const cols = visibleChildren(el.elements, editMode)
+  // Background hero must fill the device frame — skip Container like full_bleed.
+  const hasBgHero = cols.some((col) =>
+    (col.elements ?? []).some(
+      (w) =>
+        w.widgetType === 'hero-block'
+        && String(w.settings?.media_mode || 'background') === 'background',
+    ),
+  )
+  const fullBleed = fx.fullBleed || hasBgHero
   const style: CSSProperties = {
-    paddingTop: String(el.settings?.paddingY || defaultPad),
-    paddingBottom: String(el.settings?.paddingY || defaultPad),
+    paddingTop: hasBgHero ? '0' : String(el.settings?.paddingY || defaultPad),
+    paddingBottom: hasBgHero ? '0' : String(el.settings?.paddingY || defaultPad),
     // Opaque page fill + optional tint layer (avoids neighbour glow bleeding through)
     backgroundColor: 'var(--background)',
     ...(tint ? { backgroundImage: `linear-gradient(${tint}, ${tint})` } : {}),
@@ -324,11 +367,8 @@ function SectionNode({
     ...styleCss,
   }
   const gap = String(el.settings?.gap || (pageSnap !== 'none' ? '1.75rem' : '1.5rem'))
-  const cols = visibleChildren(el.elements, editMode)
-  // Width is a section setting only — never auto-fullbleed by widget type.
-  const fullBleed = fx.fullBleed
 
-  const contentStyle: CSSProperties | undefined = fx.contentMaxWidth
+  const contentStyle: CSSProperties | undefined = fx.contentMaxWidth && !hasBgHero
     ? { maxWidth: fx.contentMaxWidth, marginLeft: 'auto', marginRight: 'auto', width: '100%' }
     : undefined
 

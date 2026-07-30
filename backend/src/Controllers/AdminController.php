@@ -275,8 +275,13 @@ final class AdminController
         $this->activity->log($r, 'update', $resource, (int) $id, $values['title'] ?? $existing['title'] ?? $existing['name'] ?? null);
         $this->dispatch('resource.afterSave', ['table' => $table, 'resource' => $resource, 'data' => $values, 'id' => (int) $id]);
         if ($resource === 'pages') {
-            $revSvc = new \App\Services\PageRevisionService($this->db);
-            $revSvc->snapshot((int) $id, $r->user['id'] ?? null, 'Save');
+            try {
+                $revSvc = new \App\Services\PageRevisionService($this->db);
+                $revSvc->snapshot((int) $id, $r->user['id'] ?? null, 'Save');
+            } catch (\Throwable $e) {
+                // Revision history must never fail the save response (FE would show error while data is already written).
+                @error_log('PageRevisionService::snapshot failed: ' . $e->getMessage());
+            }
         }
         $this->show($r, $resource, $id);
     }
@@ -533,8 +538,12 @@ final class AdminController
         }
         // Snapshot a revision when publishing a page (rollback support).
         if ($resource === 'pages' && $status === 'published') {
-            $revSvc = new \App\Services\PageRevisionService($this->db);
-            $revSvc->snapshot((int) $id, $r->user['id'] ?? null, 'Publish');
+            try {
+                $revSvc = new \App\Services\PageRevisionService($this->db);
+                $revSvc->snapshot((int) $id, $r->user['id'] ?? null, 'Publish');
+            } catch (\Throwable $e) {
+                @error_log('PageRevisionService::snapshot(publish) failed: ' . $e->getMessage());
+            }
         }
         $this->dispatch('page.afterPublish', ['pageId' => (int) $id, 'resource' => $resource, 'status' => $status]);
         $this->activity->log($r, 'publish', $resource, (int) $id, null, ['status' => $status]);

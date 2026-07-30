@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Shield, RefreshCw, Zap } from 'lucide-react'
 import { api } from '@/lib/api'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { t } from '@/admin/i18n'
 import { usePluginEnabled } from '@/hooks/useApi'
@@ -65,35 +66,34 @@ export function DdosPage() {
 
   return (
     <div>
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl">DDoS защита</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Cloudflare, DDoS-Guard, StormWall, Qrator — включайте провайдеры независимо.
-            Ключи и origin shield настраиваются в Плагины → DDoS Protection.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/10 px-3 text-sm text-zinc-300 hover:bg-white/5 disabled:opacity-50"
-            disabled={syncCf.isPending}
-            onClick={() => syncCf.mutate()}
-            title={t.ddosRefreshCloudflare}
-          >
-            <RefreshCw size={14} /> {t.ddosCloudflareIps}
-          </button>
-          <Button
-            type="button"
-            className={data.under_attack ? 'border-red-500/40 bg-red-500/15 text-red-200' : 'admin-primary'}
-            disabled={underAttack.isPending}
-            onClick={() => underAttack.mutate(!data.under_attack)}
-          >
-            <Zap size={14} className="mr-1.5" />
-            {data.under_attack ? t.underAttackOff : t.underAttackOn}
-          </Button>
-        </div>
-      </div>
+      <AdminPageHero
+        title="DDoS защита"
+        hint="Cloudflare, DDoS-Guard, StormWall, Qrator — включайте провайдеры независимо. Ключи и origin shield настраиваются в Плагины → DDoS Protection."
+        eyebrow="Безопасность"
+        accent="rose"
+        actions={
+          <>
+            <button
+              type="button"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/10 px-3 text-sm text-zinc-300 hover:bg-white/5 disabled:opacity-50"
+              disabled={syncCf.isPending}
+              onClick={() => syncCf.mutate()}
+              title={t.ddosRefreshCloudflare}
+            >
+              <RefreshCw size={14} /> {t.ddosCloudflareIps}
+            </button>
+            <Button
+              type="button"
+              className={data.under_attack ? 'border-red-500/40 bg-red-500/15 text-red-200' : 'admin-primary'}
+              disabled={underAttack.isPending}
+              onClick={() => underAttack.mutate(!data.under_attack)}
+            >
+              <Zap size={14} className="mr-1.5" />
+              {data.under_attack ? t.underAttackOff : t.underAttackOn}
+            </Button>
+          </>
+        }
+      />
 
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
         <GlassPanel className="p-4">

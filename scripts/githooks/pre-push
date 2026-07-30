@@ -1,0 +1,5 @@
+#!/bin/sh
+# Pre-push: same checks as GitHub «Platform SDK / sdk» (fast mode).
+# Enable once:  git config core.hooksPath scripts/githooks
+ROOT="$(CDPATH= cd -- "$(dirname "$0")/../.." && pwd)"
+exec node "$ROOT/scripts/ci-sdk-check.js" --fast

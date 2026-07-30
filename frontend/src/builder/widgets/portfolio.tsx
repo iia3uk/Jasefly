@@ -75,7 +75,9 @@ function HeroWidget({ settings, editMode }: { settings: Record<string, unknown>;
   const primaryHref = String(pickSetting(settings, 'primary_cta_href', ''))
   const secondaryLabel = String(pickSetting(settings, 'secondary_cta_label', ''))
   const secondaryHref = String(pickSetting(settings, 'secondary_cta_href', ''))
-  const bgMedia = settings.background_media_id ?? settings.background ?? null
+  const bgMedia = Object.prototype.hasOwnProperty.call(settings, 'background_media_id')
+    ? (settings.background_media_id || null)
+    : (settings.background_media_id ?? settings.background ?? null)
   const hasBg = !!bgMedia
   const bgFieldCss = stylesToCss(readFieldStyles(settings, 'background_media_id'))
 

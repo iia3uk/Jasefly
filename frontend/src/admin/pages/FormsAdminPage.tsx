@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { FileText, Loader2, Plus, Trash2 } from 'lucide-react'
 import { api } from '@/lib/api'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { useAuth } from '@/context/AuthContext'
@@ -175,20 +176,20 @@ function FormsAdminInner() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl text-white">Формы</h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            Конструктор форм для виджета «Форма» в Page Builder. Legacy contact-form (mail) не затронут.
-          </p>
-        </div>
-        {canManage ? (
-          <Button type="button" className="admin-primary" onClick={() => setEditId('new')}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            Новая форма
-          </Button>
-        ) : null}
-      </div>
+      <AdminPageHero
+        title="Формы"
+        hint="Конструктор форм для виджета «Форма» в Page Builder. Legacy contact-form (mail) не затронут."
+        eyebrow="Контент"
+        accent="teal"
+        actions={
+          canManage ? (
+            <Button type="button" className="admin-primary" onClick={() => setEditId('new')}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              Новая форма
+            </Button>
+          ) : null
+        }
+      />
 
       <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
         <GlassPanel className="max-h-[75vh] overflow-y-auto p-2">

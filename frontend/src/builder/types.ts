@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import type { BuilderElementDTO, PageLayout } from '@/types'
 
 export type ElType = 'section' | 'column' | 'widget'
@@ -23,9 +23,15 @@ export type WidgetDefinition = {
   icon?: string
   /** Owning plugin — widget is hidden on the public site when the plugin is off. */
   plugin?: string
+  /** Widget may contain nested widgets (e.g. hero-block card slot). */
+  acceptsChildren?: boolean
   defaultSettings: Record<string, unknown>
   settingsFields: SettingsField[]
-  Render: ComponentType<{ settings: Record<string, unknown>; editMode?: boolean }>
+  Render: ComponentType<{
+    settings: Record<string, unknown>
+    editMode?: boolean
+    children?: ReactNode
+  }>
 }
 
 export type EmptyLayout = PageLayout

@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { PageContext } from '@/admin/components/PageContext'
 import { getContext } from '@/admin/context/registry'
+import { AdminPageHero, type AdminAccent } from '@/admin/components/AdminPageHero'
 
 type Props = {
   title: string
@@ -9,6 +10,8 @@ type Props = {
   status?: string | null
   actions?: ReactNode
   form: ReactNode
+  accent?: AdminAccent
+  eyebrow?: string
   /**
    * Preview is no longer rendered. The admin now ships a full page builder
    * (Elementor-style) for visual editing, so the in-page live preview was
@@ -23,7 +26,7 @@ type Props = {
 /**
  * AdminSplitLayout — full-width admin page chrome.
  *
- * Header (title + context + actions) then form content spanning the entire
+ * Hero (title + context + actions) then form content spanning the entire
  * main column beside the sidebar (no artificial max-width).
  */
 export function AdminSplitLayout({
@@ -33,22 +36,22 @@ export function AdminSplitLayout({
   status,
   actions,
   form,
+  accent = 'teal',
+  eyebrow = 'Раздел',
 }: Props) {
   const ctx = getContext(contextKey)
 
   return (
     <div className="w-full min-w-0">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <h1 className="font-heading text-3xl tracking-tight">{title}</h1>
-          <p className="mt-1 text-sm text-zinc-500">{ctx.where}</p>
-        </div>
-        {actions && (
-          <div className="flex flex-wrap items-center gap-2">{actions}</div>
-        )}
-      </div>
-
-      <PageContext contextKey={contextKey} slug={slug} status={status} className="mb-6" />
+      <AdminPageHero
+        title={title}
+        hint={ctx.where}
+        eyebrow={eyebrow}
+        accent={accent}
+        actions={actions}
+      >
+        <PageContext contextKey={contextKey} slug={slug} status={status} />
+      </AdminPageHero>
 
       {form}
     </div>

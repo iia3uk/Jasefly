@@ -41,12 +41,31 @@ import { loadPackageModules } from '@/core/packageModuleLoader'
 
 void loadPackageModules()
 
-/** After deploy, stale hashed chunks/CSS can 404 — soft-reload once. */
+/** Successful boot — allow a future deploy to auto-reload again; strip cache-bust `?_=` from URL. */
+try {
+  sessionStorage.removeItem('jasefly_stale_asset_reload')
+  sessionStorage.removeItem('jasefly_vite_preload_reload')
+  const u = new URL(window.location.href)
+  if (u.searchParams.has('_')) {
+    u.searchParams.delete('_')
+    const clean = u.pathname + (u.searchParams.toString() ? `?${u.searchParams}` : '') + u.hash
+    window.history.replaceState(null, '', clean)
+  }
+} catch {
+  /* ignore */
+}
+
+/** After deploy, stale hashed chunks can 404 — hard-reload once (HTML may still be cached). */
 window.addEventListener('vite:preloadError', (event) => {
   event.preventDefault()
   const key = 'jasefly_vite_preload_reload'
-  if (!sessionStorage.getItem(key)) {
-    sessionStorage.setItem(key, '1')
+  if (sessionStorage.getItem(key)) return
+  sessionStorage.setItem(key, '1')
+  try {
+    const u = new URL(window.location.href)
+    u.searchParams.set('_', Date.now().toString(36))
+    window.location.replace(u.toString())
+  } catch {
     window.location.reload()
   }
 })

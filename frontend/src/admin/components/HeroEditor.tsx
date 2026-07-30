@@ -183,7 +183,8 @@ export function HeroEditor({ form, set, onSave, saving, error, banner }: Props) 
               />
             </div>
             <p className="mt-2 text-xs text-[#8d94a3]">
-              JPG, PNG или WebP через медиатеку. Превью:{' '}
+              JPG, PNG или WebP через медиатеку. Синхронизируется с Hero-блоком на главной (билдер).
+              Превью:{' '}
               {mediaId != null ? (
                 <a className="text-[#25d9f4] underline" href={mediaUrl(mediaId)} target="_blank" rel="noreferrer">
                   открыть файл

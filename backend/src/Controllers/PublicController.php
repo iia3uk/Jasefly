@@ -76,9 +76,8 @@ final class PublicController
                 'navigation' => $this->filterNavByPlugins($nav, $enabled),
                 'footer_nav' => $this->filterNavByPlugins($footerNav, $enabled),
                 'footer' => $one('footer_settings'),
-                'social' => $portfolioOn
-                    ? $this->db->all('SELECT * FROM social_links WHERE is_visible=1 ORDER BY sort_order, id')
-                    : [],
+                // Core site chrome (footer) — not Portfolio-gated.
+                'social' => $this->db->all('SELECT * FROM social_links WHERE is_visible=1 ORDER BY sort_order, id'),
                 'hero' => $portfolioOn
                     ? $this->hydrateMedia($one('hero_settings') ?: [], ['background_media_id'])
                     : null,

@@ -8,16 +8,20 @@ import { useAdminList } from '@/hooks/useApi'
 import type { ContactMessage, ID, MediaAsset, MediaFolder } from '@/types'
 import { Button, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { PageContext } from '@/admin/components/PageContext'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { t } from '@/admin/i18n'
 import clsx from 'clsx'
 
 function Header({ title, contextKey, subtitle }: { title: string; contextKey: string; subtitle?: string }) {
   return (
-    <div className="mb-8">
-      <h1 className="font-heading text-3xl tracking-tight">{title}</h1>
-      <p className="mt-1 text-sm text-zinc-500">{subtitle || t.manageWorkspace}</p>
-      <PageContext contextKey={contextKey} className="mt-4" />
-    </div>
+    <AdminPageHero
+      title={title}
+      hint={subtitle || t.manageWorkspace}
+      eyebrow="Рабочая область"
+      accent="teal"
+    >
+      <PageContext contextKey={contextKey} />
+    </AdminPageHero>
   )
 }
 

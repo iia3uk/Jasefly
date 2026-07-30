@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Eraser, Languages, Loader2, Play, RefreshCw } from 'lucide-react'
 import { api } from '@/lib/api'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { adminUrl } from '@/admin/adminBasePath'
@@ -129,40 +130,43 @@ export function TranslatePage() {
   return (
     <RequirePermission permission="settings.manage">
       <div className="space-y-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="font-heading text-3xl">Переводчик сайта</h1>
-            <p className="mt-1 max-w-2xl text-sm text-zinc-500">
-              Сайт показывает только готовый кэш. Прогрев (или сохранение контента) реально переводит фразы.
-              Настройки —{' '}
-              <Link to={adminUrl('/plugins')} className="underline hover:text-zinc-300">Плагины → Переводчик</Link>.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              className="border border-white/10 bg-transparent"
-              disabled={refresh.isPending || running}
-              onClick={() => refresh.mutate()}
-            >
-              <RefreshCw size={15} className={refresh.isPending ? 'animate-spin' : undefined} />
-              Обновить
-            </Button>
-            <Button
-              type="button"
-              className="border border-amber-500/30 bg-amber-500/10 text-amber-100"
-              disabled={running}
-              onClick={() => void runWarmup(true)}
-            >
-              {running ? <Loader2 size={15} className="animate-spin" /> : <Eraser size={15} />}
-              Очистить фейки и прогреть
-            </Button>
-            <Button type="button" disabled={running} onClick={() => void runWarmup(false)}>
-              {running ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
-              {running ? 'Прогрев…' : 'Прогнать контент'}
-            </Button>
-          </div>
-        </div>
+        <AdminPageHero
+          title="Переводчик сайта"
+          hint="Сайт показывает только готовый кэш. Прогрев (или сохранение контента) реально переводит фразы."
+          eyebrow="Контент"
+          accent="sky"
+          actions={
+            <>
+              <Button
+                type="button"
+                className="border border-white/10 bg-transparent"
+                disabled={refresh.isPending || running}
+                onClick={() => refresh.mutate()}
+              >
+                <RefreshCw size={15} className={refresh.isPending ? 'animate-spin' : undefined} />
+                Обновить
+              </Button>
+              <Button
+                type="button"
+                className="border border-amber-500/30 bg-amber-500/10 text-amber-100"
+                disabled={running}
+                onClick={() => void runWarmup(true)}
+              >
+                {running ? <Loader2 size={15} className="animate-spin" /> : <Eraser size={15} />}
+                Очистить фейки и прогреть
+              </Button>
+              <Button type="button" disabled={running} onClick={() => void runWarmup(false)}>
+                {running ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
+                {running ? 'Прогрев…' : 'Прогнать контент'}
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm text-zinc-500">
+            Настройки —{' '}
+            <Link to={adminUrl('/plugins')} className="underline hover:text-zinc-300">Плагины → Переводчик</Link>.
+          </p>
+        </AdminPageHero>
 
         {status.isLoading || !status.data ? (
           <Skeleton className="h-40" />
@@ -217,6 +221,8 @@ export function TranslatePage() {
             <p className="mt-4 text-xs text-zinc-500">
               Если в БД «перевод» = русский оригинал — это фейк. Жмите «Очистить фейки и прогреть».
               После правок страниц/статей новые фразы переводятся при сохранении (или через MCP / эту кнопку).
+              После обновления CMS один раз прогрейте кэш — виджет на сайте добьёт промахи soft live-fill, но warmup делает это быстрее и без лимитов посетителя.
+              Авто-язык по стране (Плагины → Переводчик): первый визит без выбора языка → язык страны или нейтральный English; ручной выбор в виджете сохраняется.
               По умолчанию — бесплатный Google Translate. DeepL только если у вас есть свой API key.
             </p>
           </GlassPanel>

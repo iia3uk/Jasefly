@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { api } from '@/lib/api'
+import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, Field, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { adminUrl } from '@/admin/adminBasePath'
@@ -104,17 +105,17 @@ function SupportFaqInner() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl text-white">FAQ бота поддержки</h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            Если агентов нет онлайн, бот ищет ответ по ключевым словам. Сиды помечены «БАЗОВЫЙ ОТВЕТ» — правьте под себя.
-          </p>
-        </div>
-        <Link to={adminUrl('support')} className="text-sm text-zinc-300 underline hover:text-white">
-          ← Inbox
-        </Link>
-      </div>
+      <AdminPageHero
+        title="FAQ бота поддержки"
+        hint="Если агентов нет онлайн, бот ищет ответ по ключевым словам. Сиды помечены «БАЗОВЫЙ ОТВЕТ» — правьте под себя."
+        eyebrow="Коммуникации"
+        accent="emerald"
+        actions={
+          <Link to={adminUrl('support')} className="text-sm text-zinc-300 underline hover:text-white">
+            ← Inbox
+          </Link>
+        }
+      />
 
       <GlassPanel className="space-y-3 p-5">
         <h2 className="text-sm font-medium text-white">Новая запись</h2>
