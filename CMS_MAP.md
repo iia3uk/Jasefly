@@ -77,6 +77,7 @@
 | FE runtime пакетных модулей | `packageModuleLoader.ts` + `GET /modules/runtime-assets` + `/modules/{slug}/` assets |
 | Отложенная публикация страниц | `PageScheduleService` (lazy publish) + `scheduled_at` в билдере |
 | Плагины вкл/выкл, гейты UI | `frontend/src/core/pluginGates.ts`, `components/RequirePlugin.tsx`, `admin/pages/PluginsPage.tsx` |
+| Плагины: «О плагине»/настройки не видны | `PluginsPage` PluginCard: не ставить `h-full`+`overflow-hidden` — grid обрезает панели |
 | Тесты / CI / cms_local_test | `backend/tests/run.php` (+ Permission/API/CleanInstall/…/PackageEnableSync/ProjectsSoftApi/MigrationSqliteCompat/ContractGovernance/…), `backend/bin/certify-lifecycle.php`, `mcp-cms/src/local.js`, `.github/workflows/platform-sdk.yml`, `frontend` vitest (`npm test`) |
 | Локально как GitHub sdk перед push | `node scripts/ci-sdk-check.js` (или `--fast`); pre-push: `git config core.hooksPath scripts/githooks` |
 | SQLite migrate: OLD.id / MODIFY / prefix(191) | `Core/Db/SqlTranspiler.php` (rowid triggers, skip MODIFY, strip index prefix lengths); smoke: `MigrationSmokeTest` / `MigrationSqliteCompatTest` |
