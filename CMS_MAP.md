@@ -57,6 +57,7 @@
 | Beget analyzer / H1 в shell | `PrerenderService::enrichSpaHtml` (seo-fallback) + расширенные BOT_MARKERS / UA в `.htaccess` |
 | Last-Modified / HTML cache | `scripts/build-hosting.js` → `rootIndexPhp()` + Cache-Control 60s; missing `/assets/*` → 404 (не SPA HTML) |
 | После деплоя белый экран / MIME assets | Inline recovery в `frontend/index.html` + `main.tsx` `vite:preloadError`: один hard-reload с `?_=` |
+| Breadcrumbs / контент под прозрачным header (не home) | `SiteLayout` + `.cms-nav-overlay-offset` (не padding на `#cms-snap-scroller` — у него `display:contents`); home: spacer скрыт при `.cms-hero-bleed` |
 | Breadcrumbs | `SiteBreadcrumbs.tsx` + JSON-LD / prerender `BreadcrumbList` |
 | Privacy / Terms | `/privacy`, `/terms` + footer columns |
 | Canonical host / HTTPS / www 301 | `scripts/build-hosting.js` → `rootHtaccess()` + `frontend/public/.htaccess` |
@@ -117,6 +118,7 @@
 | Demo package module source | `modules-src/demo-kit/` |
 | Forms SDK certification reference | `modules-src/forms-sdk-reference/` |
 | AI Content Optimizer (ZIP, OpenRouter SEO-рерайт) | `modules-src/ai-content-optimizer/` → ZIP `release/modules/`; FE `frontend-dist/index.js` (профили/настройки OpenRouter/лог); job `ai-content-optimizer.tick` |
+| IndexNow (ZIP, Яндекс/поисковики) | `modules-src/indexnow/` → ZIP `release/modules/`; админка `/admin/indexnow`; ключ `/{key}.txt` в корне; авто submit на publish |
 | Журнал MCP / activity время не МСК | `admin/lib/formatDateTime.ts` (naive DATETIME = Moscow); Dashboard/Enterprise; BE `APP_TIMEZONE` + MySQL `SET time_zone` |
 | Контент на проде (текст/страницы) | MCP `cms_site_map` → `cms_get` / `cms_bulk` / `cms_put_singleton` |
 | Публичная API-документация (люди + агенты) | страница CMS `/api-docs` + `GET /api/v1/docs` ([backend/docs/openapi.php](backend/docs/openapi.php)); локальный черновик `content/jasefly-official/apply-api-docs.mjs` |
@@ -251,6 +253,9 @@ portfolio/
 | `cms_put_singleton` | theme, site settings, profile… |
 | `cms_verify_alive` / `cms_site_diagnostics` | После проблем |
 | `cms_hosting_guard` | Лимиты запросов к хостингу |
+| `cms_plugins_list` / `cms_plugin_toggle` | Каталог и вкл/выкл плагинов (`confirm` на toggle) |
+| `cms_admin_request` | Авторизованный `/admin/*` (модули IndexNow и т.п.; мутации + `confirm`) |
+| `cms_module_release` (+ `install:true`) | Сборка ZIP; опционально upload+install/update+enable на хостинг |
 | `list_lab_experiments` / `create_lab_experiment` / … | Lab CRUD + preview/publish |
 
 Не долбить хостинг циклами `cms_list`. Подробности: `mcp-cms/README.md`, деплой: `docs/deployment.md`. Канон docs: `docs/README.md`.

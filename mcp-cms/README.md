@@ -39,6 +39,21 @@ MCP tools: `cms_modules_list`, `cms_module_inspect`, `cms_module_install`, `cms_
 
 Dangerous ops require `confirm: true`. Build locally: `cms_module_release({ module: "demo-kit" })` → `release/modules/*.zip`.
 
+**One-shot на хостинг:** `cms_module_release({ module: "indexnow", install: true, confirm: true })` — build → upload → install/update → enable.
+
+## Plugins
+
+| Tool | Назначение |
+|------|------------|
+| `cms_plugins_list` | Каталог плагинов (`enabled_only` опционально) |
+| `cms_plugin_toggle` | Вкл/выкл (`name`, `enabled`, `confirm: true`) |
+
+## Admin API модулей
+
+`cms_admin_request` — авторизованный GET/POST/PUT/PATCH/DELETE только под `/admin/*`. Мутации требуют `confirm: true`.
+
+Примеры: `/admin/indexnow/setup`, `/admin/plugins/translate/settings`, `/admin/system`.
+
 ## Хостинг не долбим
 
 По умолчанию MCP:

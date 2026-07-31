@@ -1,0 +1,9 @@
+{
+  "slug": "indexnow",
+  "version": "1.0.1",
+  "entry": "index.js",
+  "export": "JaseflyFrontendModule",
+  "assets": {
+    "js": ["index.js"]
+  }
+}

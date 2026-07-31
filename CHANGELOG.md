@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-07-31 — Fix overlay nav: content no longer under transparent header on inner pages
+
+- #cms-snap-scroller display:contents ignored padding-top — breadcrumbs/content sat under fixed overlay nav
+- Add .cms-nav-overlay-offset spacer in SiteLayout; hide when .cms-hero-bleed (home)
+- CMS_MAP symptom row for overlay/breadcrumbs overlap
+
+
 ## 2026-07-30 — Admin EN for plugins/modules + English plugin catalog
 
 - FE i18n keys + Plugins/Modules/Overload pages wired to t()

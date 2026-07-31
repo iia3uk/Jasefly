@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
   "tools": [
+    "cms_admin_request",
     "cms_apply_content_pack",
     "cms_bulk",
     "cms_capability_report",
@@ -33,6 +34,8 @@
     "cms_page_digest",
     "cms_pages_digest",
     "cms_pipeline",
+    "cms_plugin_toggle",
+    "cms_plugins_list",
     "cms_public_services",
     "cms_publish",
     "cms_put_singleton",
