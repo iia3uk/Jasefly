@@ -33,7 +33,7 @@ const envInfo = loadMcpEnv();
 
 const server = new McpServer({
   name: 'jasefly-cms',
-  version: '1.4.0',
+  version: '1.5.0',
 });
 
 function ok(data) {
@@ -1189,14 +1189,21 @@ server.tool(
 
 server.tool(
   'cms_module_release',
-  'Собрать module ZIP локально (scripts/build-module.js). Не деплоит Core. Опционально upload+inspect.',
+  'Собрать module ZIP локально (scripts/build-module.js). Не деплоит Core. upload=true → staging; install=true+confirm → upload + install/update + enable на хостинге.',
   {
     module: z.string().min(1),
     version: z.string().optional(),
     upload: z.boolean().optional(),
+    install: z.boolean().optional().describe('После upload: установить или обновить модуль на сайте и включить'),
+    confirm: z.boolean().optional().describe('Обязателен при install=true'),
+    content_mode: z.enum(['merge', 'skip', 'replace']).optional(),
   },
-  async ({ module, version, upload }) => {
+  async ({ module, version, upload, install, confirm, content_mode }) => {
     try {
+      if (install && !confirm) {
+        return fail(new Error('install=true требует confirm=true'));
+      }
+      const doUpload = !!(upload || install);
       const { spawnSync } = await import('node:child_process');
       const args = [path.join(repoRoot(), 'scripts/build-module.js'), module, '--yes'];
       if (version) args.push(`--version=${version}`);
@@ -1211,7 +1218,7 @@ server.tool(
       zips.sort();
       const zipPath = zips.length ? path.join(outDir, zips[zips.length - 1]) : null;
       let remote = null;
-      if (upload && zipPath) {
+      if (doUpload && zipPath) {
         const cms = getClient();
         const up = await cms.uploadModuleZip(zipPath);
         const packageId = up?.data?.package_id ?? up?.package_id;
@@ -1219,8 +1226,153 @@ server.tool(
           ? await cms.post('/admin/modules/inspect', { package_id: packageId })
           : null;
         remote = { package_id: packageId, plan: plan?.data ?? plan };
+
+        if (install && packageId) {
+          const listRes = await cms.get('/admin/modules');
+          const rows = unwrapModuleList(listRes?.data ?? listRes);
+          const existing = rows.find((row) => String(row.slug || '') === module);
+          let lifecycle = null;
+          if (existing) {
+            const upd = await cms.post(`/admin/modules/${module}/update`, { package_id: packageId });
+            lifecycle = upd?.data ?? upd;
+            remote.operation = 'update';
+          } else {
+            const ins = await cms.post(`/admin/modules/${module}/install`, {
+              package_id: packageId,
+              content_mode: content_mode || 'merge',
+            });
+            lifecycle = ins?.data ?? ins;
+            remote.operation = 'install';
+          }
+          remote.lifecycle = lifecycle;
+          try {
+            remote.enable = (await cms.post(`/admin/modules/${module}/enable`, {}))?.data ?? { ok: true };
+          } catch (e) {
+            remote.enable = { warning: e instanceof Error ? e.message : String(e) };
+          }
+        }
       }
       return ok({ built: zipPath, stdout: r.stdout, remote });
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+/** @param {unknown} data */
+function unwrapModuleList(data) {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') {
+    const obj = /** @type {Record<string, unknown>} */ (data);
+    if (Array.isArray(obj.items)) return obj.items;
+    if (Array.isArray(obj.modules)) return obj.modules;
+    if (Array.isArray(obj.data)) return obj.data;
+  }
+  return [];
+}
+
+function normalizeAdminPath(raw) {
+  let p = String(raw || '').trim();
+  if (!p) throw new Error('path required');
+  if (/^https?:\/\//i.test(p)) throw new Error('Только относительный путь /admin/…, не абсолютный URL');
+  if (!p.startsWith('/')) p = `/${p}`;
+  // Allow /api/v1/admin/... → /admin/...
+  p = p.replace(/^\/api\/v\d+/i, '');
+  if (!p.startsWith('/admin/') && p !== '/admin') {
+    throw new Error('Разрешены только пути под /admin/');
+  }
+  if (p.includes('..') || p.includes('\\')) {
+    throw new Error('Небезопасный path');
+  }
+  return p;
+}
+
+// ─── Plugins (bundled + mirrored package modules) ───────────────────────────
+
+server.tool(
+  'cms_plugins_list',
+  'Каталог плагинов/модулей сайта (GET /admin/plugins): name, enabled, settings schema, missing deps. До выключения/включения — cms_plugin_toggle.',
+  {
+    enabled_only: z.boolean().optional().describe('Вернуть только включённые'),
+  },
+  async ({ enabled_only }) => {
+    try {
+      const res = await getClient().get('/admin/plugins');
+      let list = res?.data ?? res;
+      if (!Array.isArray(list)) list = [];
+      if (enabled_only) {
+        list = list.filter((p) => p && (p.is_enabled === true || p.enabled === true));
+      }
+      const summary = list.map((p) => ({
+        name: p.name ?? p.slug ?? null,
+        label: p.label ?? p.title ?? null,
+        is_enabled: !!(p.is_enabled ?? p.enabled),
+        source: p.source ?? null,
+        group: p.group ?? null,
+        missing_requires: p.missing_requires ?? [],
+      }));
+      return ok({ count: list.length, plugins: summary, raw: list });
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool(
+  'cms_plugin_toggle',
+  'Включить/выключить плагин (POST /admin/plugins/{name}/toggle). Ядро system/users отключить нельзя. Требует confirm=true.',
+  {
+    name: z.string().min(1).describe('slug плагина, напр. portfolio, translate, overload'),
+    enabled: z.boolean(),
+    confirm: z.boolean(),
+    auto_enable_deps: z.boolean().optional().describe('Авто-включить зависимости (default true)'),
+  },
+  async ({ name, enabled, confirm, auto_enable_deps }) => {
+    if (!confirm) return fail(new Error('confirm=true required'));
+    try {
+      const res = await getClient().post(`/admin/plugins/${encodeURIComponent(name)}/toggle`, {
+        enabled: !!enabled,
+        auto_enable_deps: auto_enable_deps !== false,
+      });
+      return ok(res?.data ?? res);
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+// ─── Generic authenticated admin API (package modules, settings, …) ─────────
+
+server.tool(
+  'cms_admin_request',
+  'Произвольный авторизованный запрос к /admin/* (модули IndexNow/Optimizer, settings плагинов, health). Мутации (POST/PUT/PATCH/DELETE) требуют confirm=true. Не для публичных URL.',
+  {
+    method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
+    path: z.string().min(1).describe('Относительный путь, напр. /admin/indexnow/setup или /admin/plugins/translate/settings'),
+    body: z.record(z.unknown()).optional().describe('JSON body для POST/PUT/PATCH'),
+    confirm: z.boolean().optional().describe('Обязателен для не-GET'),
+  },
+  async ({ method, path: adminPath, body, confirm }) => {
+    try {
+      const m = String(method || 'GET').toUpperCase();
+      if (m !== 'GET' && !confirm) {
+        return fail(new Error(`${m} требует confirm=true`));
+      }
+      const p = normalizeAdminPath(adminPath);
+      const cms = getClient();
+      let res;
+      if (m === 'GET') res = await cms.get(p);
+      else if (m === 'POST') res = await cms.post(p, body ?? {});
+      else if (m === 'PUT') res = await cms.put(p, body ?? {});
+      else if (m === 'DELETE') res = await cms.delete(p);
+      else if (m === 'PATCH') {
+        // CmsClient has no patch — use raw
+        await cms.ensureAuth();
+        res = await cms.raw('PATCH', p, body ?? {});
+      } else {
+        return fail(new Error(`Unsupported method ${m}`));
+      }
+      return ok({ method: m, path: p, data: res?.data ?? res });
     } catch (e) {
       return fail(e);
     }

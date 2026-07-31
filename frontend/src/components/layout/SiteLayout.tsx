@@ -436,6 +436,8 @@ export function SiteLayout({ children }: { children: ReactNode }) {
           id="cms-snap-scroller"
           className={clsx('min-w-0', overlayNav && 'cms-nav-overlay-scroll')}
         >
+          {/* Real box: #cms-snap-scroller is display:contents, so padding on it is ignored. */}
+          {overlayNav ? <div className="cms-nav-overlay-offset" aria-hidden="true" /> : null}
           <SiteBreadcrumbs />
           {customHtml ? (
             <div

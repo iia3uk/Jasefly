@@ -50,7 +50,9 @@ body::-webkit-scrollbar {
   display: none;
 }
 
-/* Default: transparent wrapper so normal pages use document scroll */
+/* Default: transparent wrapper so normal pages use document scroll.
+ * padding/margin on this node are IGNORED while display:contents —
+ * overlay offset uses .cms-nav-overlay-offset child instead. */
 #cms-snap-scroller {
   display: contents;
 }
@@ -375,8 +377,21 @@ select option:checked {
   min-height: 100%;
 }
 
-/* Overlay navbar: offset content under fixed header unless first screen is full-bleed hero. */
-.cms-nav-overlay-scroll:not(:has(.cms-hero-bleed)) {
+/* Overlay navbar: offset content under fixed header unless first screen is full-bleed hero.
+ * #cms-snap-scroller is display:contents by default — padding on the scroller itself is a no-op.
+ * Use a real spacer child (.cms-nav-overlay-offset) instead. */
+.cms-nav-overlay-offset {
+  display: block;
+  height: var(--cms-header-h, 4.25rem);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+.cms-nav-overlay-scroll:has(.cms-hero-bleed) > .cms-nav-overlay-offset {
+  display: none;
+}
+/* Snap modes: scroller is display:block — keep spacer; also safe if spacer missing. */
+html.cms-snap-paging #cms-snap-scroller.cms-nav-overlay-scroll:not(:has(.cms-hero-bleed)):not(:has(.cms-nav-overlay-offset)),
+html.cms-snap-proximity #cms-snap-scroller.cms-nav-overlay-scroll:not(:has(.cms-hero-bleed)):not(:has(.cms-nav-overlay-offset)) {
   padding-top: var(--cms-header-h, 4.25rem);
 }
 /* Hero copy sits under fixed overlay header — keep text below chrome. */
