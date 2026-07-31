@@ -1,5 +1,50 @@
 # Changelog
 
+## 2026-07-31 — ZIP FE reload: cache-bust + unload on module update
+
+- packageModuleLoader: re-import when version changes, ?v= on entry URL
+- ModulesPage: unloadPackageModule before reload after install/update
+- Fixes Character 1.2 admin UI stuck on old 1.0 screen
+
+## 2026-07-31 — Jasefly Spirit Event API — дух CMS как индикатор платформы
+
+- Core emitSpirit / window.jaseflySpirit (jasefly-spirit)
+- JaseflySpiritBridge: publish/save + API 5xx → spirit events
+- ModulesPage: install/update/error → MODULE_* events
+- Character ZIP 1.1.0 уже на хостинге: маппинг событий, cooldown, idle Sleep
+- CMS_MAP: контур духа CMS
+
+## 2026-07-31 — Карантин ZIP: универсальные критерии защиты (SDK, deps, timeout, memory, routes, migrations)
+
+- ModuleQuarantinePolicy + ModuleQuarantineReason (exception/timeout/memory/route/deps/sdk/migration)
+- Preload: SDK/api_version/deps; budget: 5s + memory delta/headroom
+- Router: duplicate METHOD+path → RouteConflictException → quarantine
+- Install/update: migration fail → quarantine migration_failed
+- Admin: quarantine.reason; config module_quarantine; tests Policy + Router conflict
+
+## 2026-07-31 — Изоляция сломанных ZIP-модулей: quarantine без падения API
+
+- ModuleQuarantine + расширенный ModuleSafeMode (class/file/stage/at)
+- InstalledModuleLoader: preflight settings() + quarantine при load
+- ModuleRegistry: изоляция boot/registerRoutes/globalMiddleware/settings/adminNav
+- Bootstrap autoload PackageModules в try/catch
+- index.php: error handler бросает ErrorException (не exit)
+- disable/update/uninstall работают для quarantined; update сбрасывает failed→enabled
+- Админка Modules: is_quarantined + recovery_actions
+- Регрессия ModuleQuarantineIsolationTest.php
+- CMS_MAP: строка quarantine
+
+## 2026-07-31 — Jasefly Character: события установки ZIP для маскота
+
+- ModulesPage: CustomEvent jasefly-character на install/update (progress/success/error)
+- CMS_MAP: строка про ZIP jasefly-character
+
+## 2026-07-31 — Cookie Consent ZIP + core gate for GDPR/152-FZ categories
+
+- ZIP modules-src/cookie-consent: categories modal, presets, consent log, CSV/Excel export, floating widget, jaseflyCookieGate
+- Core cookieConsent helpers allowsAnalytics + hide CookieBanner when ZIP enabled
+- Platform ui.createRoot for package public portals
+
 ## 2026-07-31 — Fix overlay nav: content no longer under transparent header on inner pages
 
 - #cms-snap-scroller display:contents ignored padding-top — breadcrumbs/content sat under fixed overlay nav

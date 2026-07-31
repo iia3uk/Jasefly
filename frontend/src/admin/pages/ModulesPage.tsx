@@ -11,6 +11,7 @@ import {
   Upload,
 } from 'lucide-react'
 import { api } from '@/lib/api'
+import { emitSpirit, SPIRIT_EVENTS } from '@/lib/jaseflySpirit'
 import { loadPackageModules, unloadPackageModule } from '@/core/packageModuleLoader'
 import { Button, GhostButton, GlassPanel, Skeleton } from '@/shared/ui'
 import { AdminPageHero } from '@/admin/components/AdminPageHero'
@@ -18,6 +19,16 @@ import { PageContext } from '@/admin/components/PageContext'
 import { t, useAdminLocale } from '@/admin/i18n'
 import { adminUrl } from '@/admin/adminBasePath'
 import clsx from 'clsx'
+
+type QuarantineInfo = {
+  reason?: string | null
+  class?: string | null
+  message?: string | null
+  file?: string | null
+  line?: number | null
+  stage?: string | null
+  at?: string | null
+}
 
 type InstalledModule = {
   slug: string
@@ -28,6 +39,9 @@ type InstalledModule = {
   signature_status?: string
   health_status?: string
   last_error?: string | null
+  is_quarantined?: boolean
+  quarantine?: QuarantineInfo | null
+  recovery_actions?: string[]
   rollback_available?: boolean
   description?: string
   installed_at?: string
@@ -194,20 +208,35 @@ export function ModulesPage() {
     if (!packageId || !plan?.slug) return
     const slug = plan.slug
     const op = plan.operation === 'update' ? 'update' : 'install'
-    await run('install', async () => {
+    setBusy('install')
+    setError('')
+    setNotice('')
+    emitSpirit(SPIRIT_EVENTS.MODULE_INSTALL_START, { source: 'modules-page', force: true })
+    try {
       if (op === 'update') {
         await api.post(`/admin/modules/${slug}/update`, { package_id: packageId })
+        emitSpirit(SPIRIT_EVENTS.MODULE_UPDATE_SUCCESS, { source: 'modules-page', force: true })
       } else {
         await api.post(`/admin/modules/${slug}/install`, {
           package_id: packageId,
           content_mode: contentMode,
           preserve_existing_data: false,
         })
+        emitSpirit(SPIRIT_EVENTS.MODULE_INSTALL_SUCCESS, { source: 'modules-page', force: true })
       }
       setPackageId(null)
       setPlan(null)
       setTab('installed')
-    })
+      await refresh()
+      // Force FE remount — loadPackageModules alone skipped already-loaded slugs
+      unloadPackageModule(slug)
+      await loadPackageModules()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t.modulesOpFail)
+      emitSpirit(SPIRIT_EVENTS.MODULE_INSTALL_ERROR, { source: 'modules-page', force: true })
+    } finally {
+      setBusy(null)
+    }
   }
 
   return (
@@ -308,7 +337,32 @@ export function ModulesPage() {
                         обратно не откатываются (db_rollback_available=false).
                       </p>
                     ) : null}
-                    {m.last_error ? <p className="mt-2 text-xs text-red-300">{m.last_error}</p> : null}
+                    {m.is_quarantined || m.health_status === 'quarantined' || m.status === 'failed' ? (
+                      <div className="mt-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-50/95">
+                        <div className="font-semibold text-amber-100">Модуль в карантине — ядро не затронуто</div>
+                        {m.quarantine?.message || m.last_error ? (
+                          <p className="mt-1 text-amber-100/85">{m.quarantine?.message || m.last_error}</p>
+                        ) : null}
+                        <p className="mt-1 text-[11px] text-amber-100/60">
+                          {[
+                            m.quarantine?.reason ? `reason=${m.quarantine.reason}` : null,
+                            m.quarantine?.class,
+                            m.quarantine?.stage ? `stage=${m.quarantine.stage}` : null,
+                            m.quarantine?.file
+                              ? `${m.quarantine.file}${m.quarantine.line ? `:${m.quarantine.line}` : ''}`
+                              : null,
+                            m.quarantine?.at ? `at ${m.quarantine.at}` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ') || 'Обновите ZIP или отключите / удалите модуль.'}
+                        </p>
+                        <p className="mt-1 text-[11px] text-amber-100/70">
+                          Восстановление: отключить · обновить ZIP · удалить (MCP: cms_module_disable / update / uninstall)
+                        </p>
+                      </div>
+                    ) : m.last_error ? (
+                      <p className="mt-2 text-xs text-red-300">{m.last_error}</p>
+                    ) : null}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {m.status !== 'enabled' ? (
@@ -324,7 +378,8 @@ export function ModulesPage() {
                       >
                         {t.modulesEnable}
                       </Button>
-                    ) : (
+                    ) : null}
+                    {m.status !== 'disabled' ? (
                       <GhostButton
                         type="button"
                         disabled={!!busy}
@@ -337,7 +392,7 @@ export function ModulesPage() {
                       >
                         {t.modulesDisable}
                       </GhostButton>
-                    )}
+                    ) : null}
                     <GhostButton
                       type="button"
                       disabled={!!busy}

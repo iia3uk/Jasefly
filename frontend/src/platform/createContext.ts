@@ -1,4 +1,5 @@
 import { createElement, Fragment, useEffect, useState } from 'react'
+import { createRoot } from 'react-dom/client'
 import { registerModule, setPluginEnabled } from '@/core/moduleRegistry'
 import { registerWidget, unregisterWidget } from '@/builder/registry'
 import type { AdminScreen, PublicRouteDef } from '@/core/pluginTypes'
@@ -142,7 +143,7 @@ export function createPlatformFrontendContext(slug: string, version: string, sdk
     version,
     sdkVersion,
     feature: (flag) => FEATURES[flag] ?? false,
-    ui: { createElement, useState, useEffect, Fragment },
+    ui: { createElement, useState, useEffect, Fragment, createRoot },
     admin: {
       registerPage: (screen) => {
         adminScreens.push(wrapAdminScreen(screen, slug))

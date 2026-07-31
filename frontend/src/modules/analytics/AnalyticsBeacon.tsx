@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { usePluginEnabled } from '@/hooks/useApi'
-import { useCookieConsent } from '@/lib/cookieConsent'
+import { allowsAnalytics, useCookieConsent } from '@/lib/cookieConsent'
 import { useSiteContext } from '@/context/SiteContext'
 import { trackAnalytics } from './beacon'
 
@@ -15,7 +15,7 @@ export function AnalyticsBeacon() {
     || site?.site_settings?.cookie_banner_enabled === null
     ? true
     : Boolean(Number(site.site_settings.cookie_banner_enabled))
-  const analyticsOk = !bannerOn || consent === 'all'
+  const analyticsOk = !bannerOn || allowsAnalytics(consent)
 
   useEffect(() => {
     if (!enabled || !analyticsOk) return

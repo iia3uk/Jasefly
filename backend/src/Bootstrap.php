@@ -53,7 +53,12 @@ final class Bootstrap
                             continue;
                         }
                     }
-                    require $file;
+                    try {
+                        require $file;
+                    } catch (\Throwable $e) {
+                        // Never let a broken package class take down autoload / API boot.
+                        @error_log('PackageModules autoload skip ' . $class . ': ' . $e->getMessage());
+                    }
                     return;
                 }
             }
