@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80" role="img" aria-label="Jasefly Character  Neutral">
+  <!-- Palette: #17A8FF #0A1625 #FFFFFF #5FD6FF  Flat Vector, no gradients -->
+  <g id="wing-left">
+    <path d="M30 36 C22 30 14 28 10 32 C14 34 20 38 26 42 Z" fill="#17A8FF" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M28 40 C20 38 12 40 8 46 C14 46 22 46 28 44 Z" fill="#5FD6FF" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M28 44 C22 48 16 54 14 60 C20 54 26 50 30 46 Z" fill="#17A8FF" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+  </g>
+  <g id="wing-right">
+    <path d="M50 36 C58 30 66 28 70 32 C66 34 60 38 54 42 Z" fill="#17A8FF" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M52 40 C60 38 68 40 72 46 C66 46 58 46 52 44 Z" fill="#5FD6FF" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M52 44 C58 48 64 54 66 60 C60 54 54 50 50 46 Z" fill="#17A8FF" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+  </g>
+  <path id="tail" d="M40 56 C36 62 34 68 38 74 C40 70 44 70 42 74 C46 68 44 62 40 56 Z" fill="#5FD6FF" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+  <path id="body" d="M34 44 C34 40 46 40 46 44 C46 52 42 58 40 58 C38 58 34 52 34 44 Z" fill="#17A8FF" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+  <circle id="core" cx="40" cy="48" r="3.6" fill="#5FD6FF" stroke="#FFFFFF" stroke-width="1.4"/>
+  <circle id="head" cx="40" cy="30" r="14" fill="#17A8FF" stroke="#FFFFFF" stroke-width="1.8"/>
+  <circle id="eye-l" cx="33" cy="30" r="3.4" fill="#0A1625"/>
+  <circle id="eye-r" cx="47" cy="30" r="3.4" fill="#0A1625"/>
+  <ellipse id="paw-l" cx="34" cy="54" rx="3.2" ry="2.2" fill="#17A8FF" stroke="#FFFFFF" stroke-width="1.8"/>
+  <ellipse id="paw-r" cx="46" cy="54" rx="3.2" ry="2.2" fill="#17A8FF" stroke="#FFFFFF" stroke-width="1.8"/>
+</svg>

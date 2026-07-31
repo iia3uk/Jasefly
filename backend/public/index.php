@@ -104,7 +104,9 @@ set_error_handler(static function (int $severity, string $message, string $file,
     if (!(error_reporting() & $severity)) {
         return false;
     }
-    portfolio_json_error(new ErrorException($message, 0, $severity, $file, $line));
+    // Throw so callers (e.g. InstalledModuleLoader) can quarantine bad packages.
+    // Fatal shutdown handler still covers uncaught cases.
+    throw new ErrorException($message, 0, $severity, $file, $line);
 });
 
 register_shutdown_function(static function (): void {

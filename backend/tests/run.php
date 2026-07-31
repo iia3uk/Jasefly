@@ -90,6 +90,13 @@ require_once "$root/tests/ModulePackagePathsTest.php";
 echo "SqlTranspiler\n";
 require_once "$root/tests/SqlTranspilerTest.php";
 
+// —— Package quarantine isolation (broken ZIP must not kill API) ——
+echo "Module quarantine isolation\n";
+require_once "$root/tests/ModuleQuarantineIsolationTest.php";
+
+echo "Module quarantine policy\n";
+require_once "$root/tests/ModuleQuarantinePolicyTest.php";
+
 // —— Diagnostics (safe-mode / loadFailures) ——
 echo "Diagnostics\n";
 require_once "$root/tests/DiagnosticsTest.php";

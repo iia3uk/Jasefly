@@ -18,6 +18,7 @@ use App\Services\Modules\ModuleHookRunner;
 use App\Services\Modules\ModuleMigrationService;
 use App\Services\Modules\ModulePackageService;
 use App\Services\Modules\ModuleRegistryRepository;
+use App\Services\Modules\ModuleSafeMode;
 use App\Services\Modules\ModuleSnapshotService;
 use App\Services\Modules\ModuleStagingService;
 use App\Services\PermissionService;
@@ -83,9 +84,9 @@ final class ModuleManagerModule extends AbstractModule
             Response::json(['data' => $this->runtimeManifests($repo, $paths)]);
         }, [$publicRate]);
 
-        $router->get($p('/admin/modules'), function (Request $r) use ($repo, $require) {
+        $router->get($p('/admin/modules'), function (Request $r) use ($repo, $paths, $require) {
             $require($r, 'modules.view');
-            Response::json(['data' => $this->listModules($repo)]);
+            Response::json(['data' => $this->listModules($repo, $paths)]);
         }, $protected);
 
         $router->get($p('/admin/modules/runtime'), function (Request $r) use ($repo, $paths, $require) {
@@ -138,13 +139,14 @@ final class ModuleManagerModule extends AbstractModule
             Response::json(['data' => $this->decodeOperationLog($row)]);
         }, $protected);
 
-        $router->get($p('/admin/modules/{slug}'), function (Request $r, string $slug) use ($repo, $require) {
+        $router->get($p('/admin/modules/{slug}'), function (Request $r, string $slug) use ($repo, $paths, $require) {
             $require($r, 'modules.view');
             $row = $repo->getBySlug($slug);
             if ($row === null) {
                 Response::error('Module not found', 404);
             }
-            Response::json(['data' => $this->presentModule($row)]);
+            $safe = (new ModuleSafeMode($paths))->entry($slug);
+            Response::json(['data' => $this->presentModule($row, $repo->hasRollbackSnapshot($slug), $safe)]);
         }, $protected);
 
         $router->post($p('/admin/modules/{slug}/install'), function (Request $r, string $slug) use ($svc, $activity, $require, $userId) {
@@ -351,18 +353,23 @@ final class ModuleManagerModule extends AbstractModule
     }
 
     /** @return list<array<string, mixed>> */
-    private function listModules(ModuleRegistryRepository $repo): array
+    private function listModules(ModuleRegistryRepository $repo, ModulePackagePaths $paths): array
     {
+        $safe = new ModuleSafeMode($paths);
         $out = [];
         foreach ($repo->listAll() as $row) {
             $slug = (string) ($row['slug'] ?? '');
-            $out[] = $this->presentModule($row, $slug !== '' && $repo->hasRollbackSnapshot($slug));
+            $out[] = $this->presentModule(
+                $row,
+                $slug !== '' && $repo->hasRollbackSnapshot($slug),
+                $safe->entry($slug),
+            );
         }
         return $out;
     }
 
     /** @param array<string, mixed> $row */
-    private function presentModule(array $row, bool $rollbackAvailable = false): array
+    private function presentModule(array $row, bool $rollbackAvailable = false, ?array $safeEntry = null): array
     {
         $manifest = null;
         if (!empty($row['manifest_json']) && is_string($row['manifest_json'])) {
@@ -379,15 +386,50 @@ final class ModuleManagerModule extends AbstractModule
             }
         }
 
+        $status = (string) ($row['status'] ?? '');
+        $health = (string) ($row['health_status'] ?? '');
+        $isQuarantined = $health === 'quarantined'
+            || $status === 'failed'
+            || ($safeEntry !== null && ($safeEntry['error'] ?? '') !== '');
+
+        $quarantine = null;
+        if ($isQuarantined) {
+            $quarantine = [
+                'reason' => $safeEntry['reason'] ?? null,
+                'class' => $safeEntry['class'] ?? null,
+                'message' => $safeEntry['error'] ?? ($row['last_error'] ?? null),
+                'file' => $safeEntry['file'] ?? null,
+                'line' => $safeEntry['line'] ?? null,
+                'stage' => $safeEntry['stage'] ?? null,
+                'at' => $safeEntry['at'] ?? null,
+            ];
+        }
+
+        $recovery = [];
+        if ($status !== 'enabled') {
+            $recovery[] = 'enable';
+        }
+        if ($status !== 'disabled') {
+            $recovery[] = 'disable';
+        }
+        $recovery[] = 'update';
+        $recovery[] = 'uninstall';
+        if ($rollbackAvailable) {
+            $recovery[] = 'rollback';
+        }
+
         return [
             'slug' => $row['slug'] ?? '',
             'name' => $row['name'] ?? '',
             'installed_version' => $row['installed_version'] ?? '',
-            'status' => $row['status'] ?? '',
+            'status' => $status,
             'source' => $row['source'] ?? '',
             'signature_status' => $row['signature_status'] ?? '',
-            'health_status' => $row['health_status'] ?? '',
+            'health_status' => $health,
             'last_error' => $row['last_error'] ?? null,
+            'is_quarantined' => $isQuarantined,
+            'quarantine' => $quarantine,
+            'recovery_actions' => $recovery,
             'rollback_available' => $rollbackAvailable,
             'data_retention' => $row['data_retention'] ?? '',
             'package_checksum' => $row['package_checksum'] ?? null,

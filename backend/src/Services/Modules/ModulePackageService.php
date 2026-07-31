@@ -278,23 +278,66 @@ final class ModulePackageService
         if (($row['status'] ?? '') === 'disabled') {
             // Idempotent: skip lifecycle hooks, but always repair plugins mirror (B).
             $this->syncPluginState($slug, false);
+            try {
+                (new ModuleSafeMode($this->paths))->clear($slug);
+            } catch (\Throwable) {
+            }
             return ['ok' => true, 'slug' => $slug, 'status' => 'disabled'];
         }
+        // Broken/quarantined modules must still be disableable even if hooks throw.
+        $force = ($row['status'] ?? '') === 'failed'
+            || ($row['health_status'] ?? '') === 'quarantined'
+            || (new ModuleSafeMode($this->paths))->isSkipped($slug);
         $opId = $this->registry->startOperation($slug, 'disable', (string) $row['installed_version'], null, $initiatedBy);
         try {
             $manifest = $this->rowManifest($row);
-            $this->runLifecycleHook('before_disable', $manifest, $slug, 'disable', $opId);
-            $this->registry->setStatus($slug, 'disabled', null, (string) ($row['health_status'] ?? 'unknown'));
+            try {
+                $this->runLifecycleHook('before_disable', $manifest, $slug, 'disable', $opId);
+            } catch (\Throwable $hookErr) {
+                if (!$force) {
+                    throw $hookErr;
+                }
+                $this->registry->appendOperationLog($opId, 'Skipped before_disable (quarantined): ' . $hookErr->getMessage());
+            }
+            $keepError = $force ? (string) ($row['last_error'] ?? '') : null;
+            $health = $force ? 'quarantined' : (string) ($row['health_status'] ?? 'unknown');
+            $this->registry->setStatus(
+                $slug,
+                'disabled',
+                ($keepError !== null && $keepError !== '') ? $keepError : null,
+                $health
+            );
             $this->syncPluginState($slug, false);
             try {
                 (new \App\Platform\Capabilities\CapabilityRegistry($this->db))->revokeModule($slug);
             } catch (\Throwable) {
             }
-            $this->runLifecycleHook('after_disable', $manifest, $slug, 'disable', $opId);
+            try {
+                $this->runLifecycleHook('after_disable', $manifest, $slug, 'disable', $opId);
+            } catch (\Throwable $hookErr) {
+                if (!$force) {
+                    throw $hookErr;
+                }
+                $this->registry->appendOperationLog($opId, 'Skipped after_disable (quarantined): ' . $hookErr->getMessage());
+            }
+            try {
+                (new ModuleSafeMode($this->paths))->clear($slug);
+            } catch (\Throwable) {
+            }
             $this->registry->finishOperation($opId, 'success');
-            return ['ok' => true, 'slug' => $slug, 'status' => 'disabled'];
+            return ['ok' => true, 'slug' => $slug, 'status' => 'disabled', 'force' => $force];
         } catch (\Throwable $e) {
             $this->registry->finishOperation($opId, 'failed', $e->getMessage());
+            // Still try to leave the module disabled so API stays healthy.
+            if ($force) {
+                try {
+                    $this->registry->setStatus($slug, 'disabled', $e->getMessage(), 'quarantined');
+                    $this->syncPluginState($slug, false);
+                    (new ModuleSafeMode($this->paths))->clear($slug);
+                } catch (\Throwable) {
+                }
+                return ['ok' => true, 'slug' => $slug, 'status' => 'disabled', 'force' => true, 'warning' => $e->getMessage()];
+            }
             $this->registry->setStatus($slug, 'failed', $e->getMessage(), 'failed');
             $this->syncPluginState($slug, false);
             throw $e;
@@ -314,7 +357,17 @@ final class ModulePackageService
             $backupPath = $this->snapshots->createSnapshot($slug);
             $this->registry->appendOperationLog($opId, 'Snapshot: ' . $backupPath);
 
-            $this->runLifecycleHook('before_uninstall', $manifest, $slug, 'uninstall', $opId);
+            $forceUninstall = ($row['status'] ?? '') === 'failed'
+                || ($row['health_status'] ?? '') === 'quarantined'
+                || (new ModuleSafeMode($this->paths))->isSkipped($slug);
+            try {
+                $this->runLifecycleHook('before_uninstall', $manifest, $slug, 'uninstall', $opId);
+            } catch (\Throwable $hookErr) {
+                if (!$forceUninstall) {
+                    throw $hookErr;
+                }
+                $this->registry->appendOperationLog($opId, 'Skipped before_uninstall (quarantined): ' . $hookErr->getMessage());
+            }
 
             if (!$keepData) {
                 $moduleRoot = $this->paths->moduleRoot($slug);
@@ -478,7 +531,18 @@ final class ModulePackageService
             $this->registry->appendOperationLog($opId, 'Applying migrations');
             $migResult = $this->migrations->applyPending($slug, $migrationsDir, $manifest->version());
             if ($migResult['error'] !== null) {
-                throw new \RuntimeException('Migrations failed: ' . ($migResult['error']['message'] ?? ''));
+                $migMsg = 'Migrations failed: ' . ($migResult['error']['message'] ?? '');
+                try {
+                    (new ModuleQuarantine($this->registry, new ModuleSafeMode($this->paths), $this->db))
+                        ->isolateReason($slug, ModuleQuarantineReason::MIGRATION_FAILED, $migMsg, 'migration');
+                } catch (\Throwable) {
+                    $this->registry->setStatus($slug, 'failed', $migMsg, 'quarantined');
+                }
+                throw new ModuleQuarantineViolation(
+                    ModuleQuarantineReason::MIGRATION_FAILED,
+                    $migMsg,
+                    'migration',
+                );
             }
 
             $frontendManifest = $this->readFrontendManifest($packageRoot, $manifest);
@@ -487,7 +551,8 @@ final class ModulePackageService
             $nextStatus = $operation === 'install'
                 ? 'enabled'
                 : (string) ($existingRow['status'] ?? 'enabled');
-            if ($nextStatus === 'installed') {
+            // Recover from quarantine/failed on successful update; keep explicit disabled.
+            if ($nextStatus === 'installed' || $nextStatus === 'failed') {
                 $nextStatus = 'enabled';
             }
 
@@ -506,6 +571,10 @@ final class ModulePackageService
                 'frontend_manifest_json' => $frontendManifest,
             ]);
             $this->registry->replaceModuleFiles($slug, $fileInventory);
+            try {
+                (new ModuleSafeMode($this->paths))->clear($slug);
+            } catch (\Throwable) {
+            }
             $this->syncPluginState($slug, $nextStatus === 'enabled');
 
             $hookContextInstalled = $this->makeInstallContext(

@@ -40,6 +40,13 @@ return [
         'register' => [],
     ],
 
+    // Universal ZIP quarantine budgets (ModuleQuarantinePolicy).
+    'module_quarantine' => [
+        'bootstrap_timeout_sec' => (float) ($local['module_quarantine_timeout'] ?? $env('MODULE_QUARANTINE_TIMEOUT', 5)),
+        'memory_delta_bytes' => (int) ($local['module_quarantine_memory_delta'] ?? $env('MODULE_QUARANTINE_MEMORY_DELTA', 67108864)),
+        'memory_headroom_bytes' => (int) ($local['module_quarantine_memory_headroom'] ?? $env('MODULE_QUARANTINE_MEMORY_HEADROOM', 8388608)),
+    ],
+
     'pagination' => [
         'default_per_page' => (int) ($local['per_page'] ?? $env('PER_PAGE', 12)),
         'max_per_page' => (int) ($local['max_per_page'] ?? $env('MAX_PER_PAGE', 100)),

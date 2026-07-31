@@ -10,6 +10,8 @@ final class Router
 {
     /** @var list<array{method:string,path:string,handler:callable,middleware:list<callable>}> */
     private array $routes = [];
+    /** @var array<string, true> METHOD\0path → claimed */
+    private array $routeIndex = [];
     /** @var list<callable> */
     private array $middleware = [];
 
@@ -20,8 +22,14 @@ final class Router
 
     public function add(string $method, string $path, callable $handler, array $middleware = []): void
     {
+        $method = strtoupper($method);
+        $key = $method . "\0" . $path;
+        if (isset($this->routeIndex[$key])) {
+            throw new RouteConflictException($method, $path);
+        }
+        $this->routeIndex[$key] = true;
         $this->routes[] = [
-            'method' => strtoupper($method),
+            'method' => $method,
             'path' => $path,
             'handler' => $handler,
             'middleware' => $middleware,

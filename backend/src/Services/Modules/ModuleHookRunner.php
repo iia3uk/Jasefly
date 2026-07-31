@@ -44,7 +44,11 @@ final class ModuleHookRunner
 
         $before = get_declared_classes();
         /** @var list<string> $before */
-        require_once $hookReal;
+        try {
+            require_once $hookReal;
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Hook require failed: ' . $e->getMessage(), 0, $e);
+        }
         $newClasses = array_diff(get_declared_classes(), $before);
 
         $isHook = static function (string $class): bool {

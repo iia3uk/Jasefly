@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useSiteContext } from '@/context/SiteContext'
-import { useCookieConsent, writeCookieConsent } from '@/lib/cookieConsent'
+import {
+  isCookieConsentModuleEnabled,
+  useCookieConsent,
+  writeCookieConsent,
+} from '@/lib/cookieConsent'
 
 function defaultCookieBannerText(analyticsEnabled: boolean): string {
   return analyticsEnabled
@@ -10,13 +14,17 @@ function defaultCookieBannerText(analyticsEnabled: boolean): string {
 }
 
 /**
- * Bottom consent strip. Hidden when disabled in site settings or choice already stored.
+ * Bottom consent strip (core fallback).
+ * Hidden when Cookie Consent ZIP is enabled or choice already stored.
  */
 export function CookieBanner() {
   const { site } = useSiteContext()
   const consent = useCookieConsent()
   const settings = site?.site_settings
   const seo = site?.seo
+
+  if (isCookieConsentModuleEnabled(site?.enabled_plugins)) return null
+
   const enabled = settings?.cookie_banner_enabled === undefined || settings?.cookie_banner_enabled === null
     ? true
     : Boolean(Number(settings.cookie_banner_enabled))
