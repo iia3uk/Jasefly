@@ -39,7 +39,9 @@ import '@/modules/comments'
 import '@/modules/analytics'
 import '@/modules/module-manager'
 import { loadPackageModules } from '@/core/packageModuleLoader'
+import { ensureJaseflySpiritGlobal } from '@/lib/jaseflySpirit'
 
+ensureJaseflySpiritGlobal()
 void loadPackageModules()
 
 /** Successful boot — allow a future deploy to auto-reload again; strip cache-bust `?_=` from URL. */

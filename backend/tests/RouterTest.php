@@ -6,12 +6,23 @@ declare(strict_types=1);
  */
 
 use App\Request;
+use App\RouteConflictException;
 use App\Router;
 
 $router = new Router();
 $router->get('/api/v1/health', static function (): void {});
 $router->get('/api/v1/items/{slug}', static function (): void {});
 $router->post('/api/v1/items/{slug}', static function (): void {});
+
+$conflictThrown = false;
+try {
+    $router->get('/api/v1/health', static function (): void {});
+} catch (RouteConflictException $e) {
+    $conflictThrown = true;
+    assert_true($e->method === 'GET', 'route conflict exposes method');
+    assert_true($e->path === '/api/v1/health', 'route conflict exposes path');
+}
+assert_true($conflictThrown, 'duplicate METHOD+path throws RouteConflictException');
 
 $getHealth = $router->match(new Request('GET', '/api/v1/health'));
 assert_true(($getHealth['status'] ?? 0) === 200, 'GET /health matches');

@@ -1,0 +1,9 @@
+{
+  "slug": "jasefly-character",
+  "version": "1.6.0",
+  "entry": "index.js",
+  "export": "JaseflyFrontendModule",
+  "assets": {
+    "js": ["index.js"]
+  }
+}

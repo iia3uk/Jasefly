@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Cookie Consent",
+  "slug": "cookie-consent",
+  "version": "1.0.1",
+  "description": "GDPR / 152-ФЗ: категории cookie, пресеты аналитики/рекламы, журнал согласий, плавающий виджет и публичный JS API. Расширяет тонкий core gate.",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": ["json"]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {
+      "scheduler": ">=1.0.0"
+    },
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "admin.pages",
+      "permissions.check",
+      "settings.module",
+      "scheduler.jobs",
+      "events.subscribe"
+    ],
+    "provides": ["cookie-consent.gate"]
+  },
+  "entrypoints": {
+    "backend": "backend/CookieConsentModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "cookie-consent",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "cookie-consent.view",
+    "cookie-consent.manage",
+    "cookie-consent.export"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": false,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  }
+}

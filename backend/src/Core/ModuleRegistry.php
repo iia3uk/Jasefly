@@ -5,8 +5,13 @@ namespace App\Core;
 
 use App\Core\Contract\Blueprint;
 use App\Core\Contract\ModuleInterface;
+use App\Core\Modules\ModulePackagePaths;
+use App\Core\Modules\PackageModuleAdapter;
 use App\Database;
 use App\Router;
+use App\Services\Modules\ModuleQuarantine;
+use App\Services\Modules\ModuleRegistryRepository;
+use App\Services\Modules\ModuleSafeMode;
 use App\Services\PluginStateService;
 
 /**
@@ -31,7 +36,7 @@ final class ModuleRegistry
     private array $modules = [];
     /** @var array<string, Blueprint>|null */
     private ?array $blueprintIndex = null;
-    /** @var list<array{module:string, stage:string, error:string}> */
+    /** @var list<array{module:string, stage:string, error:string, class?:string, file?:?string, line?:?int, at?:string}> */
     private array $loadFailures = [];
 
     public function __construct(
@@ -132,20 +137,50 @@ final class ModuleRegistry
      * Modules that failed to require/construct/boot.
      * Visible in admin system status — not silent.
      *
-     * @return list<array{module:string, stage:string, error:string}>
+     * @return list<array{module:string, stage:string, error:string, class?:string, file?:?string, line?:?int, at?:string}>
      */
     public function loadFailures(): array
     {
         return $this->loadFailures;
     }
 
-    public function recordLoadFailure(string $module, string $stage, string $error): void
-    {
-        $this->loadFailures[] = [
+    public function recordLoadFailure(
+        string $module,
+        string $stage,
+        string $error,
+        ?string $class = null,
+        ?string $file = null,
+        ?int $line = null,
+        ?string $at = null,
+    ): void {
+        $row = [
             'module' => $module,
             'stage' => $stage,
             'error' => $error,
         ];
+        if ($class !== null && $class !== '') {
+            $row['class'] = $class;
+        }
+        if ($file !== null && $file !== '') {
+            $row['file'] = $file;
+        }
+        if ($line !== null && $line > 0) {
+            $row['line'] = $line;
+        }
+        if ($at !== null && $at !== '') {
+            $row['at'] = $at;
+        }
+        $this->loadFailures[] = $row;
+    }
+
+    /** Remove a module from the runtime registry (after quarantine). */
+    public function unregister(string $name): void
+    {
+        $this->modules = array_values(array_filter(
+            $this->modules,
+            static fn(ModuleInterface $m) => $m->name() !== $name
+        ));
+        $this->blueprintIndex = null;
     }
 
     public function boot(): void
@@ -161,8 +196,13 @@ final class ModuleRegistry
                         'module' => $module->name(),
                         'stage' => 'boot',
                         'error' => $msg,
+                        'class' => $e::class,
+                        'file' => $e->getFile() ?: null,
+                        'line' => $e->getLine() > 0 ? $e->getLine() : null,
+                        'at' => gmdate(DATE_ATOM),
                     ];
                     @error_log('ModuleRegistry boot() fail ' . $module->name() . ': ' . $msg);
+                    $this->quarantinePackageIfNeeded($module, $e, 'boot');
                 }
             }
         }
@@ -208,9 +248,26 @@ final class ModuleRegistry
 
     public function registerRoutes(Router $router, string $apiPrefix): void
     {
-        foreach ($this->modules as $module) {
-            if ($this->isOn($module) || $module->registersRoutesWhenDisabled()) {
+        // Snapshot list — quarantine may unregister during the loop.
+        foreach (array_values($this->modules) as $module) {
+            if (!($this->isOn($module) || $module->registersRoutesWhenDisabled())) {
+                continue;
+            }
+            try {
                 $module->registerRoutes($router, $this->db, $this->app, $apiPrefix);
+            } catch (\Throwable $e) {
+                $msg = $e->getMessage();
+                $this->loadFailures[] = [
+                    'module' => $module->name(),
+                    'stage' => 'register_routes',
+                    'error' => $msg,
+                    'class' => $e::class,
+                    'file' => $e->getFile() ?: null,
+                    'line' => $e->getLine() > 0 ? $e->getLine() : null,
+                    'at' => gmdate(DATE_ATOM),
+                ];
+                @error_log('ModuleRegistry registerRoutes fail ' . $module->name() . ': ' . $msg);
+                $this->quarantinePackageIfNeeded($module, $e, 'register_routes');
             }
         }
     }
@@ -230,8 +287,22 @@ final class ModuleRegistry
     {
         $out = [];
         foreach ($this->all() as $module) {
-            foreach ($module->globalMiddleware($this->db, $this->app) as $mw) {
-                $out[] = $mw;
+            try {
+                foreach ($module->globalMiddleware($this->db, $this->app) as $mw) {
+                    $out[] = $mw;
+                }
+            } catch (\Throwable $e) {
+                $this->loadFailures[] = [
+                    'module' => $module->name(),
+                    'stage' => 'global_middleware',
+                    'error' => $e->getMessage(),
+                    'class' => $e::class,
+                    'file' => $e->getFile() ?: null,
+                    'line' => $e->getLine() > 0 ? $e->getLine() : null,
+                    'at' => gmdate(DATE_ATOM),
+                ];
+                @error_log('ModuleRegistry globalMiddleware fail ' . $module->name() . ': ' . $e->getMessage());
+                $this->quarantinePackageIfNeeded($module, $e, 'global_middleware');
             }
         }
         return $out;
@@ -266,8 +337,13 @@ final class ModuleRegistry
     {
         $nav = [];
         foreach ($this->all() as $module) {
-            foreach ($module->adminNav() as $item) {
-                $nav[] = array_merge(['module' => $module->name()], $item);
+            try {
+                foreach ($module->adminNav() as $item) {
+                    $nav[] = array_merge(['module' => $module->name()], $item);
+                }
+            } catch (\Throwable $e) {
+                $this->recordLoadFailure($module->name(), 'admin_nav', $e->getMessage(), $e::class, $e->getFile() ?: null, $e->getLine() ?: null, gmdate(DATE_ATOM));
+                $this->quarantinePackageIfNeeded($module, $e, 'admin_nav');
             }
         }
         return $nav;
@@ -407,19 +483,72 @@ final class ModuleRegistry
                         )))
                     : null,
                 'block_disable_reason' => $blockDisable,
-                'settings' => $this->state->getSettings($m),
-                'settings_schema' => $m->settingsSchema(),
-                'resources' => $m->resources(),
-                'admin_nav' => $m->adminNav(),
-                'blueprints' => $m->blueprints(),
-                'blocks' => $m->blocks(),
-                'public_routes' => $m->publicRoutes(),
-                'demo_pages' => array_map(fn(array $p) => [
+                'settings' => $this->safeModuleSettings($m),
+                'settings_schema' => $this->safeModuleCall($m, 'settingsSchema', []),
+                'resources' => $this->safeModuleCall($m, 'resources', []),
+                'admin_nav' => $this->safeModuleCall($m, 'adminNav', []),
+                'blueprints' => $this->safeModuleCall($m, 'blueprints', []),
+                'blocks' => $this->safeModuleCall($m, 'blocks', []),
+                'public_routes' => $this->safeModuleCall($m, 'publicRoutes', []),
+                'demo_pages' => array_map(static fn(array $p) => [
                     'slug' => $p['slug'] ?? '',
                     'title' => $p['title'] ?? '',
-                ], $m->demoPages()),
+                ], $this->safeModuleCall($m, 'demoPages', [])),
             ];
         }, $this->modules);
+    }
+
+    /**
+     * Quarantine package modules after runtime Throwable; bundled modules stay loaded but recorded.
+     */
+    private function quarantinePackageIfNeeded(ModuleInterface $module, \Throwable $e, string $stage): void
+    {
+        if (!$module instanceof PackageModuleAdapter) {
+            return;
+        }
+        $slug = $module->name();
+        try {
+            $paths = ModulePackagePaths::fromApp($this->app);
+            $q = new ModuleQuarantine(
+                new ModuleRegistryRepository($this->db),
+                new ModuleSafeMode($paths),
+                $this->db,
+            );
+            $q->isolate($slug, $e, $stage, $this);
+        } catch (\Throwable $isoErr) {
+            @error_log('ModuleRegistry quarantine failed ' . $slug . ': ' . $isoErr->getMessage());
+            $this->unregister($slug);
+        }
+    }
+
+    /** @return array<string, mixed> */
+    private function safeModuleSettings(ModuleInterface $m): array
+    {
+        try {
+            return $this->state->getSettings($m);
+        } catch (\Throwable $e) {
+            $this->recordLoadFailure($m->name(), 'settings', $e->getMessage(), $e::class, $e->getFile() ?: null, $e->getLine() ?: null, gmdate(DATE_ATOM));
+            $this->quarantinePackageIfNeeded($m, $e, 'settings');
+            return [];
+        }
+    }
+
+    /**
+     * @template T
+     * @param T $fallback
+     * @return T
+     */
+    private function safeModuleCall(ModuleInterface $m, string $method, mixed $fallback): mixed
+    {
+        try {
+            /** @var callable $fn */
+            $fn = [$m, $method];
+            return $fn();
+        } catch (\Throwable $e) {
+            $this->recordLoadFailure($m->name(), $method, $e->getMessage(), $e::class, $e->getFile() ?: null, $e->getLine() ?: null, gmdate(DATE_ATOM));
+            $this->quarantinePackageIfNeeded($m, $e, $method);
+            return $fallback;
+        }
     }
 
     /**

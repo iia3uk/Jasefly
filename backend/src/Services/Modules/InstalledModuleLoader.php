@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Services\Modules;
 
-use App\Core\EventDispatcher;
 use App\Core\ModuleRegistry;
 use App\Core\Modules\InstallableModuleInterface;
 use App\Core\Modules\ModuleContext;
@@ -15,6 +14,7 @@ use App\Router;
 
 /**
  * Bootstraps enabled package modules into ModuleRegistry at runtime.
+ * Failures are quarantined — core boot always continues.
  */
 final class InstalledModuleLoader
 {
@@ -28,6 +28,8 @@ final class InstalledModuleLoader
 
     public function loadEnabled(ModuleRegistry $registry, ?Router $router = null): void
     {
+        $quarantine = new ModuleQuarantine($this->registry, $this->safeMode, $this->db);
+
         foreach ($this->registry->listAll() as $row) {
             $slug = (string) ($row['slug'] ?? '');
             $status = (string) ($row['status'] ?? '');
@@ -36,39 +38,49 @@ final class InstalledModuleLoader
                 continue;
             }
             if ($this->safeMode->isSkipped($slug)) {
+                // Persist quarantine status if safe-mode skipped but DB still says enabled.
+                if (($row['health_status'] ?? '') !== 'quarantined') {
+                    $entry = $this->safeMode->entry($slug);
+                    $msg = $entry['error'] ?? 'Previously quarantined (safe-mode)';
+                    try {
+                        $this->registry->setStatus($slug, 'failed', (string) $msg, 'quarantined');
+                    } catch (\Throwable) {
+                    }
+                }
                 continue;
             }
             try {
                 $this->loadOne($registry, $row, $router);
                 $this->safeMode->clear($slug);
             } catch (\Throwable $e) {
-                $msg = $e->getMessage();
-                @error_log('InstalledModuleLoader failed ' . $slug . ': ' . $msg);
-                $this->registry->setStatus($slug, 'failed', $msg, 'failed');
-                // Record package load failure first — do not overwrite with mirror errors.
-                $registry->recordLoadFailure($slug, 'package_load', $msg);
-                try {
-                    (new ModulePluginMirror($this->db))->mirror($slug, false);
-                } catch (\Throwable $mirrorErr) {
-                    $registry->recordLoadFailure(
-                        $slug,
-                        'plugin_mirror',
-                        $mirrorErr->getMessage()
-                    );
+                if ($e instanceof ModuleQuarantineViolation
+                    && $e->reason === ModuleQuarantineReason::ENTRYPOINT_UNSAFE) {
+                    $quarantine->isolate($slug, $e, $e->stage, $registry);
+                } else {
+                    $quarantine->isolate($slug, $e, 'package_load', $registry);
                 }
-                $this->safeMode->markFailed($slug, $msg);
             }
         }
     }
 
     /** @param array<string, mixed> $row */
-    private function loadOne(ModuleRegistry $registry, array $row, ?Router $router): void
-    {
+    private function loadOne(
+        ModuleRegistry $registry,
+        array $row,
+        ?Router $router,
+    ): void {
         $slug = (string) $row['slug'];
         $manifest = $this->parseManifest($row);
         if ($manifest === null) {
-            throw new \RuntimeException('Invalid manifest for ' . $slug);
+            throw new ModuleQuarantineViolation(
+                ModuleQuarantineReason::INVALID_MANIFEST,
+                'Invalid manifest for ' . $slug,
+                'preload',
+            );
         }
+
+        $policy = new ModuleQuarantinePolicy($this->app, $this->registry);
+        $policy->assertPreload($manifest, $slug);
 
         $moduleRoot = $this->paths->moduleRoot($slug);
         if (!is_dir($moduleRoot)) {
@@ -85,6 +97,21 @@ final class InstalledModuleLoader
             throw new \RuntimeException('Entrypoint missing: ' . $entryRel);
         }
         $this->paths->assertContained($moduleRoot, $entryPath);
+
+        // Preflight: incompatible method signatures cause uncatchable E_COMPILE_ERROR on require.
+        try {
+            $this->assertEntrypointLoadable($entryPath);
+        } catch (\Throwable $e) {
+            throw new ModuleQuarantineViolation(
+                ModuleQuarantineReason::ENTRYPOINT_UNSAFE,
+                $e->getMessage(),
+                'entrypoint_preflight',
+                $e,
+            );
+        }
+
+        $startedAt = microtime(true);
+        $memBefore = memory_get_usage(true);
 
         $before = get_declared_classes();
         require_once $entryPath;
@@ -130,6 +157,14 @@ final class InstalledModuleLoader
             );
             $inner->register($context);
         }
+
+        try {
+            $policy->assertBudget($startedAt, $memBefore, $slug);
+        } catch (ModuleQuarantineViolation $budget) {
+            // Roll back registration — module must not stay hot after budget violation.
+            $registry->unregister($slug);
+            throw $budget;
+        }
     }
 
     /** @param array<string, mixed> $row */
@@ -165,5 +200,27 @@ final class InstalledModuleLoader
             }
         }
         return null;
+    }
+
+    /**
+     * Reject entrypoints that would fatal at compile time (uncatchable E_COMPILE_ERROR).
+     * Classic footgun: redeclaring AbstractModule::settings() as private static.
+     */
+    private function assertEntrypointLoadable(string $entryPath): void
+    {
+        $src = @file_get_contents($entryPath);
+        if (!is_string($src) || $src === '') {
+            throw new \RuntimeException('Entrypoint unreadable');
+        }
+        if (preg_match('/\b(?:private|protected|public)\s+static\s+function\s+settings\s*\(/', $src)) {
+            throw new \RuntimeException(
+                'Entrypoint redeclares settings() as static — conflicts with AbstractModule::settings() (compile fatal). Rename the helper.'
+            );
+        }
+        if (preg_match('/\b(?:private|protected)\s+function\s+settings\s*\(/', $src)) {
+            throw new \RuntimeException(
+                'Entrypoint narrows settings() visibility — conflicts with AbstractModule::settings(). Rename the helper.'
+            );
+        }
     }
 }

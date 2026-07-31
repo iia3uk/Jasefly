@@ -8,6 +8,8 @@ import { createPlatformFrontendContext } from '@/platform/createContext'
 import { getPlatformDashboardCards, unregisterPlatformModule } from '@/platform/registry'
 
 const loaded = new Set<string>()
+/** slug → last imported package version (reload FE when ZIP updates). */
+const loadedVersions = new Map<string, string>()
 const packUnregisterFns = new Map<string, () => void | Promise<void>>()
 const dashboardCards: Array<{ id: string; label: string; render: () => unknown }> = []
 
@@ -225,18 +227,37 @@ function normalizePack(raw: unknown, fallbackSlug: string, fallbackVersion: stri
   }
 }
 
+function withCacheBust(url: string, version: string): string {
+  try {
+    const u = new URL(url, window.location.origin)
+    u.searchParams.set('v', version || '0')
+    return u.pathname + u.search
+  } catch {
+    const sep = url.includes('?') ? '&' : '?'
+    return `${url}${sep}v=${encodeURIComponent(version || '0')}`
+  }
+}
+
 async function loadOne(asset: RuntimeModuleAsset): Promise<void> {
   const slug = asset.slug
-  if (!slug || loaded.has(slug) || asset.status !== 'enabled') return
+  if (!slug || asset.status !== 'enabled') return
 
-  const entry = asset.entry || `/modules/${slug}/index.js`
-  if (!isSafeModuleUrl(entry, slug)) {
-    console.warn('[packageModuleLoader] blocked entry URL', entry)
-    return
+  const version = asset.version || '0.0.0'
+  if (loaded.has(slug)) {
+    // ZIP update: drop old FE and re-import (ESM otherwise sticks to cached URL)
+    if (loadedVersions.get(slug) === version) return
+    unloadPackageModule(slug)
   }
 
+  const entryRaw = asset.entry || `/modules/${slug}/index.js`
+  if (!isSafeModuleUrl(entryRaw, slug)) {
+    console.warn('[packageModuleLoader] blocked entry URL', entryRaw)
+    return
+  }
+  const entry = withCacheBust(entryRaw, version)
+
   for (const css of asset.css ?? []) {
-    injectCss(css, slug)
+    injectCss(withCacheBust(css, version), slug)
   }
 
   try {
@@ -246,26 +267,27 @@ async function loadOne(asset: RuntimeModuleAsset): Promise<void> {
       JaseflyFrontendModule?: unknown
     }
     const raw = mod.default ?? mod.module ?? mod.JaseflyFrontendModule
-    const pack = normalizePack(raw, slug, asset.version || '0.0.0')
+    const pack = normalizePack(raw, slug, version)
     if (!pack) {
       console.warn('[packageModuleLoader] invalid module export', slug)
       return
     }
-    const version = asset.version || pack.version || '0.0.0'
-    const legacy = createContext(slug, version)
-    const platform = createPlatformFrontendContext(slug, version, 1)
+    const resolvedVersion = asset.version || pack.version || version
+    const legacy = createContext(slug, resolvedVersion)
+    const platform = createPlatformFrontendContext(slug, resolvedVersion, 1)
     // Hybrid context: Platform SDK (admin/builder/public) + legacy register* helpers
     const hybrid = {
       ...platform,
       ...legacy,
       slug,
-      version,
+      version: resolvedVersion,
     }
     await pack.register(hybrid as unknown as ModuleFrontendContext)
     if (typeof pack.unregister === 'function') {
       packUnregisterFns.set(slug, () => pack.unregister?.(hybrid as unknown as ModuleFrontendContext))
     }
     loaded.add(slug)
+    loadedVersions.set(slug, resolvedVersion)
   } catch (e) {
     console.error('[packageModuleLoader] failed', slug, e)
   }
@@ -287,6 +309,7 @@ export function unloadPackageModule(slug: string): void {
   unregisterModule(slug)
   setPluginEnabled(slug, false)
   loaded.delete(slug)
+  loadedVersions.delete(slug)
 }
 
 /** Load enabled package frontend modules (no Node on server). */

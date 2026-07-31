@@ -17,7 +17,7 @@ import { TranslateWidget } from '@/components/TranslateWidget'
 import { SupportWidget } from '@/components/SupportWidget'
 import { TranslateAutoWarmup } from '@/components/TranslateAutoWarmup'
 import { SnapSectionRail } from '@/components/layout/SnapSectionRail'
-import { useCookieConsent } from '@/lib/cookieConsent'
+import { useCookieConsent, allowsAnalytics } from '@/lib/cookieConsent'
 import { AnalyticsBeacon } from '@/modules/analytics/AnalyticsBeacon'
 import { SiteBreadcrumbs } from '@/components/layout/SiteBreadcrumbs'
 import { useContactInfo } from '@/hooks/useApi'
@@ -88,8 +88,8 @@ export function SeoHead({
     || site?.site_settings?.cookie_banner_enabled === null
     ? true
     : Boolean(Number(site.site_settings.cookie_banner_enabled))
-  // Banner off → analytics allowed. Banner on → only after explicit "all".
-  const analyticsOk = !bannerOn || consent === 'all'
+  // Banner off → analytics allowed. Banner on → only after analytics category / legacy "all".
+  const analyticsOk = !bannerOn || allowsAnalytics(consent)
 
   const finalTitle = title
     ? withSiteNameSuffix(title, siteName)

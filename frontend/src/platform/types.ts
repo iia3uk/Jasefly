@@ -48,6 +48,7 @@ export type PlatformFrontendContext = {
     useState: typeof import('react').useState
     useEffect: typeof import('react').useEffect
     Fragment: typeof import('react').Fragment
+    createRoot?: typeof import('react-dom/client').createRoot
   }
   admin: AdminSdk
   builder: BuilderSdk
