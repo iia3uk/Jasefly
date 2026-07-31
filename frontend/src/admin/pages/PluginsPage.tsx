@@ -353,7 +353,9 @@ function PluginCard({
 
   return (
     <GlassPanel
-      className={`relative h-full overflow-hidden p-0 transition ${
+      // No h-full here: in a CSS grid stretch + overflow-hidden it eats 100% height
+      // and clips the «О плагине» / «Настройки» panels that sit below the header.
+      className={`relative overflow-hidden p-0 transition ${
         plugin.is_enabled ? 'ring-1 ring-white/[0.08]' : ''
       }`}
     >
@@ -362,7 +364,7 @@ function PluginCard({
         style={{ background: glow }}
         aria-hidden
       />
-      <div className="relative flex h-full flex-col p-5 sm:p-6">
+      <div className="relative flex flex-col p-5 sm:p-6">
         <div className="flex items-start gap-3">
           <div
             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${iconTone}`}
