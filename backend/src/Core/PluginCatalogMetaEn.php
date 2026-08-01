@@ -45,6 +45,7 @@ final class PluginCatalogMetaEn
         'lab' => 'Jasefly Lab',
         'scheduler' => 'Scheduler',
         'module-manager' => 'Modules',
+        'access' => 'Access Control',
         'forms' => 'Forms',
         'notifications' => 'Notifications',
         'automation' => 'Automation',
@@ -296,6 +297,17 @@ final class PluginCatalogMetaEn
                     . "• Form widget — GET/POST /forms/{slug}\n"
                     . "• Honeypot, timing, rate limit\n\n"
                     . "Recommended with Mail for email actions.",
+            ],
+            'access' => [
+                'category' => 'security',
+                'description' => 'Who can see page blocks: login, role, purchase, subscription, group, wallet.',
+                'long_description' => "Universal access control for the builder and public pages.\n\n"
+                    . "How to use:\n"
+                    . "1. Builder → Widgets → find «Access» / Access Container.\n"
+                    . "2. Drop locked content inside the container.\n"
+                    . "3. Set the rule (auth / role / purchase / …) and deny mode in the inspector.\n\n"
+                    . "Server-side filterLayout strips locked children for guests.\n"
+                    . "Built-ins: auth, role, purchase. ZIP scaffolds: user-groups, subscriptions, wallet.",
             ],
             'notifications' => [
                 'category' => 'comms',

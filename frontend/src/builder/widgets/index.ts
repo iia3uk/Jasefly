@@ -6,6 +6,7 @@ import { registerLandingWidgets } from '@/builder/widgets/landing'
 import { registerPortfolioWidgets } from '@/builder/widgets/portfolio'
 import { registerCommerceWidgets } from '@/builder/widgets/commerce'
 import { registerAuthWidgets } from '@/builder/widgets/auth'
+import { registerAccessWidgets } from '@/builder/widgets/access'
 import { registerFormWidgets } from '@/builder/widgets/forms'
 import { registerNewsletterWidgets } from '@/builder/widgets/newsletter'
 import { registerCommentWidgets } from '@/builder/widgets/comments'
@@ -25,6 +26,7 @@ export function initBuilderWidgets() {
   registerPortfolioWidgets()
   registerCommerceWidgets()
   registerAuthWidgets()
+  registerAccessWidgets()
   registerFormWidgets()
   registerNewsletterWidgets()
   registerCommentWidgets()

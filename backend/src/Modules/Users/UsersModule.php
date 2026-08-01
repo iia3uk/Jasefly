@@ -65,8 +65,8 @@ final class UsersModule extends AbstractModule
     public function adminNav(): array
     {
         return [
-            ['group' => 'Система', 'path' => '/admin/users', 'label' => 'Пользователи', 'permission' => 'users.manage', 'icon' => 'users'],
-            ['group' => 'Система', 'path' => '/admin/roles', 'label' => 'Роли и права', 'permission' => 'users.manage', 'icon' => 'key'],
+            ['group' => 'Система', 'path' => '/admin/users', 'label' => 'Пользователи и доступ', 'permission' => 'users.view', 'capability' => 'users.view', 'icon' => 'users'],
+            ['group' => 'Система', 'path' => '/admin/roles', 'label' => 'Роли и права', 'permission' => 'roles.manage', 'capability' => 'roles.manage', 'icon' => 'key'],
         ];
     }
 

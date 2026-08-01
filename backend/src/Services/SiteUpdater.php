@@ -547,7 +547,8 @@ final class SiteUpdater
         $storage = (string) ($this->app['storage'] ?? ($this->apiRoot . '/storage'));
         $modulesDir = $this->apiRoot . '/src/Modules';
         $svc = new MigrationService($this->db, $migrationsDir, $storage, $modulesDir);
-        return $svc->status(true);
+        // Deploy always retries: a previous failed migration blocks status(true).
+        return $svc->retry();
     }
 
     /** @return array<string, mixed>|null */

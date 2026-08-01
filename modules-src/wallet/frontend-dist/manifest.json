@@ -1,0 +1,9 @@
+{
+  "slug": "wallet",
+  "version": "0.1.0",
+  "entry": "index.js",
+  "export": "JaseflyFrontendModule",
+  "assets": {
+    "js": ["index.js"]
+  }
+}

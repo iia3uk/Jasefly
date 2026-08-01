@@ -88,6 +88,7 @@ const KNOWN_PLUGINS = [
   'services', 'seo', 'template', 'products', 'payments', 'mail', 'registration',
   'ddos', 'overload', 'webhooks', 'translate', 'support', 'lab', 'scheduler', 'forms',
   'automation', 'notifications', 'newsletter', 'orders', 'comments', 'analytics',
+  'access',
 ]
 
 /** Always shown in admin before /site|/admin/plugins hydrates (no optional API). */

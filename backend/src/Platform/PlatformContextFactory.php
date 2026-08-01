@@ -26,6 +26,7 @@ use App\Platform\Adapters\SettingsAdapter;
 use App\Platform\Adapters\StorageAdapter;
 use App\Platform\Adapters\TranslationsAdapter;
 use App\Platform\Adapters\UsersAdapter;
+use App\Platform\Access\AccessHost;
 use App\Platform\Capabilities\CapabilityRegistry;
 use App\Platform\Capabilities\ServiceRegistry;
 use App\Platform\Compatibility\CompatibilityLayer;
@@ -54,6 +55,7 @@ final class PlatformContextFactory
         $this->capabilities = new CapabilityRegistry($db);
         $this->services = new ServiceRegistry();
         $this->features = new FeatureFlags(is_array($app['platform_features'] ?? null) ? $app['platform_features'] : []);
+        AccessHost::boot($db);
         $this->wireCoreServices();
     }
 
@@ -128,6 +130,7 @@ final class PlatformContextFactory
             new AssetsAdapter($this->paths, $slug),
             $health,
             new ContentAdapter($this->db),
+            AccessHost::get(),
             $this->capabilities,
             $this->services,
             $this->features,
@@ -140,6 +143,7 @@ final class PlatformContextFactory
     {
         $this->services->set('capabilities', $this->capabilities);
         $this->services->set('features', $this->features);
+        $this->services->set('access', AccessHost::get());
         $this->services->set('db', new DatabaseAdapter($this->db));
         $this->services->set('database', new DatabaseAdapter($this->db));
         $this->services->set('settings', new SettingsAdapter($this->db));

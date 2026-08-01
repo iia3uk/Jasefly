@@ -1,6 +1,6 @@
 import { lazy, Suspense, type ComponentType, type ReactNode } from 'react'
 import { Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom'
-import { useAuth, STAFF_ROLES } from '@/context/AuthContext'
+import { useAuth } from '@/context/AuthContext'
 import { AdminShell, DashboardPage, LoginPage } from '@/admin/AdminApp'
 import { AdminScreenResolver } from '@/admin/adminRoutes'
 import { ApiErrorDebugger } from '@/admin/components/ApiErrorDebugger'
@@ -35,14 +35,14 @@ const TermsPage = publicPage('TermsPage')
 const NotFoundPage = publicPage('NotFoundPage')
 
 function RequireAuth() {
-  const { token, role } = useAuth()
+  const { token, capsReady, hasAdminAccess } = useAuth()
   if (!token) {
     const next = `${window.location.pathname}${window.location.search}`
     const login = adminUrl('/login')
     const qs = next && !next.startsWith(login) ? `?next=${encodeURIComponent(next)}` : ''
     return <Navigate to={`${login}${qs}`} replace />
   }
-  if (role && !STAFF_ROLES.has(role)) {
+  if (capsReady && !hasAdminAccess()) {
     return <Navigate to="/" replace />
   }
   return (
@@ -56,8 +56,9 @@ function RequireAuth() {
 }
 
 function RedirectIfAuthed({ children }: { children: ReactNode }) {
-  const { token, role } = useAuth()
-  if (token && role && STAFF_ROLES.has(role)) {
+  const { token, capsReady, hasAdminAccess } = useAuth()
+  if (token && (!capsReady || hasAdminAccess())) {
+    if (!capsReady) return <>{children}</>
     const params = new URLSearchParams(window.location.search)
     const next = params.get('next')
     const nextPath = next?.split('?')[0] || ''
@@ -66,7 +67,7 @@ function RedirectIfAuthed({ children }: { children: ReactNode }) {
       : adminUrl()
     return <Navigate to={dest} replace />
   }
-  if (token && role && !STAFF_ROLES.has(role)) {
+  if (token && capsReady && !hasAdminAccess()) {
     return <Navigate to="/" replace />
   }
   return <>{children}</>

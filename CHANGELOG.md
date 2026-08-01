@@ -1,5 +1,50 @@
 # Changelog
 
+## 2026-08-01 — Fix migration 024: role_rank + retry on deploy
+
+- 024: колонка rank→role_rank (MySQL reserved word ломал ALTER)
+- SiteUpdater: retry() при деплое — снимает blocked после failed migration
+- AclEffectiveResolver/PermissionService: ORDER BY role_rank
+
+## 2026-08-01 — Fix: register migration 024 Admin Access Layer
+
+- MigrationService FILES: добавить 024_admin_access_layer.sql (иначе ZIP есть, а на проде не применяется)
+- Повторный деплой ACL: user_roles, overrides, WP-роли, capabilities seed
+
+## 2026-08-01 — Admin Access Layer: capability-based ACL
+
+- Миграция 024: user_roles, overrides, risk/scope meta, WP-роли, aliases, audit, backfill
+- Platform ACL: AclCapabilityCatalog, EffectiveResolver, cache, CapabilityAccessProvider, AdminNavRegistry
+- AccessService API: canCapability, batchCan, explain, registerCapability/AdminNavItem
+- PermissionService + Middleware → path→capability; Auth /me отдаёт capabilities/roles/is_super
+- API /admin/access/bootstrap|roles|overrides|effective с anti-escalation и last-super-admin
+- FE: AuthContext.can из live caps, guards/nav без role===admin, Users & Access UI
+- demo-kit: registerCapability + registerAdminNavItem; docs platform-sdk + CMS_MAP; AclAccessTest
+- Fix: unused STAFF_ROLES import in AppRouter (tsc)
+
+## 2026-08-01 — Fix: виджет «Доступ» снова в палитре билдера
+
+- access-container category structure→basic (structure не показывался в PALETTE_ORDER)
+- access в KNOWN_PLUGINS; keywords для поиска дос/acc
+- Плагин Access не требует других плагинов — только system
+
+## 2026-08-01 — Access Control: описания, справка в плагине, виджет «Доступ» в палитре
+
+- Описание и long_description плагина Access (RU/EN) + категория Безопасность
+- Настройки-справка: как пользоваться, провайдеры, fail-closed
+- Виджет в палитре: «Доступ», keywords (access/paywall/подписка), plugin=access
+- Поиск палитры учитывает keywords
+
+## 2026-08-01 — Universal Access Control: Platform AccessService + Access Container
+
+- Platform AccessService / providers / rule DSL (all|any|not), fail-closed
+- HTTP GET /access/providers + POST /access/can; server-side filterLayout on public pages
+- Core providers auth + role; purchase registered on boot
+- Builder widget access-container + AccessRuleEditor + deny modes
+- ZIP scaffolds: user-groups, subscriptions, wallet as Access Providers
+- CMS_MAP + platform-sdk Access Providers section + contract snapshots + AccessServiceTest
+
+
 ## 2026-07-31 — ZIP FE reload: cache-bust + unload on module update
 
 - packageModuleLoader: re-import when version changes, ?v= on entry URL

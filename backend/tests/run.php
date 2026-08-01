@@ -101,6 +101,14 @@ require_once "$root/tests/ModuleQuarantinePolicyTest.php";
 echo "Diagnostics\n";
 require_once "$root/tests/DiagnosticsTest.php";
 
+// —— Access control (DSL + layout filter) ——
+echo "AccessService\n";
+require_once "$root/tests/AccessServiceTest.php";
+
+// —— Admin ACL (capabilities / overrides / multi-role) ——
+echo "AclAccess\n";
+require_once "$root/tests/AclAccessTest.php";
+
 // —— Platform SDK ——
 echo "Platform SDK\n";
 require_once "$root/tests/PlatformSdkTest.php";

@@ -18,10 +18,9 @@ final class PermissionMiddleware
             Response::error('Unauthorized', 401);
         }
 
-        if ($this->permissions->isSystemRoute($r->path)) {
-            $this->permissions->require($user, 'system.manage');
-        } elseif ($this->permissions->isSettingsRoute($r->path)) {
-            $this->permissions->require($user, 'settings.manage');
+        $pathCap = $this->permissions->capabilityForAdminPath($r->path);
+        if ($pathCap !== null) {
+            $this->permissions->require($user, $pathCap);
         }
 
         if (str_contains($r->path, '/admin/trash') && str_contains($r->path, 'force')) {

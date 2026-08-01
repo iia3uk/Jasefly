@@ -6,6 +6,7 @@ namespace App\Platform;
 use App\Platform\Attributes\DeprecatedApi;
 use App\Platform\Capabilities\CapabilityRegistry;
 use App\Platform\Capabilities\ServiceRegistry;
+use App\Platform\Contracts\PlatformAccessInterface;
 use App\Platform\Contracts\PlatformAssetsInterface;
 use App\Platform\Contracts\PlatformBuilderInterface;
 use App\Platform\Contracts\PlatformCacheInterface;
@@ -64,6 +65,7 @@ final class PlatformContext
         private PlatformAssetsInterface $assets,
         private PlatformHealthInterface $health,
         private PlatformContentInterface $content,
+        private PlatformAccessInterface $access,
         private CapabilityRegistry $capabilities,
         private ServiceRegistry $services,
         private FeatureFlags $features,
@@ -190,6 +192,11 @@ final class PlatformContext
     public function content(): PlatformContentInterface
     {
         return $this->content;
+    }
+
+    public function access(): PlatformAccessInterface
+    {
+        return $this->access;
     }
 
     public function capabilities(): PlatformCapabilitiesInterface

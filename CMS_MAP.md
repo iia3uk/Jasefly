@@ -18,7 +18,9 @@
 | Admin Hero без превью, на сайте есть | `cmsSync`: `hero-block.media_id` ↔ `hero_settings.background_media_id`; heal в `SitePages` + push при сохранении Admin Hero |
 | Билдер: ложный dirty / hotkeys | bake-on-open без dirty; undo к baseline save; Ctrl+C/V не перехватывают text selection; Delete (не Backspace) удаляет виджет |
 | Иконки палитры билдера | `builder/lib/widgetIcons.tsx` + CSS `.builder-palette-tile` в `frontend/src/index.css` |
-| Виджет (heading/text/hero/…) | `builder/widgets/{basic,structure,blocks,portfolio,landing,commerce,auth}.tsx`; универсальные: `hero-block` `showcase-block` `compare-block` `cta-block` `steps-row` `media-placeholder` `stat-row`; секции: glow/overlay/animation/responsive в `lib/sectionEffects.tsx` |
+| Виджет (heading/text/hero/…) | `builder/widgets/{basic,structure,blocks,portfolio,landing,commerce,auth,access}.tsx`; универсальные: `hero-block` `showcase-block` `compare-block` `cta-block` `steps-row` `media-placeholder` `stat-row`; секции: glow/overlay/animation/responsive в `lib/sectionEffects.tsx` |
+| Access / paywall / «кто видит блок» | Platform `Access/` + `Modules/Access/` (`GET/POST /access/*`); виджет «Доступ» (`access-container`) + `edit/AccessRuleEditor.tsx`; описания в `PluginCatalogMeta`; публичный `filterLayout` в `PublicController`; ZIP: `modules-src/{user-groups,subscriptions,wallet}/` |
+| Admin ACL / роли / capabilities | `Platform/Access/Acl/*` + provider `capability`; `PermissionService` adapter; `GET /auth/me` caps; `GET /admin/access/bootstrap`; FE `AuthContext.can` (не `role===admin`); Users/Roles UI; миграция `024_admin_access_layer.sql` |
 | Mobile: шаги пайплайна «плывут» | `widgets/structure.tsx` → `steps-row` (1/2 col → N на lg); `panels.tsx` pipeline scroll |
 | Mobile адаптив / safe-area / FAB | `index.css` (`.cms-hero-bleed`, overlay pad, snap rail); `SiteLayout` menu lock; `CookieBanner` / `TranslateWidget` / `SupportWidget` |
 | steps-row на проде «Описание», в билдере нет | `structure.tsx` `asSteps`: в данных `body`, виджет ждал `text`; public не должен рисовать placeholder |
@@ -120,6 +122,7 @@
 | ZIP module quarantine (broken ≠ kill API) | `ModuleQuarantine` + `ModuleQuarantinePolicy` + `ModuleQuarantineReason`; критерии: exception / bootstrap_timeout / memory_limit / route_conflict / missing_dependency / sdk_incompatible / migration_failed; `Router` duplicate → `RouteConflictException`; admin `quarantine.reason`; tests `ModuleQuarantineIsolationTest` + `ModuleQuarantinePolicyTest`; emergency `public/emergency-module-quarantine.php` |
 | ZIP enable SoT (installed_modules vs plugins) | Canonical: `installed_modules.status`; mirror: `modules.is_enabled` via `ModulePluginMirror`; Plugins toggle for packages → `ModulePackageService`; CLI `modules.php reconcile-mirror` |
 | Demo package module source | `modules-src/demo-kit/` |
+| Access ZIP scaffolds (group / subscription / wallet) | `modules-src/{user-groups,subscriptions,wallet}/` → register AccessProviders |
 | Forms SDK certification reference | `modules-src/forms-sdk-reference/` |
 | AI Content Optimizer (ZIP, OpenRouter SEO-рерайт) | `modules-src/ai-content-optimizer/` → ZIP `release/modules/`; FE `frontend-dist/index.js` (профили/настройки OpenRouter/лог); job `ai-content-optimizer.tick` |
 | IndexNow (ZIP, Яндекс/поисковики) | `modules-src/indexnow/` → ZIP `release/modules/`; админка `/admin/indexnow`; ключ `/{key}.txt` в корне; авто submit на publish |

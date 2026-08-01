@@ -5,7 +5,7 @@ import { adminUrl } from '@/admin/adminBasePath'
 import { t } from '@/admin/i18n'
 import { GlassPanel } from '@/components/ui'
 
-/** Gate an admin screen by permission slug. */
+/** Gate an admin screen by capability slug (server remains source of truth). */
 export function RequirePermission({
   permission,
   children,
@@ -13,13 +13,23 @@ export function RequirePermission({
   permission: string
   children: ReactNode
 }) {
-  const { can } = useAuth()
+  const { can, capsReady } = useAuth()
+  if (!capsReady) {
+    return (
+      <GlassPanel className="mx-auto mt-10 max-w-lg p-8 text-center">
+        <p className="text-sm text-zinc-400">Проверка доступа…</p>
+      </GlassPanel>
+    )
+  }
   if (can(permission)) return <>{children}</>
   return (
     <GlassPanel className="mx-auto mt-10 max-w-lg p-8 text-center">
       <h1 className="font-heading text-xl text-white">{t.insufficientPermissions}</h1>
       <p className="mt-2 text-sm text-zinc-400">
         {t.insufficientPermissionsHint(permission)}
+      </p>
+      <p className="mt-1 text-xs text-zinc-600">
+        Требуется capability: <code className="text-zinc-400">{permission}</code>
       </p>
       <Link to={adminUrl()} className="mt-6 inline-block text-sm text-zinc-300 underline hover:text-white">
         {t.backToDashboard}

@@ -156,7 +156,10 @@ function AdminNav({
     const raw = getAdminNavGrouped()
     const filtered: typeof raw = {}
     for (const [group, items] of Object.entries(raw)) {
-      const visible = (items ?? []).filter((it) => !it.permission || can(it.permission))
+      const visible = (items ?? []).filter((it) => {
+        const cap = (it as { capability?: string }).capability || it.permission
+        return !cap || can(cap)
+      })
       if (visible.length) filtered[group] = visible
     }
     return filtered

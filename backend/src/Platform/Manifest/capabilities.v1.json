@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
   "capabilities": [
+    "access.service",
     "admin.pages",
     "analytics.events",
     "api.routes",

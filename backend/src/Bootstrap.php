@@ -86,6 +86,11 @@ final class Bootstrap
         $container->set('app', $app);
         $container->set('db', $db);
 
+        // Universal Access Control — providers register during module boot.
+        $access = \App\Platform\Access\AccessHost::boot($db);
+        $container->set(\App\Platform\Contracts\PlatformAccessInterface::class, $access);
+        $container->set(\App\Platform\Access\AccessService::class, $access);
+
         $registry = new ModuleRegistry($db, $app, __DIR__ . '/Modules');
         // EventDispatcher must be resolvable from the container DURING boot()
         // (integration plugins subscribe to events in their boot() method), so

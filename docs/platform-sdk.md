@@ -12,9 +12,67 @@ Packages must depend on **`App\Platform\*`** (PHP) and **`frontend/src/platform`
 
 ### Backend services on `PlatformContext`
 
-`database()`, `storage()`, `events()`, `scheduler()` / `jobs()`, `mail()`, `notifications()`, `settings()`, `permissions()`, `users()`, `media()`, `builder()`, `http()`, `cache()`, `logger()`, `config()`, `translations()`, `assets()`, `health()`, `content()`, `capabilities()`, plus `feature()` / `service()` for catalogued IDs.
+`database()`, `storage()`, `events()`, `scheduler()` / `jobs()`, `mail()`, `notifications()`, `settings()`, `permissions()`, `users()`, `media()`, `builder()`, `http()`, `cache()`, `logger()`, `config()`, `translations()`, `assets()`, `health()`, `content()`, `capabilities()`, `access()`, plus `feature()` / `service()` for catalogued IDs.
 
 Contracts live under `backend/src/Platform/Contracts/`. Adapters under `backend/src/Platform/Adapters/` wrap Core. `CompatibilityLayer` supplies SDK generation aliases. Public service IDs are governed by `ServiceRegistry::PUBLIC_CATALOG` and `Analysis/sdk-policy.json`.
+
+### Access Providers
+
+Universal access control is a **Platform service** (`access` / capability `access.service`), not a billing plugin. Builder and public render never call Orders/Payments/Subscriptions directly — only:
+
+```php
+$decision = $ctx->access()->can($userId, $rule);
+// AccessDecision { allowed, reason?, provider?, meta? }
+```
+
+ZIP modules register providers in `bootPlatform`:
+
+```php
+$ctx->access()->registerProvider(new GroupAccessProvider($ctx->database()));
+```
+
+Rule DSL (store in widget `settings.rule` / `settings.access`):
+
+```json
+{
+  "version": 1,
+  "op": "any",
+  "rules": [
+    { "provider": "auth", "assert": "authenticated" },
+    { "provider": "role", "assert": "in", "params": { "roles": ["member"] } },
+    { "provider": "purchase", "assert": "owns", "params": { "product_id": 12 } }
+  ]
+}
+```
+
+Operators: `all` | `any` | `not`. Unknown or unavailable provider → **deny** (fail-closed). Public `layout_json` is filtered server-side (`filterLayout`) so locked Access Container children never leak to guests.
+
+Built-ins: `auth`, `role` (core); `purchase` (Orders/Payments boot); `capability` (Admin ACL). Scaffolds: `modules-src/user-groups` → `group`, `subscriptions` → `subscription`, `wallet` → `wallet`. HTTP: `GET /access/providers`, `POST /access/can`, `GET /admin/access/bootstrap`. Builder widget: `access-container` + `AccessRuleEditor`.
+
+### Admin ACL (capability-based)
+
+Admin UI and `/admin/*` APIs use the same AccessService via provider `capability` and `canCapability(AccessContext)`.
+
+```php
+$ctx->access()->registerCapability([
+  'slug' => 'demo-kit.view',
+  'label' => 'Demo Kit',
+  'group' => 'modules',
+  'risk' => 'low',
+  'scope_default' => 'site',
+  'default_roles' => ['admin', 'editor'],
+]);
+$ctx->access()->registerAdminNavItem([
+  'group' => 'Разработка',
+  'path' => '/admin/demo-kit',
+  'label' => 'Demo Kit',
+  'capability' => 'demo-kit.view',
+  'icon' => 'package',
+]);
+$decision = $ctx->access()->canCapability(new \App\Platform\Access\Acl\AccessContext($userId, 'demo-kit.view'));
+```
+
+Effective rights: union of all user roles + allow/deny overrides (**deny wins**). `PermissionService::can/require` adapts legacy permission slugs. FE loads `capabilities` from `GET /auth/me` — do not check `role === 'admin'`.
 
 ### Frontend
 

@@ -55,6 +55,7 @@ final class ServiceRegistry
         'content' => PlatformContentInterface::class,
         'capabilities' => PlatformCapabilitiesInterface::class,
         'features' => FeatureFlags::class,
+        'access' => \App\Platform\Contracts\PlatformAccessInterface::class,
     ];
 
     /** @var array<string, object> */

@@ -197,6 +197,10 @@ final class PluginCatalogMeta
                 'requires' => ['system'],
                 'suggests' => [],
             ],
+            'access' => [
+                'requires' => ['system'],
+                'suggests' => ['registration', 'orders', 'payments'],
+            ],
             'forms' => [
                 'requires' => ['system'],
                 'suggests' => ['mail'],
@@ -463,6 +467,19 @@ final class PluginCatalogMeta
                     . "• CLI: php backend/bin/modules.php\n"
                     . "• Публичный SPA loader: GET /api/v1/modules/runtime-assets\n\n"
                     . "Ядро для расширений из api/modules/{slug}.",
+            ],
+            'access' => [
+                'category' => 'security',
+                'description' => 'Кто видит блоки на сайте: вход, роль, покупка, подписка, группа, кошелёк.',
+                'long_description' => "Универсальный контроль доступа для билдера и публичных страниц.\n\n"
+                    . "Как пользоваться:\n"
+                    . "1. Билдер → вкладка «Виджеты» → найдите «Доступ».\n"
+                    . "2. Добавьте контейнер на страницу и положите внутрь закрытый контент.\n"
+                    . "3. В инспекторе задайте правило (вход / роль / покупка / …) и режим отказа.\n\n"
+                    . "Важно: сервер не отдаёт закрытый контент гостю — paywall нельзя обойти через DevTools.\n"
+                    . "Билдер не ходит в Billing: только AccessService и провайдеры.\n\n"
+                    . "Встроенные проверки: auth, role, purchase.\n"
+                    . "ZIP-расширения: user-groups, subscriptions, wallet.",
             ],
             'forms' => [
                 'category' => 'comms',

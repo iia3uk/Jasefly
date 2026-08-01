@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
   "widgets": [
+    "access-container",
     "auth-login",
     "auth-register",
     "blog-list",

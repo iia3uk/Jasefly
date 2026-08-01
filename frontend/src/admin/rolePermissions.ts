@@ -3,7 +3,7 @@
  * Used to hide nav / gate screens; API remains the source of truth.
  */
 
-export type StaffRole = 'super_admin' | 'admin' | 'editor'
+export type StaffRole = 'super_admin' | 'admin' | 'editor' | 'author' | 'contributor' | 'subscriber' | 'member'
 
 const ADMIN_PERMS = [
   'content.view',
@@ -73,10 +73,26 @@ const EDITOR_PERMS = [
 ] as const
 
 /** '*' = all permissions (super_admin). */
+const AUTHOR_PERMS = [
+  'dashboard.view', 'content.view', 'content.create', 'content.edit_own', 'content.publish_own',
+  'content.publish', 'media.manage', 'builder.use', 'builder.publish', 'pages.manage',
+] as const
+
+const CONTRIBUTOR_PERMS = [
+  'dashboard.view', 'content.view', 'content.create', 'content.edit_own', 'media.manage', 'builder.use',
+] as const
+
+const MEMBER_PERMS = ['dashboard.view'] as const
+
+/** Fallback only before /auth/me hydrates. Live caps come from API. */
 export const ROLE_PERMISSIONS: Record<StaffRole, readonly string[] | '*'> = {
   super_admin: '*',
   admin: ADMIN_PERMS,
   editor: EDITOR_PERMS,
+  author: AUTHOR_PERMS,
+  contributor: CONTRIBUTOR_PERMS,
+  subscriber: MEMBER_PERMS,
+  member: MEMBER_PERMS,
 }
 
 export function roleCan(role: string | null | undefined, permission: string): boolean {
@@ -105,18 +121,20 @@ export function permissionForAdminSegment(segment: string): string | null {
     system: 'system.manage',
     ddos: 'system.manage',
     'content-pack': 'system.manage',
-    users: 'users.manage',
+    users: 'users.view',
+    roles: 'roles.manage',
+    access: 'access.manage',
     activity: 'activity.view',
     trash: 'content.restore',
     password: 'settings.manage',
-    seo: 'settings.manage',
+    seo: 'seo.manage',
     'site-settings': 'settings.manage',
     theme: 'settings.manage',
     'email-settings': 'settings.manage',
-  redirects: 'settings.manage',
-  mail: 'settings.manage',
-  translate: 'settings.manage',
-  media: 'media.manage',
+    redirects: 'settings.manage',
+    mail: 'settings.manage',
+    translate: 'settings.manage',
+    media: 'media.manage',
     orders: 'orders.view',
     webhooks: 'integrations.manage',
     support: 'support.agent',

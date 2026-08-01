@@ -23,6 +23,8 @@ export type WidgetDefinition = {
   icon?: string
   /** Owning plugin — widget is hidden on the public site when the plugin is off. */
   plugin?: string
+  /** Extra palette search tokens (RU/EN aliases). */
+  keywords?: string[]
   /** Widget may contain nested widgets (e.g. hero-block card slot). */
   acceptsChildren?: boolean
   defaultSettings: Record<string, unknown>

@@ -131,6 +131,7 @@ final class CapabilityRegistry implements PlatformCapabilitiesInterface
             'notifications.send', 'media.library', 'users.roles', 'events.publish', 'events.subscribe',
             'http.client', 'settings.global', 'settings.module', 'analytics.events', 'permissions.check',
             'content.pages', 'admin.pages', 'public.routes', 'api.routes', 'users.current',
+            'access.service',
         ];
         foreach ($defaults as $cap) {
             if (!isset($this->memory[$cap]) || $this->memory[$cap] === []) {

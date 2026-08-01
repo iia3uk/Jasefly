@@ -242,7 +242,8 @@ export function PageBuilderPage() {
       .map((key) => {
         const items = listWidgets(key).filter((w) => {
           if (!q) return true
-          return w.label.toLowerCase().includes(q) || w.type.toLowerCase().includes(q)
+          if (w.label.toLowerCase().includes(q) || w.type.toLowerCase().includes(q)) return true
+          return (w.keywords ?? []).some((k) => k.toLowerCase().includes(q))
         })
         return { key, title: PALETTE_LABELS[key] ?? key, items }
       })

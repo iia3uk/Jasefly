@@ -22,7 +22,7 @@ final class PublicApiRegistry
             'PlatformCacheInterface', 'PlatformLoggerInterface', 'PlatformConfigInterface',
             'PlatformTranslationsInterface', 'PlatformAssetsInterface', 'PlatformHealthInterface',
             'PlatformContentInterface', 'PlatformBuilderInterface', 'PlatformCapabilitiesInterface',
-            'PlatformRequestInterface',
+            'PlatformAccessInterface', 'PlatformRequestInterface',
         ];
         $out = [];
         foreach ($contracts as $c) {
@@ -49,7 +49,7 @@ final class PublicApiRegistry
             'public_apis' => $this->listApis(),
             'public_services' => ServiceRegistry::catalog(),
             'capabilities' => [
-                'mail.send', 'scheduler.jobs', 'storage.files', 'builder.widgets', 'builder.inspector',
+                'access.service', 'mail.send', 'scheduler.jobs', 'storage.files', 'builder.widgets', 'builder.inspector',
                 'notifications.send', 'media.library', 'users.roles', 'events.publish', 'events.subscribe',
                 'http.client', 'settings.global', 'settings.module', 'analytics.events', 'permissions.check',
                 'content.pages', 'admin.pages', 'public.routes', 'api.routes', 'users.current',

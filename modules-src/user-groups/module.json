@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "User Groups",
+  "slug": "user-groups",
+  "version": "0.1.0",
+  "description": "Каркас групп пользователей + Access Provider group (member_of). Билдер использует только AccessService.",
+  "author": {
+    "name": "Jasefly CMS",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": []
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {},
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "access.service",
+      "api.routes",
+      "admin.pages",
+      "permissions.check",
+      "http.client"
+    ],
+    "provides": ["access.provider.group"]
+  },
+  "entrypoints": {
+    "backend": "backend/UserGroupsModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "user-groups",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "user-groups.view",
+    "user-groups.manage"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  }
+}

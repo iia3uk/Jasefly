@@ -45,7 +45,8 @@
     "health",
     "content",
     "capabilities",
-    "features"
+    "features",
+    "access"
   ],
   "frontend_allowed_imports": [
     "react",

@@ -33,6 +33,7 @@ export function widgetRequiredPlugin(def: WidgetDefinition): string | null {
   if (def.type === 'auth-register') return 'registration'
   if (def.type === 'contact-form') return 'mail'
   if (def.type === 'blog-list') return 'blog'
+  if (def.type === 'access-container') return 'access'
   return null
 }
 

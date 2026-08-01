@@ -58,11 +58,11 @@ export function UsersPage() {
   })
 
   return (
-    <RequirePermission permission="users.manage">
+    <RequirePermission permission="users.view">
     <div>
       <AdminPageHero
-        title={t.usersTitle}
-        hint="Учётные записи, роли и доступ к админке."
+        title="Пользователи и доступ"
+        hint="Учётные записи, роли (multi-role через API) и capability-based доступ. Эффективные права — с сервера."
         eyebrow="Система"
         accent="violet"
         actions={
@@ -97,6 +97,9 @@ export function UsersPage() {
               <span>{t.usersColRole}</span>
               <select className="w-full" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                 <option value="editor">{t.roleEditor}</option>
+                <option value="author">Author</option>
+                <option value="contributor">Contributor</option>
+                <option value="subscriber">Subscriber</option>
                 {superAdmin && <option value="admin">{t.roleAdmin}</option>}
               </select>
             </label>
@@ -131,7 +134,10 @@ export function UsersPage() {
                   const roleLabel =
                     u.role === 'super_admin' ? t.roleSuperAdmin
                       : u.role === 'admin' ? t.roleAdmin
-                        : t.roleEditor
+                        : u.role === 'author' ? 'Author'
+                          : u.role === 'contributor' ? 'Contributor'
+                            : (u.role === 'subscriber' || u.role === 'member') ? 'Subscriber'
+                              : t.roleEditor
                   return (
                   <tr key={u.id} className="border-b border-white/5">
                     <td className="p-3">{u.name}</td>
@@ -146,6 +152,9 @@ export function UsersPage() {
                         onChange={(e) => updateRole.mutate({ id: u.id, role: e.target.value })}
                       >
                         <option value="editor">{t.roleEditor}</option>
+                        <option value="author">Author</option>
+                        <option value="contributor">Contributor</option>
+                        <option value="subscriber">Subscriber</option>
                         {superAdmin && <option value="admin">{t.roleAdmin}</option>}
                         {u.role === 'super_admin' && <option value="super_admin">{t.roleSuperAdmin}</option>}
                       </select>
@@ -178,8 +187,16 @@ export function UsersPage() {
   )
 }
 
-/** Roles & permissions admin page — assign permissions to roles. */
+/** Roles & permissions admin page — assign capabilities to roles. */
 export function RolesPage() {
+  return (
+    <RequirePermission permission="roles.manage">
+      <RolesPageInner />
+    </RequirePermission>
+  )
+}
+
+function RolesPageInner() {
   const qc = useQueryClient()
   const { data: roles = [], isLoading: rolesLoading } = useQuery({
     queryKey: ['admin', 'roles'],
@@ -187,7 +204,7 @@ export function RolesPage() {
   })
   const { data: permissions = [], isLoading: permsLoading } = useQuery({
     queryKey: ['admin', 'permissions'],
-    queryFn: async () => asData<{ id: number; slug: string; name: string; group_name: string | null }[]>(await api.get('/admin/permissions')),
+    queryFn: async () => asData<{ id: number; slug: string; name: string; group_name: string | null; risk_level?: string }[]>(await api.get('/admin/permissions')),
   })
 
   const [selectedRole, setSelectedRole] = useState<number | null>(null)
@@ -225,7 +242,7 @@ export function RolesPage() {
     <div>
       <AdminPageHero
         title="Роли и права"
-        hint="Назначение прав доступа для каждой роли."
+        hint="Матрица capabilities по ролям. Deny override и multi-role — через Access API. Опасные права (critical) помечены."
         eyebrow="Система"
         accent="violet"
       />
@@ -283,7 +300,12 @@ export function RolesPage() {
                             className="mt-1"
                           />
                           <span>
-                            <div className="text-zinc-200">{p.name}</div>
+                            <div className="text-zinc-200">
+                              {p.name}
+                              {(p.risk_level === 'critical' || p.risk_level === 'high') && (
+                                <span className="ml-2 text-[10px] uppercase text-amber-400/90">{p.risk_level}</span>
+                              )}
+                            </div>
                             <div className="text-xs text-zinc-600">{p.slug}</div>
                           </span>
                         </label>

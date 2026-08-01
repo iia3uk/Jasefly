@@ -17,6 +17,8 @@ use App\Services\SitemapService;
 use App\Services\SlugService;
 use App\Services\SoftDeleteService;
 use App\Jwt;
+use App\Modules\Access\AccessModule;
+use App\Platform\Access\AccessHost;
 use App\Support\AuthCookie;
 use App\Support\AdminBasePath;
 use App\Utils\Validator;
@@ -86,9 +88,9 @@ final class PublicController
                         'SELECT * FROM homepage_sections WHERE is_visible=1 ORDER BY sort_order, id'
                     )
                     : [],
-                'home_page' => $this->normalizePage($this->homePageRow()),
+                'home_page' => $this->normalizePage($this->homePageRow(), $r),
                 // Шаблон экрана lazy-load (Suspense) — сразу в site, без лишнего запроса.
-                'lazy_loader_page' => $this->normalizePage($this->systemPageRow('lazy-loader')),
+                'lazy_loader_page' => $this->normalizePage($this->systemPageRow('lazy-loader'), $r),
                 // Настройки плагина Portfolio (null, если плагин выключен).
                 'portfolio' => $portfolioOn ? $this->portfolioPluginSettings() : null,
                 'translate' => $translateOn ? $this->translatePluginSettings() : null,
@@ -288,7 +290,7 @@ final class PublicController
             }
             Response::error('Not found', 404);
         }
-        $data = $this->normalizePage($page);
+        $data = $this->normalizePage($page, $r);
         if (($page['status'] ?? '') === 'draft') {
             $data['preview'] = true;
         }
@@ -315,12 +317,19 @@ final class PublicController
         }
     }
 
-    private function normalizePage(?array $page): ?array
+    private function normalizePage(?array $page, ?Request $r = null): ?array
     {
         if (!$page) {
             return null;
         }
-        $page['layout'] = $this->decodeJson($page['layout_json'] ?? null);
+        $layout = $this->decodeJson($page['layout_json'] ?? null);
+        $access = AccessHost::tryGet();
+        if ($access && is_array($layout)) {
+            $userId = $r ? AccessModule::optionalUserId($r, $this->app) : null;
+            $staffBypass = $r ? $this->staffCanPreviewDrafts($r) : false;
+            $layout = $access->filterLayout($layout, $userId, $staffBypass);
+        }
+        $page['layout'] = $layout;
         $page['is_home'] = (int) ($page['is_home'] ?? 0) === 1;
         $page = $this->hydrateMedia($page, ['og_image_id']);
         return $page;

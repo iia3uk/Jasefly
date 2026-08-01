@@ -43,6 +43,22 @@ final class DemoKitModule extends AbstractPackageModule
         parent::bootPlatform($ctx);
 
         $ctx->capabilities()->require('http.client');
+        $ctx->access()->registerCapability([
+            'slug' => 'demo-kit.view',
+            'label' => 'Demo Kit',
+            'group' => 'modules',
+            'risk' => 'low',
+            'scope_default' => 'site',
+            'default_roles' => ['admin', 'editor', 'super_admin'],
+            'source' => 'demo-kit',
+        ]);
+        $ctx->access()->registerAdminNavItem([
+            'group' => 'Разработка',
+            'path' => '/admin/demo-kit',
+            'label' => 'Demo Kit',
+            'capability' => 'demo-kit.view',
+            'icon' => 'package',
+        ]);
         $ctx->storage()->put('boot-marker.txt', 'booted-at=' . gmdate(DATE_ATOM));
         $ctx->events()->publish('demo-kit.booted', ['slug' => $ctx->slug()]);
         $ctx->logger()->info('Demo Kit platform boot', ['sdk' => $ctx->moduleSdkVersion()]);

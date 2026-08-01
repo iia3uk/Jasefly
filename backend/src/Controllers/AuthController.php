@@ -289,6 +289,19 @@ final class AuthController
         if ($bearer) {
             AuthCookie::set($bearer, (int) ($this->app['jwt_ttl'] ?? 3600));
         }
+        try {
+            $access = \App\Platform\Access\AccessHost::boot($this->db);
+            $bundle = $access->effectiveBundle((int) $user['id']);
+            $user['capabilities'] = $bundle['caps'];
+            $user['roles'] = $bundle['roles'] !== [] ? $bundle['roles'] : [(string) $user['role']];
+            $user['is_super'] = $bundle['is_super'];
+            $user['caps_version'] = $bundle['version'];
+        } catch (\Throwable) {
+            $user['capabilities'] = [];
+            $user['roles'] = [(string) ($user['role'] ?? '')];
+            $user['is_super'] = (($user['role'] ?? '') === 'super_admin');
+            $user['caps_version'] = '0';
+        }
         Response::json(['data' => $user]);
     }
 

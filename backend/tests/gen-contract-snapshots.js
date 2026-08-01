@@ -49,6 +49,7 @@ function writeJson(rel, data) {
 // Core capabilities (mirror CapabilityRegistry::ensureCoreDefaults)
 {
   const caps = [
+    'access.service',
     'mail.send',
     'scheduler.jobs',
     'storage.files',
