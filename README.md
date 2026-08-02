@@ -1,55 +1,205 @@
 # Jasefly
 
-**Framework** on PHP + React: public site runtime, modular packages, Page Builder, MCP deploy/content tools.  
-A **CMS admin** is built into the control panel — it is part of the framework, not the product definition.
+```{=html}
+<p align="center">
+```
+# AI‑First Modular PHP + React Framework
 
-**Docs (engineers):** start at [`docs/README.md`](docs/README.md).  
-**Agent path map:** [`CMS_MAP.md`](CMS_MAP.md) (filename is historical; product is the framework).  
-**Install:** [`INSTALL.md`](INSTALL.md).
+Build websites, applications and installable platform ecosystems --- not
+just another CMS.
 
-## Repository layout
+**Jasefly** combines a high-performance PHP backend, React frontend,
+visual Page Builder, Platform SDK, ZIP modules and MCP-powered AI
+workflows into a single developer platform.
 
-| Path | Role |
-| --- | --- |
-| `backend/` | REST API, installer, migrations, modules |
-| `frontend/` | Public site + admin (Vite/React) |
-| `mcp-cms/` | MCP server (build → test → deploy gate) |
-| `scripts/` | `build-hosting.js`, `build-module.js` |
-| `modules-src/` | ZIP package sources |
-| `content/` | Content-pack templates |
-| `docs/` | Implementation documentation |
+[Portfolio](https://iia3uk.ru) • [Documentation](docs/README.md) •
+[Installation](INSTALL.md)
 
-No Composer — custom PHP autoload in `Bootstrap`.
+```{=html}
+</p>
+```
 
-## Quick start
+------------------------------------------------------------------------
 
-**Windows:** `setup.bat` → `start.bat` → http://localhost:5173  
+## Why Jasefly?
 
-**Manual:** [`INSTALL.md`](INSTALL.md). Admin: `/admin` (change installer password immediately).
+Most systems stop at being a CMS.
 
-## Shared hosting (short)
+Jasefly treats the CMS as **one application running on top of the
+platform**.
 
-1. `node scripts/build-hosting.js --mode=full --domain=https://YOUR_DOMAIN --demo=no --yes`
-2. Upload `release/jasefly-cms-install-*.zip`, extract
-3. Create MySQL DB → open `/install.php`
-4. Updates: `--mode=update` or MCP `cms_release`
+The platform itself provides:
 
-Secrets only in `api/config/.env` / `config.local.php` on the server.
+-   🧩 Installable ZIP modules
+-   🎨 Visual Page Builder
+-   🔐 Universal Access Control
+-   👥 Capability-based Admin ACL
+-   🤖 MCP integration
+-   🚀 Shared hosting deployment
+-   🛡 Safe Mode & Module Quarantine
+-   📦 Public Platform SDK
+-   ⚡ AI-first development workflow
 
-## Documentation index
+------------------------------------------------------------------------
 
-| Doc | Topic |
-| --- | --- |
-| [docs/README.md](docs/README.md) | Reading order |
-| [INSTALL.md](INSTALL.md) | Install / run |
-| [LOCAL_DEV.md](LOCAL_DEV.md) | Windows launcher |
-| [CLEAN_INSTALL.md](CLEAN_INSTALL.md) | Clean host install |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Layers + ownership |
-| [DEVELOPMENT.md](DEVELOPMENT.md) | Contributor entry |
-| [SECURITY.md](SECURITY.md) | Security pointer |
-| [CMS_MAP.md](CMS_MAP.md) | Symptom → file |
-| [mcp-cms/README.md](mcp-cms/README.md) | MCP ops |
+## Architecture
 
-## Not in the public tree
+``` text
+                 React Frontend
+        Public Site • Admin • Builder
+                       │
+                   REST API
+                       │
+                 Platform Services
+                       │
+        SDK • Events • Access • Builder
+                       │
+          ZIP Modules / Core Packages
+                       │
+         Bootstrap • Router • Database
+```
 
-`.env`, `config.local.php`, tokens, `node_modules/`, `frontend/dist/`, `release/` build artifacts.
+------------------------------------------------------------------------
+
+## Core Philosophy
+
+**Core owns the platform.**
+
+Modules never patch the framework directly.
+
+Every extension talks to the platform through stable SDK contracts.
+
+That allows:
+
+-   independent module releases
+-   backwards compatibility
+-   safe upgrades
+-   AI-generated extensions
+-   third-party ecosystems
+
+------------------------------------------------------------------------
+
+## Platform Features
+
+  Area       Highlights
+  ---------- ---------------------------------------
+  Builder    Visual drag & drop editor
+  Runtime    React public rendering
+  Backend    PHP REST API
+  SDK        Public extension API
+  Modules    Install / Update / Rollback / Disable
+  Security   Capability ACL + Access Control
+  Deploy     Shared-hosting friendly
+  AI         MCP build & deployment workflow
+
+------------------------------------------------------------------------
+
+## Module System
+
+ZIP packages can register:
+
+-   Routes
+-   Builder widgets
+-   Access providers
+-   SDK services
+-   Admin pages
+-   Events
+-   Migrations
+-   CLI / MCP integrations
+
+If a module crashes during bootstrap, **Module Quarantine** isolates it
+automatically without bringing down the entire application.
+
+------------------------------------------------------------------------
+
+## Access Control
+
+One unified engine protects:
+
+-   Pages
+-   Sections
+-   Widgets
+-   API
+-   Admin
+-   Purchases
+-   Memberships
+-   Roles
+-   Custom providers
+
+The renderer never exposes protected content to guests.
+
+------------------------------------------------------------------------
+
+## Developer Experience
+
+``` bash
+setup.bat
+start.bat
+```
+
+Open:
+
+    http://localhost:5173
+
+Admin:
+
+    /admin
+
+------------------------------------------------------------------------
+
+## Repository
+
+  Folder        Purpose
+  ------------- -----------------------
+  backend       PHP Core & REST API
+  frontend      React runtime & admin
+  modules-src   ZIP module sources
+  docs          Documentation
+  mcp-cms       MCP server
+  scripts       Build tools
+  content       Demo content
+
+------------------------------------------------------------------------
+
+## Documentation
+
+-   docs/README.md
+-   INSTALL.md
+-   ARCHITECTURE.md
+-   DEVELOPMENT.md
+-   CMS_MAP.md
+-   docs/platform-sdk.md
+
+------------------------------------------------------------------------
+
+## Roadmap
+
+-   Marketplace
+-   Multi-tenant support
+-   Visual workflow automation
+-   Module Store
+-   AI-assisted Builder
+-   Collaborative editing
+
+------------------------------------------------------------------------
+
+## Author
+
+Created by **iia3uk**
+
+🌐 Portfolio: https://iia3uk.ru
+
+------------------------------------------------------------------------
+
+## Support Development
+
+If Jasefly saves you time or powers your business, you can support
+future development:
+
+❤️ https://pay.cloudtips.ru/p/4cbdc8ab
+
+------------------------------------------------------------------------
+
+## License
+
+See LICENSE.
