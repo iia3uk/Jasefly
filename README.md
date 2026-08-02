@@ -1,5 +1,3 @@
-# <p align="center">Jasefly</p>
-
 <p align="center">
 
 <img src="logo_full.svg" width="140" alt="Jasefly Logo">
