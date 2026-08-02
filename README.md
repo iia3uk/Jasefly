@@ -1,205 +1,315 @@
-# Jasefly
+# <p align="center">Jasefly</p>
 
-```{=html}
 <p align="center">
-```
-# AI‑First Modular PHP + React Framework
 
-Build websites, applications and installable platform ecosystems --- not
-just another CMS.
+<img src="logo_full.svg" width="140" alt="Jasefly Logo">
 
-**Jasefly** combines a high-performance PHP backend, React frontend,
-visual Page Builder, Platform SDK, ZIP modules and MCP-powered AI
-workflows into a single developer platform.
-
-[Portfolio](https://iia3uk.ru) • [Documentation](docs/README.md) •
-[Installation](INSTALL.md)
-
-```{=html}
 </p>
-```
 
-------------------------------------------------------------------------
+<h2 align="center">
+AI-First Modular PHP + React Framework
+</h2>
 
-## Why Jasefly?
+<p align="center">
 
-Most systems stop at being a CMS.
+Build websites, applications and installable platform ecosystems.<br>
+Not just another CMS.
 
-Jasefly treats the CMS as **one application running on top of the
-platform**.
+</p>
 
-The platform itself provides:
+<p align="center">
 
--   🧩 Installable ZIP modules
--   🎨 Visual Page Builder
--   🔐 Universal Access Control
--   👥 Capability-based Admin ACL
--   🤖 MCP integration
--   🚀 Shared hosting deployment
--   🛡 Safe Mode & Module Quarantine
--   📦 Public Platform SDK
--   ⚡ AI-first development workflow
+<a href="https://iia3uk.ru">Portfolio</a> •
+<a href="docs/README.md">Documentation</a> •
+<a href="INSTALL.md">Installation</a>
 
-------------------------------------------------------------------------
+</p>
 
-## Architecture
+---
 
-``` text
+## 🚀 What is Jasefly?
+
+**Jasefly** is a modular PHP + React framework designed to build modern websites, SaaS platforms and extensible applications.
+
+Instead of treating the CMS as the product, **the CMS is only one application running on top of the platform.**
+
+The platform provides everything required to build your own ecosystem:
+
+- 🧩 ZIP Modules
+- 🎨 Visual Page Builder
+- 🔐 Universal Access Control
+- 👥 Capability-based Admin
+- 🤖 MCP Integration
+- 📦 Platform SDK
+- 🛡 Safe Mode & Module Quarantine
+- ⚡ AI-first architecture
+
+---
+
+# ✨ Features
+
+| | |
+|---|---|
+| 🎨 Builder | Visual drag & drop page editor |
+| ⚡ Runtime | Fast PHP API + React frontend |
+| 🧩 Modules | Installable ZIP packages |
+| 🔌 SDK | Stable public Platform SDK |
+| 🔐 Access | Universal Access Control engine |
+| 👥 Admin | WordPress-like capability system |
+| 🤖 MCP | AI deployment & automation |
+| 🚀 Deploy | Shared hosting friendly |
+| 🛡 Recovery | Safe Mode & Module Quarantine |
+
+---
+
+# 🏗 Architecture
+
+```text
                  React Frontend
         Public Site • Admin • Builder
                        │
                    REST API
                        │
-                 Platform Services
+               Platform Services
                        │
-        SDK • Events • Access • Builder
+      SDK • Events • Access • Builder
                        │
-          ZIP Modules / Core Packages
+           ZIP Modules / Core Packages
                        │
-         Bootstrap • Router • Database
+        Bootstrap • Router • Database
 ```
 
-------------------------------------------------------------------------
+---
 
-## Core Philosophy
+# 🧩 Platform Philosophy
 
-**Core owns the platform.**
+Unlike traditional CMS systems:
 
-Modules never patch the framework directly.
+```
+CMS
+└── Everything depends on CMS
+```
 
-Every extension talks to the platform through stable SDK contracts.
+Jasefly works differently:
 
-That allows:
+```
+Platform
+├── CMS
+├── Landing
+├── CRM
+├── Blog
+├── Shop
+├── Documentation
+└── Your own applications
+```
 
--   independent module releases
--   backwards compatibility
--   safe upgrades
--   AI-generated extensions
--   third-party ecosystems
+The CMS is simply another platform application.
 
-------------------------------------------------------------------------
+---
 
-## Platform Features
+# 📦 ZIP Module System
 
-  Area       Highlights
-  ---------- ---------------------------------------
-  Builder    Visual drag & drop editor
-  Runtime    React public rendering
-  Backend    PHP REST API
-  SDK        Public extension API
-  Modules    Install / Update / Rollback / Disable
-  Security   Capability ACL + Access Control
-  Deploy     Shared-hosting friendly
-  AI         MCP build & deployment workflow
+Modules can register:
 
-------------------------------------------------------------------------
+- Builder widgets
+- REST routes
+- SDK services
+- Events
+- Admin pages
+- Migrations
+- Access providers
+- MCP commands
 
-## Module System
+Every module is isolated.
 
-ZIP packages can register:
+If one crashes during bootstrap it is automatically quarantined without taking down the entire application.
 
--   Routes
--   Builder widgets
--   Access providers
--   SDK services
--   Admin pages
--   Events
--   Migrations
--   CLI / MCP integrations
+---
 
-If a module crashes during bootstrap, **Module Quarantine** isolates it
-automatically without bringing down the entire application.
+# 🔐 Universal Access Control
 
-------------------------------------------------------------------------
+One engine controls access to:
 
-## Access Control
+- Pages
+- Sections
+- Widgets
+- API
+- Purchases
+- Memberships
+- Roles
+- Groups
+- Wallets
+- Custom providers
 
-One unified engine protects:
+Supports:
 
--   Pages
--   Sections
--   Widgets
--   API
--   Admin
--   Purchases
--   Memberships
--   Roles
--   Custom providers
+- `all`
+- `any`
+- `not`
 
-The renderer never exposes protected content to guests.
+Content is filtered **server-side**, preventing hidden data from leaking into the browser.
 
-------------------------------------------------------------------------
+---
 
-## Developer Experience
+# 👥 Capability-based Admin
 
-``` bash
+Inspired by WordPress but redesigned for modular platforms.
+
+Features:
+
+- Multiple roles
+- Unlimited capabilities
+- Allow / Deny overrides
+- Dynamic navigation
+- ZIP modules register permissions automatically
+- API authorization
+- Builder authorization
+- Future multi-tenant support
+
+No hardcoded role names inside the Core.
+
+---
+
+# 🛡 Module Safety
+
+Jasefly protects itself automatically.
+
+If a module fails because of:
+
+- Exception
+- Missing dependency
+- SDK mismatch
+- Bootstrap timeout
+- Memory limit
+- Route conflicts
+- Migration failure
+
+…it enters **Quarantine Mode**.
+
+The platform continues running.
+
+---
+
+# 🤖 Built for AI
+
+Jasefly ships with MCP integration.
+
+Typical workflow:
+
+```text
+Build
+   ↓
+Tests
+   ↓
+Deploy
+   ↓
+Verify
+```
+
+AI agents can:
+
+- build modules
+- publish releases
+- manage content
+- install packages
+- inspect runtime
+- automate deployments
+
+---
+
+# 📂 Repository Structure
+
+| Folder | Description |
+|---------|-------------|
+| backend | PHP Core & REST API |
+| frontend | React runtime & admin |
+| modules-src | ZIP module sources |
+| docs | Technical documentation |
+| mcp-cms | MCP server |
+| scripts | Build tools |
+| content | Content templates |
+
+---
+
+# 🚀 Quick Start
+
+Windows
+
+```bash
 setup.bat
 start.bat
 ```
 
 Open:
 
-    http://localhost:5173
+```
+http://localhost:5173
+```
 
 Admin:
 
-    /admin
+```
+/admin
+```
 
-------------------------------------------------------------------------
+Installation guide:
 
-## Repository
+```
+INSTALL.md
+```
 
-  Folder        Purpose
-  ------------- -----------------------
-  backend       PHP Core & REST API
-  frontend      React runtime & admin
-  modules-src   ZIP module sources
-  docs          Documentation
-  mcp-cms       MCP server
-  scripts       Build tools
-  content       Demo content
+---
 
-------------------------------------------------------------------------
+# 📚 Documentation
 
-## Documentation
+- docs/README.md
+- INSTALL.md
+- ARCHITECTURE.md
+- DEVELOPMENT.md
+- CMS_MAP.md
+- docs/platform-sdk.md
 
--   docs/README.md
--   INSTALL.md
--   ARCHITECTURE.md
--   DEVELOPMENT.md
--   CMS_MAP.md
--   docs/platform-sdk.md
+---
 
-------------------------------------------------------------------------
+# 🗺 Roadmap
 
-## Roadmap
+- Marketplace
+- Module Store
+- AI Builder Assistant
+- Visual Workflow Automation
+- Multi-tenant Platform
+- Realtime Collaboration
 
--   Marketplace
--   Multi-tenant support
--   Visual workflow automation
--   Module Store
--   AI-assisted Builder
--   Collaborative editing
+---
 
-------------------------------------------------------------------------
+# ❤️ Support
 
-## Author
+If Jasefly saves you time or powers your business, consider supporting development.
 
-Created by **iia3uk**
+☕
 
-🌐 Portfolio: https://iia3uk.ru
+https://pay.cloudtips.ru/p/4cbdc8ab
 
-------------------------------------------------------------------------
+---
 
-## Support Development
+# 👨‍💻 Author
 
-If Jasefly saves you time or powers your business, you can support
-future development:
+**iia3uk**
 
-❤️ https://pay.cloudtips.ru/p/4cbdc8ab
+Portfolio
 
-------------------------------------------------------------------------
+https://iia3uk.ru
 
-## License
+---
 
-See LICENSE.
+# ⭐ Star the project
+
+If you like Jasefly, consider giving the repository a ⭐.
+
+It helps the project grow and motivates further development.
+
+---
+
+# 📄 License
+
+See the repository license.
