@@ -9,6 +9,8 @@ import { useAuth } from '@/context/AuthContext'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { permissionForAdminSegment } from '@/admin/rolePermissions'
 import { PackageErrorBoundary } from '@/platform/PackageErrorBoundary'
+import { DemoRestrictedPage } from '@/admin/demo/DemoRestrictedPage'
+import { demoModeForPath } from '@/admin/demo/demoNav'
 
 import { LazyLoaderFallback } from '@/builder/public/CmsPages'
 import { stripAdminBase } from '@/admin/adminBasePath'
@@ -56,15 +58,36 @@ function buildAdminRoutes(): AdminRouteEntry[] {
   for (const bp of Object.values(getBlueprints())) {
     if (bp.singleton) {
       if (!screenPaths.has(bp.key)) {
-        entries.push({ path: bp.key, element: <SingletonPage path={bp.key} title={bp.label} /> })
+        entries.push({
+          path: bp.key,
+          element: (
+            <PackageErrorBoundary slug={bp.key} label={bp.label}>
+              <SingletonPage path={bp.key} title={bp.label} />
+            </PackageErrorBoundary>
+          ),
+        })
       }
     } else {
       if (!screenPaths.has(bp.key)) {
-        entries.push({ path: bp.key, element: <CrudListPage resource={bp.key} /> })
+        entries.push({
+          path: bp.key,
+          element: (
+            <PackageErrorBoundary slug={bp.key} label={bp.label}>
+              <CrudListPage resource={bp.key} />
+            </PackageErrorBoundary>
+          ),
+        })
       }
       // Кастомный экран products/:id / products/new перекрывает generic CRUD.
       if (!screenPaths.has(`${bp.key}/:id`) && !screenPaths.has(`${bp.key}/new`)) {
-        entries.push({ path: `${bp.key}/:id`, element: <CrudEditPage resource={bp.key} /> })
+        entries.push({
+          path: `${bp.key}/:id`,
+          element: (
+            <PackageErrorBoundary slug={bp.key} label={bp.label}>
+              <CrudEditPage resource={bp.key} />
+            </PackageErrorBoundary>
+          ),
+        })
       }
     }
   }
@@ -84,7 +107,7 @@ function buildAdminRoutes(): AdminRouteEntry[] {
  */
 export function AdminScreenResolver() {
   const location = useLocation()
-  const { can } = useAuth()
+  const { can, isDemo } = useAuth()
   const [, setTick] = useState(0)
   useEffect(() => subscribePluginState(() => setTick((n) => n + 1)), [])
 
@@ -94,8 +117,12 @@ export function AdminScreenResolver() {
   const relativePath = stripAdminBase(location.pathname)
   const displayPath = relativePath.replace(/^\//, '')
   const segment = displayPath.split('/')[0] ?? ''
+  if (isDemo && demoModeForPath(segment) === 'hidden') {
+    return <DemoRestrictedPage />
+  }
   const needed = permissionForAdminSegment(segment)
   if (needed && !can(needed)) {
+    if (isDemo) return <DemoRestrictedPage />
     return <RequirePermission permission={needed}>{null}</RequirePermission>
   }
 

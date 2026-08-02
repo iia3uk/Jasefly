@@ -103,7 +103,7 @@ export function OverloadPage() {
     )
   }
 
-  if (isLoading || !data) {
+  if (isLoading || !data || typeof data !== 'object' || Array.isArray(data) || !data.stats) {
     return (
       <div className="space-y-3">
         <Skeleton className="h-10 w-64" />
@@ -118,6 +118,8 @@ export function OverloadPage() {
   const abs1 = data.threshold_1m_absolute ?? data.threshold_1m
   const quiet = Boolean(data.quiet_until && data.quiet_until * 1000 > Date.now())
   const accent = data.overloaded ? 'rose' as const : 'teal' as const
+  const stats = data.stats ?? { total: 0, last_24h: 0, closed_24h: 0 }
+  const events = Array.isArray(data.events) ? data.events : []
 
   return (
     <div>
@@ -205,15 +207,15 @@ export function OverloadPage() {
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
         <GlassPanel className="p-4">
           <p className="text-xs uppercase tracking-wider text-zinc-500">{t.overloadTotal}</p>
-          <p className="mt-1 font-heading text-xl tabular-nums">{data.stats.total}</p>
+          <p className="mt-1 font-heading text-xl tabular-nums">{stats.total}</p>
         </GlassPanel>
         <GlassPanel className="p-4">
           <p className="text-xs uppercase tracking-wider text-zinc-500">{t.overload24h}</p>
-          <p className="mt-1 font-heading text-xl tabular-nums">{data.stats.last_24h}</p>
+          <p className="mt-1 font-heading text-xl tabular-nums">{stats.last_24h}</p>
         </GlassPanel>
         <GlassPanel className="p-4">
           <p className="text-xs uppercase tracking-wider text-zinc-500">{t.overloadClosed24h}</p>
-          <p className="mt-1 font-heading text-xl tabular-nums">{data.stats.closed_24h}</p>
+          <p className="mt-1 font-heading text-xl tabular-nums">{stats.closed_24h}</p>
         </GlassPanel>
       </div>
 
@@ -234,7 +236,7 @@ export function OverloadPage() {
         <GhostButton
           type="button"
           className="text-rose-300/80"
-          disabled={!data.events.length || clearEvents.isPending}
+          disabled={!events.length || clearEvents.isPending}
           onClick={() => {
             if (confirm(t.overloadClearConfirm)) clearEvents.mutate()
           }}
@@ -243,7 +245,7 @@ export function OverloadPage() {
         </GhostButton>
       </div>
 
-      {data.events.length === 0 ? (
+      {events.length === 0 ? (
         <p className="py-10 text-center text-sm text-zinc-500">{t.overloadEmpty}</p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
@@ -258,7 +260,7 @@ export function OverloadPage() {
               </tr>
             </thead>
             <tbody>
-              {data.events.map((ev) => (
+              {events.map((ev) => (
                 <tr key={ev.id} className="border-t border-white/[0.04]">
                   <td className="px-3 py-2 text-zinc-300">
                     {ev.created_at ? formatMoscowDateTime(ev.created_at) : '—'}

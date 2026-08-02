@@ -68,6 +68,16 @@ final class PermissionService
     {
         $userId = (int) ($user['sub'] ?? $user['id'] ?? 0);
         $role = (string) ($user['role'] ?? 'editor');
+
+        // Demo sandbox: never super / mcp bypass — DemoCapabilityPolicy only.
+        $isDemo = !empty($user['is_demo'])
+            || ($user['auth'] ?? '') === 'demo'
+            || ($user['type'] ?? '') === 'demo_access'
+            || \App\Modules\Demo\DemoContextHolder::isDemo();
+        if ($isDemo) {
+            return \App\Modules\Demo\DemoCapabilityPolicy::allows($permission);
+        }
+
         if ($role === 'super_admin' || ($user['auth'] ?? '') === 'mcp_token') {
             return true;
         }

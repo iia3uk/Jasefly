@@ -231,13 +231,16 @@ final class TranslateService
                 $out[$i] = trim(implode(' ', $parts));
                 continue;
             }
-            // Soft fallback for this phrase only
-            $fb = $this->viaLibreTranslate([$text], $source, $target);
-            $cand = $fb[0] ?? null;
-            if (is_string($cand) && $cand !== '__QUOTA__' && self::isAcceptable($source, $target, $text, $cand)) {
-                $out[$i] = $cand;
-            } elseif ($cand === '__QUOTA__') {
-                $out[$i] = '__QUOTA__';
+            // Do NOT fall back to public LibreTranslate — quality is often unusable and
+            // pollutes translate_cache. Short phrases may retry via MyMemory; else leave miss.
+            if (mb_strlen($text) <= 400) {
+                $fb = $this->viaMyMemory([$text], $source, $target);
+                $cand = $fb[0] ?? null;
+                if (is_string($cand) && $cand !== '__QUOTA__' && self::isAcceptable($source, $target, $text, $cand)) {
+                    $out[$i] = $cand;
+                } elseif ($cand === '__QUOTA__') {
+                    $out[$i] = '__QUOTA__';
+                }
             }
         }
         return $out;

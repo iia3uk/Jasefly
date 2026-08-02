@@ -258,6 +258,30 @@ final class AuthController
 
     public function me(Request $r): never
     {
+        // Demo sandbox explorer — no production users row
+        if (
+            ($r->user['auth'] ?? '') === 'demo'
+            || ($r->user['type'] ?? '') === 'demo_access'
+            || !empty($r->user['is_demo'])
+            || \App\Modules\Demo\DemoContextHolder::isDemo()
+        ) {
+            $caps = \App\Modules\Demo\DemoCapabilityPolicy::allowedCapabilities();
+            Response::json(['data' => [
+                'id' => \App\Modules\Demo\DemoSessionService::DEMO_USER_ID,
+                'email' => 'demo@jasefly.local',
+                'name' => 'Demo Explorer',
+                'role' => 'demo_explorer',
+                'roles' => ['demo_explorer'],
+                'totp_enabled' => false,
+                'auth' => 'demo',
+                'is_demo' => true,
+                'is_super' => false,
+                'capabilities' => $caps,
+                'caps_version' => 'demo-1',
+                'demo_sid' => $r->user['demo_sid'] ?? (\App\Modules\Demo\DemoContextHolder::get()?->sessionId),
+            ]]);
+        }
+
         // MCP machine token — no users row (sub=0)
         if (($r->user['auth'] ?? '') === 'mcp_token') {
             Response::json(['data' => [

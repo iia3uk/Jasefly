@@ -1,17 +1,17 @@
 {
-  "title": "О проекте",
+  "title": "About",
   "slug": "about",
-  "id": 2,
-  "seo_title": "О проекте Jasefly CMS — независимая разработка IIA3UK",
-  "seo_description": "Jasefly CMS создана независимым разработчиком IIA3UK: контроль кодовой базы, AI-first workflow, модульность и deployment на shared-хостинг.",
+  "seo_title": "About Jasefly — AI-first Modular PHP Framework by IIA3UK",
+  "seo_description": "Jasefly is an independent open-source modular PHP framework with React, Builder, Platform SDK, MCP, and ZIP modules. Built and maintained by IIA3UK.",
   "layout": {
     "version": 1,
     "meta": {
-      "product": "jasefly-official"
+      "product": "jasefly-official",
+      "revision": "framework-first-2026-08-02"
     },
     "elements": [
       {
-        "id": "s_42",
+        "id": "s_about_hero",
         "elType": "section",
         "settings": {
           "paddingY": "3.5rem",
@@ -20,29 +20,29 @@
         },
         "elements": [
           {
-            "id": "c_41",
+            "id": "c_about_hero",
             "elType": "column",
             "settings": {
               "width": 100
             },
             "elements": [
               {
-                "id": "w_3z",
+                "id": "w_about_h1",
                 "elType": "widget",
                 "widgetType": "heading",
                 "settings": {
-                  "text": "О проекте",
+                  "text": "About Jasefly",
                   "tag": "h1",
                   "size": "2xl",
                   "align": "left"
                 }
               },
               {
-                "id": "w_40",
+                "id": "w_about_intro",
                 "elType": "widget",
                 "widgetType": "text",
                 "settings": {
-                  "html": "<p>Jasefly CMS создана независимым разработчиком <strong>IIA3UK</strong> как собственная платформа для разработки сайтов, управления контентом через AI и безопасного развёртывания на обычном хостинге.</p>",
+                  "html": "<p><strong>Jasefly</strong> is an open-source <strong>AI-first modular PHP framework</strong> by <strong>IIA3UK</strong>. It unifies a modern PHP backend, React frontend, visual Builder, Platform SDK, Access Layer, MCP tooling, and ZIP module runtime — so you can build real web products on shared hosting without a closed constructor lock-in.</p><p>The admin CMS is part of the platform. It is not the definition of the product.</p>",
                   "align": "left"
                 }
               }
@@ -51,7 +51,7 @@
         ]
       },
       {
-        "id": "s_45",
+        "id": "s_about_grid",
         "elType": "section",
         "settings": {
           "paddingY": "3.5rem",
@@ -60,45 +60,50 @@
         },
         "elements": [
           {
-            "id": "c_44",
+            "id": "c_about_grid",
             "elType": "column",
             "settings": {
               "width": 100
             },
             "elements": [
               {
-                "id": "w_43",
+                "id": "w_about_grid",
                 "elType": "widget",
                 "widgetType": "features-grid",
                 "settings": {
-                  "title": "Мотивация",
-                  "subtitle": "",
-                  "columns": 2,
+                  "title": "Principles",
+                  "subtitle": "How the project is steered.",
+                  "columns": 3,
                   "items": [
                     {
-                      "icon": "code",
-                      "title": "Контроль над кодовой базой",
-                      "body": "Собственное ядро вместо тяжёлой зависимости от чужой CMS."
+                      "icon": "sparkles",
+                      "title": "AI-native, controlled",
+                      "body": "Agents get tools and digests — not unrestricted server shells."
                     },
                     {
-                      "icon": "layers",
-                      "title": "Удобное расширение",
-                      "body": "Новые домены — модулями, без бесконечных патчей ядра."
+                      "icon": "package",
+                      "title": "Modular by default",
+                      "body": "Domain features ship as modules/packages through the Platform SDK."
                     },
                     {
-                      "icon": "bot",
-                      "title": "AI-first workflow",
-                      "body": "Карта сайта, digest и MCP для работы с Cursor и агентами."
+                      "icon": "server",
+                      "title": "Hosting realism",
+                      "body": "Designed for PHP shared hosting with prebuilt frontend assets."
                     },
                     {
-                      "icon": "upload",
-                      "title": "Автоматизация deployment",
-                      "body": "Локальная сборка, ZIP и обновления из админки."
+                      "icon": "shield",
+                      "title": "Honest claims",
+                      "body": "No fake marketplace or invented APIs in marketing copy."
                     },
                     {
-                      "icon": "briefcase",
-                      "title": "Свои и клиентские проекты",
-                      "body": "Один стек для личных продуктов и заказов."
+                      "icon": "globe",
+                      "title": "One live portfolio",
+                      "body": "Production proof: iia3uk.ru — open it as Live Demo."
+                    },
+                    {
+                      "icon": "heart",
+                      "title": "Independent",
+                      "body": "Built and maintained by IIA3UK; support via CloudTips when you want to help."
                     }
                   ]
                 }
@@ -108,7 +113,7 @@
         ]
       },
       {
-        "id": "s_49",
+        "id": "s_about_cta",
         "elType": "section",
         "settings": {
           "paddingY": "3.5rem",
@@ -117,30 +122,25 @@
         },
         "elements": [
           {
-            "id": "c_48",
+            "id": "c_about_cta",
             "elType": "column",
             "settings": {
               "width": 100
             },
             "elements": [
               {
-                "id": "w_46",
+                "id": "w_about_cta",
                 "elType": "widget",
-                "widgetType": "text",
+                "widgetType": "cta-block",
                 "settings": {
-                  "html": "<p>Проект развивается одним автором — это не команда и не компания. Связь по предложениям и ошибкам — через страницу контактов.</p>",
-                  "align": "left"
-                }
-              },
-              {
-                "id": "w_47",
-                "elType": "widget",
-                "widgetType": "cta-banner",
-                "settings": {
-                  "title": "Связаться",
-                  "subtitle": "",
-                  "cta_label": "Контакты",
-                  "cta_href": "/contact"
+                  "title": "Follow the work",
+                  "cta1_label": "GitHub",
+                  "cta1_href": "https://github.com/iia3uk/jasefly",
+                  "cta2_label": "Support Development",
+                  "cta2_href": "https://pay.cloudtips.ru/p/4cbdc8ab",
+                  "subtitle": "Star the repo, try the live demo, or support development.",
+                  "show_media": false,
+                  "layout": "center"
                 }
               }
             ]

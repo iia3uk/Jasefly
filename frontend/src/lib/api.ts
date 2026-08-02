@@ -292,8 +292,11 @@ export const mediaUrl = (media?: MediaAsset | { id?: IDLike; media_id?: IDLike }
   return undefined
 }
 
-const list = async <T>(path: string, options?: RequestOptions): Promise<T[]> =>
-  unwrap(await api.get<ApiEnvelope<T[]> | T[]>(path, options))
+const list = async <T>(path: string, options?: RequestOptions): Promise<T[]> => {
+  const raw = unwrap(await api.get<ApiEnvelope<T[]> | T[]>(path, options))
+  // Demo / soft APIs sometimes return {} instead of [] — never crash .map callers.
+  return Array.isArray(raw) ? raw : []
+}
 const one = async <T>(path: string, options?: RequestOptions): Promise<T> =>
   unwrap(await api.get<ApiEnvelope<T> | T>(path, options))
 

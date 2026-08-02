@@ -1,47 +1,34 @@
 {
-  "title": "Обновления",
+  "title": "Updates",
   "slug": "updates",
-  "seo_title": "Обновления Jasefly CMS — install и update ZIP из админки",
-  "seo_description": "Как устроены install и update пакеты, проверка ZIP, сохранение uploads и config, миграции, журналы и рекомендации перед обновлением.",
+  "seo_title": "Updating Jasefly — Safe SiteUpdater Releases",
+  "seo_description": "How to update a Jasefly site safely: backup, apply update ZIP via SiteUpdater, migrations, quarantine awareness, and post-deploy checks.",
   "layout": {
     "version": 1,
-    "meta": {
-      "product": "jasefly-official"
-    },
+    "meta": { "product": "jasefly-official", "revision": "framework-first-2026-08-02" },
     "elements": [
       {
-        "id": "s_3q",
+        "id": "s_up_hero",
         "elType": "section",
-        "settings": {
-          "paddingY": "3.5rem",
-          "gap": "1.5rem",
-          "columns": 1
-        },
+        "settings": { "paddingY": "3.5rem", "gap": "1.5rem", "columns": 1 },
         "elements": [
           {
-            "id": "c_3p",
+            "id": "c_up_hero",
             "elType": "column",
-            "settings": {
-              "width": 100
-            },
+            "settings": { "width": 100 },
             "elements": [
               {
-                "id": "w_3n",
+                "id": "w_up_h1",
                 "elType": "widget",
                 "widgetType": "heading",
-                "settings": {
-                  "text": "Обновления",
-                  "tag": "h1",
-                  "size": "2xl",
-                  "align": "left"
-                }
+                "settings": { "text": "Safe updates", "tag": "h1", "size": "2xl", "align": "left" }
               },
               {
-                "id": "w_3o",
+                "id": "w_up_intro",
                 "elType": "widget",
                 "widgetType": "text",
                 "settings": {
-                  "html": "<p>Jasefly разделяет полный установочный пакет и пакет обновления. Update не затирает локальную конфигурацию, загрузки, резервные копии и журналы.</p>",
+                  "html": "<p>Production sites update through <strong>SiteUpdater</strong> and managed release ZIPs (including <code>cms_release</code> from MCP). The goal is predictable deploys on shared hosting — backup first, apply the package, verify the site.</p>",
                   "align": "left"
                 }
               }
@@ -50,70 +37,42 @@
         ]
       },
       {
-        "id": "s_3t",
+        "id": "s_up_steps",
         "elType": "section",
-        "settings": {
-          "paddingY": "3.5rem",
-          "gap": "1.5rem",
-          "columns": 1
-        },
+        "settings": { "paddingY": "3.5rem", "gap": "1.5rem", "columns": 1 },
         "elements": [
           {
-            "id": "c_3s",
+            "id": "c_up_steps",
             "elType": "column",
-            "settings": {
-              "width": 100
-            },
+            "settings": { "width": 100 },
             "elements": [
               {
-                "id": "w_3r",
+                "id": "w_up_steps",
+                "elType": "widget",
+                "widgetType": "steps-row",
+                "settings": {
+                  "animate": true,
+                  "show_line": true,
+                  "items": [
+                    { "badge": "1", "title": "Backup", "text": "Snapshot files and database before applying any update ZIP." },
+                    { "badge": "2", "title": "Apply", "text": "Upload/apply the release via admin updater or MCP cms_release pipeline." },
+                    { "badge": "3", "title": "Migrate", "text": "Run pending migrations if the release includes schema changes." },
+                    { "badge": "4", "title": "Verify", "text": "Hard-refresh the admin (Ctrl+F5), smoke public pages, check diagnostics." }
+                  ]
+                }
+              },
+              {
+                "id": "w_up_grid",
                 "elType": "widget",
                 "widgetType": "features-grid",
                 "settings": {
-                  "title": "Пакеты",
-                  "subtitle": "",
-                  "columns": 2,
+                  "title": "What the updater protects",
+                  "subtitle": "Operational realities of the framework.",
+                  "columns": 3,
                   "items": [
-                    {
-                      "icon": "package",
-                      "title": "Install package",
-                      "body": "Полный набор для новой площадки: frontend assets, API, installer, миграции схемы."
-                    },
-                    {
-                      "icon": "refresh",
-                      "title": "Update package",
-                      "body": "Runtime-файлы и миграции поверх существующей установки без медиа и локальных секретов."
-                    },
-                    {
-                      "icon": "shield",
-                      "title": "Проверка пакета",
-                      "body": "Перед применением CMS валидирует архив и состав обновления."
-                    },
-                    {
-                      "icon": "folder",
-                      "title": "Uploads",
-                      "body": "Файлы медиатеки сохраняются и не входят в типичный update wipe."
-                    },
-                    {
-                      "icon": "key",
-                      "title": "Локальный config",
-                      "body": "Секреты и config.local / .env на сервере не должны перезаписываться update-пакетом."
-                    },
-                    {
-                      "icon": "database",
-                      "title": "Миграции",
-                      "body": "SQL накатывается после обновления файлов; схема доводится до актуальной."
-                    },
-                    {
-                      "icon": "list",
-                      "title": "Журналирование",
-                      "body": "Действия и ошибки фиксируются для разбора после релиза."
-                    },
-                    {
-                      "icon": "save",
-                      "title": "Резервные копии",
-                      "body": "Перед крупным обновлением рекомендуется бэкап БД и файлов из админки/хостинга."
-                    }
+                    { "icon": "refresh", "title": "Asset prune", "body": "Stale hashed frontend files are cleaned after a successful update." },
+                    { "icon": "bug", "title": "Module quarantine", "body": "A broken ZIP module can isolate instead of killing the API process." },
+                    { "icon": "shield", "title": "Config stays local", "body": "Hosting secrets are not overwritten by the public release package." }
                   ]
                 }
               }
@@ -122,50 +81,24 @@
         ]
       },
       {
-        "id": "s_3y",
+        "id": "s_up_cta",
         "elType": "section",
-        "settings": {
-          "paddingY": "3.5rem",
-          "gap": "1.5rem",
-          "columns": 1
-        },
+        "settings": { "paddingY": "3.5rem", "gap": "1.5rem", "columns": 1 },
         "elements": [
           {
-            "id": "c_3x",
+            "id": "c_up_cta",
             "elType": "column",
-            "settings": {
-              "width": 100
-            },
+            "settings": { "width": 100 },
             "elements": [
               {
-                "id": "w_3u",
-                "elType": "widget",
-                "widgetType": "heading",
-                "settings": {
-                  "text": "Рекомендации перед обновлением",
-                  "tag": "h2",
-                  "size": "xl",
-                  "align": "left"
-                }
-              },
-              {
-                "id": "w_3v",
-                "elType": "widget",
-                "widgetType": "text",
-                "settings": {
-                  "html": "<ol><li>Сделайте резервную копию БД и critical files.</li><li>Проверьте, что update собран из нужного коммита.</li><li>Загрузите ZIP через панель обновлений.</li><li>Дождитесь validate → migrate → ready.</li><li>Обновите админку (hard refresh) и проверьте ключевые страницы.</li></ol>",
-                  "align": "left"
-                }
-              },
-              {
-                "id": "w_3w",
+                "id": "w_up_cta",
                 "elType": "widget",
                 "widgetType": "cta-banner",
                 "settings": {
-                  "title": "Как устроен весь цикл",
-                  "subtitle": "",
-                  "cta_label": "Как это работает",
-                  "cta_href": "/workflow"
+                  "title": "Need the install baseline?",
+                  "subtitle": "Fresh sites start from the install release tag.",
+                  "cta_label": "Install ZIP",
+                  "cta_href": "https://github.com/iia3uk/jasefly/releases/tag/install"
                 }
               }
             ]

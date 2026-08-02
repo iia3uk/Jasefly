@@ -216,7 +216,7 @@ final class TranslateModule extends AbstractModule
                     ['value' => 'mymemory', 'label' => 'MyMemory (бесплатно, лимит символов/день)'],
                     ['value' => 'deepl', 'label' => 'DeepL (только если есть свой API key)'],
                 ],
-                'help' => 'По умолчанию — бесплатный Google. DeepL оставляйте тем, у кого есть аккаунт API.',
+                'help' => 'Google gtx — бесплатно, качество среднее. Для нормального RU↔EN лучше DeepL (свой API key). Лоховый Libre больше не подмешивается в кэш при сбое Google.',
             ],
             [
                 'key' => 'deepl_api_key',
@@ -595,6 +595,9 @@ final class TranslateModule extends AbstractModule
         $remainingForTarget = 0;
 
         foreach ($targets as $target) {
+            if ($target === '' || $target === $source) {
+                continue;
+            }
             $cachedMap = $cache->getMany($source, $target, $corpus);
             $miss = [];
             foreach ($corpus as $text) {
@@ -688,16 +691,26 @@ final class TranslateModule extends AbstractModule
      */
     private function allowedTargets(array $settings): array
     {
+        $source = strtolower(trim((string) ($settings['source_lang'] ?? 'ru')));
         $raw = (string) ($settings['languages'] ?? 'en,de,fr,es');
         $parts = preg_split('/[\s,;]+/', strtolower($raw)) ?: [];
         $out = [];
         foreach ($parts as $p) {
             $p = preg_replace('/[^a-z\-]/', '', $p) ?? '';
-            if ($p !== '' && strlen($p) <= 8 && !in_array($p, $out, true)) {
+            // Same-lang pairs never translate (TranslateService no-ops) and stall admin warmup.
+            if ($p !== '' && $p !== $source && strlen($p) <= 8 && !in_array($p, $out, true)) {
                 $out[] = $p;
             }
         }
-        return $out ?: ['en'];
+        if ($out !== []) {
+            return $out;
+        }
+        foreach (['en', 'ru', 'de', 'fr', 'es'] as $fallback) {
+            if ($fallback !== $source) {
+                return [$fallback];
+            }
+        }
+        return [];
     }
 
     /** @return array<string, mixed> */

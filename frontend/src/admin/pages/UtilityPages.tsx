@@ -10,6 +10,8 @@ import { Button, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { PageContext } from '@/admin/components/PageContext'
 import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { t } from '@/admin/i18n'
+import { useAuth } from '@/context/AuthContext'
+import { DEMO_NOTICE } from '@/admin/demo/demoNav'
 import clsx from 'clsx'
 
 function MediaLibraryHelp() {
@@ -78,6 +80,7 @@ function Header({ title, contextKey, subtitle }: { title: string; contextKey: st
 type FolderFilter = 'all' | 'root' | ID
 
 export function MediaLibraryPage() {
+  const { isDemo } = useAuth()
   const client = useQueryClient()
   const file = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')
@@ -150,6 +153,7 @@ export function MediaLibraryPage() {
   }
 
   const uploadFiles = async (list: FileList | null) => {
+    if (isDemo) return
     const files = list ? Array.from(list) : []
     if (!files.length) return
     setUploading(true)
@@ -269,10 +273,18 @@ export function MediaLibraryPage() {
               className="min-w-0 flex-1"
               disabled={unusedOnly}
             />
-            <input ref={file} type="file" className="hidden" multiple accept="image/*,application/pdf,video/mp4" onChange={(e) => uploadFiles(e.target.files)} />
-            <Button type="button" disabled={uploading || unusedOnly} onClick={() => file.current?.click()}>
-              <Upload size={16} />{uploading ? t.uploading : t.uploadMedia}
-            </Button>
+            {!isDemo ? (
+              <>
+                <input ref={file} type="file" className="hidden" multiple accept="image/*,application/pdf,video/mp4" onChange={(e) => uploadFiles(e.target.files)} />
+                <Button type="button" disabled={uploading || unusedOnly} onClick={() => file.current?.click()}>
+                  <Upload size={16} />{uploading ? t.uploading : t.uploadMedia}
+                </Button>
+              </>
+            ) : (
+              <Button type="button" disabled title={DEMO_NOTICE}>
+                <Upload size={16} />{t.uploadMedia}
+              </Button>
+            )}
             <Button
               type="button"
               className={unusedOnly ? 'border-teal-400/40 text-teal-200' : ''}
@@ -542,6 +554,7 @@ export function ContactMessagesPage() {
 }
 
 export function BackupPage() {
+  const { isDemo } = useAuth()
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
   return (
@@ -549,26 +562,37 @@ export function BackupPage() {
       <Header title={t.backup} contextKey="backup" />
       <GlassPanel className="p-6">
         <p className="text-sm text-zinc-400">{t.createBackupHint}</p>
-        <Button
-          type="button"
-          className="mt-4"
-          disabled={busy}
-          onClick={async () => {
-            setBusy(true)
-            setStatus('')
-            try {
-              await api.post('/admin/backup')
-              setStatus(t.backupOk)
-            } catch (e) {
-              setStatus(e instanceof Error ? e.message : t.backupFail)
-            } finally {
-              setBusy(false)
-            }
-          }}
-        >
-          <Download size={16} />{busy ? t.creatingBackup : t.createBackup}
-        </Button>
-        {status && <p className="mt-3 text-sm text-zinc-400">{status}</p>}
+        {isDemo ? (
+          <div className="mt-4 space-y-2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3">
+            <p className="text-sm text-amber-100">{DEMO_NOTICE}</p>
+            <Button type="button" disabled className="opacity-50">
+              <Download size={16} />{t.createBackup}
+            </Button>
+          </div>
+        ) : (
+          <>
+            <Button
+              type="button"
+              className="mt-4"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true)
+                setStatus('')
+                try {
+                  await api.post('/admin/backup')
+                  setStatus(t.backupOk)
+                } catch (e) {
+                  setStatus(e instanceof Error ? e.message : t.backupFail)
+                } finally {
+                  setBusy(false)
+                }
+              }}
+            >
+              <Download size={16} />{busy ? t.creatingBackup : t.createBackup}
+            </Button>
+            {status && <p className="mt-3 text-sm text-zinc-400">{status}</p>}
+          </>
+        )}
       </GlassPanel>
     </>
   )
@@ -602,6 +626,7 @@ type UpdateResult = {
 }
 
 export function UpdatesPage() {
+  const { isDemo } = useAuth()
   const fileRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
@@ -610,13 +635,14 @@ export function UpdatesPage() {
   const [info, setInfo] = useState<UpdateStatus | null>(null)
 
   useEffect(() => {
+    if (isDemo) return
     void api.get<{ data?: UpdateStatus } | UpdateStatus>('/admin/updates')
       .then((res) => {
         const data = (res as { data?: UpdateStatus }).data ?? (res as UpdateStatus)
         setInfo(data)
       })
       .catch(() => setInfo(null))
-  }, [result])
+  }, [result, isDemo])
 
   return (
     <>
@@ -625,6 +651,20 @@ export function UpdatesPage() {
         <GlassPanel className="space-y-4 p-6">
           <p className="text-sm text-zinc-400">{t.updatesHint}</p>
           <p className="text-xs leading-relaxed text-zinc-500">{t.updatesProtectNote}</p>
+          {isDemo ? (
+            <div className="space-y-3 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-4">
+              <p className="text-sm font-medium text-amber-100">Загрузка обновлений в демо отключена</p>
+              <p className="text-xs leading-relaxed text-amber-100/80">
+                {DEMO_NOTICE} Файл нельзя выбрать и отправить — на сервере ZIP-апдейты для demo-сессии
+                полностью запрещены.
+              </p>
+              <Button type="button" disabled className="opacity-50">
+                <RefreshCw size={16} />
+                {t.updatesInstall}
+              </Button>
+            </div>
+          ) : (
+            <>
           {info && (
             <dl className="grid gap-2 text-sm text-zinc-400 sm:grid-cols-2">
               <div>
@@ -713,6 +753,8 @@ export function UpdatesPage() {
                 <li key={w}>{w}</li>
               ))}
             </ul>
+          )}
+            </>
           )}
         </GlassPanel>
 

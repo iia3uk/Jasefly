@@ -23,6 +23,7 @@ import { useAdminRouteParams } from '@/admin/AdminRouteParams'
 import { HeroEditor } from '@/admin/components/HeroEditor'
 import { adminUrl, normalizeAdminBase, setAdminBaseFromSite } from '@/admin/adminBasePath'
 import { useAuth } from '@/context/AuthContext'
+import { DEMO_NOTICE } from '@/admin/demo/demoNav'
 import { layoutHeroMediaId, pushHeroMediaToHomeLayout } from '@/builder/editor/cmsSync'
 
 type Data = Record<string, any>
@@ -77,9 +78,12 @@ export function SingletonPage({ path, title }: { path: string; title: string }) 
   const save = useSingletonSave(path)
   const nav = useNavigate()
   const qc = useQueryClient()
-  const { isSuperAdmin } = useAuth()
+  const { isSuperAdmin, isDemo } = useAuth()
   const { form, setForm, baseline, setBaseline } = useHydratedForm<Data>(data, path)
-  const set = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }))
+  const set = (k: string, v: any) => {
+    if (isDemo) return
+    setForm(p => ({ ...p, [k]: v }))
+  }
   const mediaField = path === 'hero' ? 'background_media_id' : path === 'seo' ? 'og_image_id' : path === 'site-settings' ? 'logo_media_id' : undefined
   const fields = singletonFields[path] ?? Object.keys(form).filter(k => k !== 'id' && k !== 'updated_at' && k !== 'created_at')
   const contextKey = pathToContextKey[path] ?? path
@@ -87,7 +91,7 @@ export function SingletonPage({ path, title }: { path: string; title: string }) 
 
   // Builder home uses hero-block.media_id — heal empty Admin Hero from layout once.
   useEffect(() => {
-    if (path !== 'hero' || !data || heroMediaHealed.current) return
+    if (isDemo || path !== 'hero' || !data || heroMediaHealed.current) return
     const cmsMedia = data.background_media_id ?? data.background?.id
     if (cmsMedia != null && cmsMedia !== '' && cmsMedia !== 0) return
     const layout = site?.home_page?.layout as PageLayout | undefined
@@ -103,14 +107,22 @@ export function SingletonPage({ path, title }: { path: string; title: string }) 
         void qc.invalidateQueries({ queryKey: ['site'] })
       })
       .catch(() => { /* non-fatal */ })
-  }, [path, data, site?.home_page?.layout, setForm, setBaseline, qc])
+  }, [isDemo, path, data, site?.home_page?.layout, setForm, setBaseline, qc])
 
   const baselineJson = useMemo(() => (baseline ? JSON.stringify(baseline) : null), [baseline])
-  const dirty = baselineJson != null && JSON.stringify(form) !== baselineJson
+  const dirty = !isDemo && baselineJson != null && JSON.stringify(form) !== baselineJson
   useUnsavedGuard(dirty)
-  const { bannerNode, clearDraftLocal } = useFormAutosave(path, 'singleton', form, baselineJson, dirty, setForm)
+  const { bannerNode, clearDraftLocal } = useFormAutosave(
+    path,
+    'singleton',
+    form,
+    baselineJson,
+    dirty,
+    setForm,
+  )
 
   const onSave = useCallback(() => {
+    if (isDemo) return
     const prevBase = normalizeAdminBase(baseline?.admin_base_path)
     const payload = { ...form }
     if (path === 'site-settings' && !isSuperAdmin()) {
@@ -143,25 +155,35 @@ export function SingletonPage({ path, title }: { path: string; title: string }) 
         }
       },
     })
-  }, [save, form, clearDraftLocal, path, baseline?.admin_base_path, nav, qc, setBaseline, isSuperAdmin, site])
-  useAdminSaveHotkey(onSave)
+  }, [isDemo, save, form, clearDraftLocal, path, baseline?.admin_base_path, nav, qc, setBaseline, isSuperAdmin, site])
+  useAdminSaveHotkey(isDemo ? () => {} : onSave)
+
+  const demoNotice = isDemo ? (
+    <p className="mb-4 rounded-lg border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
+      {DEMO_NOTICE}
+    </p>
+  ) : null
 
   const formBody = path === 'hero' ? (
     isLoading ? (
       <Skeleton className="h-80" />
     ) : (
-      <HeroEditor
-        form={form}
-        set={set}
-        onSave={onSave}
-        saving={save.isPending}
-        error={save.error?.message}
-        banner={bannerNode}
-      />
+      <>
+        {demoNotice}
+        <HeroEditor
+          form={form}
+          set={set}
+          onSave={onSave}
+          saving={save.isPending}
+          error={save.error?.message}
+          banner={isDemo ? null : bannerNode}
+        />
+      </>
     )
   ) : (
     <>
-      {bannerNode}
+      {demoNotice}
+      {!isDemo ? bannerNode : null}
       {isLoading ? <Skeleton className="h-80" /> : (
         <GlassPanel className={adminFormGridClass}>
           {fields.map(key => {
@@ -423,7 +445,7 @@ export function SingletonPage({ path, title }: { path: string; title: string }) 
           {mediaField && <MediaPicker label={fieldLabel(mediaField)} value={form[mediaField]} onChange={v => set(mediaField, v)} />}
         </GlassPanel>
       )}
-      <Save saving={save.isPending} error={save.error?.message} run={onSave} />
+      {!isDemo ? <Save saving={save.isPending} error={save.error?.message} run={onSave} /> : null}
     </>
   )
 
@@ -438,31 +460,34 @@ export function SingletonPage({ path, title }: { path: string; title: string }) 
 }
 
 export function ThemeSettingsPage() {
+  const { isDemo } = useAuth()
   const { data } = useAdminSingleton<Data>('theme')
   const save = useSingletonSave('theme')
   const { form, setForm, baseline, setBaseline } = useHydratedForm<Data>(data, 'theme')
   const [codeTab, setCodeTab] = useState<'html' | 'css' | 'js'>('html')
   const [showFineTune, setShowFineTune] = useState(false)
   const baselineJson = useMemo(() => (baseline ? JSON.stringify(baseline) : null), [baseline])
-  const dirty = baselineJson != null && JSON.stringify(form) !== baselineJson
+  const dirty = !isDemo && baselineJson != null && JSON.stringify(form) !== baselineJson
   useUnsavedGuard(dirty)
   const { bannerNode, clearDraftLocal } = useFormAutosave('theme', 'singleton', form, baselineJson, dirty, setForm)
 
   const onSave = useCallback(() => {
+    if (isDemo) return
     save.mutate(form, {
       onSuccess: () => {
         clearDraftLocal()
         setBaseline(form)
       },
     })
-  }, [save, form, clearDraftLocal, setBaseline])
-  useAdminSaveHotkey(onSave)
+  }, [isDemo, save, form, clearDraftLocal, setBaseline])
+  useAdminSaveHotkey(isDemo ? () => {} : onSave)
 
   const preset = form.preset || 'midnight'
   const isCustom = preset === CUSTOM_TEMPLATE_ID
   const activeTemplate = getSiteTemplate(preset)
 
   const selectTemplate = (templateId: string) => {
+    if (isDemo) return
     const template = getSiteTemplate(templateId)
     if (!template) return
     setForm((prev) => applySiteTemplate(prev as ThemeSettings, template))
@@ -480,7 +505,11 @@ export function ThemeSettingsPage() {
       contextKey="theme"
       form={
         <>
-          {bannerNode}
+          {isDemo ? (
+            <p className="mb-4 rounded-lg border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
+              {DEMO_NOTICE}
+            </p>
+          ) : bannerNode}
           <GlassPanel className="p-6">
             <p className="text-sm text-zinc-400">{t.templatePickerHint}</p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -613,7 +642,13 @@ export function ThemeSettingsPage() {
             </>
           )}
 
-          <Save saving={save.isPending} error={save.error?.message} run={onSave} />
+          {isDemo ? (
+            <p className="mt-6 rounded-lg border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-100/90">
+              {DEMO_NOTICE}
+            </p>
+          ) : (
+            <Save saving={save.isPending} error={save.error?.message} run={onSave} />
+          )}
         </>
       }
       preview={<ThemePreview form={form} />}

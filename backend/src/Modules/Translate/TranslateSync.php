@@ -73,13 +73,22 @@ final class TranslateSync
         $parts = preg_split('/[\s,;]+/', strtolower($raw)) ?: [];
         $out = [];
         $source = (string) ($this->settings['source_lang'] ?? 'ru');
+        $source = strtolower(trim($source));
         foreach ($parts as $p) {
             $p = preg_replace('/[^a-z\-]/', '', $p) ?? '';
             if ($p !== '' && $p !== $source && strlen($p) <= 8 && !in_array($p, $out, true)) {
                 $out[] = $p;
             }
         }
-        return $out ?: ['en'];
+        if ($out !== []) {
+            return $out;
+        }
+        foreach (['en', 'ru', 'de', 'fr', 'es'] as $fallback) {
+            if ($fallback !== $source) {
+                return [$fallback];
+            }
+        }
+        return [];
     }
 
     /**

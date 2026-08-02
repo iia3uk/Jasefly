@@ -2,14 +2,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { endpoints, type MigrationStatusPayload } from '@/lib/api'
 import { Button } from '@/components/ui'
+import { useAuth } from '@/context/AuthContext'
 
 export type MigrationStatus = MigrationStatusPayload
 
 export function MigrationBanner() {
+  const { isDemo } = useAuth()
   const client = useQueryClient()
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['admin-migrations'],
     queryFn: () => endpoints.migrations(),
+    enabled: !isDemo,
     staleTime: 30_000,
     refetchOnWindowFocus: true,
   })

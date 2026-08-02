@@ -1,0 +1,20 @@
+[
+  {
+    "id": 910001,
+    "filename": "demo-hero.png",
+    "original_name": "demo-hero.png",
+    "mime_type": "image/png",
+    "size": 12000,
+    "url": "/landing/hero.png",
+    "alt": "Demo placeholder image"
+  },
+  {
+    "id": 910002,
+    "filename": "demo-modules.png",
+    "original_name": "demo-modules.png",
+    "mime_type": "image/png",
+    "size": 8000,
+    "url": "/landing/modules.png",
+    "alt": "Demo modules placeholder"
+  }
+]

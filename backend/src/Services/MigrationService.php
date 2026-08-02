@@ -43,6 +43,7 @@ final class MigrationService
         '022_platform_capabilities_ext.sql',
         '023_theme_header_style.sql',
         '024_admin_access_layer.sql',
+        '025_demo_sandbox.sql',
     ];
 
     private SqlTranspiler $transpiler;

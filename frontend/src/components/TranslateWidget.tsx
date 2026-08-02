@@ -91,6 +91,45 @@ function normalizeText(raw: string): string {
   return raw.trim().replace(/\s+/gu, ' ')
 }
 
+const LOCAL_CACHE_PREFIX = 'site.translate.map.v1'
+
+function localCacheStorageKey(source: string, target: string, contentHash: string): string {
+  return `${LOCAL_CACHE_PREFIX}:${source}:${target}:${contentHash || 'na'}`
+}
+
+function readLocalTranslationMap(source: string, target: string, contentHash: string): Map<string, string> {
+  try {
+    const raw = sessionStorage.getItem(localCacheStorageKey(source, target, contentHash))
+    if (!raw) return new Map()
+    const obj = JSON.parse(raw) as Record<string, string>
+    if (!obj || typeof obj !== 'object') return new Map()
+    return new Map(Object.entries(obj).filter(([, v]) => typeof v === 'string' && v !== ''))
+  } catch {
+    return new Map()
+  }
+}
+
+function writeLocalTranslationMap(
+  source: string,
+  target: string,
+  contentHash: string,
+  map: Map<string, string>,
+) {
+  try {
+    const obj: Record<string, string> = {}
+    let n = 0
+    for (const [k, v] of map) {
+      if (!k || !v) continue
+      obj[k] = v
+      n++
+      if (n >= 4000) break
+    }
+    sessionStorage.setItem(localCacheStorageKey(source, target, contentHash), JSON.stringify(obj))
+  } catch {
+    /* quota / private mode */
+  }
+}
+
 function isUrlLike(t: string): boolean {
   return /^(https?:\/\/|mailto:|\/|tel:|#)/i.test(t.trim())
 }
@@ -260,6 +299,26 @@ export function TranslateWidget() {
   const moTimerRef = useRef(0)
   const partialRetriesRef = useRef(0)
   const applyFnRef = useRef<(target: string, mode?: 'full' | 'patch') => Promise<void>>(async () => {})
+  /** In-memory map per target for this tab (sessionStorage is backup across reloads). */
+  const memoryMapsRef = useRef(new Map<string, Map<string, string>>())
+  const contentHash = String(cfg?.content_hash || '')
+  const cacheReady = Boolean(cfg?.cache_ready)
+
+  const getLocalMap = useCallback((target: string) => {
+    const key = `${source}|${target}|${contentHash}`
+    let map = memoryMapsRef.current.get(key)
+    if (!map) {
+      map = readLocalTranslationMap(source, target, contentHash)
+      memoryMapsRef.current.set(key, map)
+    }
+    return map
+  }, [source, contentHash])
+
+  const persistLocalMap = useCallback((target: string, map: Map<string, string>) => {
+    const key = `${source}|${target}|${contentHash}`
+    memoryMapsRef.current.set(key, map)
+    writeLocalTranslationMap(source, target, contentHash, map)
+  }, [source, contentHash])
 
   const restoreToSource = useCallback(() => {
     applyingRef.current = true
@@ -316,26 +375,23 @@ export function TranslateWidget() {
       | { kind: 'title'; key: string; original: string }
 
     try {
+      const localMap = getLocalMap(target)
+
       if (mode === 'full') {
-        // Reset to source once, then translate — never do this on patch/MO.
-        for (const root of translationRoots()) {
-          for (const node of collectTextNodes(root)) {
-            const key = textNodeKey(node)
-            const orig = sourceByKey.current.get(key)
-            if (orig != null) node.nodeValue = orig
-          }
-          for (const { el, attr, key } of collectAttrTargets(root)) {
-            const orig = sourceByKey.current.get(key)
-            if (orig != null) el.setAttribute(attr, orig)
-          }
-        }
-        const titleOrig = sourceByKey.current.get(TITLE_KEY)
-        if (titleOrig != null) document.title = titleOrig
         settledNorm.current.clear()
         partialRetriesRef.current = 0
       }
 
       const jobs: Job[] = []
+      const paintJob = (job: Job, text: string) => {
+        if (job.kind === 'text') {
+          if (job.node.isConnected) job.node.nodeValue = withPreservedSpace(job.original, text)
+        } else if (job.kind === 'attr') {
+          if (job.el.isConnected) job.el.setAttribute(job.attr, text)
+        } else {
+          document.title = text
+        }
+      }
 
       for (const root of translationRoots()) {
         for (const n of collectTextNodes(root)) {
@@ -346,13 +402,19 @@ export function TranslateWidget() {
           const orig = sourceByKey.current.get(key) ?? current
           const norm = normalizeText(orig)
           if (mode === 'patch') {
-            // Only new nodes or nodes still showing source that we haven't settled yet.
             const stillSource = normalizeText(current) === norm
             if (known && (!stillSource || settledNorm.current.has(norm))) continue
-          } else if (n.nodeValue !== orig) {
+          }
+          const job: Job = { kind: 'text', node: n, key, original: orig }
+          // Instant paint from session/memory cache — no source flash while waiting API.
+          const hit = localMap.get(norm)
+          if (hit) {
+            paintJob(job, hit)
+            settledNorm.current.add(norm)
+          } else if (mode === 'full' && n.nodeValue !== orig) {
             n.nodeValue = orig
           }
-          jobs.push({ kind: 'text', node: n, key, original: orig })
+          jobs.push(job)
         }
         for (const t of collectAttrTargets(root)) {
           const current = t.el.getAttribute(t.attr) ?? ''
@@ -363,10 +425,16 @@ export function TranslateWidget() {
           if (mode === 'patch') {
             const stillSource = normalizeText(current) === norm
             if (known && (!stillSource || settledNorm.current.has(norm))) continue
-          } else if (t.el.getAttribute(t.attr) !== orig) {
+          }
+          const job: Job = { kind: 'attr', el: t.el, attr: t.attr, key: t.key, original: orig }
+          const hit = localMap.get(norm)
+          if (hit) {
+            paintJob(job, hit)
+            settledNorm.current.add(norm)
+          } else if (mode === 'full' && t.el.getAttribute(t.attr) !== orig) {
             t.el.setAttribute(t.attr, orig)
           }
-          jobs.push({ kind: 'attr', el: t.el, attr: t.attr, key: t.key, original: orig })
+          jobs.push(job)
         }
       }
 
@@ -382,7 +450,13 @@ export function TranslateWidget() {
             jobs.push({ kind: 'title', key: TITLE_KEY, original: titleOrig })
           }
         } else {
-          if (document.title !== titleOrig) document.title = titleOrig
+          const hit = localMap.get(norm)
+          if (hit) {
+            document.title = hit
+            settledNorm.current.add(norm)
+          } else if (document.title !== titleOrig) {
+            document.title = titleOrig
+          }
           jobs.push({ kind: 'title', key: TITLE_KEY, original: titleOrig })
         }
       }
@@ -407,11 +481,36 @@ export function TranslateWidget() {
       }
 
       const translated = new Array<string>(unique.length)
+      const needFetch: string[] = []
+      for (let i = 0; i < unique.length; i++) {
+        const hit = localMap.get(unique[i])
+        if (hit) {
+          translated[i] = hit
+        } else {
+          needFetch.push(unique[i])
+        }
+      }
+
+      document.documentElement.lang = target
+
+      // All hits in session cache — no network round-trip.
+      if (needFetch.length === 0) {
+        jobs.forEach((job, i) => {
+          const t = translated[mapJob[i]]
+          if (typeof t === 'string') paintJob(job, t)
+        })
+        return
+      }
+
       let needsPartialRetry = false
-      const chunkSize = 200
-      for (let i = 0; i < unique.length; i += chunkSize) {
+      // When server cache is marked ready, skip live MT (misses stay source; no slow/bad fill).
+      const fillMisses = !cacheReady || mode === 'patch'
+      const chunkSize = 80
+      const fetchedMap = new Map<string, string>()
+
+      for (let i = 0; i < needFetch.length; i += chunkSize) {
         if (ticket !== abortRef.current || langRef.current === source) return
-        const slice = unique.slice(i, i + chunkSize)
+        const slice = needFetch.slice(i, i + chunkSize)
         let list: string[] = []
         for (let attempt = 0; attempt < 4; attempt++) {
           if (ticket !== abortRef.current || langRef.current === source) return
@@ -420,11 +519,11 @@ export function TranslateWidget() {
               source,
               target,
               texts: slice,
-              fill_misses: true,
+              fill_misses: fillMisses,
             }, { silent: true })
             const payload = res?.data ?? res
             if (payload?.throttled) {
-              await new Promise((r) => setTimeout(r, 800 * (attempt + 1)))
+              await new Promise((r) => setTimeout(r, 600 * (attempt + 1)))
               continue
             }
             if (payload?.partial) needsPartialRetry = true
@@ -435,19 +534,35 @@ export function TranslateWidget() {
               ? Number((e as { status?: number }).status)
               : 0
             if (status === 429 && attempt < 3) {
-              await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
+              await new Promise((r) => setTimeout(r, 800 * (attempt + 1)))
               continue
             }
             throw e
           }
         }
         for (let j = 0; j < slice.length; j++) {
-          const got = typeof list[j] === 'string' ? list[j] : ''
-          translated[i + j] = got.trim() !== '' ? got : slice[j]
-          // Mark settled even if translation equals source (brand / untranslatable).
-          settledNorm.current.add(slice[j])
+          const src = slice[j]
+          const got = typeof list[j] === 'string' ? list[j].trim() : ''
+          const value = got !== '' ? got : src
+          fetchedMap.set(src, value)
+          translated[indexOf.get(src)!] = value
+          settledNorm.current.add(src)
+          // Persist only real translations (not echo) into local cache.
+          if (got !== '' && normalizeText(got) !== src) {
+            localMap.set(src, got)
+          }
+        }
+        // Progressive paint as chunks arrive.
+        if (ticket === abortRef.current && langRef.current === target) {
+          jobs.forEach((job, ji) => {
+            const src = unique[mapJob[ji]]
+            const t = fetchedMap.get(src) ?? localMap.get(src)
+            if (typeof t === 'string') paintJob(job, t)
+          })
         }
       }
+
+      persistLocalMap(target, localMap)
 
       if (ticket !== abortRef.current || langRef.current === source) {
         if (ticket === abortRef.current) restoreToSource()
@@ -456,28 +571,18 @@ export function TranslateWidget() {
 
       jobs.forEach((job, i) => {
         const t = translated[mapJob[i]]
-        if (typeof t !== 'string') return
-        if (job.kind === 'text') {
-          if (job.node.isConnected) {
-            job.node.nodeValue = withPreservedSpace(job.original, t)
-          }
-        } else if (job.kind === 'attr') {
-          if (job.el.isConnected) job.el.setAttribute(job.attr, t)
-        } else {
-          document.title = t
-        }
+        if (typeof t === 'string') paintJob(job, t)
       })
       document.documentElement.lang = target
 
-      // Soft miss-fill: patch only (no restore flash), capped retries.
       if (
         needsPartialRetry
+        && fillMisses
         && ticket === abortRef.current
         && langRef.current === target
-        && partialRetriesRef.current < 3
+        && partialRetriesRef.current < 2
       ) {
         partialRetriesRef.current += 1
-        // Unsettle only strings that came back identical (still pending live fill).
         for (let i = 0; i < unique.length; i++) {
           if (normalizeText(translated[i] || '') === unique[i]) {
             settledNorm.current.delete(unique[i])
@@ -485,7 +590,7 @@ export function TranslateWidget() {
         }
         window.setTimeout(() => {
           if (langRef.current === target) void applyFnRef.current(target, 'patch')
-        }, 1100)
+        }, 900)
       }
     } catch (e) {
       if (ticket === abortRef.current) {
@@ -495,13 +600,13 @@ export function TranslateWidget() {
     } finally {
       if (ticket === abortRef.current) {
         setBusy(false)
-        quietUntilRef.current = Date.now() + 1200
+        quietUntilRef.current = Date.now() + 800
         window.setTimeout(() => {
           if (ticket === abortRef.current) applyingRef.current = false
-        }, 100)
+        }, 80)
       }
     }
-  }, [abortAll, restoreToSource, source])
+  }, [abortAll, restoreToSource, source, getLocalMap, persistLocalMap, cacheReady])
 
   applyFnRef.current = applyFromCache
 
@@ -528,17 +633,22 @@ export function TranslateWidget() {
     }
     partialRetriesRef.current = 0
     settledNorm.current.clear()
+    // Immediate when session cache warm; short defer only for first paint.
+    const delay = cacheReady || getLocalMap(lang).size > 0 ? 0 : 40
     const id1 = window.setTimeout(() => {
       if (langRef.current !== source) void applyFromCache(langRef.current, 'full')
-    }, 80)
-    const id2 = window.setTimeout(() => {
-      if (langRef.current !== source) void applyFromCache(langRef.current, 'patch')
-    }, 1400)
+    }, delay)
+    // Late patch for React/layout paint — skip second pass when server cache is ready.
+    const id2 = cacheReady
+      ? 0
+      : window.setTimeout(() => {
+          if (langRef.current !== source) void applyFromCache(langRef.current, 'patch')
+        }, 1200)
     return () => {
       window.clearTimeout(id1)
-      window.clearTimeout(id2)
+      if (id2) window.clearTimeout(id2)
     }
-  }, [lang, source, enabledPlugin, cfg?.widget_enabled, applyFromCache, abortAll, restoreToSource])
+  }, [lang, source, enabledPlugin, cfg?.widget_enabled, applyFromCache, abortAll, restoreToSource, cacheReady, getLocalMap])
 
   // SPA navigation: clear identity map and re-apply once.
   useEffect(() => {

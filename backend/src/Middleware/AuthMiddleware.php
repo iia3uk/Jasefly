@@ -4,8 +4,10 @@ namespace App\Middleware;
 
 use App\Core\Container;
 use App\Jwt;
+use App\Modules\Demo\DemoCookie;
 use App\Request;
 use App\Response;
+use App\Support\AuthCookie;
 
 final class AuthMiddleware
 {
@@ -17,6 +19,10 @@ final class AuthMiddleware
     public function __invoke(Request $r, callable $next): mixed
     {
         $bearer = $r->bearer() ?? '';
+        if ($bearer === '') {
+            // Prefer production media cookie over demo cookie when both exist.
+            $bearer = AuthCookie::token() ?? DemoCookie::token() ?? '';
+        }
 
         $mcpToken = $this->mcpApiToken;
         if ($mcpToken === null) {
@@ -38,7 +44,14 @@ final class AuthMiddleware
 
         try {
             $r->user = Jwt::decode($bearer, $this->secret);
-            if (($r->user['type'] ?? '') !== 'access') {
+            $type = (string) ($r->user['type'] ?? '');
+            // Production sessions: type=access. Demo sandbox: type=demo_access (never super / mcp).
+            if ($type === 'demo_access' && !empty($r->user['is_demo'])) {
+                $r->user['role'] = 'demo_explorer';
+                $r->user['auth'] = 'demo';
+                $r->user['is_demo'] = true;
+                unset($r->user['is_super']);
+            } elseif ($type !== 'access') {
                 throw new \RuntimeException('Invalid token type');
             }
             if (!isset($r->user['name']) && isset($r->user['sub'])) {

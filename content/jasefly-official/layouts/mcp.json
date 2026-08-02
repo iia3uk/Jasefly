@@ -1,16 +1,17 @@
 {
-  "title": "MCP и AI",
+  "title": "MCP & AI",
   "slug": "mcp",
-  "seo_title": "MCP и AI в Jasefly CMS — управляемый доступ агента к сайту",
-  "seo_description": "Что такое MCP для CMS, как агент получает карту сайта, какие операции доступны, как ограничиваются права токена и зачем нужны throttling и digest.",
+  "seo_title": "Jasefly MCP — Controlled AI Tools for the Framework",
+  "seo_description": "How MCP connects AI agents to Jasefly: cms_* tools, site map digests, content updates, and cms_release — with an honest caveat about local clone + MCP configuration.",
   "layout": {
     "version": 1,
     "meta": {
-      "product": "jasefly-official"
+      "product": "jasefly-official",
+      "revision": "framework-first-2026-08-02"
     },
     "elements": [
       {
-        "id": "s_2k",
+        "id": "s_mcp_hero",
         "elType": "section",
         "settings": {
           "paddingY": "3.5rem",
@@ -19,29 +20,29 @@
         },
         "elements": [
           {
-            "id": "c_2j",
+            "id": "c_mcp_hero",
             "elType": "column",
             "settings": {
               "width": 100
             },
             "elements": [
               {
-                "id": "w_2h",
+                "id": "w_mcp_h1",
                 "elType": "widget",
                 "widgetType": "heading",
                 "settings": {
-                  "text": "MCP и AI",
+                  "text": "MCP & AI",
                   "tag": "h1",
                   "size": "2xl",
                   "align": "left"
                 }
               },
               {
-                "id": "w_2i",
+                "id": "w_mcp_intro",
                 "elType": "widget",
                 "widgetType": "text",
                 "settings": {
-                  "html": "<p>MCP (Model Context Protocol) — способ подключить AI-агента (например Cursor) к инструментам CMS: карте сайта, контенту, проверкам и деплою. Это не «полный доступ к серверу», а набор операций через API с токеном.</p>",
+                  "html": "<p>Jasefly is <strong>AI-first by design</strong>: a Model Context Protocol server exposes controlled <code>cms_*</code> tools so agents can read the site map, update content, run diagnostics, and ship releases — without giving the model shell root on your host.</p>",
                   "align": "left"
                 }
               }
@@ -50,146 +51,156 @@
         ]
       },
       {
-        "id": "s_2n",
+        "id": "s_mcp_caveat",
         "elType": "section",
         "settings": {
-          "paddingY": "3.5rem",
-          "gap": "1.5rem",
+          "paddingY": "2rem",
+          "gap": "1rem",
           "columns": 1
         },
         "elements": [
           {
-            "id": "c_2m",
+            "id": "c_mcp_caveat",
             "elType": "column",
             "settings": {
               "width": 100
             },
             "elements": [
               {
-                "id": "w_2l",
-                "elType": "widget",
-                "widgetType": "faq",
-                "settings": {
-                  "title": "Как устроен доступ",
-                  "subtitle": "",
-                  "items": [
-                    {
-                      "q": "Что такое MCP в контексте CMS?",
-                      "a": "Протокол и набор инструментов, через которые агент вызывает операции CMS: прочитать карту, обновить страницу, запустить pipeline сборки и деплоя."
-                    },
-                    {
-                      "q": "Зачем это CMS?",
-                      "a": "Чтобы нейросеть работала со структурой и контентом осознанно: через digest и карту, а не через хаотичный перебор эндпоинтов."
-                    },
-                    {
-                      "q": "Как агент получает структуру сайта?",
-                      "a": "Обычно одним запросом карты сайта: страницы, навигация, тема и ключевые singleton-настройки. Для деталей страницы — digest layout."
-                    },
-                    {
-                      "q": "Какие операции может выполнять агент?",
-                      "a": "В рамках токена: чтение/создание/обновление контента, singleton-настройки, bulk-операции, локальный build/test, changelog, deploy update, verify. Точный набор зависит от выданных прав и конфигурации MCP."
-                    },
-                    {
-                      "q": "Почему токен ≠ доступ к серверу?",
-                      "a": "Токен ходит в HTTP API CMS. Он не заменяет SSH, не открывает произвольные файлы хостинга и не даёт прав вне реализованных эндпоинтов. Это снижение поверхности, а не абсолютная гарантия безопасности."
-                    },
-                    {
-                      "q": "Зачем throttling и digest?",
-                      "a": "Shared-хостинг плохо переносит шторм запросов. Digest и карта уменьшают число round-trip, а Hosting Guard в MCP-клиенте ограничивает частоту и кэширует GET."
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "s_2q",
-        "elType": "section",
-        "settings": {
-          "paddingY": "3.5rem",
-          "gap": "1.5rem",
-          "columns": 1
-        },
-        "elements": [
-          {
-            "id": "c_2p",
-            "elType": "column",
-            "settings": {
-              "width": 100
-            },
-            "elements": [
-              {
-                "id": "w_2o",
-                "elType": "widget",
-                "widgetType": "features-grid",
-                "settings": {
-                  "title": "Типичный AI-контур",
-                  "subtitle": "",
-                  "columns": 2,
-                  "items": [
-                    {
-                      "icon": "map",
-                      "title": "Карта",
-                      "body": "cms_site_map — понять, что уже есть."
-                    },
-                    {
-                      "icon": "edit",
-                      "title": "Контент",
-                      "body": "create/update/bulk в пределах лимитов."
-                    },
-                    {
-                      "icon": "check",
-                      "title": "Build & test",
-                      "body": "Локально, до отправки на хостинг."
-                    },
-                    {
-                      "icon": "upload",
-                      "title": "Deploy",
-                      "body": "Управляемый pipeline с verify."
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "s_2u",
-        "elType": "section",
-        "settings": {
-          "paddingY": "3.5rem",
-          "gap": "1.5rem",
-          "columns": 1
-        },
-        "elements": [
-          {
-            "id": "c_2t",
-            "elType": "column",
-            "settings": {
-              "width": 100
-            },
-            "elements": [
-              {
-                "id": "w_2r",
+                "id": "w_mcp_caveat",
                 "elType": "widget",
                 "widgetType": "text",
                 "settings": {
-                  "html": "<p>Не заявляем абсолютную безопасность: токен нужно хранить секретно, права — минимально необходимыми, а действия агента — ревьюить. MCP делает работу с CMS удобнее и прозрачнее, но ответственность за секреты и изменения остаётся за человеком.</p>",
+                  "html": "<p><strong>Honest caveat:</strong> without MCP configured and a local GitHub clone of the project with MCP wired on both sides, an AI agent does <em>not</em> work with your site directly. Install ZIP alone is not a magic remote AI connection.</p>",
                   "align": "left"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_mcp_steps",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_mcp_steps",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_mcp_steps",
+                "elType": "widget",
+                "widgetType": "steps-row",
+                "settings": {
+                  "animate": true,
+                  "show_line": true,
+                  "items": [
+                    {
+                      "badge": "1",
+                      "title": "Map",
+                      "text": "cms_site_map / digests — understand pages, nav, singletons without scraping HTML."
+                    },
+                    {
+                      "badge": "2",
+                      "title": "Edit",
+                      "text": "cms_update / cms_put_singleton — change layouts and settings with structured JSON."
+                    },
+                    {
+                      "badge": "3",
+                      "title": "Code",
+                      "text": "Work in the local clone — modules, widgets, PHP — then verify with local tests."
+                    },
+                    {
+                      "badge": "4",
+                      "title": "Release",
+                      "text": "cms_release — build, package, and deploy the update ZIP to hosting."
+                    }
+                  ]
                 }
               },
               {
-                "id": "w_2s",
+                "id": "w_mcp_grid",
                 "elType": "widget",
-                "widgetType": "cta-banner",
+                "widgetType": "features-grid",
                 "settings": {
-                  "title": "Shared-хостинг",
-                  "subtitle": "Почему production обходится без Node.js.",
-                  "cta_label": "Shared Hosting",
-                  "cta_href": "/shared-hosting"
+                  "title": "What MCP is good for",
+                  "subtitle": "Controlled operations — not unbounded server access.",
+                  "columns": 3,
+                  "items": [
+                    {
+                      "icon": "map",
+                      "title": "Site intelligence",
+                      "body": "Pages digest, SEO fields, widget inventory for agents."
+                    },
+                    {
+                      "icon": "file-text",
+                      "title": "Content ops",
+                      "body": "Create/update/publish resources with the same admin API."
+                    },
+                    {
+                      "icon": "package",
+                      "title": "Managed deploy",
+                      "body": "cms_release ships frontend/backend changes as hosting updates."
+                    },
+                    {
+                      "icon": "activity",
+                      "title": "Diagnostics",
+                      "body": "Alive checks, last error, hosting guards before you break production."
+                    },
+                    {
+                      "icon": "shield",
+                      "title": "Token-scoped",
+                      "body": "Operations go through API auth — not SSH as root."
+                    },
+                    {
+                      "icon": "cpu",
+                      "title": "Framework-native",
+                      "body": "Tools map to platform concepts: pages, modules, SDK reports."
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_mcp_cta",
+        "elType": "section",
+        "settings": {
+          "paddingY": "3.5rem",
+          "gap": "1.5rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_mcp_cta",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_mcp_cta",
+                "elType": "widget",
+                "widgetType": "cta-block",
+                "settings": {
+                  "title": "Get the source and configure MCP",
+                  "cta1_label": "GitHub",
+                  "cta1_href": "https://github.com/iia3uk/jasefly",
+                  "cta2_label": "Docs",
+                  "cta2_href": "/docs",
+                  "subtitle": "Clone the repo, set mcp-cms credentials locally, then connect your IDE agent.",
+                  "show_media": false,
+                  "layout": "center"
                 }
               }
             ]

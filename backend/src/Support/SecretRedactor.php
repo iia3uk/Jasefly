@@ -18,6 +18,32 @@ final class SecretRedactor
         'bot_token',
     ];
 
+    /** Extended key set for Demo Sandbox response pipeline. */
+    public const DEMO_KEYS = [
+        'password',
+        'password_hash',
+        'token',
+        'secret',
+        'api_key',
+        'authorization',
+        'bot_token',
+        'private_key',
+        'cookie',
+        'session',
+        'smtp_password',
+        'database_password',
+        'db_password',
+        'webhook_secret',
+        'oauth_client_secret',
+        'client_secret',
+        'refresh_token',
+        // Note: do NOT include access_token — Demo start must return a usable JWT.
+        'mcp_api_token',
+        'jwt_secret',
+        'backup_key',
+        'totp_secret',
+    ];
+
     /**
      * @param list<string>|null $keys lowercase key names to mask
      */

@@ -54,20 +54,12 @@ export function GlobalSearch() {
         run: () => navigate(adminUrl('/blog/new')),
       })
     }
-    list.push(
-      {
-        id: 'toggle-sidebar',
-        label: t.toggleSidebarCmd,
-        subtitle: t.commands,
-        run: () => window.dispatchEvent(new Event('admin:toggle-sidebar')),
-      },
-      {
-        id: 'view-site',
-        label: t.viewSite,
-        subtitle: t.commands,
-        run: () => window.open('/', '_blank'),
-      },
-    )
+    list.push({
+      id: 'view-site',
+      label: t.viewSite,
+      subtitle: t.commands,
+      run: () => window.open('/', '_blank'),
+    })
     return list
   }, [navigate, projectsOn, blogOn])
 

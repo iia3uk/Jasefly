@@ -157,6 +157,16 @@ export function setEnabledPlugins(names: string[]): void {
   syncDisabledFromEnabled(expandEnabled(names))
 }
 
+/** Demo sandbox: surface every registered + known plugin in the admin nav. */
+export function hydrateDemoPlugins(): void {
+  const names = new Set<string>([
+    ...KNOWN_PLUGINS,
+    ...manifests.map((m) => m.name),
+    'module-manager',
+  ])
+  syncDisabledFromEnabled(expandEnabled(names))
+}
+
 /** Mark a single plugin enabled/disabled at runtime (after a toggle action). */
 export function setPluginEnabled(name: string, enabled: boolean): void {
   const aliases = PLUGIN_ALIASES[name] ?? [name]

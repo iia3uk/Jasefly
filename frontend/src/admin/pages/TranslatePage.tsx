@@ -105,7 +105,11 @@ export function TranslatePage() {
           continue
         } else {
           idleRounds++
-          pushLog('Нет прогресса в этом шаге.')
+          const tgt = res.target ?? '?'
+          pushLog(
+            `Нет прогресса (${tgt}, осталось ~${res.remaining_for_target ?? '?'}). `
+            + (idleRounds >= 3 ? 'Проверьте исходный язык ≠ целевым в Плагины → Переводчик.' : 'Повтор…'),
+          )
           if (idleRounds >= 5) break
         }
         if (res.finished || res.ready) break
@@ -168,7 +172,7 @@ export function TranslatePage() {
           </p>
         </AdminPageHero>
 
-        {status.isLoading || !status.data ? (
+        {status.isLoading || !status.data || Array.isArray(status.data) || !status.data.cache ? (
           <Skeleton className="h-40" />
         ) : (
           <div className="grid gap-3 sm:grid-cols-3">
@@ -179,7 +183,7 @@ export function TranslatePage() {
             </GlassPanel>
             <GlassPanel className="p-4">
               <p className="text-xs uppercase tracking-wider text-zinc-500">В кэше</p>
-              <p className="mt-1 text-2xl">{status.data.cache.rows}</p>
+              <p className="mt-1 text-2xl">{status.data.cache?.rows ?? 0}</p>
               <p className="mt-1 text-xs text-zinc-500">движок: {status.data.provider}</p>
             </GlassPanel>
             <GlassPanel className="p-4">
@@ -196,14 +200,14 @@ export function TranslatePage() {
           </div>
         )}
 
-        {status.data && (
+        {status.data && !Array.isArray(status.data) && Array.isArray(status.data.targets) && (
           <GlassPanel className="p-5">
             <div className="mb-3 flex items-center gap-2 text-sm font-medium text-zinc-200">
               <Languages size={16} /> Осталось перевести по языкам
             </div>
             <div className="flex flex-wrap gap-2">
               {status.data.targets.map((code) => {
-                const miss = status.data!.missing[code] ?? 0
+                const miss = status.data!.missing?.[code] ?? 0
                 return (
                   <span
                     key={code}

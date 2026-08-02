@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Bug, Copy, Trash2, X } from 'lucide-react'
 import { api, ApiRequestError, type ApiErrorDetails, subscribeApiErrors } from '@/lib/api'
 import { copyToClipboard } from '@/lib/clipboard'
+import { useAuth } from '@/context/AuthContext'
 
 function formatReport(details: ApiErrorDetails): string {
   const lines = [
@@ -35,7 +36,15 @@ function toolBtn(className = '') {
   return `inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2.5 text-xs text-zinc-100 hover:bg-white/10 disabled:opacity-50 ${className}`
 }
 
+function isExpectedDemoRestriction(err: ApiErrorDetails): boolean {
+  const raw = err.raw as { code?: string; error?: string } | undefined
+  const code = String(raw?.code || '')
+  const msg = String(err.message || raw?.error || '')
+  return code === 'demo_restricted' || /demo restricted/i.test(msg)
+}
+
 export function ApiErrorDebugger() {
+  const { isDemo } = useAuth()
   const [open, setOpen] = useState(false)
   const [details, setDetails] = useState<ApiErrorDetails | null>(null)
   const [copied, setCopied] = useState(false)
@@ -44,11 +53,15 @@ export function ApiErrorDebugger() {
 
   useEffect(() => {
     return subscribeApiErrors((err) => {
+      // Demo sandbox: expected 403s must not hijack the UI with the debugger.
+      if (isDemo && isExpectedDemoRestriction(err)) {
+        return
+      }
       setDetails(err)
       setStatus('')
       setOpen(true)
     })
-  }, [])
+  }, [isDemo])
 
   const loadLast = useCallback(async () => {
     setBusy(true)

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { api, endpoints } from '@/lib/api'
+// api used for demo end session
 import { AUTH_SESSION_EXPIRED_EVENT, clearAuthStorage } from '@/lib/authStorage'
 import type { AuthResponse } from '@/types'
 import { isSuperAdminRole, roleCan } from '@/admin/rolePermissions'
@@ -15,6 +16,7 @@ type AuthState = {
   roles: string[]
   capabilities: string[]
   isSuper: boolean
+  isDemo: boolean
   capsReady: boolean
   can: (permission: string) => boolean
   canAny: (...permissions: string[]) => boolean
@@ -24,6 +26,7 @@ type AuthState = {
   login: (email: string, password: string) => Promise<LoginResult>
   verify2fa: (challengeToken: string, code: string) => Promise<void>
   acceptSession: (result: AuthResponse) => void
+  acceptDemoSession: (data: Record<string, unknown>) => void
   logout: () => void
 }
 
@@ -73,16 +76,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<string[]>([])
   const [capabilities, setCapabilities] = useState<string[]>([])
   const [isSuper, setIsSuper] = useState(false)
+  const [isDemo, setIsDemo] = useState(() => localStorage.getItem('is_demo') === '1')
   const [capsReady, setCapsReady] = useState(false)
 
   const clearSessionState = () => {
     clearAuthStorage()
+    localStorage.removeItem('is_demo')
     setToken(null)
     setUserName(null)
     setRole(null)
     setRoles([])
     setCapabilities([])
     setIsSuper(false)
+    setIsDemo(false)
     setCapsReady(false)
   }
 
@@ -98,7 +104,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const rs = Array.isArray(data.roles) ? data.roles.map(String) : []
       setCapabilities(caps)
       setRoles(rs.length ? rs : (data.role ? [String(data.role)] : []))
-      setIsSuper(Boolean(data.is_super) || String(data.role ?? '') === 'super_admin')
+      const demo = Boolean(data.is_demo) || String(data.role ?? '') === 'demo_explorer' || String(data.auth ?? '') === 'demo'
+      setIsDemo(demo)
+      if (demo) localStorage.setItem('is_demo', '1')
+      // Demo must never be treated as super
+      setIsSuper(!demo && (Boolean(data.is_super) || String(data.role ?? '') === 'super_admin'))
       if (data.role) {
         setRole(String(data.role))
         localStorage.setItem('user_role', String(data.role))
@@ -112,7 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Fallback to static role matrix until me works
       setCapabilities([])
       setRoles(role ? [role] : [])
-      setIsSuper(role === 'super_admin')
+      const demo = localStorage.getItem('is_demo') === '1' || role === 'demo_explorer'
+      setIsDemo(demo)
+      setIsSuper(!demo && role === 'super_admin')
       setCapsReady(true)
     }
   }, [role])
@@ -132,6 +144,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token, refreshCapabilities])
 
   const can = useCallback((permission: string) => {
+    // Demo UX: show full admin chrome. API/DemoGuard remain the security boundary.
+    if (isDemo) return true
     if (isSuper) return true
     if (capsReady && capabilities.length > 0) {
       if (capabilities.includes(permission)) return true
@@ -142,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     // Pre-hydrate fallback
     return roleCan(role, permission)
-  }, [isSuper, capsReady, capabilities, role])
+  }, [isDemo, isSuper, capsReady, capabilities, role])
 
   const value = useMemo<AuthState>(() => ({
     token,
@@ -151,11 +165,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     roles,
     capabilities,
     isSuper,
+    isDemo,
     capsReady,
     can,
     canAny: (...perms: string[]) => perms.some((p) => can(p)),
-    isSuperAdmin: () => isSuper || isSuperAdminRole(role),
+    isSuperAdmin: () => !isDemo && (isSuper || isSuperAdminRole(role)),
     hasAdminAccess: () => {
+      if (isDemo) return true
       if (isSuper) return true
       if (capsReady) {
         return capabilities.length > 0 || can('dashboard.view')
@@ -164,6 +180,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     refreshCapabilities,
     login: async (email, password) => {
+      localStorage.removeItem('is_demo')
+      setIsDemo(false)
       const result = await endpoints.login(email, password)
       if (result.requires_2fa && result.challenge_token) {
         return { requires_2fa: true, challenge_token: result.challenge_token }
@@ -178,12 +196,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     acceptSession: (result) => {
       applySession(result, setToken, setUserName, setRole)
     },
+    acceptDemoSession: (data) => {
+      const access = String(data.access_token ?? '')
+      if (!access) throw new Error('No demo access token')
+      localStorage.setItem('access_token', access)
+      localStorage.removeItem('refresh_token')
+      localStorage.setItem('is_demo', '1')
+      localStorage.setItem('user_name', 'Demo Explorer')
+      localStorage.setItem('user_role', 'demo_explorer')
+      setToken(access)
+      setUserName('Demo Explorer')
+      setRole('demo_explorer')
+      setIsDemo(true)
+      setIsSuper(false)
+      const caps = Array.isArray(data.capabilities) ? data.capabilities.map(String) : []
+      setCapabilities(caps)
+      setRoles(['demo_explorer'])
+      setCapsReady(true)
+    },
     logout: () => {
-      const refresh = localStorage.getItem('refresh_token')
-      void endpoints.logout(refresh).catch(() => { /* ignore */ })
+      if (isDemo) {
+        void api.post('/auth/demo/end', {}).catch(() => undefined)
+      } else {
+        const refresh = localStorage.getItem('refresh_token')
+        void endpoints.logout(refresh).catch(() => { /* ignore */ })
+      }
       clearSessionState()
     },
-  }), [token, userName, role, roles, capabilities, isSuper, capsReady, can, refreshCapabilities])
+  }), [token, userName, role, roles, capabilities, isSuper, isDemo, capsReady, can, refreshCapabilities])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

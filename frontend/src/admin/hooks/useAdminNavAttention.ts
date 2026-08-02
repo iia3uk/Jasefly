@@ -12,16 +12,17 @@ export type NavAttentionMap = Record<string, number>
  * Soft-fails per source so missing plugins don't break the shell.
  */
 export function useAdminNavAttention(): NavAttentionMap {
-  const { token, can } = useAuth()
+  const { token, can, isDemo } = useAuth()
   const hydrated = usePluginsHydrated()
   const formsOn = usePluginEnabled('forms')
   const commentsOn = usePluginEnabled('comments')
   const supportOn = usePluginEnabled('support')
   const notificationsOn = usePluginEnabled('notifications')
+  const live = hydrated && !!token && !isDemo
 
   const dash = useQuery({
     queryKey: ['dashboard', 'nav-attention'],
-    enabled: hydrated && !!token,
+    enabled: live,
     staleTime: 30_000,
     refetchInterval: 60_000,
     queryFn: endpoints.dashboard,
@@ -29,7 +30,7 @@ export function useAdminNavAttention(): NavAttentionMap {
 
   const formsNew = useQuery({
     queryKey: ['nav-attention', 'forms-new'],
-    enabled: hydrated && !!token && formsOn && can('forms.submissions.view'),
+    enabled: live && formsOn && can('forms.submissions.view'),
     staleTime: 30_000,
     refetchInterval: 60_000,
     retry: false,
@@ -50,7 +51,7 @@ export function useAdminNavAttention(): NavAttentionMap {
 
   const commentsPending = useQuery({
     queryKey: ['nav-attention', 'comments-pending'],
-    enabled: hydrated && !!token && commentsOn && can('comments.view'),
+    enabled: live && commentsOn && can('comments.view'),
     staleTime: 30_000,
     refetchInterval: 60_000,
     retry: false,
@@ -66,13 +67,16 @@ export function useAdminNavAttention(): NavAttentionMap {
 
   const supportOpen = useQuery({
     queryKey: ['nav-attention', 'support-open'],
-    enabled: hydrated && !!token && supportOn && can('support.view'),
+    enabled: live && supportOn && (can('support.view') || can('support.agent')),
     staleTime: 30_000,
     refetchInterval: 45_000,
     retry: false,
     queryFn: async () => {
       try {
-        const res = await api.get<{ data: Array<{ status?: string }> }>('/admin/support?status=waiting_agent', { silent: true })
+        const res = await api.get<{ data: Array<{ status?: string }> }>(
+          '/admin/support/tickets?status=waiting_agent',
+          { silent: true },
+        )
         const rows = (res as { data?: Array<{ status?: string }> }).data ?? []
         return rows.length
       } catch {
@@ -83,7 +87,7 @@ export function useAdminNavAttention(): NavAttentionMap {
 
   const notifUnread = useQuery({
     queryKey: ['nav-attention', 'notifications'],
-    enabled: hydrated && !!token && notificationsOn && can('notifications.view'),
+    enabled: live && notificationsOn && can('notifications.view'),
     staleTime: 30_000,
     refetchInterval: 45_000,
     retry: false,

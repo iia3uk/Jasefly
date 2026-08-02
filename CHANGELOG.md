@@ -1,5 +1,170 @@
 # Changelog
 
+## 2026-08-02 — Demo: Builder и Admin — разные входы
+
+- /demo?to=builder → page builder; /demo?to=admin → dashboard
+- explore-doors: разные CTA/href; legacy /demo разводится по title карточки
+- DEFAULT_EXPLORE обновлён
+
+## 2026-08-02 — Переводчик: мгновенный кэш + без Libre-мусора
+
+- FE session/memory cache — paint до API, без flash оригинала
+- При cache_ready не делаем live fill_misses (не тормозит и не портит)
+- Google больше не падает в публичный LibreTranslate (засорял кэш)
+- Повторный выбор языка на вкладке — без ожидания сети, если map уже есть
+
+## 2026-08-02 — Фикс прогрева переводчика: не крутить source→source
+
+- allowedTargets исключает source_lang — иначе en→en давал translated=0 и FE писал «Нет прогресса»
+- runWarmupChunk пропускает same-lang цели
+- Лог прогрева понятнее при простое
+
+## 2026-08-02 — Логотип сайдбара реально на всю ширину
+
+- Убран max-h у BrandLogo в меню — логотип тянется на 100% ширины колонки
+
+## 2026-08-02 — Фикс: оставлена сетка меню, убран классический список
+
+- Единственное меню — AdminNavNerve (сетка разделов)
+- Убрана кнопка и классический список-вариант
+- Логотип на всю ширину сайдбара → панель управления
+
+## 2026-08-02 — Одно меню админки: полный логотип, без сетки
+
+- Убрана кнопка и хоткей переключения в «вариант 2» (AdminNavNerve/сетка)
+- Оставлен только классический список в сайдбаре
+- Логотип на всю ширину сайдбара со ссылкой на панель управления
+
+## 2026-08-02 — Единая админка: логотип на дашборд, без RU/EN
+
+- В сайдбаре один BrandLogo со ссылкой на панель управления (без Demo Explorer / роли)
+- Убран переключатель RU/EN из футера сайдбара
+- Убрана вторая полоска DEMO_NOTICE — остаётся только sandbox-баннер
+
+## 2026-08-02 — Demo: systemic fix for admin page crashes (wrong API shapes)
+
+- Smart preview payloads: lists=[], status/stats objects, detail shells not []
+- Dedicated translate/scheduler/notifications/support/contact-messages stubs
+- FE list() + CrudList coerce arrays; PackageErrorBoundary on blueprint CRUD
+- TranslatePage guards cache/targets; dashboard/analytics shapes aligned
+
+## 2026-08-02 — Demo: fix Trash page .map crash
+
+- admin/trash returns empty object Record not settings blob
+- TrashPage only maps array resource buckets
+
+## 2026-08-02 — Demo: align DDoS status stub with FE type
+
+- syntheticDdosStatus matches protection_enabled / providers / active_count
+
+## 2026-08-02 — Demo: fix Overload page crash on stats.total
+
+- Gateway returns full /admin/overload/status shape with stats/events
+- OverloadPage guards missing stats; ddos status stub too
+
+## 2026-08-02 — Demo: fix activity .map crash and updates 403
+
+- admin/activity returns synthetic list (not dashboard object)
+- admin/updates GET returns status stub; POST/ZIP still denied
+- ActivityPage guards Array.isArray
+
+## 2026-08-02 — Demo: remove ZIP/file pickers on updates/modules/media
+
+- Updates page in demo has no file input at all
+- Modules ZIP upload tab locked; media upload button removed in demo
+- Hard-deny admin/updates and modules/upload in DemoRoutePolicy
+
+## 2026-08-02 — Demo admin: real plugin descriptions + empty read-only settings
+
+- Demo plugins catalog from ModuleRegistry (labels, descriptions, categories, settings_schema)
+- Settings values empty/defaults; toggles and saves disabled in demo UI
+- Singleton/theme settings show empty shells with DEMO notice, no save
+
+## 2026-08-02 — Demo sandbox: fix 404/403 noise and analytics crash
+
+- Router runs DemoGuard on unmatched admin routes (disabled plugins)
+- migrations GET → healthy preview; write still denied
+- Synthetic analytics overview with page_views; comments/support empty lists
+- FE: skip nav-attention + MigrationBanner in demo; harden DashboardAnalyticsWidget
+- Fix support attention URL to /admin/support/tickets
+
+## 2026-08-02 — Full Demo Sandbox admin UI (isolated API)
+
+- Demo FE: can() opens full nav; hydrateDemoPlugins; SiteContext does not shrink to prod plugins
+- demoNav default preview (not hidden) for all sections
+- DemoRoutePolicy: GET preview for almost all admin; hard deny MCP/migrations/content-pack; writes still fail-closed
+- DemoSandboxGateway: plugins, module-operations, catch-all synthetic GET payloads
+
+## 2026-08-02 — Fix Demo Sandbox empty sidebar (path segment bug)
+
+- demoModeForPath strips /admin base so pages/media/blog stay interactive
+- Sidebar full-bleed under demo banner; shell max-w-none
+
+## 2026-08-02 — Demo UX: allow page-templates, silence expected 403 debugger
+
+- GET /admin/page-templates returns empty demo list instead of 403
+- page-templates/ensure is a sandbox no-op
+- ApiErrorDebugger ignores expected demo_restricted in demo mode
+- Hide «Создать шаблоны» in demo; support POST new demo pages
+
+## 2026-08-02 — Fix Demo start: do not redact access_token JWT
+
+- DemoResponseSanitizer no longer masks access_token on /auth/demo/start
+- Restore usable demo JWT for Admin/Builder sandbox
+
+## 2026-08-02 — Apply 025_demo_sandbox migration for Demo Sandbox tables
+
+- Register 025_demo_sandbox.sql in MigrationService::FILES
+- Create demo_sessions, demo_overlays, demo_audit_log on hosting
+- Unblock Open Admin Demo (/demo) against live sandbox
+
+## 2026-08-02 — Demo Sandbox: isolated Admin/Builder with fail-closed API
+
+- Demo module: DemoContext, session overlay, DemoGuardMiddleware fail-closed
+- POST /auth/demo/start|reset|end — short-lived demo JWT, no production refresh
+- Sandbox gateway for pages/builder/media/blog; production CRUD unreachable
+- SecretRedactor DEMO_KEYS + DemoResponseSanitizer
+- FE /demo entry, DEMO SANDBOX banner, nav modes, DemoRestrictedPage
+- Security tests in DemoSandboxTest; home Open Admin Demo → /demo
+
+## 2026-08-02 — Home: open live surfaces instead of UI screenshots
+
+- New explore-doors widget: live links to Admin, Docs, SDK, Architecture, GitHub, Production; Builder marked coming soon
+- Removed decorative Builder/admin PNG gallery from home
+- features-grid supports href + Open live → CTAs
+- Philosophy copy: where a surface exists, open it
+
+## 2026-08-02 — Mature framework site: living hero, pulse, journey, GitHub-first
+
+- Living hero atmosphere (grid/glow/chip breathe) + scroll fade-up sections
+- New widgets: dev-journey, repo-tree, status-timeline, github-pulse
+- Build-time sitePulse metrics/commits via generate-site-pulse.mjs
+- Home: philosophy, designed-for / not-for, production gallery, everything-together
+- Footer: repository/docs columns + framework version badge; Open GitHub primary CTA
+
+## 2026-08-02 — Home landing: product story, DX tabs, arch hover
+
+- Emotional origin block + Independent by design personality section
+- WordPress vs Jasefly compare; shorter mature copy throughout home
+- architecture-stack hover lights next hop; features-grid accent tones
+- code-tabs widget (PHP / TypeScript / HTTP / CLI) with real SDK APIs
+- Status metrics from repo: 22 services, 56 widgets, 29 modules, 9 packages
+
+## 2026-08-02 — Home landing as platform story, not feature docs
+
+- Restructure __home: philosophy hero, Why story, How different, Built in production, request-path architecture, outcome capabilities, expanded DX, Exploring roadmap, Open Source CTA
+- cta-block supports up to 5 action buttons
+- architecture-stack default layers include Browser → Shared Hosting
+
+## 2026-08-02 — Framework-first public site: architecture widgets + EN positioning
+
+- Add architecture-stack, code-snippet, status-roadmap builder widgets
+- Extend hero-block with optional cta3/cta4 for GitHub and Live Demo
+- Rebuild home and marketing pages as AI-first Modular PHP Framework (EN)
+- Nav/footer/singletons: Framework labels; Live Demo and Portfolio → iia3uk.ru
+- Built with Jasefly showcase uses iia3uk.ru screenshot (media #14)
+
+
 ## 2026-08-02 — Обновление логотипов, favicon и OG-изображения
 
 - Синхронизированы SVG/PNG логотипы и favicon в frontend/public/brand

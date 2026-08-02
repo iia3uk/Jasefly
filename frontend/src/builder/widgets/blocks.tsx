@@ -426,6 +426,8 @@ function HeroBlockRender({
     || settings.body
     || settings.cta1_label
     || settings.cta2_label
+    || settings.cta3_label
+    || settings.cta4_label
     || chips.length,
   )
 
@@ -468,11 +470,23 @@ function HeroBlockRender({
       <div className={clsx('mt-8 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap', align === 'center' && 'sm:justify-center')}>
         <Cta label={String(settings.cta1_label || '')} href={String(settings.cta1_href || '#')} variant="solid" editMode={editMode} field="cta1_label" />
         <Cta label={String(settings.cta2_label || '')} href={String(settings.cta2_href || '#')} variant="ghost" editMode={editMode} field="cta2_label" />
+        {(settings.cta3_label || editMode) ? (
+          <Cta label={String(settings.cta3_label || '')} href={String(settings.cta3_href || '#')} variant="ghost" editMode={editMode} field="cta3_label" />
+        ) : null}
+        {(settings.cta4_label || editMode) ? (
+          <Cta label={String(settings.cta4_label || '')} href={String(settings.cta4_href || '#')} variant="ghost" editMode={editMode} field="cta4_label" />
+        ) : null}
       </div>
       {chips.length || editMode ? (
         <div className={clsx('mt-8 flex flex-wrap gap-2', align === 'center' && 'justify-center')}>
           {(chips.length ? chips : [{ label: 'Чип' }]).map((chip, i) => (
-            <span key={i} className={chipClass}>{String(chip.label || chip.text || '')}</span>
+            <span
+              key={i}
+              className={clsx(chipClass, !editMode && settings.living !== false && 'cms-hero-chip-breathe')}
+              style={!editMode && settings.living !== false ? { animationDelay: `${i * 0.35}s` } : undefined}
+            >
+              {String(chip.label || chip.text || '')}
+            </span>
           ))}
         </div>
       ) : null}
@@ -513,7 +527,10 @@ function HeroBlockRender({
           marginTop: bleedY === '0px' || bleedY === '0' ? undefined : `calc(-1 * ${bleedY})`,
           marginBottom: bleedY === '0px' || bleedY === '0' ? undefined : `calc(-1 * ${bleedY})`,
         }}
-        className="cms-hero-bleed relative flex w-full items-center overflow-hidden"
+        className={clsx(
+          'cms-hero-bleed relative flex w-full items-center overflow-hidden',
+          !editMode && settings.living !== false && 'cms-hero-living-host',
+        )}
       >
         <HeroBackgroundFill
           mediaId={settings.media_id}
@@ -522,9 +539,16 @@ function HeroBlockRender({
           editMode={editMode}
           objectPosition={String(settings.media_object_position || 'center center')}
         />
+        {!editMode && settings.living !== false ? (
+          <div className="cms-hero-living pointer-events-none absolute inset-0 z-[1]" aria-hidden>
+            <div className="cms-hero-living-grid" />
+            <div className="cms-hero-living-glow a" />
+            <div className="cms-hero-living-glow b" />
+          </div>
+        ) : null}
         {overlayStrength > 0.01 ? (
           <div
-            className="pointer-events-none absolute inset-0 z-[1]"
+            className="pointer-events-none absolute inset-0 z-[2]"
             style={{
               background: `linear-gradient(105deg, rgb(0 0 0 / ${overlayStrength * 0.82}) 0%, rgb(0 0 0 / ${overlayStrength * 0.45}) 42%, rgb(0 0 0 / ${overlayStrength * 0.18}) 100%)`,
             }}
@@ -696,6 +720,8 @@ function ShowcaseBlockRender({ settings, editMode }: { settings: Record<string, 
 function CtaBlockRender({ settings, editMode }: { settings: Record<string, unknown>; editMode?: boolean }) {
   const styles = stylesToCss(readStyles(settings))
   const layout = String(settings.layout || 'split')
+  const showMedia = settings.show_media !== false
+  const centered = layout === 'center' || !showMedia
   const copy = (
     <div>
       <EditableText
@@ -715,13 +741,22 @@ function CtaBlockRender({ settings, editMode }: { settings: Record<string, unkno
         className="mt-4 max-w-xl text-sm leading-6 text-[color:var(--muted)] sm:text-base sm:leading-7"
         placeholder="Текст"
       />
-      <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap">
+      <div className={clsx('mt-8 flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap', centered && 'sm:justify-center')}>
         <Cta label={String(settings.cta1_label || '')} href={String(settings.cta1_href || '#')} variant="solid" editMode={editMode} field="cta1_label" />
         <Cta label={String(settings.cta2_label || '')} href={String(settings.cta2_href || '#')} variant="ghost" editMode={editMode} field="cta2_label" />
+        {settings.cta3_label || editMode ? (
+          <Cta label={String(settings.cta3_label || '')} href={String(settings.cta3_href || '#')} variant="ghost" editMode={editMode} field="cta3_label" />
+        ) : null}
+        {settings.cta4_label || editMode ? (
+          <Cta label={String(settings.cta4_label || '')} href={String(settings.cta4_href || '#')} variant="ghost" editMode={editMode} field="cta4_label" />
+        ) : null}
+        {settings.cta5_label || editMode ? (
+          <Cta label={String(settings.cta5_label || '')} href={String(settings.cta5_href || '#')} variant="ghost" editMode={editMode} field="cta5_label" />
+        ) : null}
       </div>
     </div>
   )
-  const media = settings.show_media !== false ? (
+  const media = showMedia ? (
     <MediaBox
       mediaId={settings.media_id}
       url={String(settings.media_url || '')}
@@ -799,15 +834,20 @@ export function registerBlockWidgets() {
       title_1: 'Собирайте страницы без кода.',
       title_2: 'Публикуйте без лишней инфраструктуры.',
       body: 'Универсальный hero для любой посадочной: бейдж, заголовки, CTA, чипы и медиа.',
-      cta1_label: 'Начать',
+      cta1_label: 'Get Started',
       cta1_href: '/docs',
-      cta2_label: 'Смотреть демо',
-      cta2_href: '#',
+      cta2_label: 'Documentation',
+      cta2_href: '/docs',
+      cta3_label: 'GitHub',
+      cta3_href: 'https://github.com/iia3uk/jasefly',
+      cta4_label: 'Live Demo',
+      cta4_href: 'https://iia3uk.ru',
       layout: 'split',
       align: 'left',
       image_position: 'right',
       media_mode: 'background',
       height_preset: 'viewport',
+      living: true,
       media_id: null,
       media_url: '',
       media_alt: '',
@@ -831,6 +871,10 @@ export function registerBlockWidgets() {
       { key: 'cta1_href', label: 'Ссылка 1', type: 'url' },
       { key: 'cta2_label', label: 'Кнопка 2', type: 'text' },
       { key: 'cta2_href', label: 'Ссылка 2', type: 'url' },
+      { key: 'cta3_label', label: 'Кнопка 3', type: 'text' },
+      { key: 'cta3_href', label: 'Ссылка 3', type: 'url' },
+      { key: 'cta4_label', label: 'Кнопка 4', type: 'text' },
+      { key: 'cta4_href', label: 'Ссылка 4', type: 'url' },
       { key: 'layout', label: 'Компоновка (если медиа сбоку)', type: 'select', options: [
         { value: 'split', label: 'Текст + медиа' }, { value: 'stack', label: 'Стек' },
       ] },
@@ -841,6 +885,7 @@ export function registerBlockWidgets() {
         { value: 'background', label: 'Фон на всё пространство' },
         { value: 'side', label: 'Сбоку / в колонке' },
       ] },
+      { key: 'living', label: 'Живой фон (сетка / glow)', type: 'toggle' },
       { key: 'height_preset', label: 'Высота (шаблон)', type: 'select', options: [
         { value: 'viewport', label: 'На весь экран (основной)' },
         { value: 'tall', label: 'Высокий' },
@@ -953,6 +998,12 @@ export function registerBlockWidgets() {
       cta1_href: '/docs',
       cta2_label: 'Документация',
       cta2_href: '/docs',
+      cta3_label: '',
+      cta3_href: '',
+      cta4_label: '',
+      cta4_href: '',
+      cta5_label: '',
+      cta5_href: '',
       layout: 'split',
       show_media: true,
       media_id: null,
@@ -967,6 +1018,12 @@ export function registerBlockWidgets() {
       { key: 'cta1_href', label: 'Ссылка 1', type: 'url' },
       { key: 'cta2_label', label: 'Кнопка 2', type: 'text' },
       { key: 'cta2_href', label: 'Ссылка 2', type: 'url' },
+      { key: 'cta3_label', label: 'Кнопка 3', type: 'text' },
+      { key: 'cta3_href', label: 'Ссылка 3', type: 'url' },
+      { key: 'cta4_label', label: 'Кнопка 4', type: 'text' },
+      { key: 'cta4_href', label: 'Ссылка 4', type: 'url' },
+      { key: 'cta5_label', label: 'Кнопка 5', type: 'text' },
+      { key: 'cta5_href', label: 'Ссылка 5', type: 'url' },
       { key: 'layout', label: 'Компоновка', type: 'select', options: [
         { value: 'split', label: 'Текст + медиа' }, { value: 'center', label: 'По центру' },
       ] },

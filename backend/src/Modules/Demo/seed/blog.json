@@ -1,0 +1,11 @@
+[
+  {
+    "id": 920001,
+    "title": "Welcome to the Demo Sandbox",
+    "slug": "demo-welcome",
+    "status": "published",
+    "excerpt": "This post exists only inside your demo session.",
+    "content": "<p>Edit freely. Reset restores the seed.</p>",
+    "published_at": "2026-08-01 12:00:00"
+  }
+]

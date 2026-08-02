@@ -8,6 +8,8 @@ import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { AdminPageHero, AdminSectionLabel } from '@/admin/components/AdminPageHero'
 import { t, useAdminLocale } from '@/admin/i18n'
 import { setPluginEnabled, setPluginStates, type PluginState, type PluginSettingField } from '@/core/moduleRegistry'
+import { useAuth } from '@/context/AuthContext'
+import { DEMO_NOTICE } from '@/admin/demo/demoNav'
 
 /** Core plugins that cannot be disabled (mirrors backend guard). */
 const CORE_PLUGINS = new Set(['system', 'users'])
@@ -53,6 +55,7 @@ type StatusFilter = 'all' | 'on' | 'off'
 
 export function PluginsPage() {
   const { locale } = useAdminLocale()
+  const { isDemo } = useAuth()
   const client = useQueryClient()
   const queryKey = ['admin', 'plugins', locale]
   const { data, isLoading } = useQuery<PluginState[]>({
@@ -247,6 +250,7 @@ export function PluginsPage() {
                         plugin={p}
                         categoryKey={group.key}
                         isCore={CORE_PLUGINS.has(p.name)}
+                        isDemo={isDemo}
                         expanded={expanded === p.name}
                         aboutOpen={aboutOpen === p.name}
                         onExpand={() => {
@@ -257,9 +261,15 @@ export function PluginsPage() {
                           setAboutOpen((cur) => (cur === p.name ? null : p.name))
                           setExpanded((cur) => (cur === p.name ? null : cur))
                         }}
-                        onToggle={(enabled) => toggle.mutate({ name: p.name, enabled })}
+                        onToggle={(enabled) => {
+                          if (isDemo) return
+                          toggle.mutate({ name: p.name, enabled })
+                        }}
                         toggling={toggle.isPending && toggle.variables?.name === p.name}
-                        onSeedPages={() => seedPages.mutate(p.name)}
+                        onSeedPages={() => {
+                          if (isDemo) return
+                          seedPages.mutate(p.name)
+                        }}
                         seeding={seedPages.isPending && seedPages.variables === p.name}
                         onSaved={() => {
                           void client.invalidateQueries({ queryKey })
@@ -320,6 +330,7 @@ function PluginCard({
   plugin,
   categoryKey,
   isCore,
+  isDemo,
   expanded,
   aboutOpen,
   onExpand,
@@ -333,6 +344,7 @@ function PluginCard({
   plugin: PluginState
   categoryKey: string
   isCore: boolean
+  isDemo: boolean
   expanded: boolean
   aboutOpen: boolean
   onExpand: () => void
@@ -347,7 +359,7 @@ function PluginCard({
   void locale
   const hasSettings = (plugin.settings_schema?.length ?? 0) > 0
   const demoPages = plugin.demo_pages ?? []
-  const hasDemoPages = demoPages.length > 0
+  const hasDemoPages = demoPages.length > 0 && !isDemo
   const short = (plugin.description || '').trim()
   const long = (plugin.long_description || '').trim()
   const requires = plugin.requires_labels ?? []
@@ -357,12 +369,14 @@ function PluginCard({
   const hasDepsInfo = requires.length > 0 || suggests.length > 0 || requiredBy.length > 0
   const hasAbout = Boolean(long || short || hasDepsInfo)
   const panelOpen = aboutOpen || expanded
-  const canToggle = plugin.is_enabled
+  const canToggle = !isDemo && (plugin.is_enabled
     ? (plugin.can_disable !== false && !isCore)
-    : (plugin.can_enable !== false)
-  const toggleHint = plugin.is_enabled
-    ? (plugin.block_disable_reason || (isCore ? 'Ядро нельзя отключить' : undefined))
-    : (plugin.block_enable_reason || undefined)
+    : (plugin.can_enable !== false))
+  const toggleHint = isDemo
+    ? DEMO_NOTICE
+    : plugin.is_enabled
+      ? (plugin.block_disable_reason || (isCore ? 'Ядро нельзя отключить' : undefined))
+      : (plugin.block_enable_reason || undefined)
 
   const glow = CATEGORY_GLOW[categoryKey] || CATEGORY_GLOW.other
   const iconTone = plugin.is_enabled
@@ -530,7 +544,7 @@ function PluginCard({
 
       {expanded && hasSettings && (
         <div className="relative shrink-0 border-t border-white/10 bg-black/30 p-4 sm:p-5">
-          <PluginSettingsForm plugin={plugin} onSaved={onSaved} />
+          <PluginSettingsForm plugin={plugin} onSaved={onSaved} readOnly={isDemo} />
         </div>
       )}
     </GlassPanel>
@@ -566,7 +580,15 @@ function splitSettingsSections(schema: PluginSettingField[], defaultLabel: strin
   return sections
 }
 
-function PluginSettingsForm({ plugin, onSaved }: { plugin: PluginState; onSaved: () => void }) {
+function PluginSettingsForm({
+  plugin,
+  onSaved,
+  readOnly = false,
+}: {
+  plugin: PluginState
+  onSaved: () => void
+  readOnly?: boolean
+}) {
   const { locale } = useAdminLocale()
   void locale
   const [values, setValues] = useState<Record<string, unknown>>(() => ({ ...plugin.settings }))
@@ -590,9 +612,16 @@ function PluginSettingsForm({ plugin, onSaved }: { plugin: PluginState; onSaved:
     },
   })
 
-  const setField = (key: string, v: unknown) => setValues((prev) => ({ ...prev, [key]: v }))
+  const setField = (key: string, v: unknown) => {
+    if (readOnly) return
+    setValues((prev) => ({ ...prev, [key]: v }))
+  }
 
-  const saveBar = (
+  const saveBar = readOnly ? (
+    <div className="border-t border-white/10 pt-3 text-xs text-amber-200/90">
+      {DEMO_NOTICE}
+    </div>
+  ) : (
     <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-3">
       <Button type="submit" className="admin-primary" disabled={save.isPending}>
         <Save size={15} className="mr-1.5" />
@@ -608,6 +637,7 @@ function PluginSettingsForm({ plugin, onSaved }: { plugin: PluginState; onSaved:
       <form
         onSubmit={(e) => {
           e.preventDefault()
+          if (readOnly) return
           save.mutate(values)
         }}
         className="grid gap-3 sm:grid-cols-2"
@@ -631,6 +661,7 @@ function PluginSettingsForm({ plugin, onSaved }: { plugin: PluginState; onSaved:
     <form
       onSubmit={(e) => {
         e.preventDefault()
+        if (readOnly) return
         save.mutate(values)
       }}
       className="flex flex-col gap-4 lg:flex-row lg:items-stretch"

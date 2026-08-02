@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import { MediaImage } from '@/components/ui'
 import { registerWidget } from '@/builder/registry'
@@ -209,30 +210,76 @@ function featuresGridClass(cols: number): string {
   return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
 }
 
+function FeatureCardLink({
+  href,
+  className,
+  children,
+}: {
+  href: string
+  className: string
+  children: ReactNode
+}) {
+  const external = href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:')
+  if (external) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+        {children}
+      </a>
+    )
+  }
+  return (
+    <Link to={href} className={className}>
+      {children}
+    </Link>
+  )
+}
+
 function FeaturesRender({ settings }: { settings: Record<string, unknown> }) {
   const items = asItems(settings.items)
   const cols = Number(settings.columns || 3)
   const styles = stylesToCss(readStyles(settings))
+  const accented = settings.accented === true || settings.accented === 1 || settings.accented === '1'
   return (
     <div className="min-w-0" style={styles}>
       <SectionTitle title={String(settings.title || 'Возможности')} subtitle={String(settings.subtitle || '')} />
-      <div className={clsx('grid gap-3 sm:gap-4', featuresGridClass(cols))}>
-        {items.length ? items.map((item, i) => (
-          <div
-            key={i}
-            className="min-w-0 overflow-hidden rounded-[var(--radius)] border border-white/[0.08] bg-white/[0.02] p-3.5 sm:p-5"
-          >
-            {item.icon ? (
-              <span className="mb-2.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-[var(--accent)] sm:mb-3 sm:h-10 sm:w-10">
-                <AppIcon name={String(item.icon)} size={18} />
-              </span>
-            ) : null}
-            <h3 className="break-words font-heading text-base font-semibold sm:text-lg">{String(item.title || 'Фича')}</h3>
-            {item.body ? (
-              <p className="mt-1.5 break-words text-sm leading-6 text-[var(--muted)] sm:mt-2">{String(item.body)}</p>
-            ) : null}
-          </div>
-        )) : (
+      <div className={clsx('grid gap-4 sm:gap-5', accented && 'fw-features-accent', featuresGridClass(cols))}>
+        {items.length ? items.map((item, i) => {
+          const href = String(item.href || '').trim()
+          const cta = String(item.cta || item.cta_label || (href ? 'Open live →' : ''))
+          const className = clsx(
+            'fw-feature-card relative min-w-0 overflow-hidden rounded-[var(--radius)] border border-white/[0.08] bg-white/[0.02] p-4 transition duration-300 sm:p-6',
+            accented && `fw-feature-tone-${(i % 6) + 1}`,
+            href && 'hover:-translate-y-0.5 hover:border-[color:var(--primary)]/35 hover:shadow-[0_16px_40px_-28px_var(--primary)]',
+          )
+          const body = (
+            <>
+              {accented ? <span className="fw-feature-bar" aria-hidden /> : null}
+              {item.icon ? (
+                <span className="fw-feature-icon mb-3 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] sm:mb-4 sm:h-11 sm:w-11">
+                  <AppIcon name={String(item.icon)} size={18} />
+                </span>
+              ) : null}
+              <h3 className="break-words font-heading text-base font-semibold sm:text-lg">{String(item.title || 'Фича')}</h3>
+              {item.body ? (
+                <p className="mt-2 break-words text-sm leading-6 text-[var(--muted)]">{String(item.body)}</p>
+              ) : null}
+              {cta ? (
+                <p className={clsx('mt-3 text-sm font-medium', href ? 'text-[color:var(--primary)]' : 'text-[color:var(--muted)]')}>
+                  {cta}
+                </p>
+              ) : null}
+            </>
+          )
+          return href ? (
+            <FeatureCardLink key={i} href={href} className={className}>
+              {body}
+            </FeatureCardLink>
+          ) : (
+            <div key={i} className={className}>
+              {body}
+            </div>
+          )
+        }) : (
           <p className="text-sm text-[var(--muted)]">Добавьте карточки возможностей</p>
         )}
       </div>
@@ -449,6 +496,7 @@ export function registerLandingWidgets() {
       title: 'Возможности',
       subtitle: '',
       columns: 3,
+      accented: false,
       items: [
         { icon: 'sparkles', title: 'Быстро', body: 'Запуск без лишней сложности.' },
         { icon: 'shield', title: 'Надёжно', body: 'Стабильная база и бэкапы.' },
@@ -459,6 +507,7 @@ export function registerLandingWidgets() {
       { key: 'title', label: 'Заголовок', type: 'text' },
       { key: 'subtitle', label: 'Подзаголовок', type: 'textarea' },
       { key: 'columns', label: 'Колонки', type: 'number' },
+      { key: 'accented', label: 'Цветные акценты карточек', type: 'toggle' },
       {
         key: 'items',
         label: 'Карточки',
@@ -468,11 +517,13 @@ export function registerLandingWidgets() {
             value={value}
             onChange={onChange}
             addLabel="Карточка"
-            blank={() => ({ icon: '', title: '', body: '' })}
+            blank={() => ({ icon: '', title: '', body: '', href: '', cta: '' })}
             fields={[
               { key: 'icon', label: 'Иконка (имя)', kind: 'text' },
               { key: 'title', label: 'Заголовок', kind: 'text' },
               { key: 'body', label: 'Текст', kind: 'textarea' },
+              { key: 'href', label: 'Ссылка (live)', kind: 'url' },
+              { key: 'cta', label: 'CTA (напр. Open live →)', kind: 'text' },
             ]}
           />
         ),

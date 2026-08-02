@@ -10,6 +10,8 @@ import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { emptyLayout } from '@/builder/types'
 import { SLUG_PLUGIN_GATES } from '@/core/pluginGates'
 import { t } from '@/admin/i18n'
+import { useAuth } from '@/context/AuthContext'
+import { adminUrl } from '@/admin/adminBasePath'
 
 /** Always treat these as system templates (even if plugin-gated out of the API list). */
 const ALWAYS_SYSTEM_SLUGS = new Set([
@@ -34,6 +36,7 @@ type TemplateRow = {
 }
 
 export function PagesListPage() {
+  const { isDemo } = useAuth()
   const { data = [], isLoading } = useAdminList<Page>('pages')
   const { remove, save } = useCrud('pages')
   const nav = useNavigate()
@@ -47,7 +50,7 @@ export function PagesListPage() {
   const templatesQuery = useQuery({
     queryKey: ['admin', 'page-templates'],
     queryFn: async () => {
-      const res = await api.get<{ data: TemplateRow[] }>('/admin/page-templates')
+      const res = await api.get<{ data: TemplateRow[] }>('/admin/page-templates', { silent: true })
       return (res as { data?: TemplateRow[] })?.data ?? []
     },
   })
@@ -77,13 +80,17 @@ export function PagesListPage() {
         },
       })
       const id = (created as Page)?.id
-      if (id != null) nav(`/admin/pages/${id}/builder`)
+      if (id != null) nav(adminUrl(`/pages/${id}/builder`))
     } catch (e) {
       window.alert(e instanceof Error ? e.message : 'Не удалось создать')
     }
   }
 
   const ensureTemplates = async () => {
+    if (isDemo) {
+      setMsg('В Demo Sandbox шаблоны production недоступны — работайте с Demo Home / Demo About.')
+      return
+    }
     setBusy(true)
     setMsg('')
     try {
@@ -185,9 +192,11 @@ export function PagesListPage() {
         accent="sky"
         actions={
           <>
-            <Button type="button" disabled={busy} onClick={() => void ensureTemplates()}>
-              <Wand2 size={16} /> Создать / обновить шаблоны
-            </Button>
+            {!isDemo ? (
+              <Button type="button" disabled={busy} onClick={() => void ensureTemplates()}>
+                <Wand2 size={16} /> Создать / обновить шаблоны
+              </Button>
+            ) : null}
             <Button type="button" onClick={() => void createPage()}>
               <Plus size={16} /> Новая страница
             </Button>

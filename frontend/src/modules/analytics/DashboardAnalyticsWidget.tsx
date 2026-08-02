@@ -42,10 +42,11 @@ export function DashboardAnalyticsWidget() {
 
   if (!on) return null
 
-  const daily = q.data?.daily ?? []
-  const views = q.data?.summary.page_views ?? 0
-  const visitors = q.data?.summary.visitors ?? 0
-  const sessions = q.data?.summary.sessions ?? 0
+  const daily = Array.isArray(q.data?.daily) ? q.data.daily : []
+  const summary = q.data && typeof q.data === 'object' && !Array.isArray(q.data) ? q.data.summary : undefined
+  const views = summary?.page_views ?? 0
+  const visitors = summary?.visitors ?? 0
+  const sessions = summary?.sessions ?? 0
   const viewsTrend = trendPct(daily, 'page_views')
   const top = (q.data?.pages ?? []).slice(0, 3)
   const maxTop = Math.max(1, ...top.map((p) => p.views))

@@ -22,6 +22,7 @@ import { AnalyticsBeacon } from '@/modules/analytics/AnalyticsBeacon'
 import { SiteBreadcrumbs } from '@/components/layout/SiteBreadcrumbs'
 import { useContactInfo } from '@/hooks/useApi'
 import { withSiteNameSuffix } from '@/lib/seoTitle'
+import sitePulse from '@/generated/sitePulse.json'
 
 function parseJson<T>(value: unknown, fallback: T): T {
   if (value == null) return fallback
@@ -313,6 +314,7 @@ export function Footer() {
   const { site } = useSiteContext()
   const { data: contact } = useContactInfo()
   const year = new Date().getFullYear()
+  const frameworkVersion = String(sitePulse.github?.latest_tag || sitePulse.version || '')
   const copyrightHtml = sanitizeHtml(
     (site?.footer?.copyright_text || '').replace('{year}', String(year)),
   )
@@ -407,12 +409,19 @@ export function Footer() {
             </div>
           )}
         </div>
-        {copyrightHtml ? (
-          <p
-            className="mt-10 text-sm text-[var(--muted)] sm:mt-12 [&_a]:text-[var(--accent)] [&_a]:underline-offset-2 hover:[&_a]:underline"
-            dangerouslySetInnerHTML={{ __html: copyrightHtml }}
-          />
-        ) : null}
+        <div className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--muted)] sm:mt-12">
+          {copyrightHtml ? (
+            <p
+              className="[&_a]:text-[var(--accent)] [&_a]:underline-offset-2 hover:[&_a]:underline"
+              dangerouslySetInnerHTML={{ __html: copyrightHtml }}
+            />
+          ) : null}
+          {frameworkVersion ? (
+            <span className="rounded border border-white/10 px-2 py-0.5 font-mono text-[11px] tracking-wide text-[color:var(--muted)]">
+              {frameworkVersion}
+            </span>
+          ) : null}
+        </div>
       </Container>
     </footer>
   )

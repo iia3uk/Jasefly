@@ -1,47 +1,34 @@
 {
-  "title": "Как это работает",
+  "title": "Architecture",
   "slug": "workflow",
-  "seo_title": "Как работает Jasefly CMS — от локальной разработки до хостинга",
-  "seo_description": "Полный цикл: локальная установка, разработка, MCP, build, ZIP, установка или обновление на shared-хостинге и дальнейшее управление сайтом.",
+  "seo_title": "Jasefly Architecture — from PHP Core to React and MCP",
+  "seo_description": "How Jasefly layers work: React frontend, REST API, Platform SDK, Access Layer, ZIP module runtime, PHP core, database, and shared hosting.",
   "layout": {
     "version": 1,
-    "meta": {
-      "product": "jasefly-official"
-    },
+    "meta": { "product": "jasefly-official", "revision": "framework-first-2026-08-02" },
     "elements": [
       {
-        "id": "s_1q",
+        "id": "s_wf_hero",
         "elType": "section",
-        "settings": {
-          "paddingY": "3.5rem",
-          "gap": "1.5rem",
-          "columns": 1
-        },
+        "settings": { "paddingY": "3.5rem", "gap": "1.5rem", "columns": 1 },
         "elements": [
           {
-            "id": "c_1p",
+            "id": "c_wf_hero",
             "elType": "column",
-            "settings": {
-              "width": 100
-            },
+            "settings": { "width": 100 },
             "elements": [
               {
-                "id": "w_1n",
+                "id": "w_wf_h1",
                 "elType": "widget",
                 "widgetType": "heading",
-                "settings": {
-                  "text": "Как это работает",
-                  "tag": "h1",
-                  "size": "2xl",
-                  "align": "left"
-                }
+                "settings": { "text": "Architecture", "tag": "h1", "size": "2xl", "align": "left" }
               },
               {
-                "id": "w_1o",
+                "id": "w_wf_intro",
                 "elType": "widget",
                 "widgetType": "text",
                 "settings": {
-                  "html": "<p>Ниже — полный цикл от репозитория до работающего сайта на обычном хостинге.</p>",
+                  "html": "<p>Jasefly is structured as a <strong>platform stack</strong>, not a single monolith admin panel. Modules and packages talk to the host through the Platform SDK. Content editing is a surface; the framework is the product.</p>",
                   "align": "left"
                 }
               }
@@ -50,80 +37,31 @@
         ]
       },
       {
-        "id": "s_1t",
+        "id": "s_wf_stack",
         "elType": "section",
-        "settings": {
-          "paddingY": "3.5rem",
-          "gap": "1.5rem",
-          "columns": 1
-        },
+        "settings": { "paddingY": "3.5rem", "gap": "1.5rem", "columns": 1 },
         "elements": [
           {
-            "id": "c_1s",
+            "id": "c_wf_stack",
             "elType": "column",
-            "settings": {
-              "width": 100
-            },
+            "settings": { "width": 100 },
             "elements": [
               {
-                "id": "w_1r",
+                "id": "w_wf_arch",
                 "elType": "widget",
-                "widgetType": "features-grid",
+                "widgetType": "architecture-stack",
                 "settings": {
-                  "title": "Полный цикл",
-                  "subtitle": "",
-                  "columns": 2,
-                  "items": [
-                    {
-                      "icon": "1",
-                      "title": "1. Локальная установка",
-                      "body": "Клонируете репозиторий, поднимаете backend и frontend у себя."
-                    },
-                    {
-                      "icon": "2",
-                      "title": "2. Разработка",
-                      "body": "Меняете модули, виджеты, API и UI в привычном git-workflow."
-                    },
-                    {
-                      "icon": "3",
-                      "title": "3. Cursor / MCP",
-                      "body": "Агент получает карту сайта и правит контент через API в рамках токена."
-                    },
-                    {
-                      "icon": "4",
-                      "title": "4. Локальный запуск",
-                      "body": "Проверяете сайт и админку на своей машине."
-                    },
-                    {
-                      "icon": "5",
-                      "title": "5. Проверка",
-                      "body": "Линт, тесты пакета и ручной просмотр критичных сценариев."
-                    },
-                    {
-                      "icon": "6",
-                      "title": "6. Production build",
-                      "body": "Vite собирает статический frontend; API готовится к упаковке."
-                    },
-                    {
-                      "icon": "7",
-                      "title": "7. Install / Update ZIP",
-                      "body": "Сборщик создаёт пакет для первой установки или апдейта."
-                    },
-                    {
-                      "icon": "8",
-                      "title": "8. Загрузка на хостинг",
-                      "body": "ZIP попадает в public_html или через панель обновлений."
-                    },
-                    {
-                      "icon": "9",
-                      "title": "9. Installer / Updates",
-                      "body": "Первый запуск — install.php; дальше — обновления из админки."
-                    },
-                    {
-                      "icon": "10",
-                      "title": "10. Управление сайтом",
-                      "body": "Контент, SEO, модули и медиа правятся в админке или через MCP."
-                    }
+                  "title": "Stack layers",
+                  "subtitle": "Top to bottom — how a request and a package meet the host.",
+                  "layers": [
+                    { "label": "React Frontend", "hint": "Admin SPA · Public site · Builder" },
+                    { "label": "REST API", "hint": "Versioned /api/v1 routes" },
+                    { "label": "Platform SDK", "hint": "PlatformContext for packages" },
+                    { "label": "Access Layer", "hint": "Rules · roles · capabilities" },
+                    { "label": "ZIP Module Runtime", "hint": "Install · update · quarantine" },
+                    { "label": "PHP Core", "hint": "Bootstrap · modules · services" },
+                    { "label": "Database", "hint": "MySQL / SQLite dialects" },
+                    { "label": "Shared Hosting", "hint": "Apache · PHP · prebuilt assets" }
                   ]
                 }
               }
@@ -132,30 +70,53 @@
         ]
       },
       {
-        "id": "s_1w",
+        "id": "s_wf_steps",
         "elType": "section",
-        "settings": {
-          "paddingY": "3.5rem",
-          "gap": "1.5rem",
-          "columns": 1
-        },
+        "settings": { "paddingY": "3.5rem", "gap": "1.5rem", "columns": 1 },
         "elements": [
           {
-            "id": "c_1v",
+            "id": "c_wf_steps",
             "elType": "column",
-            "settings": {
-              "width": 100
-            },
+            "settings": { "width": 100 },
             "elements": [
               {
-                "id": "w_1u",
+                "id": "w_wf_steps",
+                "elType": "widget",
+                "widgetType": "steps-row",
+                "settings": {
+                  "animate": true,
+                  "show_line": true,
+                  "items": [
+                    { "badge": "1", "title": "Install", "text": "Drop the install ZIP (or clone + build locally), configure .env / DB, run migrations." },
+                    { "badge": "2", "title": "Compose", "text": "Use Builder widgets and modules; register capabilities and blocks via Platform SDK." },
+                    { "badge": "3", "title": "Extend", "text": "Ship ZIP packages or in-repo modules — FE registers pages/widgets, PHP boots via bootPlatform." },
+                    { "badge": "4", "title": "Operate", "text": "Update via SiteUpdater, MCP for content/release, quarantine protects a bad package." }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_wf_cta",
+        "elType": "section",
+        "settings": { "paddingY": "3.5rem", "gap": "1.5rem", "columns": 1 },
+        "elements": [
+          {
+            "id": "c_wf_cta",
+            "elType": "column",
+            "settings": { "width": 100 },
+            "elements": [
+              {
+                "id": "w_wf_cta",
                 "elType": "widget",
                 "widgetType": "cta-banner",
                 "settings": {
-                  "title": "Нужен AI-контур?",
-                  "subtitle": "Разберите, как MCP ограничивает агента и какие операции доступны.",
-                  "cta_label": "MCP и AI",
-                  "cta_href": "/mcp"
+                  "title": "Dive into Platform SDK",
+                  "subtitle": "APIs for access, events, builder, and capabilities.",
+                  "cta_label": "Open docs",
+                  "cta_href": "/docs"
                 }
               }
             ]

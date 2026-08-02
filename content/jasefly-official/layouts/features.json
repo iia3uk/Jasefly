@@ -1,16 +1,17 @@
 {
-  "title": "Возможности",
+  "title": "Features",
   "slug": "features",
-  "seo_title": "Возможности Jasefly CMS — Page Builder, MCP, модули и деплой",
-  "seo_description": "Модульная архитектура, визуальный Page Builder, MCP для AI, remote deploy, обновления из админки, SEO, commerce и безопасность.",
+  "seo_title": "Jasefly Features — Builder, SDK, ZIP Modules, Access, MCP",
+  "seo_description": "Real platform capabilities of the Jasefly modular PHP framework: visual Builder, Platform SDK, ZIP packages, Access Layer, MCP, safe updates, and shared-hosting install.",
   "layout": {
     "version": 1,
     "meta": {
-      "product": "jasefly-official"
+      "product": "jasefly-official",
+      "revision": "framework-first-2026-08-02"
     },
     "elements": [
       {
-        "id": "s_1g",
+        "id": "s_feat_hero",
         "elType": "section",
         "settings": {
           "paddingY": "3.5rem",
@@ -19,29 +20,29 @@
         },
         "elements": [
           {
-            "id": "c_1f",
+            "id": "c_feat_hero",
             "elType": "column",
             "settings": {
               "width": 100
             },
             "elements": [
               {
-                "id": "w_1d",
+                "id": "w_feat_h1",
                 "elType": "widget",
                 "widgetType": "heading",
                 "settings": {
-                  "text": "Возможности Jasefly CMS",
+                  "text": "Platform features",
                   "tag": "h1",
                   "size": "2xl",
                   "align": "left"
                 }
               },
               {
-                "id": "w_1e",
+                "id": "w_feat_intro",
                 "elType": "widget",
                 "widgetType": "text",
                 "settings": {
-                  "html": "<p>Платформа объединяет разработку, управление контентом и production-развёртывание. Ниже — что делает каждая возможность, какую задачу закрывает и кому полезна.</p>",
+                  "html": "<p>Jasefly is an <strong>AI-first modular PHP framework</strong>. The admin CMS is one product surface on top of PHP core, React frontend, Platform SDK, Access, Builder, MCP, and ZIP module runtime. Below are shipped capabilities — not a wishlist.</p>",
                   "align": "left"
                 }
               }
@@ -50,7 +51,7 @@
         ]
       },
       {
-        "id": "s_1j",
+        "id": "s_feat_core",
         "elType": "section",
         "settings": {
           "paddingY": "3.5rem",
@@ -59,80 +60,80 @@
         },
         "elements": [
           {
-            "id": "c_1i",
+            "id": "c_feat_core",
             "elType": "column",
             "settings": {
               "width": 100
             },
             "elements": [
               {
-                "id": "w_1h",
+                "id": "w_feat_grid",
                 "elType": "widget",
                 "widgetType": "features-grid",
                 "settings": {
-                  "title": "Платформа",
-                  "subtitle": "",
-                  "columns": 2,
+                  "title": "What ships today",
+                  "subtitle": "Honest inventory of the platform stack.",
+                  "columns": 3,
                   "items": [
                     {
-                      "icon": "layers",
-                      "title": "Модульная система",
-                      "body": "Что делает: включает и отключает доменные модули. Решает: не тащить лишний функционал. Как: через реестр модулей и плагины. Кому: студиям и разработчикам с разными проектами."
-                    },
-                    {
                       "icon": "layout",
-                      "title": "Page Builder",
-                      "body": "Что делает: собирает страницы из секций, колонок и виджетов. Решает: правки без правки React-кода. Как: в админке на canvas. Кому: разработчикам и контент-редакторам."
+                      "title": "Visual Builder",
+                      "body": "Compose public pages from widgets; layouts stored as layout_json and rendered by LayoutRenderer."
                     },
                     {
-                      "icon": "file",
-                      "title": "Управление контентом",
-                      "body": "Что делает: страницы, блог, проекты, медиа, навигация. Решает: единый источник правды для публичного сайта. Как: CRUD в админке и через MCP. Кому: всем, кто ведёт сайт без правки репозитория для каждого текста."
+                      "icon": "package",
+                      "title": "ZIP Module Runtime",
+                      "body": "Upload → inspect → install/update packages with rollback metadata and quarantine on hard failure."
                     },
                     {
-                      "icon": "palette",
-                      "title": "Темы",
-                      "body": "Что делает: пресеты цветов и шрифтов. Решает: быстрый визуальный каркас. Как: singleton theme. Кому: при запуске бренда без кастомного дизайн-кода."
-                    },
-                    {
-                      "icon": "search",
-                      "title": "SEO",
-                      "body": "Что делает: title, description, OG, sitemap, robots, prerender. Решает: индексацию SPA. Как: настройки страницы и SEO-модуль. Кому: продуктовым и контентным сайтам."
-                    },
-                    {
-                      "icon": "image",
-                      "title": "Медиатека",
-                      "body": "Что делает: хранит и подставляет изображения и файлы. Решает: централизованные ассеты. Как: media API и поля виджетов. Кому: любому публичному сайту."
-                    },
-                    {
-                      "icon": "cart",
-                      "title": "Commerce",
-                      "body": "Что делает: товары, каталог, checkout, оплата. Решает: продажу цифровых и простых товаров. Как: модули Products и Payments. Кому: проектам с витриной."
+                      "icon": "layers",
+                      "title": "Platform SDK",
+                      "body": "bootPlatform(PlatformContext) — access, events, HTTP, builder, capabilities, content, and more."
                     },
                     {
                       "icon": "shield",
-                      "title": "Безопасность",
-                      "body": "Что делает: роли, JWT, 2FA, журнал, бэкапы. Решает: контроль доступа и аудит. Как: Users/System. Кому: любым продакшен-сайтам."
+                      "title": "Universal Access Layer",
+                      "body": "One access service for content rules and admin capabilities — fail-closed providers."
+                    },
+                    {
+                      "icon": "key",
+                      "title": "Capabilities & ACL",
+                      "body": "registerCapability / canCapability for admin UI and /admin APIs — deny wins on overrides."
+                    },
+                    {
+                      "icon": "cpu",
+                      "title": "MCP Server",
+                      "body": "cms_* tools for site map, content, modules, diagnostics, and managed releases from the agent."
                     },
                     {
                       "icon": "refresh",
-                      "title": "Обновления",
-                      "body": "Что делает: ZIP update из админки + миграции. Решает: обновление без ручной замены дерева файлов. Как: пакет update и панель Updates. Кому: shared-хостингу и соло-разработчикам."
+                      "title": "Safe Updates",
+                      "body": "SiteUpdater applies update ZIPs and cleans stale frontend assets on shared hosting."
                     },
                     {
-                      "icon": "bot",
-                      "title": "MCP",
-                      "body": "Что делает: даёт AI-агенту карту сайта и операции. Решает: управляемое редактирование контента нейросетью. Как: MCP-токен и инструменты. Кому: Cursor и AI-first workflow."
+                      "icon": "bug",
+                      "title": "Quarantine",
+                      "body": "Broken ZIP modules isolate so a bad package does not take down the whole API."
                     },
                     {
-                      "icon": "upload",
-                      "title": "Remote Deploy",
-                      "body": "Что делает: pipeline build → test → changelog → deploy → verify. Решает: повторяемый выпуск кода. Как: MCP cms_release. Кому: разработчикам с локальной сборкой."
+                      "icon": "server",
+                      "title": "Shared Hosting Install",
+                      "body": "Prebuilt frontend + PHP API on ordinary Apache/MySQL hosting — install ZIP on GitHub releases."
                     },
                     {
-                      "icon": "gauge",
-                      "title": "Hosting Guard",
-                      "body": "Что делает: троттлинг и кэш запросов MCP-клиента. Решает: защиту shared-хостинга от шторма запросов агента. Как: лимиты в MCP-конфиге. Кому: всем, кто пускает AI к API."
+                      "icon": "box",
+                      "title": "Self-contained Packages",
+                      "body": "Module packages carry their own PHP + FE assets and register through the Platform SDK."
+                    },
+                    {
+                      "icon": "sparkles",
+                      "title": "AI-ready Workflow",
+                      "body": "MCP + local clone lets agents work on code and content with controlled tools — not shell root."
+                    },
+                    {
+                      "icon": "zap",
+                      "title": "Event-driven Hooks",
+                      "body": "events()->publish / subscribe for cross-module coordination without hard coupling."
                     }
                   ]
                 }
@@ -142,7 +143,36 @@
         ]
       },
       {
-        "id": "s_1m",
+        "id": "s_feat_not",
+        "elType": "section",
+        "settings": {
+          "paddingY": "2.5rem",
+          "gap": "1rem",
+          "columns": 1
+        },
+        "elements": [
+          {
+            "id": "c_feat_not",
+            "elType": "column",
+            "settings": {
+              "width": 100
+            },
+            "elements": [
+              {
+                "id": "w_feat_not",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p><strong>Not claimed as shipped:</strong> a public Module Marketplace storefront. ZIP Package Manager exists; a marketplace is exploratory roadmap only.</p>",
+                  "align": "left"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s_feat_cta",
         "elType": "section",
         "settings": {
           "paddingY": "3.5rem",
@@ -151,21 +181,25 @@
         },
         "elements": [
           {
-            "id": "c_1l",
+            "id": "c_feat_cta",
             "elType": "column",
             "settings": {
               "width": 100
             },
             "elements": [
               {
-                "id": "w_1k",
+                "id": "w_feat_cta",
                 "elType": "widget",
-                "widgetType": "cta-banner",
+                "widgetType": "cta-block",
                 "settings": {
-                  "title": "Дальше по процессу",
-                  "subtitle": "Посмотрите полный цикл от локальной машины до хостинга.",
-                  "cta_label": "Как это работает",
-                  "cta_href": "/workflow"
+                  "title": "Start building on the framework",
+                  "cta1_label": "Get Started",
+                  "cta1_href": "/docs",
+                  "cta2_label": "Live Demo",
+                  "cta2_href": "https://iia3uk.ru",
+                  "subtitle": "Read the docs, clone the repo, or open the live production demo.",
+                  "show_media": false,
+                  "layout": "center"
                 }
               }
             ]

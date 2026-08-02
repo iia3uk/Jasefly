@@ -18,6 +18,8 @@ import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { PageContext } from '@/admin/components/PageContext'
 import { t, useAdminLocale } from '@/admin/i18n'
 import { adminUrl } from '@/admin/adminBasePath'
+import { useAuth } from '@/context/AuthContext'
+import { DEMO_NOTICE } from '@/admin/demo/demoNav'
 import clsx from 'clsx'
 
 type QuarantineInfo = {
@@ -87,6 +89,7 @@ type Operation = {
 
 export function ModulesPage() {
   const { locale } = useAdminLocale()
+  const { isDemo } = useAuth()
   void locale
   const [tab, setTab] = useState<'installed' | 'upload' | 'operations'>('installed')
   const [modules, setModules] = useState<InstalledModule[]>([])
@@ -506,6 +509,13 @@ export function ModulesPage() {
       {tab === 'upload' && (
         <div className="space-y-4">
           <GlassPanel className="p-6">
+            {isDemo ? (
+              <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-amber-400/30 bg-amber-500/10 px-6 py-10 text-center">
+                <ShieldAlert size={22} className="text-amber-300" />
+                <span className="text-sm font-medium text-amber-100">Загрузка ZIP в демо отключена</span>
+                <p className="max-w-md text-xs leading-relaxed text-amber-100/80">{DEMO_NOTICE}</p>
+              </div>
+            ) : (
             <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border border-dashed border-white/15 px-6 py-10 text-center hover:border-white/30">
               <Upload size={22} className="text-zinc-400" />
               <span className="text-sm text-zinc-300">{t.modulesPickZip}</span>
@@ -517,6 +527,7 @@ export function ModulesPage() {
                 onChange={(e) => void onUpload(e.target.files?.[0] ?? null)}
               />
             </label>
+            )}
           </GlassPanel>
 
           {plan ? (

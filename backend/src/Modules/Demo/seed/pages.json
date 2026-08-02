@@ -1,0 +1,136 @@
+[
+  {
+    "id": 900001,
+    "title": "Demo Home",
+    "slug": "demo-home",
+    "status": "published",
+    "template": "builder",
+    "is_home": true,
+    "seo_title": "Demo Home — Jasefly Sandbox",
+    "seo_description": "Isolated demo page. Changes never reach production.",
+    "layout": {
+      "version": 1,
+      "meta": {
+        "product": "jasefly-demo",
+        "seed": true,
+        "useOnSite": true,
+        "demo": true
+      },
+      "elements": [
+        {
+          "id": "s_demo_hero",
+          "elType": "section",
+          "settings": { "paddingY": "4rem", "columns": 1, "glow": true },
+          "elements": [
+            {
+              "id": "c_demo_hero",
+              "elType": "column",
+              "settings": { "width": 100 },
+              "elements": [
+                {
+                  "id": "w_demo_hero",
+                  "elType": "widget",
+                  "widgetType": "hero-block",
+                  "settings": {
+                    "badge": "DEMO SANDBOX",
+                    "title_1": "Explore the",
+                    "title_2": "Page Builder",
+                    "body": "Edit texts, move blocks, open the inspector. Nothing here is production.",
+                    "cta1_label": "View on GitHub",
+                    "cta1_href": "https://github.com/iia3uk/jasefly",
+                    "cta2_label": "Documentation",
+                    "cta2_href": "/docs",
+                    "media_mode": "background",
+                    "height_preset": "tall",
+                    "living": true,
+                    "align": "left",
+                    "chips": [
+                      { "label": "Isolated" },
+                      { "label": "Auto-reset" },
+                      { "label": "No secrets" }
+                    ]
+                  },
+                  "elements": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "s_demo_body",
+          "elType": "section",
+          "settings": { "paddingY": "3rem", "columns": 1 },
+          "elements": [
+            {
+              "id": "c_demo_body",
+              "elType": "column",
+              "settings": { "width": 100 },
+              "elements": [
+                {
+                  "id": "w_demo_h",
+                  "elType": "widget",
+                  "widgetType": "heading",
+                  "settings": { "text": "Try rearranging this section", "tag": "h2", "size": "lg" },
+                  "elements": []
+                },
+                {
+                  "id": "w_demo_t",
+                  "elType": "widget",
+                  "widgetType": "text",
+                  "settings": {
+                    "html": "<p>Select widgets, open settings, change copy. Reset demo restores this seed.</p>"
+                  },
+                  "elements": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": 900002,
+    "title": "Demo About",
+    "slug": "demo-about",
+    "status": "draft",
+    "template": "builder",
+    "is_home": false,
+    "seo_title": "Demo About",
+    "seo_description": "Secondary demo page",
+    "layout": {
+      "version": 1,
+      "meta": { "demo": true, "useOnSite": true },
+      "elements": [
+        {
+          "id": "s_about",
+          "elType": "section",
+          "settings": { "paddingY": "3rem", "columns": 1 },
+          "elements": [
+            {
+              "id": "c_about",
+              "elType": "column",
+              "settings": { "width": 100 },
+              "elements": [
+                {
+                  "id": "w_about_h",
+                  "elType": "widget",
+                  "widgetType": "heading",
+                  "settings": { "text": "About (demo)", "tag": "h1", "size": "xl" },
+                  "elements": []
+                },
+                {
+                  "id": "w_about_t",
+                  "elType": "widget",
+                  "widgetType": "text",
+                  "settings": { "html": "<p>Synthetic page for the sandbox Pages list.</p>" },
+                  "elements": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

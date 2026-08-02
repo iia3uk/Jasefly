@@ -165,7 +165,8 @@ export function CrudListPage({ resource, basePath }: { resource: string; basePat
   const gatePlugin = pluginForAdminResource(resource)
   const pluginsReady = usePluginsHydrated()
   const canFetch = useAdminResourceEnabled(resource)
-  const { data = [], isLoading } = useAdminList<Data>(resource, canFetch)
+  const { data: rawList, isLoading } = useAdminList<Data>(resource, canFetch)
+  const data = Array.isArray(rawList) ? rawList : []
   const { remove, save } = useCrud(resource)
   const client = useQueryClient()
   const nav = useNavigate()

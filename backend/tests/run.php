@@ -161,6 +161,9 @@ require_once "$root/tests/ContractGovernanceTest.php";
 echo "Security verification\n";
 require_once "$root/tests/SecurityVerificationTest.php";
 
+echo "Demo sandbox\n";
+require_once "$root/tests/DemoSandboxTest.php";
+
 // —— Maintainability (shared helpers / error envelope) ——
 echo "Maintainability\n";
 require_once "$root/tests/MaintainabilityTest.php";

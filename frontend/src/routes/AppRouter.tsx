@@ -17,6 +17,8 @@ import { RegisterPage, RegisterVerifyPage } from '@/pages/RegisterPages'
 import { adminUrl, getAdminBase, isAdminPathname, setAdminBaseFromSite } from '@/admin/adminBasePath'
 import { LabPublicPage } from '@/modules/lab/LabPublicPage'
 import { usePackagePublicRouteElements } from '@/platform/PackagePublicRoutes'
+import { DemoEntryPage } from '@/admin/demo/DemoEntryPage'
+import { DemoRestrictedPage } from '@/admin/demo/DemoRestrictedPage'
 
 const publicPage = <T extends keyof typeof import('@/pages/PublicPages')>(name: T) =>
   lazy(() => import('@/pages/PublicPages').then((module) => ({ default: module[name] as ComponentType })))
@@ -137,10 +139,15 @@ export function AppRouter() {
       <Routes>
         <Route path={adminLogin} element={<RedirectIfAuthed><LoginPage /></RedirectIfAuthed>} />
 
+        {/* Public demo entry — no production password; creates isolated session */}
+        <Route path="/demo" element={<DemoEntryPage />} />
+        <Route path={`${adminRoot}/demo/start`} element={<DemoEntryPage />} />
+
         <Route path={adminRoot} element={<RequireAuth />}>
           <Route path="pages/:id/builder" element={<PageBuilderPage />} />
           <Route element={<AdminShell />}>
             <Route index element={<DashboardPage />} />
+            <Route path="demo/restricted" element={<DemoRestrictedPage />} />
             <Route path="*" element={<AdminScreenResolver />} />
           </Route>
         </Route>

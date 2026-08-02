@@ -18,9 +18,10 @@
 | Admin Hero без превью, на сайте есть | `cmsSync`: `hero-block.media_id` ↔ `hero_settings.background_media_id`; heal в `SitePages` + push при сохранении Admin Hero |
 | Билдер: ложный dirty / hotkeys | bake-on-open без dirty; undo к baseline save; Ctrl+C/V не перехватывают text selection; Delete (не Backspace) удаляет виджет |
 | Иконки палитры билдера | `builder/lib/widgetIcons.tsx` + CSS `.builder-palette-tile` в `frontend/src/index.css` |
-| Виджет (heading/text/hero/…) | `builder/widgets/{basic,structure,blocks,portfolio,landing,commerce,auth,access}.tsx`; универсальные: `hero-block` `showcase-block` `compare-block` `cta-block` `steps-row` `media-placeholder` `stat-row`; секции: glow/overlay/animation/responsive в `lib/sectionEffects.tsx` |
+| Виджет (heading/text/hero/…) | `builder/widgets/{basic,structure,blocks,portfolio,landing,framework,frameworkPulse,commerce,auth,access}.tsx`; универсальные: `hero-block` `showcase-block` `compare-block` `cta-block` `steps-row` `media-placeholder` `stat-row`; framework: `architecture-stack` `code-snippet` `code-tabs` `status-roadmap` `dev-journey` `repo-tree` `status-timeline` `github-pulse` `explore-doors`; секции: glow/overlay/animation/responsive в `lib/sectionEffects.tsx` |
 | Access / paywall / «кто видит блок» | Platform `Access/` + `Modules/Access/` (`GET/POST /access/*`); виджет «Доступ» (`access-container`) + `edit/AccessRuleEditor.tsx`; описания в `PluginCatalogMeta`; публичный `filterLayout` в `PublicController`; ZIP: `modules-src/{user-groups,subscriptions,wallet}/` |
 | Admin ACL / роли / capabilities | `Platform/Access/Acl/*` + provider `capability`; `PermissionService` adapter; `GET /auth/me` caps; `GET /admin/access/bootstrap`; FE `AuthContext.can` (не `role===admin`); Users/Roles UI; миграция `024_admin_access_layer.sql` |
+| Demo Sandbox (публичный Admin/Builder) | `Modules/Demo/*` + `025_demo_sandbox.sql`; `/demo?to=builder` → билдер, `/demo?to=admin` → дашборд (`DemoEntryPage`); doors: `explore-doors` + `resolveDemoDoor`; docs `docs/demo-sandbox.md` |
 | Mobile: шаги пайплайна «плывут» | `widgets/structure.tsx` → `steps-row` (1/2 col → N на lg); `panels.tsx` pipeline scroll |
 | Mobile адаптив / safe-area / FAB | `index.css` (`.cms-hero-bleed`, overlay pad, snap rail); `SiteLayout` menu lock; `CookieBanner` / `TranslateWidget` / `SupportWidget` |
 | steps-row на проде «Описание», в билдере нет | `structure.tsx` `asSteps`: в данных `body`, виджет ждал `text`; public не должен рисовать placeholder |
@@ -32,6 +33,8 @@
 | Lightbox картинок (блог обложка/контент) | `shared/ui/ImageLightbox.tsx` + `MediaImage lightbox` / `RichText` в `shared/ui/index.tsx`, `BlogPostView` |
 | Иконки карточек (features-grid, ?) | `shared/icons.tsx` + `shared/techBrandIcons.ts` (Lucide + Simple Icons) |
 | Переводчик / auto-warmup 429 | `TranslateAutoWarmup.tsx` + `SoftRateLimitMiddleware` + `TranslateModule` (batch тоже soft) |
+| Прогрев «Нет прогресса» / en→en | `TranslateModule::allowedTargets` исключает `source_lang`; иначе chunk крутит same-lang и FE стопорится |
+| Переводчик медленный при «всё в кэше» | FE `TranslateWidget`: session/memory map + paint до API; `fill_misses=false` если `cache_ready`; Google без Libre-fallback |
 | Переводчик не весь DOM / attrs / chrome | `TranslateWidget.tsx`: корни `main/header/footer/[data-translate-root]`, attrs placeholder/aria-label/title/alt, `document.title`, MutationObserver; chrome: breadcrumbs/cookie/rail/custom_html |
 | Переводчик кэш + soft miss-fill | `POST /translate/batch` `fill_misses` → `TranslateService::translateBatch(..., fillMissCap=12)`; warmup/corpus для полноты |
 | Переводчик авто-язык по стране | `TranslateGeo.php` (CF/CDN/Accept-Language) → `publicConfig.suggested_lang`; FE `TranslateWidget` если нет localStorage; fallback `en` |
@@ -180,6 +183,7 @@ portfolio/
 | `heading` `text` `image` `button` `spacer` `divider` `html` `page-loader` `chip` `chip-row` `connector-line` `step-badge` `steps-row` `media-placeholder` | `widgets/basic.tsx` + `structure.tsx` + `blocks.tsx` |
 | `hero` `projects-grid` `skills` `experience` `services` `testimonials` `blog-list` `contact-form` `profile-card` `cta-banner` | `widgets/portfolio.tsx` |
 | `image-gallery` `faq` `logos-strip` `pricing-table` `features-grid` `video-embed` `content-tabs` `hero-block` `compare-block` `showcase-block` `cta-block` `stat-row` | `widgets/landing.tsx` + `structure.tsx` + `blocks.tsx` |
+| `architecture-stack` `code-snippet` `code-tabs` `status-roadmap` `dev-journey` `repo-tree` `status-timeline` `github-pulse` `explore-doors` | `widgets/framework.tsx` + `frameworkPulse.tsx`; метрики: `frontend/scripts/generate-site-pulse.mjs` → `src/generated/sitePulse.json` |
 | `payment-checkout` `payment-methods` `seller-info` `offer-document` | `widgets/commerce.tsx` |
 | `auth-login` `auth-register` | `widgets/auth.tsx` |
 | `form` | `widgets/forms.tsx` (plugin forms) |
@@ -224,7 +228,7 @@ portfolio/
 | Что | Где |
 | --- | --- |
 | Shell админки | `admin/AdminApp.tsx` |
-| Меню админки (сетка + группы) | `AdminNavNerve.tsx` + `navIcons.ts` + `useAdminNavAttention` (бейджи); fold в `getAdminNavGrouped`; `[` = список |
+| Меню админки (сетка) | `AdminNavNerve.tsx` + `AdminApp.tsx`; `navIcons.ts` + `useAdminNavAttention`; fold в `getAdminNavGrouped` |
 | Роутинг экранов | `admin/adminRoutes.tsx` |
 | Хабы меню | `admin/adminHubs.ts` + вложенные пункты в `AdminApp` |
 | Страницы CMS (list/builder entry) | `admin/pages/PagesAdmin.tsx` |

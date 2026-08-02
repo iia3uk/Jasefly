@@ -1,16 +1,17 @@
 {
-  "title": "Модули",
-  "slug": "modules",
-  "seo_title": "Модули Jasefly CMS — система, контент, коммерция и SEO",
-  "seo_description": "Каталог реально доступных модулей: System, Users, Content, Blog, Projects, Portfolio, Products, Payments, SEO, Media, Mail и другие.",
+  "title": "Modules",
+  "slug": "cms-modules",
+  "seo_title": "Jasefly Modules — ZIP Packages and Platform SDK",
+  "seo_description": "How modules extend Jasefly: in-repo Modules/, ZIP packages via Platform SDK, bootPlatform, capabilities, builder widgets, and quarantine — not a public marketplace.",
   "layout": {
     "version": 1,
     "meta": {
-      "product": "jasefly-official"
+      "product": "jasefly-official",
+      "revision": "framework-first-2026-08-02"
     },
     "elements": [
       {
-        "id": "s_20",
+        "id": "s_mod_hero",
         "elType": "section",
         "settings": {
           "paddingY": "3.5rem",
@@ -19,29 +20,29 @@
         },
         "elements": [
           {
-            "id": "c_1z",
+            "id": "c_mod_hero",
             "elType": "column",
             "settings": {
               "width": 100
             },
             "elements": [
               {
-                "id": "w_1x",
+                "id": "w_mod_h1",
                 "elType": "widget",
                 "widgetType": "heading",
                 "settings": {
-                  "text": "Модули",
+                  "text": "Modules & packages",
                   "tag": "h1",
                   "size": "2xl",
                   "align": "left"
                 }
               },
               {
-                "id": "w_1y",
+                "id": "w_mod_intro",
                 "elType": "widget",
                 "widgetType": "text",
                 "settings": {
-                  "html": "<p>Список отражает возможности установленной CMS. Стоимость не указана — модули входят в платформу как встроенные или подключаемые пакеты.</p>",
+                  "html": "<p>Extensibility is a first-class framework concern. You can ship <strong>in-repo modules</strong> under <code>backend/src/Modules</code> + <code>frontend/src/modules</code>, or distribute <strong>ZIP packages</strong> that boot through <code>bootPlatform(PlatformContext)</code>. There is a Package Manager — not a public Module Marketplace store.</p>",
                   "align": "left"
                 }
               }
@@ -50,7 +51,7 @@
         ]
       },
       {
-        "id": "s_23",
+        "id": "s_mod_grid",
         "elType": "section",
         "settings": {
           "paddingY": "3.5rem",
@@ -59,188 +60,62 @@
         },
         "elements": [
           {
-            "id": "c_22",
+            "id": "c_mod_grid",
             "elType": "column",
             "settings": {
               "width": 100
             },
             "elements": [
               {
-                "id": "w_21",
+                "id": "w_mod_grid",
                 "elType": "widget",
                 "widgetType": "features-grid",
                 "settings": {
-                  "title": "Система",
-                  "subtitle": "Каркас runtime и администрирования.",
-                  "columns": 2,
+                  "title": "What a module can do",
+                  "subtitle": "Real registration surfaces — no invented APIs.",
+                  "columns": 3,
                   "items": [
                     {
-                      "icon": "settings",
-                      "title": "System",
-                      "body": "Категория: системный. Назначение: ядро, плагины, обновления, бэкапы, журнал. Статус: системный."
-                    },
-                    {
-                      "icon": "users",
-                      "title": "Users",
-                      "body": "Категория: системный. Назначение: авторизация, роли, права, 2FA. Статус: системный."
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "s_26",
-        "elType": "section",
-        "settings": {
-          "paddingY": "3.5rem",
-          "gap": "1.5rem",
-          "columns": 1
-        },
-        "elements": [
-          {
-            "id": "c_25",
-            "elType": "column",
-            "settings": {
-              "width": 100
-            },
-            "elements": [
-              {
-                "id": "w_24",
-                "elType": "widget",
-                "widgetType": "features-grid",
-                "settings": {
-                  "title": "Контент",
-                  "subtitle": "",
-                  "columns": 2,
-                  "items": [
-                    {
-                      "icon": "file",
-                      "title": "Content",
-                      "body": "Категория: контент. Страницы, навигация, site settings, Page Builder layouts. Статус: встроенный."
-                    },
-                    {
-                      "icon": "pen",
-                      "title": "Blog",
-                      "body": "Категория: контент. Посты, категории, теги, SEO постов. Статус: встроенный / плагин."
-                    },
-                    {
-                      "icon": "folder",
-                      "title": "Projects",
-                      "body": "Категория: контент. Портфолио-проекты и медиа. Статус: встроенный / плагин."
-                    },
-                    {
-                      "icon": "briefcase",
-                      "title": "Portfolio",
-                      "body": "Категория: продукт поверх ядра. Услуги, навыки, опыт, отзывы и связанные виджеты. Статус: плагин."
-                    },
-                    {
-                      "icon": "image",
-                      "title": "Media",
-                      "body": "Категория: контент. Медиатека и использование файлов. Статус: встроенный."
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "s_29",
-        "elType": "section",
-        "settings": {
-          "paddingY": "3.5rem",
-          "gap": "1.5rem",
-          "columns": 1
-        },
-        "elements": [
-          {
-            "id": "c_28",
-            "elType": "column",
-            "settings": {
-              "width": 100
-            },
-            "elements": [
-              {
-                "id": "w_27",
-                "elType": "widget",
-                "widgetType": "features-grid",
-                "settings": {
-                  "title": "Коммерция и продвижение",
-                  "subtitle": "",
-                  "columns": 2,
-                  "items": [
-                    {
-                      "icon": "cart",
-                      "title": "Products",
-                      "body": "Категория: коммерция. Каталог товаров и витринные шаблоны. Статус: плагин."
-                    },
-                    {
-                      "icon": "card",
-                      "title": "Payments",
-                      "body": "Категория: коммерция. Checkout, провайдеры оплаты, оферта. Статус: плагин."
-                    },
-                    {
-                      "icon": "search",
-                      "title": "SEO",
-                      "body": "Категория: продвижение. Sitemap, robots, редиректы, SEO-настройки. Статус: встроенный."
-                    },
-                    {
-                      "icon": "mail",
-                      "title": "Mail",
-                      "body": "Категория: интеграции. Письма и уведомления с контакт-формы. Статус: встроенный."
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "s_2c",
-        "elType": "section",
-        "settings": {
-          "paddingY": "3.5rem",
-          "gap": "1.5rem",
-          "columns": 1
-        },
-        "elements": [
-          {
-            "id": "c_2b",
-            "elType": "column",
-            "settings": {
-              "width": 100
-            },
-            "elements": [
-              {
-                "id": "w_2a",
-                "elType": "widget",
-                "widgetType": "features-grid",
-                "settings": {
-                  "title": "Дополнительно",
-                  "subtitle": "",
-                  "columns": 2,
-                  "items": [
-                    {
-                      "icon": "globe",
-                      "title": "Translate",
-                      "body": "Категория: дополнительный. Помощь с переводами корпуса контента. Статус: плагин."
+                      "icon": "code",
+                      "title": "bootPlatform",
+                      "body": "Preferred package entry on AbstractPackageModule — register routes, capabilities, providers."
                     },
                     {
                       "icon": "shield",
-                      "title": "DDoS",
-                      "body": "Категория: дополнительный. Интеграции с внешними anti-DDoS провайдерами при настройке. Статус: плагин."
+                      "title": "Access providers",
+                      "body": "Register AccessProvider implementations; content gates stay fail-closed."
                     },
                     {
-                      "icon": "user-plus",
-                      "title": "Registration",
-                      "body": "Категория: дополнительный. Публичная регистрация пользователей. Статус: плагин."
+                      "icon": "key",
+                      "title": "Capabilities",
+                      "body": "registerCapability + registerAdminNavItem for admin ACL and navigation."
+                    },
+                    {
+                      "icon": "layout",
+                      "title": "Builder blocks",
+                      "body": "builder()->registerBlockMeta(...) and FE builder.registerWidget."
+                    },
+                    {
+                      "icon": "zap",
+                      "title": "Events",
+                      "body": "events()->publish / subscribe for loose coupling across packages."
+                    },
+                    {
+                      "icon": "bug",
+                      "title": "Quarantine",
+                      "body": "Failed ZIP install/update can isolate the package instead of crashing the host."
                     }
                   ]
+                }
+              },
+              {
+                "id": "w_mod_code",
+                "elType": "widget",
+                "widgetType": "code-snippet",
+                "settings": {
+                  "title": "Package boot",
+                  "language": "php",
+                  "code": "public function bootPlatform(PlatformContext $ctx): void\n{\n    $ctx->access()->registerCapability([\n        'slug' => 'demo-kit.view',\n        'label' => 'Demo Kit',\n        'group' => 'modules',\n        'risk' => 'low',\n        'default_roles' => ['admin', 'editor'],\n    ]);\n    $ctx->builder()->registerBlockMeta('demo-hero', [\n        'label' => 'Demo Hero',\n        'category' => 'content',\n    ]);\n}"
                 }
               }
             ]
@@ -248,7 +123,7 @@
         ]
       },
       {
-        "id": "s_2g",
+        "id": "s_mod_cta",
         "elType": "section",
         "settings": {
           "paddingY": "3.5rem",
@@ -257,30 +132,25 @@
         },
         "elements": [
           {
-            "id": "c_2f",
+            "id": "c_mod_cta",
             "elType": "column",
             "settings": {
               "width": 100
             },
             "elements": [
               {
-                "id": "w_2d",
+                "id": "w_mod_cta",
                 "elType": "widget",
-                "widgetType": "text",
+                "widgetType": "cta-block",
                 "settings": {
-                  "html": "<p><strong>MCP и Hosting Guard</strong> — часть инструментария агента и конфигурации MCP-клиента, а не отдельный платный модуль в каталоге. Remote deploy выполняется через MCP pipeline, а не отдельным UI-модулем витрины.</p>",
-                  "align": "left"
-                }
-              },
-              {
-                "id": "w_2e",
-                "elType": "widget",
-                "widgetType": "cta-banner",
-                "settings": {
-                  "title": "Подробнее про AI-доступ",
-                  "subtitle": "",
-                  "cta_label": "MCP и AI",
-                  "cta_href": "/mcp"
+                  "title": "See modules in a live product",
+                  "cta1_label": "Live Demo",
+                  "cta1_href": "https://iia3uk.ru",
+                  "cta2_label": "Documentation",
+                  "cta2_href": "/docs",
+                  "subtitle": "iia3uk.ru runs on this same module stack.",
+                  "show_media": false,
+                  "layout": "center"
                 }
               }
             ]

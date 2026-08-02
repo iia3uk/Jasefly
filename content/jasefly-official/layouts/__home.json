@@ -2,826 +2,800 @@
   "version": 1,
   "meta": {
     "product": "jasefly-official",
-    "revision": "copy-one-idea-per-section-2026-07-24",
-    "useOnSite": true,
+    "revision": "framework-live-doors-2026-08-02",
     "seed": false,
-    "scroll_snap": "mandatory",
-    "scroll_smooth": false,
-    "snap_height": "var(--cms-snap-vh)",
-    "note": "Each section = full snap viewport, opaque bg, content centered"
+    "useOnSite": true,
+    "scroll_snap": "none",
+    "scroll_smooth": true
   },
   "elements": [
     {
-      "id": "s_2mq8c75",
+      "id": "s_hero",
       "elType": "section",
-      "settings": {
-        "paddingY": "clamp(5rem, 12vh, 8rem)",
-        "gap": "1.75rem",
-        "columns": 1,
-        "min_height": "min(92dvh, 56rem)",
-        "v_align": "center",
-        "scroll_snap": "start",
-        "snap_stop": "always",
-        "animation": "blur-up",
-        "glow": true
-      },
+      "settings": { "paddingY": "0", "gap": "1.5rem", "columns": 1, "glow": true },
       "elements": [
         {
-          "id": "c_75tq3z6",
+          "id": "c_hero",
           "elType": "column",
-          "settings": {
-            "width": 100
-          },
+          "settings": { "width": 100 },
           "elements": [
             {
-              "id": "w_hb70ci8",
+              "id": "w_hero",
               "elType": "widget",
               "widgetType": "hero-block",
               "settings": {
-                "badge": "PHP 8.3 · React · TypeScript · Vite · MySQL",
-                "title_1": "Jasefly CMS",
-                "title_2": "Модульная система управления сайтом.",
-                "body": "Одно ядро для страниц, ролей и контента. Проект собирается модулями под задачу — без отдельного application server на каждый заказ.",
-                "cta1_label": "Открыть документацию",
-                "cta1_href": "/docs",
-                "cta2_label": "Как устроен цикл",
-                "cta2_href": "#how-it-works",
-                "layout": "split",
-                "align": "left",
+                "badge": "AI-first Modular PHP Framework",
+                "title_1": "Stop rebuilding",
+                "title_2": "the same platform.",
+                "body": "Independent open-source platform: PHP, React, Builder, Platform SDK, Access, MCP, ZIP modules — already wired. CMS is one surface. The product is the framework.",
+                "cta1_label": "Open GitHub",
+                "cta1_href": "https://github.com/iia3uk/jasefly",
+                "cta2_label": "Get Started",
+                "cta2_href": "/docs",
+                "cta3_label": "Live Demo",
+                "cta3_href": "https://iia3uk.ru",
+                "cta4_label": "Documentation",
+                "cta4_href": "/docs",
                 "media_mode": "background",
-                "media_id": 10,
-                "media_url": "/landing/hero.png",
-                "media_alt": "Jasefly CMS",
-                "media_overlay": "0.2",
-                "media_object_fit": "cover",
+                "height_preset": "viewport",
+                "living": true,
+                "align": "left",
+                "layout": "split",
+                "media_overlay": "0.42",
                 "chips": [
-                  {
-                    "label": "Page Builder"
-                  },
-                  {
-                    "label": "Роли и доступ"
-                  },
-                  {
-                    "label": "Медиатека"
-                  },
-                  {
-                    "label": "SEO"
-                  }
+                  { "label": "Platform SDK" },
+                  { "label": "ZIP Runtime" },
+                  { "label": "Access Layer" },
+                  { "label": "Shared Hosting" }
                 ]
-              }
+              },
+              "elements": []
             }
           ]
         }
       ]
     },
     {
-      "id": "s_3tyr9xs",
+      "id": "s_origin",
       "elType": "section",
-      "settings": {
-        "paddingY": "clamp(2.5rem, 5vh, 4rem)",
-        "gap": "1.75rem",
-        "columns": 1,
-        "v_align": "center",
-        "scroll_snap": "start",
-        "snap_stop": "always",
-        "animation": "fade-up",
-        "htmlId": "how-it-works"
-      },
+      "settings": { "paddingY": "5rem", "gap": "1.25rem", "columns": 1, "animation": "fade-up", "glow": true },
       "elements": [
         {
-          "id": "c_75mxv7m",
+          "id": "c_origin",
           "elType": "column",
-          "settings": {
-            "width": 100
-          },
+          "settings": { "width": 100 },
           "elements": [
             {
-              "id": "w_8pvompz",
+              "id": "w_origin_h",
               "elType": "widget",
               "widgetType": "heading",
-              "settings": {
-                "text": "От IDE до production",
-                "tag": "h2",
-                "size": "xl",
-                "align": "center"
-              }
+              "settings": { "text": "I was tired of assembling the same stack.", "tag": "h2", "size": "xl", "align": "left" },
+              "elements": []
             },
             {
-              "id": "w_rx3nccy",
+              "id": "w_origin_t",
               "elType": "widget",
               "widgetType": "text",
               "settings": {
-                "html": "<p style=\"text-align:center;max-width:36rem;margin:0 auto\">Пишете код у себя. Сборка и проверки — до выкладки. На сервер уходит готовый артефакт.</p>",
-                "align": "center"
-              }
-            },
-            {
-              "id": "w_udalxqd",
-              "elType": "widget",
-              "widgetType": "steps-row",
-              "settings": {
-                "animate": true,
-                "show_line": true,
-                "items": [
-                  {
-                    "badge": "1",
-                    "title": "IDE",
-                    "text": "Правки в привычном окружении."
-                  },
-                  {
-                    "badge": "2",
-                    "title": "Build",
-                    "text": "Frontend собирается в статику."
-                  },
-                  {
-                    "badge": "3",
-                    "title": "Test",
-                    "text": "Ошибки ловятся до релиза."
-                  },
-                  {
-                    "badge": "4",
-                    "title": "ZIP",
-                    "text": "Пакет install или update."
-                  },
-                  {
-                    "badge": "5",
-                    "title": "Update",
-                    "text": "Применение через админку."
-                  },
-                  {
-                    "badge": "6",
-                    "title": "Live",
-                    "text": "Сайт снова в рабочем режиме."
-                  }
-                ]
-              }
+                "html": "<p>Every new PHP product starts the same way.</p><p>Pick a backend framework.</p><p>Then an admin.</p><p>Then a builder.</p><p>Then ACL.</p><p>Then updates.</p><p>Then a package lifecycle.</p><p>Then docs.</p><p>Then AI glue.</p><p>Weeks disappear into infrastructure — before the product exists.</p><p>Jasefly exists because that platform was built once.</p><p>Now the work is the product.</p>",
+                "align": "left"
+              },
+              "elements": []
             }
           ]
         }
       ]
     },
     {
-      "id": "s_rrhqljt",
+      "id": "s_why",
       "elType": "section",
-      "settings": {
-        "paddingY": "clamp(2.5rem, 5vh, 4rem)",
-        "gap": "1.75rem",
-        "columns": 1,
-        "v_align": "center",
-        "scroll_snap": "start",
-        "snap_stop": "always",
-        "animation": "fade-up",
-        "background": "rgba(255,255,255,0.015)"
-      },
+      "settings": { "paddingY": "4.5rem", "gap": "1.25rem", "columns": 1, "animation": "fade-up" },
       "elements": [
         {
-          "id": "c_g197qnl",
+          "id": "c_why",
           "elType": "column",
-          "settings": {
-            "width": 100
-          },
+          "settings": { "width": 100 },
           "elements": [
             {
-              "id": "w_q3hfu16",
+              "id": "w_why_h",
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": { "text": "Why Jasefly?", "tag": "h2", "size": "xl", "align": "left" },
+              "elements": []
+            },
+            {
+              "id": "w_why_t",
+              "elType": "widget",
+              "widgetType": "text",
+              "settings": {
+                "html": "<p>A modern PHP platform that feels complete — without forcing Docker, Kubernetes, or Node on the server.</p><p>Shared hosting. Prebuilt React assets. ZIP updates. Quarantine for broken modules.</p><p>A real Platform SDK. MCP for controlled AI ops — not shell root.</p>",
+                "align": "left"
+              },
+              "elements": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s_journey",
+      "elType": "section",
+      "settings": { "paddingY": "4.5rem", "gap": "1.5rem", "columns": 1, "animation": "fade-up", "glow": true },
+      "elements": [
+        {
+          "id": "c_journey",
+          "elType": "column",
+          "settings": { "width": 100 },
+          "elements": [
+            {
+              "id": "w_journey",
+              "elType": "widget",
+              "widgetType": "dev-journey",
+              "settings": {
+                "title": "Developer journey",
+                "subtitle": "The lifecycle of a product on Jasefly — not a tech diagram.",
+                "items": [
+                  { "title": "Idea", "text": "A product need appears" },
+                  { "title": "Build", "text": "Extend the platform" },
+                  { "title": "ZIP", "text": "Package the module" },
+                  { "title": "Production", "text": "Ship on shared hosting" },
+                  { "title": "Update", "text": "Safe SiteUpdater release" },
+                  { "title": "AI", "text": "MCP-assisted ops" },
+                  { "title": "Next", "text": "Another feature" }
+                ]
+              },
+              "elements": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s_philosophy",
+      "elType": "section",
+      "settings": { "paddingY": "4.5rem", "gap": "1.25rem", "columns": 1, "animation": "fade-up" },
+      "elements": [
+        {
+          "id": "c_philosophy",
+          "elType": "column",
+          "settings": { "width": 100 },
+          "elements": [
+            {
+              "id": "w_philosophy_h",
+              "elType": "widget",
+              "widgetType": "heading",
+              "settings": { "text": "Philosophy", "tag": "h2", "size": "xl", "align": "left" },
+              "elements": []
+            },
+            {
+              "id": "w_philosophy_t",
+              "elType": "widget",
+              "widgetType": "text",
+              "settings": {
+                "html": "<p>Frameworks usually give you a backend.</p><p>Jasefly gives you a platform.</p><p>Admin, public site, builder, access, packages, updates, and AI tooling share one runtime — so product work starts earlier.</p><p>This site is not a brochure. Where a surface exists, open it.</p>",
+                "align": "left"
+              },
+              "elements": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s_diff",
+      "elType": "section",
+      "settings": { "paddingY": "4.5rem", "gap": "2.5rem", "columns": 1, "animation": "fade-up" },
+      "elements": [
+        {
+          "id": "c_diff",
+          "elType": "column",
+          "settings": { "width": 100 },
+          "elements": [
+            {
+              "id": "w_diff",
               "elType": "widget",
               "widgetType": "compare-block",
               "settings": {
-                "title": "Меньше часов на обслуживание сервера",
-                "subtitle": "Типичный VPS забирает время на патчи, процессы и ритуал деплоя. Здесь эта рутина не становится частью каждого проекта.",
-                "left_title": "Типичный VPS",
-                "right_title": "С Jasefly",
-                "left_items": "Патчи ОС и зависимостей\nСлежение за процессами\nСкрипты деплоя под каждый релиз\nSSH ради мелких правок\nОтдельный runtime под UI",
-                "right_items": "Часы возвращаются в продукт\nКонтент правят в админке\nРелиз — операция, не ритуал\nНет Node-процесса на проде\nХватает PHP и MySQL",
-                "footnote": "Отдельный VPS остаётся нужен для нестандартных runtime и высокой нагрузки."
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "s_fpsejgc",
-      "elType": "section",
-      "settings": {
-        "paddingY": "clamp(2.5rem, 5vh, 4rem)",
-        "gap": "1.75rem",
-        "columns": 1,
-        "v_align": "center",
-        "scroll_snap": "start",
-        "snap_stop": "always",
-        "animation": "fade-up"
-      },
-      "elements": [
-        {
-          "id": "c_c6cg6bn",
-          "elType": "column",
-          "settings": {
-            "width": 100
-          },
-          "elements": [
+                "title": "How is it different?",
+                "subtitle": "Different problem. Different shape of product.",
+                "left_title": "Laravel / Symfony",
+                "left_items": "Excellent backend frameworks\nYou assemble the product platform yourself\nAdmin, SPA, packages, deploy, ACL are your glue\nYou start from application code",
+                "right_title": "Jasefly",
+                "right_items": "A ready product platform\nPHP + React + Builder already wired\nPlatform SDK, ZIP Runtime, Access, Modules, MCP\nYou extend a running system",
+                "footnote": ""
+              },
+              "elements": []
+            },
             {
-              "id": "w_pc2a7xa",
+              "id": "w_diff_wp",
               "elType": "widget",
-              "widgetType": "showcase-block",
+              "widgetType": "compare-block",
               "settings": {
-                "title": "Страницы меняются без релиза кода",
-                "body": "Редактор собирает макет и публикует черновик. Разработчик не открывает шаблоны ради каждой правки текста.",
-                "points": "Черновик до публикации\nSEO рядом со структурой\nОдин холст для команды",
-                "media_url": "/landing/page-builder.png",
-                "media_alt": "Page Builder",
-                "reverse": false
-              }
+                "title": "",
+                "subtitle": "WordPress optimizes for content. Jasefly optimizes for product architecture.",
+                "left_title": "WordPress",
+                "left_items": "Content-first\nPlugins\nThemes\nWebsite management",
+                "right_title": "Jasefly",
+                "right_items": "Platform-first\nSDK\nModules\nFramework\nProduct architecture",
+                "footnote": "CMS is a surface on Jasefly — not the definition of the project."
+              },
+              "elements": []
             }
           ]
         }
       ]
     },
     {
-      "id": "s_ly360zu",
+      "id": "s_for",
       "elType": "section",
-      "settings": {
-        "paddingY": "clamp(2.5rem, 5vh, 4rem)",
-        "gap": "1.75rem",
-        "columns": 1,
-        "v_align": "center",
-        "scroll_snap": "start",
-        "snap_stop": "always",
-        "animation": "fade-up"
-      },
+      "settings": { "paddingY": "4.5rem", "gap": "1.5rem", "columns": 1, "animation": "fade-up", "glow": true },
       "elements": [
         {
-          "id": "c_2tdzkc7",
+          "id": "c_for",
           "elType": "column",
-          "settings": {
-            "width": 100
-          },
+          "settings": { "width": 100 },
           "elements": [
             {
-              "id": "w_4xk0eol",
-              "elType": "widget",
-              "widgetType": "showcase-block",
-              "settings": {
-                "title": "Агент получает tools, а не весь репозиторий",
-                "body": "Через MCP модель видит карту сайта, digest и разрешённые операции. Действует в рамках токена — без произвольного доступа к файлам.",
-                "points": "Список tools вместо shell\nScoped-права по токену\nПодтверждение чувствительных шагов",
-                "media_url": "/landing/mcp-workflow.png",
-                "media_alt": "MCP для агентов",
-                "reverse": true
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "s_suy5w2j",
-      "elType": "section",
-      "settings": {
-        "paddingY": "clamp(2.5rem, 5vh, 4rem)",
-        "gap": "1.75rem",
-        "columns": 1,
-        "v_align": "center",
-        "scroll_snap": "start",
-        "snap_stop": "always",
-        "animation": "fade-up"
-      },
-      "elements": [
-        {
-          "id": "c_tws0fvw",
-          "elType": "column",
-          "settings": {
-            "width": 100
-          },
-          "elements": [
-            {
-              "id": "w_8hy7i9l",
-              "elType": "widget",
-              "widgetType": "showcase-block",
-              "settings": {
-                "title": "Релиз с проверками, а не «залить поверх»",
-                "body": "Перед включением сверяется манифест, пишется changelog, сохраняются uploads и настройки. План отката задаётся до применения.",
-                "points": "Changelog до включения\nПроверки целостности\nКонтент и config не затираются",
-                "media_url": "/landing/update-zip.png",
-                "media_alt": "Безопасные обновления",
-                "reverse": false
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "s_rim3ihm",
-      "elType": "section",
-      "settings": {
-        "paddingY": "clamp(2.5rem, 5vh, 4rem)",
-        "gap": "1.75rem",
-        "columns": 1,
-        "v_align": "center",
-        "scroll_snap": "start",
-        "snap_stop": "always",
-        "animation": "scale-in",
-        "background": "rgba(255,255,255,0.015)"
-      },
-      "elements": [
-        {
-          "id": "c_mz9836a",
-          "elType": "column",
-          "settings": {
-            "width": 100
-          },
-          "elements": [
-            {
-              "id": "w_wenqg17",
+              "id": "w_for",
               "elType": "widget",
               "widgetType": "features-grid",
               "settings": {
-                "title": "Какие задачи закрывает",
-                "subtitle": "Не перечень экранов — сдвиги в работе команды.",
-                "columns": 3,
+                "title": "Designed for",
+                "subtitle": "Where the platform fits without stretching the model.",
+                "columns": 4,
+                "accented": true,
                 "items": [
-                  {
-                    "title": "Контент меняется чаще кода",
-                    "body": "Правки выходят без ожидания деплоя.",
-                    "icon": "layout-template"
-                  },
-                  {
-                    "title": "Редакторам не нужен сервер",
-                    "body": "Роли и доступ живут в админке.",
-                    "icon": "users"
-                  },
-                  {
-                    "title": "Проект ≠ полный набор модулей",
-                    "body": "Включаете только то, что нужно заказу.",
-                    "icon": "layers"
-                  },
-                  {
-                    "title": "Медиа не в git",
-                    "body": "Файлы в хранилище CMS, не в коммитах.",
-                    "icon": "image"
-                  },
-                  {
-                    "title": "Публикация осознанная",
-                    "body": "Черновик отдельно от живого URL.",
-                    "icon": "file"
-                  },
-                  {
-                    "title": "Аудит действий",
-                    "body": "Видно, кто менял страницы и настройки.",
-                    "icon": "shield"
-                  }
+                  { "icon": "zap", "title": "SaaS", "body": "" },
+                  { "icon": "layout", "title": "Internal tools", "body": "" },
+                  { "icon": "globe", "title": "Company websites", "body": "" },
+                  { "icon": "shield", "title": "Admin panels", "body": "" },
+                  { "icon": "users", "title": "Client portals", "body": "" },
+                  { "icon": "cpu", "title": "AI applications", "body": "" },
+                  { "icon": "layers", "title": "Product platforms", "body": "" }
                 ]
-              }
+              },
+              "elements": []
             }
           ]
         }
       ]
     },
     {
-      "id": "s_qgae2du",
+      "id": "s_not",
       "elType": "section",
-      "settings": {
-        "paddingY": "clamp(2.5rem, 5vh, 4rem)",
-        "gap": "1.75rem",
-        "columns": 1,
-        "v_align": "center",
-        "scroll_snap": "start",
-        "snap_stop": "always",
-        "animation": "fade-up"
-      },
+      "settings": { "paddingY": "4rem", "gap": "1.25rem", "columns": 1, "animation": "fade-up" },
       "elements": [
         {
-          "id": "c_cfa6axq",
+          "id": "c_not",
           "elType": "column",
-          "settings": {
-            "width": 100
-          },
+          "settings": { "width": 100 },
           "elements": [
             {
-              "id": "w_qvhy8yt",
+              "id": "w_not_h",
               "elType": "widget",
               "widgetType": "heading",
-              "settings": {
-                "text": "Как агент работает с сайтом",
-                "tag": "h2",
-                "size": "lg",
-                "align": "left"
-              }
+              "settings": { "text": "Probably not for you if…", "tag": "h2", "size": "xl", "align": "left" },
+              "elements": []
             },
             {
-              "id": "w_jbpimfx",
+              "id": "w_not_t",
               "elType": "widget",
               "widgetType": "text",
               "settings": {
-                "html": "<p>Сначала карта и digest. Затем выбор tool. Затем действие в лимитах токена. Больше структуры — меньше догадок о содержимом.</p>",
+                "html": "<ul><li>you only need a blog</li><li>you only need WordPress themes</li><li>you only want a bare API backend</li><li>you do not need a platform</li></ul><p>That honesty saves everyone time.</p>",
                 "align": "left"
-              }
-            },
-            {
-              "id": "w_bbd7xu7",
-              "elType": "widget",
-              "widgetType": "mcp-inspector",
-              "settings": {
-                "caption": "Поверхность tools · не файловая система",
-                "preview_text": "Агент оперирует ресурсами CMS: страницы, навигация, настройки — строго по правам токена."
-              }
+              },
+              "elements": []
             }
           ]
         }
       ]
     },
     {
-      "id": "s_rrejo0n",
+      "id": "s_explore",
       "elType": "section",
-      "settings": {
-        "paddingY": "clamp(2.5rem, 5vh, 4rem)",
-        "gap": "1.75rem",
-        "columns": 1,
-        "v_align": "center",
-        "scroll_snap": "start",
-        "snap_stop": "always",
-        "animation": "fade-up",
-        "background": "rgba(255,255,255,0.015)"
-      },
+      "settings": { "paddingY": "5rem", "gap": "1.5rem", "columns": 1, "animation": "fade-up", "glow": true },
       "elements": [
         {
-          "id": "c_98c1io1",
+          "id": "c_explore",
           "elType": "column",
-          "settings": {
-            "width": 100
-          },
+          "settings": { "width": 100 },
           "elements": [
             {
-              "id": "w_chpr39u",
+              "id": "w_explore",
               "elType": "widget",
-              "widgetType": "heading",
+              "widgetType": "explore-doors",
               "settings": {
-                "text": "Контрольные точки перед включением",
-                "tag": "h2",
-                "size": "lg",
-                "align": "left"
-              }
-            },
-            {
-              "id": "w_keod05o",
-              "elType": "widget",
-              "widgetType": "pipeline-panel",
-              "settings": {
-                "active_index": 2,
-                "caption": "Статусы видны в админке до и после каждого шага",
-                "panel_text": "На этом этапе сверяется changelog и совместимость. Применение стартует только после прохождения проверок.",
-                "steps": [
-                  {
-                    "label": "Манифест",
-                    "icon": "box",
-                    "text": "Читается состав пакета и целевая версия."
-                  },
-                  {
-                    "label": "Совместимость",
-                    "icon": "network",
-                    "text": "Проверяются зависимости и схема БД."
-                  },
-                  {
-                    "label": "Changelog",
-                    "icon": "file-minus",
-                    "text": "Фиксируется, что изменится на сайте."
-                  },
-                  {
-                    "label": "Применение",
-                    "icon": "upload",
-                    "text": "Миграции и файлы включаются по порядку."
-                  },
-                  {
-                    "label": "Контроль",
-                    "icon": "check",
-                    "text": "Сайт отвечает, журнал записан."
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "s_ze0lecv",
-      "elType": "section",
-      "settings": {
-        "paddingY": "clamp(2.5rem, 5vh, 4rem)",
-        "gap": "1.75rem",
-        "columns": 1,
-        "v_align": "center",
-        "scroll_snap": "start",
-        "snap_stop": "always",
-        "animation": "fade-up"
-      },
-      "elements": [
-        {
-          "id": "c_gdvbut6",
-          "elType": "column",
-          "settings": {
-            "width": 100
-          },
-          "elements": [
-            {
-              "id": "w_fg68y2y",
-              "elType": "widget",
-              "widgetType": "heading",
-              "settings": {
-                "text": "Соберите CMS под конкретный проект",
-                "tag": "h2",
-                "size": "lg",
-                "align": "left"
-              }
-            },
-            {
-              "id": "w_8xx7ldb",
-              "elType": "widget",
-              "widgetType": "module-toggles",
-              "settings": {
-                "caption": "Модули независимы. Зависимости объявлены явно. Выключаете лишнее — ядро не переписываете.",
-                "columns": 3,
+                "kicker": "Don't look at screenshots.",
+                "title": "Open the real thing",
+                "subtitle": "Jasefly is a working platform. These doors open live surfaces — or an honest status when a public demo is not ready yet.",
                 "items": [
                   {
-                    "label": "Система",
+                    "icon": "layout",
+                    "title": "Builder",
+                    "body": "Isolated Demo Sandbox — edit layouts without touching production.",
+                    "href": "/demo",
+                    "cta": "Open Admin Demo →",
+                    "status": "live"
+                  },
+                  {
                     "icon": "settings",
-                    "on": true,
-                    "text": "Ядро, роли, настройки сайта"
+                    "title": "Admin",
+                    "body": "Same Demo Sandbox shell — dashboard, pages, media. No production data.",
+                    "href": "/demo",
+                    "cta": "Open Admin Demo →",
+                    "status": "live"
                   },
                   {
-                    "label": "Контент",
-                    "icon": "file",
-                    "on": true,
-                    "text": "Страницы, билдер, медиа"
+                    "icon": "book-open",
+                    "title": "Documentation",
+                    "body": "Project documentation on this site — not a marketing page.",
+                    "href": "/docs",
+                    "cta": "Open live →",
+                    "status": "live"
                   },
                   {
-                    "label": "Блог",
-                    "icon": "megaphone",
-                    "on": true,
-                    "text": "Посты и лента"
+                    "icon": "code",
+                    "title": "Platform SDK",
+                    "body": "REST and PlatformContext surfaces developers actually call.",
+                    "href": "/api-docs",
+                    "cta": "Open live →",
+                    "status": "live"
                   },
                   {
-                    "label": "Магазин",
-                    "icon": "shop",
-                    "on": false,
-                    "text": "Каталог — если нужен заказчику"
+                    "icon": "layers",
+                    "title": "Architecture",
+                    "body": "The layer map used to explain Jasefly — same diagram, live page.",
+                    "href": "/workflow",
+                    "cta": "Open live →",
+                    "status": "live"
                   },
                   {
-                    "label": "Платежи",
-                    "icon": "package",
-                    "on": false,
-                    "text": "Зависит от модуля магазина"
+                    "icon": "github",
+                    "title": "Repository",
+                    "body": "Source of truth. Clone it.",
+                    "href": "https://github.com/iia3uk/jasefly",
+                    "cta": "Open GitHub →",
+                    "status": "live"
                   },
                   {
-                    "label": "Агенты",
-                    "icon": "network",
-                    "on": true,
-                    "text": "Протокол tools для внешних агентов"
-                  },
-                  {
-                    "label": "Переводчик",
-                    "icon": "puzzle",
-                    "on": true,
-                    "text": "Языки поверх готовых страниц"
-                  },
-                  {
-                    "label": "Поддержка",
-                    "icon": "shield",
-                    "on": true,
-                    "text": "Чат и FAQ на сайте"
-                  },
-                  {
-                    "label": "Lab",
-                    "icon": "box",
-                    "on": false,
-                    "text": "Песочница экспериментов"
+                    "icon": "globe",
+                    "title": "Production Site",
+                    "body": "iia3uk.ru — the only production installation of this platform today.",
+                    "href": "https://iia3uk.ru",
+                    "cta": "Open live →",
+                    "status": "live"
                   }
                 ]
-              }
+              },
+              "elements": []
             }
           ]
         }
       ]
     },
     {
-      "id": "s_dg7hvf9",
+      "id": "s_built",
       "elType": "section",
-      "settings": {
-        "paddingY": "clamp(2.5rem, 5vh, 4rem)",
-        "gap": "1.75rem",
-        "columns": 1,
-        "v_align": "center",
-        "scroll_snap": "start",
-        "snap_stop": "always",
-        "animation": "fade-up",
-        "background": "rgba(255,255,255,0.015)"
-      },
+      "settings": { "paddingY": "5rem", "gap": "1.5rem", "columns": 1, "animation": "fade-up", "glow": true },
       "elements": [
         {
-          "id": "c_kp1uqbb",
+          "id": "c_built",
           "elType": "column",
-          "settings": {
-            "width": 100
-          },
+          "settings": { "width": 100 },
           "elements": [
             {
-              "id": "w_q1p6mj6",
+              "id": "w_built",
+              "elType": "widget",
+              "widgetType": "showcase-block",
+              "settings": {
+                "title": "Built in production",
+                "body": "One real site. No invented client logos. Open it — do not study a mockup.",
+                "points": "iia3uk.ru — the only production project on Jasefly today\nFull public site + admin on the same framework\nShared hosting, real traffic, real updates\nHonesty beats a fake ecosystem",
+                "media_id": 14,
+                "media_url": "",
+                "media_alt": "iia3uk.ru — the only production site on Jasefly today",
+                "media_ratio": "16/9",
+                "media_placeholder": "iia3uk.ru",
+                "reverse": true
+              },
+              "elements": []
+            },
+            {
+              "id": "w_built_cta",
+              "elType": "widget",
+              "widgetType": "cta-banner",
+              "settings": {
+                "title": "Open the production site",
+                "subtitle": "The only live product installation — end to end on Jasefly.",
+                "cta_label": "Open iia3uk.ru →",
+                "cta_href": "https://iia3uk.ru"
+              },
+              "elements": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s_together",
+      "elType": "section",
+      "settings": { "paddingY": "5rem", "gap": "1.5rem", "columns": 1, "animation": "fade-up" },
+      "elements": [
+        {
+          "id": "c_together",
+          "elType": "column",
+          "settings": { "width": 100 },
+          "elements": [
+            {
+              "id": "w_together",
+              "elType": "widget",
+              "widgetType": "architecture-stack",
+              "settings": {
+                "title": "Everything works together",
+                "subtitle": "Not plugins glued after the fact. One platform.",
+                "layers": [
+                  { "label": "Builder", "hint": "Compose pages in the real codebase" },
+                  { "label": "Access", "hint": "Content gates + admin capabilities" },
+                  { "label": "ZIP", "hint": "Install · update · quarantine" },
+                  { "label": "SDK", "hint": "Stable contracts for packages" },
+                  { "label": "Events", "hint": "publish / subscribe across modules" },
+                  { "label": "MCP", "hint": "Controlled AI operations" },
+                  { "label": "Deployment", "hint": "Shared hosting · SiteUpdater" }
+                ]
+              },
+              "elements": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s_arch",
+      "elType": "section",
+      "settings": { "paddingY": "5rem", "gap": "1.5rem", "columns": 1, "animation": "fade-up", "glow": true },
+      "elements": [
+        {
+          "id": "c_arch",
+          "elType": "column",
+          "settings": { "width": 100 },
+          "elements": [
+            {
+              "id": "w_arch",
+              "elType": "widget",
+              "widgetType": "architecture-stack",
+              "settings": {
+                "title": "Request path",
+                "subtitle": "Hover a layer — the next hop lights up.",
+                "layers": [
+                  { "label": "Browser", "hint": "Visitor · admin · agent tooling" },
+                  { "label": "React", "hint": "Public site · Admin SPA · Builder" },
+                  { "label": "REST", "hint": "/api/v1" },
+                  { "label": "Platform SDK", "hint": "Stable contracts for packages" },
+                  { "label": "Access Layer", "hint": "Content rules · admin capabilities" },
+                  { "label": "ZIP Runtime", "hint": "Install · update · quarantine" },
+                  { "label": "PHP Core", "hint": "Router · modules · services" },
+                  { "label": "MySQL", "hint": "Schema · migrations" },
+                  { "label": "Shared Hosting", "hint": "Apache · PHP · no Node on server" }
+                ]
+              },
+              "elements": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s_feat",
+      "elType": "section",
+      "settings": { "paddingY": "5rem", "gap": "1.5rem", "columns": 1, "animation": "fade-up" },
+      "elements": [
+        {
+          "id": "c_feat",
+          "elType": "column",
+          "settings": { "width": 100 },
+          "elements": [
+            {
+              "id": "w_feat",
               "elType": "widget",
               "widgetType": "features-grid",
               "settings": {
-                "title": "Кому это рабочий процесс",
-                "subtitle": "Если важны повторяемый релиз и админка для команды.",
+                "title": "What you get as a developer",
+                "subtitle": "Open a live surface — not a slide.",
                 "columns": 3,
+                "accented": true,
                 "items": [
-                  {
-                    "title": "Сольные разработчики",
-                    "body": "Один процесс на все клиентские сайты.",
-                    "icon": "code-xml"
-                  },
-                  {
-                    "title": "Фрилансеры",
-                    "body": "Смена проекта без смены стека.",
-                    "icon": "users"
-                  },
-                  {
-                    "title": "Студии",
-                    "body": "Общие соглашения по модулям и билдеру.",
-                    "icon": "layers"
-                  },
-                  {
-                    "title": "Контент-команды",
-                    "body": "Правки без тикета разработчику.",
-                    "icon": "file"
-                  },
-                  {
-                    "title": "Продуктовые команды",
-                    "body": "Сайт в том же релизном цикле, что и код.",
-                    "icon": "rocket"
-                  }
+                  { "icon": "layout", "title": "Builder", "body": "Compose pages visually. Keep a real React codebase.", "href": "/demo", "cta": "Open Admin Demo →" },
+                  { "icon": "code", "title": "Platform SDK", "body": "Stable contracts. No private-framework hacks.", "href": "/api-docs", "cta": "Open live →" },
+                  { "icon": "package", "title": "ZIP Modules", "body": "Install, update, roll back. Quarantine on failure.", "href": "/cms-modules", "cta": "Open live →" },
+                  { "icon": "layers", "title": "Architecture", "body": "How the layers connect in one runtime.", "href": "/workflow", "cta": "Open live →" },
+                  { "icon": "cpu", "title": "MCP", "body": "Controlled AI ops. No shell access to the host.", "href": "/mcp", "cta": "Open live →" },
+                  { "icon": "server", "title": "Shared Hosting", "body": "Ordinary PHP hosting. No DevOps cluster required.", "href": "/shared-hosting", "cta": "Open live →" }
                 ]
-              }
+              },
+              "elements": []
             }
           ]
         }
       ]
     },
     {
-      "id": "s_xernpw4",
+      "id": "s_repo",
       "elType": "section",
-      "settings": {
-        "paddingY": "clamp(2.5rem, 5vh, 4rem)",
-        "gap": "1.75rem",
-        "columns": 1,
-        "v_align": "center",
-        "scroll_snap": "start",
-        "snap_stop": "always",
-        "animation": "fade-up"
-      },
+      "settings": { "paddingY": "5rem", "gap": "1.5rem", "columns": 1, "animation": "fade-up", "glow": true },
       "elements": [
         {
-          "id": "c_w9kgi0j",
+          "id": "c_repo",
           "elType": "column",
-          "settings": {
-            "width": 100
-          },
+          "settings": { "width": 100 },
           "elements": [
             {
-              "id": "w_voirej8",
+              "id": "w_repo",
+              "elType": "widget",
+              "widgetType": "repo-tree",
+              "settings": {
+                "title": "Real project structure",
+                "subtitle": "What you see when you clone the repository.",
+                "repo_href": "https://github.com/iia3uk/jasefly",
+                "tree": "jasefly/\n├── backend/          PHP core · Platform SDK · modules\n├── frontend/         React admin · public · builder\n├── modules-src/      ZIP package sources\n├── content/          Content packs\n├── docs/             Engineer documentation\n└── mcp-cms/          MCP server for agents"
+              },
+              "elements": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s_dx",
+      "elType": "section",
+      "settings": { "paddingY": "5rem", "gap": "1.25rem", "columns": 1, "animation": "fade-up" },
+      "elements": [
+        {
+          "id": "c_dx",
+          "elType": "column",
+          "settings": { "width": 100 },
+          "elements": [
+            {
+              "id": "w_dx_tabs",
+              "elType": "widget",
+              "widgetType": "code-tabs",
+              "settings": {
+                "title": "Developer experience",
+                "subtitle": "Real Platform SDK surfaces. Then open the repo and write the first ZIP module.",
+                "tabs": [
+                  {
+                    "label": "PHP",
+                    "language": "php",
+                    "title": "bootPlatform · access · events · builder",
+                    "code": "public function bootPlatform(PlatformContext $ctx): void\n{\n    $ctx->access()->registerCapability([\n        'slug' => 'demo-kit.view',\n        'label' => 'Demo Kit',\n        'group' => 'modules',\n        'risk' => 'low',\n        'default_roles' => ['admin', 'editor'],\n    ]);\n\n    $ctx->events()->subscribe('page.published', $this->onPublished(...));\n    $ctx->events()->publish('demo.ready', ['slug' => $slug]);\n\n    $ctx->builder()->registerBlockMeta('demo-hero', [\n        'label' => 'Demo Hero',\n        'category' => 'content',\n    ]);\n}"
+                  },
+                  {
+                    "label": "TypeScript",
+                    "language": "ts",
+                    "title": "register · registerNavItem · registerWidget",
+                    "code": "export function register(ctx: PlatformFrontendContext) {\n  ctx.admin.registerPage({ path: 'demo', element: DemoPage })\n  ctx.admin.registerNavItem({\n    group: 'Content',\n    path: 'demo',\n    label: 'Demo',\n  })\n  ctx.builder.registerWidget({\n    type: 'demo-block',\n    label: 'Demo',\n    Render: DemoWidget,\n  })\n}"
+                  },
+                  {
+                    "label": "HTTP",
+                    "language": "http",
+                    "title": "Access + auth surfaces",
+                    "code": "GET  /api/v1/access/providers\nPOST /api/v1/access/can\nGET  /api/v1/auth/me\nGET  /api/v1/docs"
+                  },
+                  {
+                    "label": "CLI",
+                    "language": "bash",
+                    "title": "backend/bin/sdk.php",
+                    "code": "php backend/bin/sdk.php list-public-services\nphp backend/bin/sdk.php list-capabilities\nphp backend/bin/sdk.php certify path/to/package\nphp backend/bin/sdk.php sdk-report"
+                  }
+                ]
+              },
+              "elements": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s_docs",
+      "elType": "section",
+      "settings": { "paddingY": "4.5rem", "gap": "1.5rem", "columns": 1, "animation": "fade-up" },
+      "elements": [
+        {
+          "id": "c_docs",
+          "elType": "column",
+          "settings": { "width": 100 },
+          "elements": [
+            {
+              "id": "w_docs",
+              "elType": "widget",
+              "widgetType": "features-grid",
+              "settings": {
+                "title": "Where to go next",
+                "subtitle": "Short public guides. Deep docs also live in the repo under docs/.",
+                "columns": 3,
+                "accented": false,
+                "items": [
+                  { "icon": "book-open", "title": "Documentation", "body": "Clone or install. First admin hour.", "href": "/docs", "cta": "Open live →" },
+                  { "icon": "download", "title": "Installation", "body": "Shared-hosting ZIP and updates.", "href": "/shared-hosting", "cta": "Open live →" },
+                  { "icon": "layers", "title": "Architecture", "body": "How the layers connect.", "href": "/workflow", "cta": "Open live →" },
+                  { "icon": "code", "title": "Platform SDK", "body": "Contracts packages may call.", "href": "/api-docs", "cta": "Open live →" },
+                  { "icon": "package", "title": "Modules", "body": "ZIP packages — not a public store.", "href": "/cms-modules", "cta": "Open live →" },
+                  { "icon": "github", "title": "Repository", "body": "Source of truth on GitHub.", "href": "https://github.com/iia3uk/jasefly", "cta": "Open GitHub →" }
+                ]
+              },
+              "elements": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s_pulse",
+      "elType": "section",
+      "settings": { "paddingY": "5rem", "gap": "1.5rem", "columns": 1, "animation": "fade-up", "glow": true },
+      "elements": [
+        {
+          "id": "c_pulse",
+          "elType": "column",
+          "settings": { "width": 100 },
+          "elements": [
+            {
+              "id": "w_pulse",
+              "elType": "widget",
+              "widgetType": "github-pulse",
+              "settings": {
+                "title": "Project pulse",
+                "subtitle": "Generated at build time from this repository — version, metrics, recent commits.",
+                "repo_href": "https://github.com/iia3uk/jasefly"
+              },
+              "elements": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s_road",
+      "elType": "section",
+      "settings": { "paddingY": "5rem", "gap": "2rem", "columns": 1, "animation": "fade-up" },
+      "elements": [
+        {
+          "id": "c_road",
+          "elType": "column",
+          "settings": { "width": 100 },
+          "elements": [
+            {
+              "id": "w_timeline",
+              "elType": "widget",
+              "widgetType": "status-timeline",
+              "settings": {
+                "title": "Roadmap",
+                "subtitle": "Direction of travel. Exploring is curiosity — not a shipping promise.",
+                "completed_title": "Completed",
+                "current_title": "Current",
+                "next_title": "Next",
+                "future_title": "Future",
+                "completed": [
+                  { "text": "Platform SDK + PlatformContext" },
+                  { "text": "ZIP install / update / quarantine" },
+                  { "text": "Access Layer + admin ACL" },
+                  { "text": "Visual Page Builder" },
+                  { "text": "MCP + SiteUpdater" }
+                ],
+                "current": [
+                  { "text": "Package Manager UX" },
+                  { "text": "SDK certification governance" },
+                  { "text": "Onboarding polish" }
+                ],
+                "next": [
+                  { "text": "Deeper package tooling" },
+                  { "text": "Clearer SDK docs in-repo" }
+                ],
+                "future": [
+                  { "text": "Module marketplace" },
+                  { "text": "AI Builder assistant" },
+                  { "text": "Visual workflow automation" }
+                ]
+              },
+              "elements": []
+            },
+            {
+              "id": "w_road",
+              "elType": "widget",
+              "widgetType": "status-roadmap",
+              "settings": {
+                "title": "Status board",
+                "subtitle": "Same honesty in three columns.",
+                "done_title": "Done",
+                "progress_title": "In Progress",
+                "planned_title": "Exploring",
+                "done": [
+                  { "text": "Platform SDK + PlatformContext" },
+                  { "text": "ZIP install / update / quarantine" },
+                  { "text": "Universal Access Layer + admin ACL" },
+                  { "text": "Visual Page Builder" },
+                  { "text": "MCP for controlled AI ops" },
+                  { "text": "SiteUpdater + shared-hosting packages" }
+                ],
+                "progress": [
+                  { "text": "Package Manager UX hardening" },
+                  { "text": "SDK certification governance" },
+                  { "text": "Developer onboarding polish" }
+                ],
+                "planned": [
+                  { "text": "Module marketplace" },
+                  { "text": "AI Builder assistant" },
+                  { "text": "Visual workflow automation" }
+                ]
+              },
+              "elements": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s_indie",
+      "elType": "section",
+      "settings": { "paddingY": "5rem", "gap": "1.25rem", "columns": 1, "animation": "fade-up", "glow": true },
+      "elements": [
+        {
+          "id": "c_indie",
+          "elType": "column",
+          "settings": { "width": 100 },
+          "elements": [
+            {
+              "id": "w_indie_h",
               "elType": "widget",
               "widgetType": "heading",
+              "settings": { "text": "Independent by design.", "tag": "h2", "size": "xl", "align": "left" },
+              "elements": []
+            },
+            {
+              "id": "w_indie_t",
+              "elType": "widget",
+              "widgetType": "text",
               "settings": {
-                "text": "UI собирается заранее. На хостинге — PHP и MySQL.",
-                "tag": "h2",
-                "size": "lg",
+                "html": "<p>Jasefly is built by one developer.</p><p>No corporation behind it.</p><p>No venture round.</p><p>No marketing department.</p><p>Decisions come from real production work — that is why the shape differs from popular PHP frameworks.</p>",
                 "align": "left"
-              }
-            },
-            {
-              "id": "w_958k3yu",
-              "elType": "widget",
-              "widgetType": "stat-row",
-              "settings": {
-                "items": [
-                  {
-                    "value": "React",
-                    "label": "UI"
-                  },
-                  {
-                    "value": "TypeScript",
-                    "label": "Типы"
-                  },
-                  {
-                    "value": "Vite",
-                    "label": "Сборка"
-                  },
-                  {
-                    "value": "PHP 8.3",
-                    "label": "Runtime"
-                  }
-                ]
-              }
-            },
-            {
-              "id": "w_bnfu3hd",
-              "elType": "widget",
-              "widgetType": "chip-row",
-              "settings": {
-                "items": [
-                  {
-                    "label": "React"
-                  },
-                  {
-                    "label": "TypeScript"
-                  },
-                  {
-                    "label": "Vite"
-                  },
-                  {
-                    "label": "PHP 8.3"
-                  },
-                  {
-                    "label": "MySQL"
-                  },
-                  {
-                    "label": "PDO"
-                  }
-                ]
-              }
+              },
+              "elements": []
             }
           ]
         }
       ]
     },
     {
-      "id": "s_za9tkt0",
+      "id": "s_oss",
       "elType": "section",
-      "settings": {
-        "paddingY": "clamp(2.5rem, 5vh, 4rem)",
-        "gap": "1.75rem",
-        "columns": 1,
-        "v_align": "center",
-        "scroll_snap": "start",
-        "snap_stop": "always",
-        "animation": "scale-in",
-        "glow": true
-      },
+      "settings": { "paddingY": "4.5rem", "gap": "1.5rem", "columns": 1, "animation": "fade-up" },
       "elements": [
         {
-          "id": "c_x3vkv6z",
+          "id": "c_oss",
           "elType": "column",
-          "settings": {
-            "width": 100
-          },
+          "settings": { "width": 100 },
           "elements": [
             {
-              "id": "w_z660znm",
+              "id": "w_oss",
               "elType": "widget",
               "widgetType": "cta-block",
               "settings": {
-                "title": "Поставьте локально и соберите первую страницу",
-                "subtitle": "Документация ведёт от установки до публикации. Без демо «посмотрите картинки».",
-                "cta1_label": "Открыть документацию",
-                "cta1_href": "/docs",
-                "cta2_label": "API для интеграций",
-                "cta2_href": "/api-docs",
-                "layout": "split",
-                "show_media": true,
-                "media_url": "/landing/final-cta.png",
-                "media_alt": "Jasefly CMS"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "s_41pafmg",
-      "elType": "section",
-      "settings": {
-        "paddingY": "clamp(7.5rem, 18vh, 12rem)",
-        "gap": "1.75rem",
-        "columns": 1,
-        "v_align": "center",
-        "scroll_snap": "start",
-        "snap_stop": "always",
-        "animation": "fade-up"
-      },
-      "elements": [
-        {
-          "id": "c_p9jpuo0",
-          "elType": "column",
-          "settings": {
-            "width": 100
-          },
-          "elements": [
-            {
-              "id": "w_wijprbq",
-              "elType": "widget",
-              "widgetType": "blog-list",
-              "settings": {
-                "title": "Заметки из разработки",
-                "limit": 3
-              }
+                "title": "Open source",
+                "subtitle": "This project grows in public. Every feature starts as production code. Every release is visible. Every architectural decision is documented.",
+                "cta1_label": "Open GitHub",
+                "cta1_href": "https://github.com/iia3uk/jasefly",
+                "cta2_label": "Documentation",
+                "cta2_href": "/docs",
+                "cta3_label": "Live Demo",
+                "cta3_href": "https://iia3uk.ru",
+                "cta4_label": "Portfolio",
+                "cta4_href": "https://iia3uk.ru",
+                "cta5_label": "Support Project",
+                "cta5_href": "https://pay.cloudtips.ru/p/4cbdc8ab",
+                "layout": "center",
+                "show_media": false
+              },
+              "elements": []
             }
           ]
         }

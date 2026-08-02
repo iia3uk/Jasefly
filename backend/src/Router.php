@@ -126,7 +126,16 @@ final class Router
         }
 
         if (($matched['status'] ?? 404) !== 200 || !isset($matched['handler'])) {
-            Response::error('Not found', 404);
+            // Still run global middleware on 404 so DemoGuard can serve sandbox
+            // responses for admin paths whose production modules are disabled.
+            $run = $this->middleware;
+            $next = static fn () => Response::error('Not found', 404);
+            foreach (array_reverse($run) as $m) {
+                $old = $next;
+                $next = static fn () => $m($r, $old);
+            }
+            $next();
+            exit;
         }
 
         /** @var callable $handler */

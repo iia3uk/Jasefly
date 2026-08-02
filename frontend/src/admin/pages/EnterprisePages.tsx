@@ -44,7 +44,14 @@ export function TrashPage() {
     onSuccess: () => void client.invalidateQueries({ queryKey: ['trash'] }),
   })
 
-  const groups = data ?? {}
+  const groups = useMemo(() => {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return {} as Record<string, Array<Record<string, unknown>>>
+    const out: Record<string, Array<Record<string, unknown>>> = {}
+    for (const [resource, items] of Object.entries(data as Record<string, unknown>)) {
+      if (Array.isArray(items)) out[resource] = items as Array<Record<string, unknown>>
+    }
+    return out
+  }, [data])
 
   return (
     <div>
@@ -94,7 +101,7 @@ export function TrashPage() {
                 </Button>
               </div>
               <GlassPanel className="divide-y divide-white/10">
-                {(items as Array<Record<string, unknown>>).map((item) => (
+                {items.map((item) => (
                   <div key={String(item.id)} className="flex items-center justify-between gap-4 p-4">
                     <div>
                       <p className="font-medium">{String(item.title ?? item.name ?? item.original_name ?? item.id)}</p>
@@ -132,10 +139,11 @@ export function ActivityPage() {
   const sourceParam = params.get('source')
   const initialTab = sourceParam === 'mcp' || sourceParam === 'admin' ? sourceParam : 'all'
   const [tab, setTab] = useState<'all' | 'admin' | 'mcp'>(initialTab)
-  const { data = [], isLoading } = useQuery({
+  const { data: rawData, isLoading } = useQuery({
     queryKey: ['activity', tab],
     queryFn: () => endpoints.activity({ source: tab, limit: 150 }),
   })
+  const data = Array.isArray(rawData) ? rawData : []
 
   useEffect(() => {
     const next = sourceParam === 'mcp' || sourceParam === 'admin' ? sourceParam : 'all'
