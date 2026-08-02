@@ -48,6 +48,7 @@ final class IndexNowClient
         if ($ch === false) {
             return ['ok' => false, 'status' => 0, 'body' => '', 'error' => 'curl_init'];
         }
+        $responseHeaders = [];
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $json,
@@ -55,6 +56,14 @@ final class IndexNowClient
                 'Content-Type: application/json; charset=utf-8',
             ],
             CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADERFUNCTION => static function ($ch, string $headerLine) use (&$responseHeaders): int {
+                $len = strlen($headerLine);
+                $parts = explode(':', $headerLine, 2);
+                if (count($parts) === 2) {
+                    $responseHeaders[strtolower(trim($parts[0]))] = trim($parts[1]);
+                }
+                return $len;
+            },
             CURLOPT_TIMEOUT => 20,
             CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
         ]);
@@ -64,6 +73,19 @@ final class IndexNowClient
         $err = $errno !== 0 ? curl_error($ch) : '';
         curl_close($ch);
 
+        $retryAfter = null;
+        if (isset($responseHeaders['retry-after'])) {
+            $ra = $responseHeaders['retry-after'];
+            if (ctype_digit($ra)) {
+                $retryAfter = max(1, (int) $ra);
+            } else {
+                $ts = strtotime($ra);
+                if ($ts !== false) {
+                    $retryAfter = max(1, $ts - time());
+                }
+            }
+        }
+
         // 200 OK / 202 Accepted are success for IndexNow.
         $ok = $errno === 0 && ($status === 200 || $status === 202);
         return [
@@ -71,6 +93,7 @@ final class IndexNowClient
             'status' => $status,
             'body' => mb_substr($body, 0, 2000),
             'error' => $err !== '' ? $err : null,
+            'retry_after' => $retryAfter,
         ];
     }
 

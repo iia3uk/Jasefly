@@ -8,6 +8,25 @@ use App\Platform\PlatformContext;
 
 final class IndexNowService
 {
+    /** Min seconds between HTTP calls to the same rate-limit group. */
+    private const ENDPOINT_MIN_INTERVAL = 90;
+
+    /** After HTTP 429, skip the group for this many seconds (or Retry-After if larger). */
+    private const COOLDOWN_429 = 3600;
+
+    /** Do not re-notify the same URL within this window (IndexNow FAQ ≈ 10 min). */
+    private const URL_RESUBMIT_COOLDOWN = 900;
+
+    /** Auto-submit debounce: ignore bursts of content events. */
+    private const AUTO_DEBOUNCE = 45;
+
+    /** Prefer Bing direct; hub shares the same Bing quota — never both. */
+    private const DEFAULT_ENDPOINTS = [
+        'https://www.bing.com/indexnow',
+        'https://yandex.com/indexnow',
+        'https://search.seznam.cz/indexnow',
+    ];
+
     public function __construct(
         private PlatformDatabaseInterface $db,
         private PlatformContext $ctx,
@@ -19,10 +38,8 @@ final class IndexNowService
         $defaults = [
             'api_key' => '',
             'host' => '',
-            'endpoints' => [
-                'https://yandex.com/indexnow',
-                'https://api.indexnow.org/indexnow',
-            ],
+            // Google does NOT support IndexNow. Bing + hub share one quota — hub omitted.
+            'endpoints' => self::DEFAULT_ENDPOINTS,
             'auto_submit' => 1,
             'key_file_ok' => 0,
             'key_file_url' => '',
@@ -93,8 +110,9 @@ final class IndexNowService
             static fn($e) => trim((string) $e),
             $endpoints
         ), static fn($e) => $e !== '' && str_starts_with($e, 'http'))));
+        $endpoints = $this->dedupeEndpointGroups($endpoints);
         if ($endpoints === []) {
-            $endpoints = ['https://yandex.com/indexnow', 'https://api.indexnow.org/indexnow'];
+            $endpoints = self::DEFAULT_ENDPOINTS;
         }
 
         $auto = array_key_exists('auto_submit', $data)
@@ -211,7 +229,7 @@ final class IndexNowService
 
     /**
      * @param list<string>|null $urls
-     * @return array{ok: bool, results: list<array<string, mixed>>, submitted: int}
+     * @return array{ok: bool, results: list<array<string, mixed>>, submitted: int, skipped?: list<array<string, mixed>>, error?: string}
      */
     public function submit(?array $urls = null, string $source = 'manual'): array
     {
@@ -230,30 +248,98 @@ final class IndexNowService
             return ['ok' => false, 'results' => [], 'submitted' => 0, 'error' => 'no_urls'];
         }
 
+        $isAuto = str_starts_with($source, 'auto:');
+        if ($isAuto && $this->recentAutoSubmitWithin(self::AUTO_DEBOUNCE)) {
+            return [
+                'ok' => true,
+                'results' => [],
+                'submitted' => 0,
+                'skipped' => [['reason' => 'auto_debounce', 'seconds' => self::AUTO_DEBOUNCE]],
+            ];
+        }
+
+        // Never re-spam the same URLs (auto always; manual/submit-all also — prevents 429 loops).
+        $fresh = $this->filterUrlsNotRecentlySubmitted($urls, self::URL_RESUBMIT_COOLDOWN);
+        if ($fresh === []) {
+            return [
+                'ok' => true,
+                'results' => [],
+                'submitted' => 0,
+                'skipped' => [['reason' => 'url_cooldown', 'seconds' => self::URL_RESUBMIT_COOLDOWN, 'urls' => count($urls)]],
+            ];
+        }
+        $urls = $fresh;
+
+        $endpoints = $this->dedupeEndpointGroups(array_map('strval', (array) ($settings['endpoints'] ?? [])));
         $keyLocation = (string) ($settings['key_file_url'] ?? '');
         $client = new IndexNowClient();
         $results = [];
+        $skipped = [];
         $anyOk = false;
-        foreach ((array) ($settings['endpoints'] ?? []) as $endpoint) {
-            $endpoint = trim((string) $endpoint);
+        $groupsHit = [];
+
+        foreach ($endpoints as $endpoint) {
+            $endpoint = trim($endpoint);
             if ($endpoint === '') {
                 continue;
             }
+            $group = $this->rateLimitGroup($endpoint);
+            if (isset($groupsHit[$group])) {
+                $skipped[] = ['endpoint' => $endpoint, 'reason' => 'duplicate_group', 'group' => $group];
+                continue;
+            }
+
+            $cooldownLeft = $this->groupCooldownRemaining($group);
+            if ($cooldownLeft > 0) {
+                $skipped[] = [
+                    'endpoint' => $endpoint,
+                    'reason' => 'cooldown_429',
+                    'group' => $group,
+                    'retry_in' => $cooldownLeft,
+                ];
+                continue;
+            }
+
+            $gapLeft = $this->groupMinIntervalRemaining($group);
+            if ($gapLeft > 0) {
+                $skipped[] = [
+                    'endpoint' => $endpoint,
+                    'reason' => 'min_interval',
+                    'group' => $group,
+                    'retry_in' => $gapLeft,
+                ];
+                continue;
+            }
+
             $res = $client->submit($endpoint, $host, $key, $urls, $keyLocation !== '' ? $keyLocation : null);
             $this->logSubmission($endpoint, $urls, $res, $source);
-            $results[] = [
+            $groupsHit[$group] = true;
+
+            $row = [
                 'endpoint' => $endpoint,
                 'ok' => $res['ok'],
                 'status' => $res['status'],
                 'body' => $res['body'],
                 'error' => $res['error'] ?? null,
             ];
+            if ((int) ($res['status'] ?? 0) === 429) {
+                $ra = isset($res['retry_after']) && is_int($res['retry_after'])
+                    ? $res['retry_after']
+                    : self::COOLDOWN_429;
+                $row['cooldown_seconds'] = max(self::COOLDOWN_429, $ra);
+            }
+            $results[] = $row;
             if ($res['ok']) {
                 $anyOk = true;
             }
         }
 
-        return ['ok' => $anyOk, 'results' => $results, 'submitted' => count($urls)];
+        return [
+            'ok' => $anyOk || ($results === [] && $skipped !== []),
+            'results' => $results,
+            'submitted' => $results === [] ? 0 : count($urls),
+            'skipped' => $skipped,
+        ];
     }
 
     /** @param array<string, mixed> $payload */
@@ -389,6 +475,171 @@ final class IndexNowService
             return '';
         }
         return $key;
+    }
+
+    /**
+     * Bing direct + api.indexnow.org share one quota — keep one endpoint per group.
+     *
+     * @param list<string> $endpoints
+     * @return list<string>
+     */
+    private function dedupeEndpointGroups(array $endpoints): array
+    {
+        $out = [];
+        $seen = [];
+        foreach ($endpoints as $endpoint) {
+            $endpoint = trim((string) $endpoint);
+            if ($endpoint === '' || !str_starts_with($endpoint, 'http')) {
+                continue;
+            }
+            $group = $this->rateLimitGroup($endpoint);
+            if (isset($seen[$group])) {
+                continue;
+            }
+            // Prefer bing.com over hub when both appear (hub is weaker under load).
+            $seen[$group] = true;
+            $out[] = $endpoint;
+        }
+        // If hub won the race before bing in the list, swap preference on save:
+        // rebuild: if group bing has hub only, leave; if both in input, prefer bing.com
+        $hasBingDirect = false;
+        $hasHub = false;
+        foreach ($endpoints as $e) {
+            $h = strtolower((string) (parse_url(trim((string) $e), PHP_URL_HOST) ?? ''));
+            if ($h === 'www.bing.com' || $h === 'bing.com') {
+                $hasBingDirect = true;
+            }
+            if ($h === 'api.indexnow.org') {
+                $hasHub = true;
+            }
+        }
+        if ($hasBingDirect && $hasHub) {
+            $out = array_values(array_filter(
+                $out,
+                static function (string $e): bool {
+                    $h = strtolower((string) (parse_url($e, PHP_URL_HOST) ?? ''));
+                    return $h !== 'api.indexnow.org';
+                }
+            ));
+        }
+        return $out;
+    }
+
+    private function rateLimitGroup(string $endpoint): string
+    {
+        $host = strtolower((string) (parse_url($endpoint, PHP_URL_HOST) ?? ''));
+        if ($host === 'www.bing.com' || $host === 'bing.com' || $host === 'api.indexnow.org') {
+            return 'bing';
+        }
+        if ($host === 'yandex.com' || $host === 'yandex.ru' || str_ends_with($host, '.yandex.com')) {
+            return 'yandex';
+        }
+        return $host !== '' ? $host : $endpoint;
+    }
+
+    private function groupCooldownRemaining(string $group): int
+    {
+        try {
+            $rows = $this->db->all(
+                'SELECT endpoint, http_status, created_at, response_body
+                 FROM indexnow_log
+                 WHERE http_status = 429 AND created_at >= ?
+                 ORDER BY id DESC LIMIT 40',
+                [gmdate('Y-m-d H:i:s', time() - self::COOLDOWN_429)]
+            );
+        } catch (\Throwable) {
+            return 0;
+        }
+        $latest = 0;
+        foreach ($rows as $row) {
+            if ($this->rateLimitGroup((string) ($row['endpoint'] ?? '')) !== $group) {
+                continue;
+            }
+            $ts = strtotime((string) ($row['created_at'] ?? '') . ' UTC');
+            if ($ts === false) {
+                continue;
+            }
+            $until = $ts + self::COOLDOWN_429;
+            if ($until > $latest) {
+                $latest = $until;
+            }
+        }
+        return max(0, $latest - time());
+    }
+
+    private function groupMinIntervalRemaining(string $group): int
+    {
+        try {
+            $rows = $this->db->all(
+                'SELECT endpoint, created_at FROM indexnow_log
+                 WHERE created_at >= ? ORDER BY id DESC LIMIT 30',
+                [gmdate('Y-m-d H:i:s', time() - self::ENDPOINT_MIN_INTERVAL)]
+            );
+        } catch (\Throwable) {
+            return 0;
+        }
+        foreach ($rows as $row) {
+            if ($this->rateLimitGroup((string) ($row['endpoint'] ?? '')) !== $group) {
+                continue;
+            }
+            $ts = strtotime((string) ($row['created_at'] ?? '') . ' UTC');
+            if ($ts === false) {
+                continue;
+            }
+            $left = ($ts + self::ENDPOINT_MIN_INTERVAL) - time();
+            return max(0, $left);
+        }
+        return 0;
+    }
+
+    private function recentAutoSubmitWithin(int $seconds): bool
+    {
+        try {
+            $row = $this->db->one(
+                "SELECT created_at FROM indexnow_log
+                 WHERE source LIKE 'auto:%' AND created_at >= ?
+                 ORDER BY id DESC LIMIT 1",
+                [gmdate('Y-m-d H:i:s', time() - max(1, $seconds))]
+            );
+            return is_array($row) && $row !== [];
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * @param list<string> $urls
+     * @return list<string>
+     */
+    private function filterUrlsNotRecentlySubmitted(array $urls, int $seconds): array
+    {
+        if ($urls === []) {
+            return [];
+        }
+        try {
+            $rows = $this->db->all(
+                'SELECT urls_json FROM indexnow_log
+                 WHERE ok = 1 AND created_at >= ?
+                 ORDER BY id DESC LIMIT 80',
+                [gmdate('Y-m-d H:i:s', time() - max(1, $seconds))]
+            );
+        } catch (\Throwable) {
+            return $urls;
+        }
+        $recent = [];
+        foreach ($rows as $row) {
+            $decoded = json_decode((string) ($row['urls_json'] ?? ''), true);
+            if (!is_array($decoded)) {
+                continue;
+            }
+            foreach ($decoded as $u) {
+                $recent[trim((string) $u)] = true;
+            }
+        }
+        if ($recent === []) {
+            return $urls;
+        }
+        return array_values(array_filter($urls, static fn(string $u) => !isset($recent[$u])));
     }
 
     /**

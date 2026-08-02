@@ -3,8 +3,8 @@
   "type": "jasefly-module",
   "name": "IndexNow",
   "slug": "indexnow",
-  "version": "1.0.1",
-  "description": "Протокол IndexNow: уведомление Яндекса и других поисковиков о новых, обновлённых и удалённых страницах. Ключ верификации, автоотправка при публикации, журнал.",
+  "version": "1.0.2",
+  "description": "Протокол IndexNow: Bing/Яндекс/Seznam, ключ верификации, автоотправка с rate-limit (без долбёжки 429), журнал.",
   "author": {
     "name": "Jasefly",
     "url": "https://jasefly.com"

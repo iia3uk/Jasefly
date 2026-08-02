@@ -2,7 +2,7 @@
  * IndexNow admin — Jasefly dark chrome + one-click setup.
  */
 const SLUG = 'indexnow'
-const VERSION = '1.0.1'
+const VERSION = '1.0.2'
 const API = '/api/v1'
 
 function authHeaders(extra = {}) {
@@ -177,7 +177,20 @@ function AdminApp({ ui }) {
       })
     req.then((r) => {
       const lines = (r.results || []).map((x) => `${x.endpoint}: HTTP ${x.status}${x.ok ? ' ✓' : ' ✗'}`).join(' · ')
-      setMsg(`Отправлено URL: ${r.submitted || 0}. ${lines || (r.ok ? 'OK' : (r.error || 'ошибка'))}`)
+      const skips = (r.skipped || []).map((x) => {
+        if (x.reason === 'url_cooldown') return `URL уже слали недавно (${x.seconds || 900}с)`
+        if (x.reason === 'auto_debounce') return 'debounce авто'
+        if (x.reason === 'cooldown_429') return `${x.endpoint || x.group}: пауза после 429 (~${x.retry_in || '?'}с)`
+        if (x.reason === 'min_interval') return `${x.endpoint || x.group}: мин. интервал (~${x.retry_in || '?'}с)`
+        if (x.reason === 'duplicate_group') return `${x.endpoint}: дубль группы`
+        return x.reason || 'skip'
+      }).join(' · ')
+      setMsg([
+        `Отправлено URL: ${r.submitted || 0}`,
+        lines || '',
+        skips ? `Пропуск: ${skips}` : '',
+        !lines && !skips ? (r.ok ? 'OK' : (r.error || 'ошибка')) : '',
+      ].filter(Boolean).join('. '))
       return reload()
     }).catch((e) => setError(e.message)).finally(() => setBusy(false))
   }
@@ -249,7 +262,7 @@ function AdminApp({ ui }) {
         })),
       h(Field, {
         ui, label: 'Endpoints (по одному на строку)',
-        hint: 'По умолчанию: yandex.com/indexnow и api.indexnow.org/indexnow',
+        hint: 'Google ≠ IndexNow. По умолчанию: Bing + Яндекс + Seznam (hub не дублируем — одна квота с Bing). Плагин сам троттлит: пауза 90с, cooldown 1ч после 429, не шлёт тот же URL 15 мин.',
       }, h('textarea', {
         rows: 3, style: { ...css.input, ...css.mono }, value: endpointsText,
         onChange: (e) => setSettings({ ...settings, endpoints: e.target.value }),
