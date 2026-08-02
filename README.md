@@ -1,6 +1,6 @@
 <p align="center">
 
-<img src="logo_full.svg" width="140" alt="Jasefly Logo">
+<img src="logo_full.svg" width="340" alt="Jasefly Logo">
 
 </p>
 
