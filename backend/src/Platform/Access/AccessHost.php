@@ -24,6 +24,13 @@ final class AccessHost
         return $service;
     }
 
+    /** Clear process singleton (tests / re-bind after DB swap). */
+    public static function reset(): void
+    {
+        self::$instance = null;
+        Acl\AclEffectiveCache::forget();
+    }
+
     public static function get(): AccessService
     {
         if (!(self::$instance instanceof AccessService)) {

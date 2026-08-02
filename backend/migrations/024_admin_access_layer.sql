@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS user_roles (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
   INDEX idx_user_roles_role (role_id)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Per-user allow/deny overrides (deny wins)
 CREATE TABLE IF NOT EXISTS user_capability_overrides (
@@ -44,14 +44,14 @@ CREATE TABLE IF NOT EXISTS user_capability_overrides (
   UNIQUE KEY uq_user_cap_override (user_id, capability_slug),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_uco_slug (capability_slug)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Alias map: legacy permission slug → canonical capability (or expansion handled in PHP)
 CREATE TABLE IF NOT EXISTS permission_aliases (
   alias_slug VARCHAR(80) NOT NULL PRIMARY KEY,
   target_slug VARCHAR(80) NOT NULL,
   INDEX idx_perm_alias_target (target_slug)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Access / RBAC audit
 CREATE TABLE IF NOT EXISTS access_audit_log (
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS access_audit_log (
   INDEX idx_access_audit_actor (actor_user_id),
   INDEX idx_access_audit_created (created_at),
   INDEX idx_access_audit_action (action)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Core ACL capabilities (new + keep legacy)
 INSERT IGNORE INTO permissions (slug, name, group_name, description, risk_level, scope_default) VALUES
@@ -113,10 +113,11 @@ INSERT IGNORE INTO permission_aliases (alias_slug, target_slug) VALUES
 ('content.delete_any', 'content.delete');
 
 -- Backfill user_roles from users.role
+-- COLLATE: users.role may be utf8mb4_unicode_ci while roles.slug is server-default 0900_ai_ci (MySQL 8).
 INSERT IGNORE INTO user_roles (user_id, role_id, is_primary)
 SELECT u.id, r.id, 1
 FROM users u
-INNER JOIN roles r ON r.slug = u.role;
+INNER JOIN roles r ON r.slug COLLATE utf8mb4_unicode_ci = u.role COLLATE utf8mb4_unicode_ci;
 
 -- Author grants
 INSERT IGNORE INTO role_permissions (role_id, permission_id)

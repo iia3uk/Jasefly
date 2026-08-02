@@ -47,6 +47,16 @@ assert_true($modOut === [], 'sqlite skips MODIFY without COLUMN keyword');
 $modColOut = $modT->transpile('ALTER TABLE project_media MODIFY COLUMN media_id INT UNSIGNED NULL');
 assert_true($modColOut === [], 'sqlite skips MODIFY COLUMN');
 
+// COLLATE in JOIN (024 user_roles backfill) must be stripped for sqlite
+$colT = new SqlTranspiler('sqlite');
+$colSql = "INSERT IGNORE INTO user_roles (user_id, role_id, is_primary)\n"
+    . "SELECT u.id, r.id, 1 FROM users u\n"
+    . "INNER JOIN roles r ON r.slug COLLATE utf8mb4_unicode_ci = u.role COLLATE utf8mb4_unicode_ci";
+$colOut = $colT->transpile($colSql);
+assert_true(count($colOut) === 1, 'COLLATE INSERT yields one sqlite statement');
+assert_true(!str_contains($colOut[0], 'COLLATE'), 'sqlite strips COLLATE from JOIN');
+assert_true(str_contains($colOut[0], 'r.slug'), 'sqlite keeps join columns');
+
 // MySQL index prefix lengths must be stripped for sqlite CREATE INDEX
 $idxT = new SqlTranspiler('sqlite');
 $idxCreate = "CREATE TABLE module_files (

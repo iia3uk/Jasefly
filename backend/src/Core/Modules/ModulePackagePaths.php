@@ -27,6 +27,14 @@ final class ModulePackagePaths
 
     public static function fromApp(array $app): self
     {
+        $paths = is_array($app['paths'] ?? null) ? $app['paths'] : [];
+        $configuredApi = $paths['api_root'] ?? null;
+        $configuredWeb = $paths['web_root'] ?? null;
+        if (is_string($configuredApi) && trim($configuredApi) !== '') {
+            $web = is_string($configuredWeb) && trim($configuredWeb) !== '' ? $configuredWeb : null;
+            return new self($configuredApi, $web);
+        }
+
         $api = realpath(dirname(__DIR__, 3));
         $apiRoot = $api !== false ? $api : dirname(__DIR__, 3);
         return new self($apiRoot);

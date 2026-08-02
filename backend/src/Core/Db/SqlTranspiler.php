@@ -61,6 +61,10 @@ final class SqlTranspiler
             return [$s];
         }
 
+        // SQLite/PG: strip MySQL collation/charset clauses (e.g. JOIN … COLLATE utf8mb4_unicode_ci).
+        $s = preg_replace('/\s+CHARACTER\s+SET\s+[A-Za-z0-9_]+/i', '', $s) ?? $s;
+        $s = preg_replace('/\s+COLLATE\s+[A-Za-z0-9_]+/i', '', $s) ?? $s;
+
         if (preg_match('/^CREATE\s+TABLE/i', $s)) {
             return $this->transpileCreateTable($s);
         }

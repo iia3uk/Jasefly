@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS activity_logs (
 
 -- ─── RBAC ────────────────────────────────────────────────────────────────────
 
-ALTER TABLE users MODIFY COLUMN role VARCHAR(60) NOT NULL DEFAULT 'admin';
+ALTER TABLE users MODIFY COLUMN role VARCHAR(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'admin';
 
 CREATE TABLE IF NOT EXISTS roles (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS roles (
   description TEXT NULL,
   is_system TINYINT(1) NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS permissions (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS permissions (
   name VARCHAR(120) NOT NULL,
   group_name VARCHAR(60) NULL,
   description VARCHAR(255) NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS role_permissions (
   role_id INT UNSIGNED NOT NULL,

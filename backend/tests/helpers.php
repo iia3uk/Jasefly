@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 use App\Core\Db\SqlTranspiler;
 use App\Database;
+use App\Platform\Access\AccessHost;
 use App\Services\MigrationService;
 
 /**
@@ -93,6 +94,7 @@ function jasefly_test_sqlite_boot(): array
     };
 
     $cleanup = static function () use ($tmpDir, $prop): void {
+        AccessHost::reset();
         $prop->setValue(null, null);
         if (!is_dir($tmpDir)) {
             return;
@@ -106,6 +108,8 @@ function jasefly_test_sqlite_boot(): array
         }
         @rmdir($tmpDir);
     };
+
+    AccessHost::reset();
 
     return [
         'db' => $db,

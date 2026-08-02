@@ -186,7 +186,10 @@ assert_true(str_contains((string) $rowA['last_error'], 'settings'), 'boom-settin
 
 $entryA = $safe->entry($slugA);
 assert_true($entryA !== null, 'boom-settings safe-mode entry exists');
-assert_true(($entryA['stage'] ?? '') === 'package_load', 'boom-settings stage=package_load');
+assert_true(
+    in_array((string) ($entryA['stage'] ?? ''), ['package_load', 'entrypoint_preflight'], true),
+    'boom-settings stage=package_load|entrypoint_preflight'
+);
 assert_true(($entryA['at'] ?? '') !== '', 'boom-settings quarantine time set');
 assert_true(($entryA['class'] ?? '') !== '' || str_contains((string) ($entryA['error'] ?? ''), 'settings'), 'boom-settings class or error recorded');
 

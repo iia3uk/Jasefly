@@ -19,18 +19,62 @@ const root = path.resolve(__dirname, '..')
 const frontend = path.join(root, 'frontend')
 const fast = process.argv.includes('--fast')
 
+/** @returns {{ bin: string, args: string[] } | null} */
 function whichPhp() {
+  const wingetPhpDir = (() => {
+    try {
+      const base = path.join(
+        process.env.LOCALAPPDATA || '',
+        'Microsoft',
+        'WinGet',
+        'Packages',
+      )
+      if (!fs.existsSync(base)) return null
+      const hit = fs
+        .readdirSync(base)
+        .find((n) => /^PHP\.PHP\./i.test(n))
+      if (!hit) return null
+      const dir = path.join(base, hit)
+      return fs.existsSync(path.join(dir, 'php.exe')) ? dir : null
+    } catch {
+      return null
+    }
+  })()
+
+  /** @type {Array<{ bin: string, args?: string[] }>} */
   const candidates = [
-    process.env.PHP_BIN,
-    'php',
-    'C:\\tools\\php\\php.exe',
-    'C:\\php\\php.exe',
+    process.env.PHP_BIN ? { bin: process.env.PHP_BIN } : null,
+    wingetPhpDir
+      ? {
+          bin: path.join(wingetPhpDir, 'php.exe'),
+          args: [
+            '-d',
+            `extension_dir=${path.join(wingetPhpDir, 'ext')}`,
+            '-d',
+            'extension=pdo_sqlite',
+            '-d',
+            'extension=sqlite3',
+          ],
+        }
+      : null,
+    { bin: 'php' },
+    { bin: 'C:\\tools\\php\\php.exe' },
+    { bin: 'C:\\php\\php.exe' },
   ].filter(Boolean)
-  for (const bin of candidates) {
-    const r = spawnSync(bin, ['-v'], { encoding: 'utf8' })
-    if (r.status === 0) return bin
+
+  /** @type {{ bin: string, args: string[] } | null} */
+  let fallback = null
+  for (const c of candidates) {
+    const args = c.args || []
+    const v = spawnSync(c.bin, [...args, '-v'], { encoding: 'utf8' })
+    if (v.status !== 0) continue
+    const mods = spawnSync(c.bin, [...args, '-m'], { encoding: 'utf8' })
+    const modOut = `${mods.stdout || ''}${mods.stderr || ''}`
+    const resolved = { bin: c.bin, args }
+    if (/\bpdo_sqlite\b/i.test(modOut)) return resolved
+    if (!fallback) fallback = resolved
   }
-  return null
+  return fallback
 }
 
 function run(step, cmd, args, opts = {}) {
@@ -62,16 +106,26 @@ if (!php) {
 }
 
 console.log(`ci-sdk-check · root=${root}`)
-console.log(`php=${php}${fast ? ' · --fast' : ''}`)
+console.log(`php=${php.bin}${php.args.length ? ' (+sqlite ext)' : ''}${fast ? ' · --fast' : ''}`)
 
-run('PHP unit tests', php, ['backend/tests/run.php'])
-run('SDK API diff', php, ['backend/bin/sdk.php', 'api-diff'])
-run('Certify demo-kit', php, ['backend/bin/sdk.php', 'certify', 'modules-src/demo-kit'])
-run('Certify forms-sdk-reference', php, [
+// Mirror GHA: pdo_sqlite must be loaded or ~170 tests are SKIP and CI will diverge.
+const phpMods = spawnSync(php.bin, [...php.args, '-m'], { encoding: 'utf8' })
+const modOut = `${phpMods.stdout || ''}${phpMods.stderr || ''}`
+if (!/\bpdo_sqlite\b/i.test(modOut)) {
+  console.error('FAIL: PHP без pdo_sqlite — поставь extension или PHP_BIN как в GHA (php 8.2 + pdo_sqlite).')
+  console.error('Иначе локальный прогон пропустит SQLite-тесты и расходится с GitHub Actions.')
+  process.exit(1)
+}
+
+const phpArgs = (...rest) => [...php.args, ...rest]
+run('PHP unit tests', php.bin, phpArgs('backend/tests/run.php'))
+run('SDK API diff', php.bin, phpArgs('backend/bin/sdk.php', 'api-diff'))
+run('Certify demo-kit', php.bin, phpArgs('backend/bin/sdk.php', 'certify', 'modules-src/demo-kit'))
+run('Certify forms-sdk-reference', php.bin, phpArgs(
   'backend/bin/sdk.php',
   'certify',
   'modules-src/forms-sdk-reference',
-])
+))
 
 if (!fs.existsSync(path.join(frontend, 'node_modules'))) {
   run('Frontend npm ci', 'npm', ['ci'], { cwd: frontend })

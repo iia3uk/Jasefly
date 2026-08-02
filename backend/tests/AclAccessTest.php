@@ -66,7 +66,7 @@ if (!extension_loaded('pdo_sqlite')) {
             description TEXT,
             is_system INTEGER DEFAULT 0,
             is_super INTEGER DEFAULT 0,
-            rank INTEGER DEFAULT 100
+            role_rank INTEGER DEFAULT 100
         )');
         $db->pdo()->exec('CREATE TABLE permissions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,9 +96,9 @@ if (!extension_loaded('pdo_sqlite')) {
             alias_slug TEXT PRIMARY KEY, target_slug TEXT
         )');
 
-        $db->run("INSERT INTO roles (id, slug, name, is_super, rank) VALUES (1, 'editor', 'Editor', 0, 20)");
-        $db->run("INSERT INTO roles (id, slug, name, is_super, rank) VALUES (2, 'author', 'Author', 0, 30)");
-        $db->run("INSERT INTO roles (id, slug, name, is_super, rank) VALUES (3, 'super_admin', 'SA', 1, 0)");
+        $db->run("INSERT INTO roles (id, slug, name, is_super, role_rank) VALUES (1, 'editor', 'Editor', 0, 20)");
+        $db->run("INSERT INTO roles (id, slug, name, is_super, role_rank) VALUES (2, 'author', 'Author', 0, 30)");
+        $db->run("INSERT INTO roles (id, slug, name, is_super, role_rank) VALUES (3, 'super_admin', 'SA', 1, 0)");
         $db->run("INSERT INTO permissions (slug, name, group_name) VALUES ('content.view', 'View', 'content')");
         $db->run("INSERT INTO permissions (slug, name, group_name) VALUES ('content.edit_own', 'Edit own', 'content')");
         $db->run("INSERT INTO permissions (slug, name, group_name) VALUES ('content.edit_any', 'Edit any', 'content')");
