@@ -110,6 +110,7 @@
 | Подвал слоган/копирайт HTML | `SiteLayout` Footer + `sanitizeHtml`; админ textarea в `SitePages` path=`footer` |
 | Соцсети (ядро, не Portfolio) | FE `modules/site` + hub Оформление; BE `ContentModule` resources/blueprints; `PublicController.site.social` без portfolio-gate; таблица `social_links` |
 | Проекты / блог / услуги | `modules/projects|blog|services/` ↔ `backend/src/Modules/{Projects,Blog,Content}/` |
+| Редактор блога (writing studio) | `modules/blog/admin/BlogEditPage.tsx` + `BlogComposer.tsx` (TipTap HTML, bubble/slash, meta drawer) |
 | Товары / оплата | `modules/products|payments/` ↔ `Modules/Products|Payments/` |
 | Заказы / корзины / возвраты | `modules/orders/` ↔ `Modules/Orders/` + адаптер в `Payments/PaymentService.php` |
 | Комментарии / отзывы / рейтинги | `modules/comments/` ↔ `Modules/Comments/` + `builder/widgets/comments.tsx` |
@@ -223,6 +224,7 @@ portfolio/
 | Что | Где |
 | --- | --- |
 | Shell админки | `admin/AdminApp.tsx` |
+| Меню админки (сетка + группы) | `AdminNavNerve.tsx` + `navIcons.ts` + `useAdminNavAttention` (бейджи); fold в `getAdminNavGrouped`; `[` = список |
 | Роутинг экранов | `admin/adminRoutes.tsx` |
 | Хабы меню | `admin/adminHubs.ts` + вложенные пункты в `AdminApp` |
 | Страницы CMS (list/builder entry) | `admin/pages/PagesAdmin.tsx` |
@@ -230,7 +232,7 @@ portfolio/
 | Редиректы 301/302 | `admin/pages/RedirectsPage.tsx` |
 | Плагины | `admin/pages/PluginsPage.tsx` |
 | CRUD generic | `admin/pages/AdminPages.tsx` |
-| Rich text | `admin/components/RichTextEditor.tsx` |
+| Rich text | `admin/components/RichTextEditor.tsx` (общий); блог — `modules/blog/admin/BlogComposer.tsx` |
 
 ---
 

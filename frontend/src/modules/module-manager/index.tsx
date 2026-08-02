@@ -11,7 +11,7 @@ registerModule({
       path: '/admin/modules',
       label: 'Модули',
       permission: 'modules.view',
-      icon: 'package',
+      icon: 'boxes',
     },
   ],
   adminScreens: [

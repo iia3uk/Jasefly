@@ -30,9 +30,12 @@ export function writeAdminLocale(locale: AdminLocale) {
 
 export function readSidebarCollapsed(): boolean {
   try {
-    return localStorage.getItem(SIDEBAR_KEY) === '1'
+    const raw = localStorage.getItem(SIDEBAR_KEY)
+    // Default: icon mosaic (compact). Explicit '0' keeps classic list.
+    if (raw === null) return true
+    return raw === '1'
   } catch {
-    return false
+    return true
   }
 }
 

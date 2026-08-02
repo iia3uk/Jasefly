@@ -305,6 +305,19 @@ select option:checked {
 
 .admin-shell { --background: #090b10; --surface: #10141c; --text: #f4f6fa; --muted: #8b95a8; }
 
+/* Horizon nav — hub strip + open deck */
+.admin-shell aside.admin-aside-shelf {
+  background:
+    radial-gradient(90% 35% at 0% 0%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 55%),
+    #0e0e12;
+}
+.admin-shell .admin-nav-strip {
+  scrollbar-width: none;
+}
+.admin-shell .admin-nav-strip::-webkit-scrollbar {
+  display: none;
+}
+
 /* Quiet scrollbars — sidebar & preview */
 .admin-shell aside,
 .admin-quiet-scroll {
@@ -1077,6 +1090,60 @@ html.cms-snap-paging .cms-snap-enter-down {
   float: left;
   height: 0;
   pointer-events: none;
+}
+
+/* Admin nav attention / "loot" badges */
+.admin-nav-loot {
+  background: linear-gradient(145deg, #fbbf24, #f59e0b 55%, #d97706);
+  color: #1a1205;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / .35), 0 0 10px rgb(251 191 36 / .35);
+}
+
+/* Blog writing studio */
+.blog-studio-title {
+  caret-color: color-mix(in srgb, var(--accent) 80%, white);
+}
+.blog-composer .blog-composer-prose {
+  min-height: 22rem;
+  color: #e8ebf2;
+  font-size: 1.08rem;
+  line-height: 1.8;
+}
+.blog-composer .blog-composer-prose h1 {
+  color: #fff;
+  font-size: 1.85rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  margin: 1.4rem 0 .7rem;
+}
+.blog-composer .blog-composer-prose h2 {
+  color: #fff;
+  font-size: 1.4rem;
+  margin: 1.35rem 0 .65rem;
+}
+.blog-composer .blog-composer-prose h3 {
+  color: #f2f4f8;
+  font-size: 1.15rem;
+  margin: 1.2rem 0 .55rem;
+}
+.blog-composer .blog-composer-prose p.is-editor-empty:first-child::before,
+.blog-composer .blog-composer-prose .is-empty::before {
+  color: #5c6578;
+}
+.blog-composer .blog-composer-prose img {
+  margin: 1.25rem 0;
+  border-radius: 12px;
+}
+.blog-composer .blog-composer-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: .92rem;
+}
+.blog-composer .blog-composer-prose th,
+.blog-composer .blog-composer-prose td {
+  border: 1px solid rgb(255 255 255 / .12);
+  padding: .45rem .65rem;
 }
 
 .rte-toolbar-btn {

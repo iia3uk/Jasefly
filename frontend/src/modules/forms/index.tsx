@@ -12,14 +12,14 @@ registerModule({
       path: '/admin/forms',
       label: 'Формы',
       permission: 'forms.view',
-      icon: 'layout-template',
+      icon: 'form-input',
     },
     {
       group: 'Контент',
       path: '/admin/form-submissions',
       label: 'Заявки форм',
       permission: 'forms.submissions.view',
-      icon: 'mail',
+      icon: 'clipboard-list',
     },
   ],
   adminScreens: [

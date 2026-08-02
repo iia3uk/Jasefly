@@ -299,6 +299,9 @@ export interface BlogPost {
   content_format?: string
   cover_media_id?: ID | null
   cover?: MediaAsset | null
+  /** Open Graph / social share image (separate from on-page cover). */
+  og_image_id?: ID | null
+  og_image?: MediaAsset | null
   category_id?: ID | null
   project_id?: ID | null
   status?: string

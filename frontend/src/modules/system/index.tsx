@@ -12,7 +12,7 @@ registerModule({
   name: 'system',
   label: 'Система',
   adminNav: [
-    { group: 'Система', path: '/admin/plugins', label: 'Плагины', permission: 'system.manage', icon: 'settings' },
+    { group: 'Система', path: '/admin/plugins', label: 'Плагины', permission: 'system.manage', icon: 'puzzle' },
     { group: 'Система', path: '/admin/system', label: 'Состояние системы', permission: 'system.manage', icon: 'heart' },
     { group: 'Система', path: '/admin/updates', label: 'Обновление CMS', permission: 'system.manage', icon: 'refresh-cw' },
     { group: 'Система', path: '/admin/activity', label: 'Журнал действий', permission: 'activity.view', icon: 'activity' },

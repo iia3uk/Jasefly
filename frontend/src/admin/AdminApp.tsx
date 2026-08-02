@@ -1,11 +1,7 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  FileText, FolderKanban, Image, LayoutDashboard, LogOut, Settings, Users, BriefcaseBusiness,
-  GraduationCap, Wrench, MessageSquare, MessageCircle, HelpCircle, PanelTop, Mail, Palette, Database, KeyRound, Globe,
-  Menu, Trash2, Activity, HeartPulse, X, Layers, ExternalLink, PanelLeftClose, PanelLeft, Pin, PinOff, Keyboard,
-  LayoutTemplate, Webhook, ShoppingCart, CreditCard, Shield, RefreshCw, Bell, Workflow, Send, ChevronDown,
-  type LucideIcon,
+  LogOut, X, ExternalLink, PanelLeftClose, PanelLeft, Pin, PinOff, Keyboard, ChevronDown, Menu,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { Button, Container } from '@/components/ui'
@@ -29,87 +25,16 @@ import {
   type AdminHub,
 } from '@/admin/adminHubs'
 import { AdminHubTabs } from '@/admin/components/AdminHubTabs'
+import { AdminNavNerve, type NerveNavGroup } from '@/admin/components/AdminNavNerve'
 import { adminUrl, getAdminBase, isAdminPathname, toCanonicalAdminPath } from '@/admin/adminBasePath'
+import { resolveNavIcon } from '@/admin/navIcons'
+import { formatAttentionBadge, useAdminNavAttention } from '@/admin/hooks/useAdminNavAttention'
 import { api, endpoints } from '@/lib/api'
 import { usePluginEnabled } from '@/hooks/useApi'
 import { NotificationsBell } from '@/modules/notifications/NotificationsBell'
 
-// Icon registry — maps manifest icon keys to lucide components.
-// Plugins reference icons by string key so manifests stay serializable.
-const iconRegistry: Record<string, LucideIcon> = {
-  users: Users,
-  globe: Globe,
-  'layout-dashboard': LayoutDashboard,
-  briefcase: BriefcaseBusiness,
-  graduation: GraduationCap,
-  wrench: Wrench,
-  layers: Layers,
-  folder: FolderKanban,
-  'file-text': FileText,
-  settings: Settings,
-  'message-square': MessageSquare,
-  'message-circle': MessageCircle,
-  'help-circle': HelpCircle,
-  trash: Trash2,
-  'panel-top': PanelTop,
-  'layout-template': LayoutTemplate,
-  menu: Menu,
-  mail: Mail,
-  image: Image,
-  activity: Activity,
-  heart: HeartPulse,
-  palette: Palette,
-  database: Database,
-  key: KeyRound,
-  webhook: Webhook,
-  'shopping-cart': ShoppingCart,
-  'credit-card': CreditCard,
-  shield: Shield,
-  'refresh-cw': RefreshCw,
-  bell: Bell,
-  workflow: Workflow,
-  send: Send,
-}
-
-// Fallback icon map for legacy hardcoded paths (kept until all routes
-// are migrated to manifests; resolved by path when no icon key is provided).
-const legacyPathIcons: Record<string, LucideIcon> = {
-  '/admin/profile': Users,
-  '/admin/social-links': Globe,
-  '/admin/statistics': LayoutDashboard,
-  '/admin/experience': BriefcaseBusiness,
-  '/admin/education': GraduationCap,
-  '/admin/skills': Wrench,
-  '/admin/skill-categories': Layers,
-  '/admin/projects': FolderKanban,
-  '/admin/blog': FileText,
-  '/admin/services': Settings,
-  '/admin/testimonials': MessageSquare,
-  '/admin/trash': Trash2,
-  '/admin/hero': PanelTop,
-  '/admin/pages': LayoutTemplate,
-  '/admin/homepage': Globe,
-  '/admin/navigation': Menu,
-  '/admin/footer': PanelTop,
-  '/admin/contact-info': Mail,
-  '/admin/messages': MessageSquare,
-  '/admin/media': Image,
-  '/admin/activity': Activity,
-  '/admin/system': HeartPulse,
-  '/admin/seo': Globe,
-  '/admin/redirects': Globe,
-  '/admin/site-settings': Settings,
-  '/admin/theme': Palette,
-  '/admin/email': Mail,
-  '/admin/backup': Database,
-  '/admin/updates': RefreshCw,
-  '/admin/password': KeyRound,
-}
-
-function resolveIcon(path: string, iconKey?: string): LucideIcon {
-  if (iconKey && iconRegistry[iconKey]) return iconRegistry[iconKey]
-  const canon = toCanonicalAdminPath(path)
-  return legacyPathIcons[canon] ?? legacyPathIcons[path] ?? FileText
+function resolveIcon(path: string, iconKey?: string) {
+  return resolveNavIcon(path, iconKey)
 }
 
 function isTypingTarget(el: EventTarget | null) {
@@ -140,6 +65,7 @@ function AdminNav({
     () => ({ products: productsOn, payments: paymentsOn, orders: ordersOn }),
     [productsOn, paymentsOn, ordersOn],
   )
+  const attention = useAdminNavAttention()
   /** Manual expand/collapse for hubs that are not the active route. */
   const [hubOpenManual, setHubOpenManual] = useState<Record<string, boolean>>({})
 
@@ -179,12 +105,15 @@ function AdminNav({
     return translated !== seg.replace(/-/g, ' ') ? translated : label
   }
 
+  const attentionFor = (path: string) => attention[toCanonicalAdminPath(path)] ?? 0
+
   const renderLink = (to: string, label: string, iconKey?: string, showPin?: boolean, pinPath?: string) => {
     const href = adminUrl(to)
     const Icon = resolveIcon(to, iconKey)
     const pinKey = pinPath ?? to
     const isPinned = pinSet.has(toCanonicalAdminPath(pinKey)) || pinSet.has(pinKey)
     const displayLabel = resolveDisplayLabel(to, label)
+    const badge = formatAttentionBadge(attentionFor(to))
     return (
       <div key={pinKey} className={`group relative mb-1 flex items-center ${collapsed ? '' : 'gap-0.5'}`}>
         <NavLink
@@ -196,8 +125,20 @@ function AdminNav({
           }
           end={toCanonicalAdminPath(to) === '/admin' || href === `/${getAdminBase()}`}
         >
-          <Icon size={16} className="shrink-0" />
-          {!collapsed && <span className="min-w-0 truncate">{displayLabel}</span>}
+          <span className="relative shrink-0">
+            <Icon size={16} className="shrink-0" />
+            {badge && collapsed ? (
+              <span className="admin-nav-loot absolute -right-1.5 -top-1.5 min-w-[1rem] rounded-full px-1 text-center text-[9px] font-bold leading-[1rem]">
+                {badge}
+              </span>
+            ) : null}
+          </span>
+          {!collapsed && <span className="min-w-0 flex-1 truncate">{displayLabel}</span>}
+          {!collapsed && badge ? (
+            <span className="admin-nav-loot ml-auto min-w-[1.15rem] shrink-0 rounded-full px-1.5 text-center text-[10px] font-bold leading-[1.15rem]">
+              {badge}
+            </span>
+          ) : null}
         </NavLink>
         {!collapsed && showPin && (
           <button
@@ -322,37 +263,136 @@ function AdminNav({
     return renderLink(to, label, iconKey, showPin, pinPath)
   }
 
+  const mosaicGroups = useMemo((): NerveNavGroup[] => {
+    const out: NerveNavGroup[] = []
+    const pinnedItems: NerveNavGroup['items'] = []
+    for (const to of pinned) {
+      const navItem = findNavEntry(groupedNav, to)
+      if (navItem) {
+        pinnedItems.push({
+          path: navItem.path,
+          label: resolveDisplayLabel(navItem.path, navItem.label),
+          iconKey: navItem.icon,
+          Icon: resolveIcon(navItem.path, navItem.icon),
+        })
+        continue
+      }
+      const hub = findHubByPath(to)
+      if (!hub || !findNavEntry(groupedNav, hub.navPath)) continue
+      const hubPin = resolveHubPin(to)
+      if (!hubPin) continue
+      pinnedItems.push({
+        path: hubPin.path,
+        label: hubPin.label,
+        iconKey: hubPin.icon,
+        Icon: resolveIcon(hubPin.path, hubPin.icon),
+        hub,
+        tabCount: visibleHubTabs(hub, pluginFlags).length,
+      })
+    }
+    if (pinnedItems.length) {
+      out.push({ key: '__pinned', title: t.pinned, items: pinnedItems })
+    }
+    for (const [group, items] of Object.entries(groupedNav)) {
+      const visible = (items ?? []).filter((it) => !pinSet.has(it.path) && !pinSet.has(toCanonicalAdminPath(it.path)))
+      if (!visible.length) continue
+      out.push({
+        key: group,
+        title: translateNavGroup(group),
+        items: visible.map((it) => {
+          const hub = findHubByNavPath(it.path)
+          const tabs = hub ? visibleHubTabs(hub, pluginFlags) : []
+          return {
+            path: it.path,
+            label: resolveDisplayLabel(it.path, it.label),
+            iconKey: it.icon,
+            Icon: resolveIcon(it.path, it.icon),
+            hub: tabs.length >= 2 ? hub : undefined,
+            tabCount: tabs.length,
+          }
+        }),
+      })
+    }
+    return out
+  }, [groupedNav, pinned, pinSet, pluginFlags, locale])
+
+  const footerActions = (
+    <>
+      <AdminLocaleSwitcher collapsed={collapsed} />
+      <a
+        href="/"
+        target="_blank"
+        rel="noreferrer"
+        onClick={onNavigate}
+        title={t.viewSite}
+        className={`mt-2 flex items-center gap-2 text-sm text-zinc-500 hover:text-white ${collapsed ? 'rounded-lg px-2 py-1.5 hover:bg-white/5' : 'px-3'}`}
+      >
+        <ExternalLink size={16} />
+        <span>{t.viewSite}</span>
+      </a>
+      <button
+        type="button"
+        onClick={() => { onNavigate?.(); logout() }}
+        title={t.signOut}
+        className={`mt-1 flex w-full items-center gap-2 text-sm text-zinc-500 hover:text-white ${collapsed ? 'rounded-lg px-2 py-1.5 hover:bg-white/5' : 'px-3'}`}
+      >
+        <LogOut size={16} />
+        <span>{t.signOut}</span>
+      </button>
+    </>
+  )
+
+  if (collapsed) {
+    return (
+      <AdminNavNerve
+        groups={mosaicGroups}
+        pinnedPaths={pinSet}
+        attention={attention}
+        onNavigate={onNavigate}
+        onTogglePin={onTogglePin}
+        header={(
+          <div className="flex items-center gap-2 px-0.5">
+            <Link
+              to={adminUrl()}
+              onClick={onNavigate}
+              className="block w-9 shrink-0 overflow-hidden"
+              title={t.cmsFull}
+            >
+              <BrandLogo variant="mini" className="h-9 w-9" />
+            </Link>
+            <div className="min-w-0">
+              <p className="truncate text-xs font-medium text-zinc-200">{userName ?? t.administrator}</p>
+              <p className="truncate text-[10px] text-zinc-600">{role ?? 'admin'}</p>
+            </div>
+          </div>
+        )}
+        footer={footerActions}
+      />
+    )
+  }
+
   return (
     <>
       <Link
         to={adminUrl()}
         onClick={onNavigate}
-        className={`block min-w-0 max-w-full overflow-hidden ${collapsed ? 'px-0' : ''}`}
+        className="block min-w-0 max-w-full overflow-hidden"
         title={t.cmsFull}
       >
-        {collapsed ? (
-          <BrandLogo variant="mini" className="mx-auto h-8 w-8" />
-        ) : (
-          <BrandLogo
-            variant="full2"
-            className="h-auto max-h-14 w-auto max-w-full object-left"
-          />
-        )}
+        <BrandLogo
+          variant="full2"
+          className="h-auto max-h-14 w-auto max-w-full object-left"
+        />
       </Link>
-      {!collapsed && (
-        <p className="mt-1 text-xs text-zinc-500">{userName ?? t.administrator} · {role ?? 'admin'}</p>
-      )}
+      <p className="mt-1 text-xs text-zinc-500">{userName ?? t.administrator} · {role ?? 'admin'}</p>
 
-      <nav className={`mt-6 space-y-5 ${collapsed ? 'mt-8 space-y-1' : ''}`}>
+      <nav className="mt-6 space-y-5">
         {!!pinned.length && (
           <section>
-            {!collapsed && (
-              <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">{t.pinned}</p>
-            )}
+            <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">{t.pinned}</p>
             {pinned.map((to) => {
               const navItem = findNavEntry(groupedNav, to)
               if (navItem) return renderNavItem(navItem.path, navItem.label, navItem.icon, true, to)
-              // Legacy deep pin under a hub — only if that hub's plugin is still in nav.
               const hub = findHubByPath(to)
               if (!hub || !findNavEntry(groupedNav, hub.navPath)) return null
               const hubPin = resolveHubPin(to)
@@ -366,36 +406,14 @@ function AdminNav({
           if (!visible.length) return null
           return (
             <section key={group}>
-              {!collapsed && (
-                <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">{translateNavGroup(group)}</p>
-              )}
+              <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">{translateNavGroup(group)}</p>
               {visible.map((it) => renderNavItem(it.path, it.label, it.icon, true))}
             </section>
           )
         })}
       </nav>
 
-      <AdminLocaleSwitcher collapsed={collapsed} />
-      <a
-        href="/"
-        target="_blank"
-        rel="noreferrer"
-        onClick={onNavigate}
-        title={collapsed ? t.viewSite : undefined}
-        className={`mt-3 flex items-center gap-2 text-sm text-zinc-500 hover:text-white ${collapsed ? 'justify-center px-0' : 'px-3'}`}
-      >
-        <ExternalLink size={16} />
-        {!collapsed && t.viewSite}
-      </a>
-      <button
-        type="button"
-        onClick={() => { onNavigate?.(); logout() }}
-        title={collapsed ? t.signOut : undefined}
-        className={`mt-2 flex items-center gap-2 text-sm text-zinc-500 hover:text-white ${collapsed ? 'justify-center px-0' : 'px-3'}`}
-      >
-        <LogOut size={16} />
-        {!collapsed && t.signOut}
-      </button>
+      {footerActions}
     </>
   )
 }
@@ -490,26 +508,32 @@ export function AdminShell() {
     return () => { cancelled = true }
   }, [])
 
-  const asideWidth = collapsed ? 'md:w-[4.25rem]' : 'md:w-64'
-  const mainPad = collapsed ? 'md:pl-[4.25rem]' : 'md:pl-64'
+  const asideWidth = collapsed ? 'md:w-[16.75rem]' : 'md:w-64'
+  const mainPad = collapsed ? 'md:pl-[16.75rem]' : 'md:pl-64'
 
   return (
     <div className="admin-shell min-h-screen bg-[#0a0a0b] text-zinc-100">
       <aside
-        className={`fixed inset-y-0 left-0 z-30 hidden overflow-x-hidden overflow-y-auto border-r border-white/10 bg-[#101012] transition-[width] duration-200 md:block ${asideWidth} ${collapsed ? 'p-2.5' : 'p-5'}`}
+        className={`fixed inset-y-0 left-0 z-30 hidden border-r border-white/10 transition-[width] duration-200 md:flex md:flex-col ${asideWidth} ${
+          collapsed
+            ? 'admin-aside-shelf overflow-hidden bg-[#0e0e12] p-2.5'
+            : 'overflow-x-hidden overflow-y-auto bg-[#101012] p-5'
+        }`}
       >
-        <div className={`mb-3 flex ${collapsed ? 'justify-center' : 'justify-end'}`}>
+        <div className={`mb-2 flex shrink-0 ${collapsed ? 'justify-center' : 'justify-end'}`}>
           <button
             type="button"
             onClick={toggleCollapsed}
             title={collapsed ? t.expandSidebar : t.collapseSidebar}
             aria-label={collapsed ? t.expandSidebar : t.collapseSidebar}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-zinc-400 hover:bg-white/5 hover:text-white"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 text-zinc-400 hover:bg-white/5 hover:text-white"
           >
             {collapsed ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}
           </button>
         </div>
-        <AdminNav collapsed={collapsed} pinned={pinned} onTogglePin={togglePin} />
+        <div className={collapsed ? 'flex min-h-0 flex-1 flex-col' : ''}>
+          <AdminNav collapsed={collapsed} pinned={pinned} onTogglePin={togglePin} />
+        </div>
       </aside>
 
       {menuOpen && (
@@ -748,7 +772,8 @@ export function LoginPage() {
 
 export { DashboardPage } from '@/admin/pages/DashboardPage'
 
-export { CrudListPage, CrudEditPage, ProfilePage, ProjectEditPage, BlogEditPage } from '@/admin/pages/AdminPages'
+export { CrudListPage, CrudEditPage, ProfilePage, ProjectEditPage } from '@/admin/pages/AdminPages'
+export { BlogEditPage } from '@/modules/blog/admin/BlogEditPage'
 export { SingletonPage, ThemeSettingsPage, HomepagePage, HomepageEditPage } from '@/admin/pages/SitePages'
 export { MediaLibraryPage, ContactMessagesPage, BackupPage, PasswordPage, UpdatesPage } from '@/admin/pages/UtilityPages'
 export { TrashPage, ActivityPage, SystemStatusPage } from '@/admin/pages/EnterprisePages'

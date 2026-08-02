@@ -16,7 +16,7 @@ import { getBlueprints } from '@/core/moduleRegistry'
 import { AppIcon } from '@/shared/icons'
 import { AdminSplitLayout, adminFormFullClass, adminFormGridClass } from '@/admin/components/AdminSplitLayout'
 import { PageContext } from '@/admin/components/PageContext'
-import { BlogPostPreview, CrudItemPreview, ListContextPreview, ProfilePreview, ProjectPreview } from '@/admin/preview'
+import { CrudItemPreview, ListContextPreview, ProfilePreview, ProjectPreview } from '@/admin/preview'
 import { t, fieldLabel, resourceTitle, pageTitle } from '@/admin/i18n'
 import { getContext, resolvePublicUrl } from '@/admin/context/registry'
 import { skillRankFromPercent } from '@/shared/skillRank'
@@ -771,90 +771,8 @@ function ProjectLinkedPosts({ projectId }: { projectId: unknown }) {
   )
 }
 
-export function BlogEditPage() {
-  const { id = 'new' } = useAdminRouteParams()
-  const pluginsReady = usePluginsHydrated()
-  const blogOn = usePluginEnabled('blog')
-  const { data } = useAdminItem<BlogPost>('blog', id, blogOn)
-  const projectsOn = usePluginEnabled('projects')
-  const { data: projects = [] } = useAdminList<Project>('projects', projectsOn)
-  const crud = useCrud('blog')
-  const nav = useNavigate()
-  const { form, setForm, baseline, setBaseline } = useHydratedForm<Data>(data as Data | undefined, String(id))
-  const set = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }))
-  const { dirty, baselineJson } = useDirtyForm(form, baseline)
-  useUnsavedGuard(dirty)
-  const { bannerNode, clearDraftLocal } = useFormAutosave('blog', id, form, baselineJson, dirty, (d) => setForm(d))
-
-  const projectOptions = useMemo(
-    () => [
-      { value: '', label: '— не привязан —' },
-      ...projects.map((p) => ({ value: String(p.id), label: String(p.title || `#${p.id}`) })),
-    ],
-    [projects],
-  )
-
-  const submit = useCallback((status: string) => {
-    const projectId = form.project_id === '' || form.project_id == null ? null : Number(form.project_id)
-    crud.save.mutate({
-      data: {
-        ...form,
-        status,
-        project_id: Number.isFinite(projectId as number) ? projectId : null,
-      },
-      id: id === 'new' ? undefined : id,
-    }, {
-      onSuccess: r => {
-        clearDraftLocal()
-        setBaseline({ ...form, status, project_id: projectId })
-        if (id !== 'new') endpoints.publish('blog', id, status)
-        nav(adminUrl(`/blog/${(r as any).id ?? id}`))
-      },
-    })
-  }, [crud.save, form, id, clearDraftLocal, nav, setBaseline])
-
-  const saveDraft = useCallback(() => submit('draft'), [submit])
-  useAdminSaveHotkey(saveDraft)
-
-  if (!pluginsReady) return <Skeleton className="h-96" />
-  if (!blogOn) return <PluginOffNotice plugin="blog" />
-
-  return (
-    <AdminSplitLayout
-      title={id === 'new' ? t.newPost : t.editPost}
-      contextKey="blog"
-      slug={form.slug}
-      status={form.status}
-      form={
-        <>
-          {bannerNode}
-          <GlassPanel className={adminFormGridClass}>
-            <Text label={fieldLabel('title')} value={form.title} onChange={v => set('title', v)} />
-            <Text label={fieldLabel('slug')} value={form.slug} onChange={v => set('slug', v)} />
-            {projectsOn ? (
-              <Select
-                label={fieldLabel('project_id')}
-                value={form.project_id ?? ''}
-                onChange={v => set('project_id', v === '' ? null : v)}
-                options={projectOptions}
-              />
-            ) : null}
-            <Text label={fieldLabel('seo_title')} value={form.seo_title} onChange={v => set('seo_title', v)} />
-            <Text label={fieldLabel('tags')} value={asText(form.tags)} onChange={v => set('tags', v)} />
-            <div className={adminFormFullClass}><Field label={fieldLabel('excerpt')}><textarea value={form.excerpt ?? ''} onChange={e => set('excerpt', e.target.value)} /></Field></div>
-            <MediaPicker label={fieldLabel('cover_image')} value={form.cover_media_id} onChange={v => set('cover_media_id', v)} />
-            <div className={adminFormFullClass}><Field label={fieldLabel('content')}><RichTextEditor value={form.content} onChange={v => set('content', v)} /></Field></div>
-            <div className={adminFormFullClass}><Field label={fieldLabel('seo_description')}><textarea value={form.seo_description ?? ''} onChange={e => set('seo_description', e.target.value)} /></Field></div>
-          </GlassPanel>
-          <SaveBar saving={crud.save.isPending} error={crud.save.error?.message} onSave={() => submit('draft')} label={t.saveDraft}>
-            <Button type="button" onClick={() => submit('published')}>{t.publish}</Button>
-          </SaveBar>
-        </>
-      }
-      preview={<BlogPostPreview form={form} />}
-    />
-  )
-}
+/** Writing studio lives in the blog module. */
+export { BlogEditPage } from '@/modules/blog/admin/BlogEditPage'
 
 /** Re-export for list pages that only need the banner */
 export { PageContext }

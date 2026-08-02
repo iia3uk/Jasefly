@@ -203,22 +203,83 @@ export function getAllModules(): ModuleManifest[] {
   return manifests
 }
 
-/** Sidebar groups by plugin label (enabled modules only, registration order). */
+/**
+ * Preferred sidebar section order. Unknown groups append after these.
+ * Keep in sync with folds in resolveAdminNavGroup().
+ */
+const NAV_GROUP_ORDER = [
+  'Система',
+  'Сайт',
+  'Контент',
+  'Коммерция',
+  'Коммуникации',
+  'Пользователи',
+  'Безопасность',
+  'Интеграции',
+  'Разработка',
+  'Модули',
+  'Прочее',
+] as const
+
+/** Fold fragmented / EN / per-plugin labels into a few hub tabs. */
+const NAV_GROUP_FOLD: Record<string, string> = {
+  System: 'Система',
+  Content: 'Контент',
+  Commerce: 'Коммерция',
+  Communications: 'Коммуникации',
+  Security: 'Безопасность',
+  Integrations: 'Интеграции',
+  Other: 'Прочее',
+  Design: 'Сайт',
+  Modules: 'Модули',
+  Оформление: 'Сайт',
+  SEO: 'Сайт',
+  Медиа: 'Сайт',
+  Почта: 'Система',
+  'DDoS защита': 'Безопасность',
+  Портфолио: 'Контент',
+  Проекты: 'Контент',
+  Блог: 'Контент',
+  Услуги: 'Контент',
+  Платежи: 'Коммерция',
+  Товары: 'Коммерция',
+  Webhooks: 'Интеграции',
+}
+
+function resolveAdminNavGroup(raw: string): string {
+  const label = raw.trim()
+  if (!label) return 'Прочее'
+  const folded = NAV_GROUP_FOLD[label]
+  if (folded) return folded
+  // Package leftovers keyed by slug (ai-content-optimizer, cookie-consent, …)
+  if (!/[А-Яа-яЁё]/.test(label) && (/[-_]/.test(label) || label === label.toLowerCase())) {
+    return 'Модули'
+  }
+  return label
+}
+
+/** Sidebar groups by nav item.group (enabled modules only), folded into hubs. */
 export function getAdminNavGrouped(): Record<string, ModuleManifest['adminNav']> {
   const grouped: Record<string, NonNullable<ModuleManifest['adminNav']>> = {}
   const seenPaths = new Set<string>()
   for (const mod of getModules()) {
-    const items = mod.adminNav ?? []
-    if (items.length === 0) continue
-    const section = mod.label || mod.name
-    grouped[section] ??= []
-    for (const item of items) {
+    for (const item of mod.adminNav ?? []) {
       if (seenPaths.has(item.path)) continue
       seenPaths.add(item.path)
+      const section = resolveAdminNavGroup(item.group || mod.label || mod.name)
+      grouped[section] ??= []
       grouped[section]!.push(item)
     }
   }
-  return grouped
+
+  const ordered: Record<string, NonNullable<ModuleManifest['adminNav']>> = {}
+  for (const key of NAV_GROUP_ORDER) {
+    if (grouped[key]?.length) ordered[key] = grouped[key]
+  }
+  for (const [key, items] of Object.entries(grouped)) {
+    if (!ordered[key] && items.length) ordered[key] = items
+  }
+  return ordered
 }
 
 /** Aggregated blueprints across all enabled modules, keyed by resource key. */

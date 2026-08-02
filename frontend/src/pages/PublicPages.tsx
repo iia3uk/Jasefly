@@ -578,7 +578,12 @@ export function BlogPostPage() {
 
   return (
     <>
-      <SeoHead title={post.seo_title || post.title} description={post.seo_description || post.excerpt} path={`/blog/${post.slug}`} />
+      <SeoHead
+        title={post.seo_title || post.title}
+        description={post.seo_description || post.excerpt}
+        path={`/blog/${post.slug}`}
+        image={mediaUrl(post.og_image_id ?? post.og_image ?? post.cover_media_id ?? post.cover ?? null)}
+      />
       <BlogPostView post={post} />
       {!!post.related?.length && (
         <Section>
