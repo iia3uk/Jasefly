@@ -1,5 +1,96 @@
 # Changelog
 
+## 2026-08-02 — Обновление логотипов, favicon и OG-изображения
+
+- Синхронизированы SVG/PNG логотипы и favicon в frontend/public/brand
+- На сайте: новый OG (media #12) и logo (media #13)
+
+## 2026-08-02 — Admin nav: module icons + attention loot badges
+
+- Expanded navIconRegistry (sparkles/cookie/radar/forms/AI/etc.) so ZIP modules get real icons
+- Forms/Blog/Plugins/Modules get distinct icons
+- Gold circular badges on menu tiles/hubs for unread messages, new form submissions, pending comments, support waiting, notifications, trash
+
+## 2026-08-02 — Blog posts emit og:image from OG cover (fallback to post cover)
+
+- Public BlogPostPage SeoHead now sets og:image from og_image_id, else cover
+
+## 2026-08-02 — Blog studio: Meta cover is OG image, not post cover
+
+- Meta panel cover now edits og_image_id (Open Graph / social share)
+- Canvas cover stays cover_media_id (on-page hero)
+- Clarify labels/hints so the two are not confused
+
+## 2026-08-02 — Blog studio: wider writing canvas
+
+- Raise post editor max-width (~48rem → ~84rem) so side gutters are smaller
+
+## 2026-08-02 — Blog writing studio: modern TipTap post editor
+
+- New Ghost/Medium-style BlogEditPage with title/cover canvas and meta drawer
+- BlogComposer: sticky toolbar, selection bubble, slash menu, media library images, focus-safe TipTap
+- Write/Preview toggle keeps editor mounted so caret is not lost
+- HTML content model unchanged; CMS_MAP + i18n updated
+
+## 2026-08-02 — Admin nav variant: lattice tiles (same hubs)
+
+- Same consolidations (Система/Сайт/Контент/…)
+- Icon-only hub dock on top; items as 2-column tiles to cut vertical scroll
+- Aside: only the deck scrolls, footer stays pinned
+
+## 2026-08-02 — Admin nav variant: horizon hubs (same consolidations)
+
+- Keep folded hubs (Система/Сайт/Контент/…)
+- Replace left icon rail with horizontal hub strip + full-width item deck
+- Long hubs get soft clusters (Управление/Состояние/…) — presentation only
+
+## 2026-08-02 — Admin nav: fold items into hub tabs (not per-module)
+
+- Group sidebar by item.group instead of module label — ZIP modules no longer each get a rail icon
+- Fold DDoS/Mail/Blog/Projects/etc. into Система/Сайт/Контент/… hubs
+- Slug leftovers go under Модули; stable group order + icons
+
+## 2026-08-02 — Admin nav: station rail (icons) + open deck
+
+- Replaced wrapping group chips with thin vertical icon rail
+- Open group shows as a colored deck with readable labels
+- Items get the width; groups no longer eat the sidebar height
+
+## 2026-08-02 — Admin: no scroll jump on hub tabs + compact group chips
+
+- Sidebar: tall spines replaced with wrapping group chips + short shelf (less scroll)
+- ScrollToTop skips jump when switching tabs inside the same admin hub
+- Hub tabs sticky under header and wrap instead of endless horizontal scroll
+- Active hub tab scrolls into view with nearest block
+
+## 2026-08-02 — Admin nav: bookshelf spines (not grid/fan)
+
+- Новая модель: корешки групп слева (вертикальный текст) + одна открытая полка справа
+- В полке — обычный читаемый список иконка+название, без веера и сетки
+- Активная группа открывается сама; ПКМ — закрепить
+- Классический список по `[`
+
+## 2026-08-02 — Admin nav: readable tile launcher (kill nerve fan)
+
+- Убран нерв/монограммы/веер — было неюзабельно
+- Компакт: сетка плиток иконка + читаемая подпись
+- Группы с нормальными названиями; pin по hover/ПКМ
+- Список по `[` как запасной режим
+
+## 2026-08-02 — Admin nav: nerve rail + bloom fan
+
+- Вместо сетки/списка — тонкий «нерв»: группы как позвонки с монограммой и цветом
+- Hover/клик → bloom-веер разделов справа (дуга, не менюшка)
+- Активная группа светится; ПКМ в веере — закрепить
+- Список с названиями остаётся по `[` / кнопке
+
+## 2026-08-02 — Admin nav: icon mosaic sidebar
+
+- Компактное меню админки — сетка квадратных иконок 2×N вместо длинного списка
+- Flyout при наведении: название + группа; ПКМ — закрепить
+- Переключение мозаика ↔ список (кнопка / клавиша [); default = мозаика
+- AdminNavMosaic + CSS accent для aside
+
 ## 2026-08-01 — Fix migration 024: role_rank + retry on deploy
 
 - 024: колонка rank→role_rank (MySQL reserved word ломал ALTER)
