@@ -1,5 +1,5 @@
 /**
- * Jasefly Maps — Platform SDK frontend module (v1.0.1)
+ * Jasefly Maps — Platform SDK frontend module (v1.0.2)
  * Provider adapters: Yandex (default, РФ) + optional OpenStreetMap/Leaflet.
  */
 import {
@@ -14,7 +14,7 @@ import {
 } from './maps-core.js'
 
 const SLUG = 'maps'
-const VERSION = '1.0.1'
+const VERSION = '1.0.2'
 const API = '/api/v1'
 
 export {
@@ -573,7 +573,7 @@ export function createMapsApi(ui, options = {}) {
       dragging = true,
       fitBounds = false,
       showReset = true,
-      showZoomControls = true,
+      showZoomControls,
       provider = 'yandex',
       apiKey,
       mapStyle,
@@ -597,6 +597,9 @@ export function createMapsApi(ui, options = {}) {
     const dirTarget = directionsTargetFromProps({ directions, address, center }, markers)
     const dirService = directions?.service || (provider === 'google' ? 'google' : provider === 'osm' ? 'osm' : 'yandex')
     const directionsUrl = dirTarget ? buildDirectionsUrl(dirTarget, dirService) : null
+    // Yandex/Google already ship native zoom UI — our overlay duplicates them
+    const nativeProviderUi = provider === 'yandex' || provider === 'google'
+    const controlsVisible = showZoomControls != null ? !!showZoomControls : !nativeProviderUi
 
     const [phase, setPhase] = useState(
       typeof window === 'undefined' || forceError ? 'fallback' : 'loading',
@@ -780,7 +783,7 @@ export function createMapsApi(ui, options = {}) {
           },
         }, 'Загрузка карты…')
         : null,
-      showZoomControls
+      controlsVisible
         ? h(MapControls, {
           interactive: interactive !== false,
           showReset: showReset !== false,
@@ -857,7 +860,9 @@ function createMapWidget(ui) {
         showDirectionsLink: settings.show_directions !== false && settings.show_directions !== 0 && settings.show_directions !== '0',
         provider: settings.provider || 'yandex',
         mapStyle: settings.map_style || 'default',
-        showZoomControls: !editMode || settings.show_controls !== false,
+        // Overlay +/- only for OSM; Yandex has its own controls
+        showZoomControls: (settings.provider || 'yandex') === 'osm'
+          && (!editMode || settings.show_controls !== false),
         directions: {
           target: settings.address
             || (Number.isFinite(Number(settings.center_lat)) && Number.isFinite(Number(settings.center_lng))

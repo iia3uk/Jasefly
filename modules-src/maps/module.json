@@ -3,7 +3,7 @@
   "type": "jasefly-module",
   "name": "Maps",
   "slug": "maps",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Универсальные интерактивные карты: Яндекс Карты по умолчанию (РФ), опционально OSM/Leaflet, виджет билдера, маркеры, внешние маршруты, fallback и a11y.",
   "author": {
     "name": "Jasefly",
