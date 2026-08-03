@@ -145,6 +145,10 @@ require_once "$root/tests/PackageEnableSyncTest.php";
 echo "Projects soft API\n";
 require_once "$root/tests/ProjectsSoftApiTest.php";
 
+// —— Soft delete empty-all (tables without deleted_at) ——
+echo "SoftDelete empty trash\n";
+require_once "$root/tests/SoftDeleteEmptyTrashTest.php";
+
 // —— Operation / schedule / snapshot integrity ——
 echo "Operation integrity\n";
 require_once "$root/tests/OperationIntegrityTest.php";
