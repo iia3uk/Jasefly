@@ -32,7 +32,9 @@ final class TrashController
         if (!$row) {
             Response::error('Not found', 404);
         }
-        $this->softDelete->restore($table, (int) $id);
+        if (!$this->softDelete->restore($table, (int) $id)) {
+            Response::error('Resource does not support trash restore', 422);
+        }
         $this->activity->log($r, 'restore', $resource, (int) $id, $row['title'] ?? $row['name'] ?? null);
         Response::json(['message' => 'Restored', 'data' => ['id' => (int) $id, 'resource' => $resource]]);
     }
