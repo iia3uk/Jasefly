@@ -56,6 +56,10 @@ final class SoftDeleteService
 
     public function restore(string $table, int $id): bool
     {
+        // pages/education and some TRASHABLE entries never got deleted_at — skip SQL.
+        if (!$this->hasDeletedAt($table)) {
+            return false;
+        }
         if ($table === 'lab_experiments') {
             $row = $this->db->one("SELECT slug FROM `$table` WHERE id=?", [$id]);
             $slug = (string) ($row['slug'] ?? '');
@@ -85,6 +89,11 @@ final class SoftDeleteService
 
     public function emptyTrash(string $table): int
     {
+        // empty-all walks every TRASHABLE table; without this guard, tables
+        // without deleted_at (pages, education on prod) throw SQLSTATE 42S22.
+        if (!$this->hasDeletedAt($table)) {
+            return 0;
+        }
         $count = (int) ($this->db->one("SELECT COUNT(*) c FROM `$table` WHERE deleted_at IS NOT NULL")['c'] ?? 0);
         $this->db->run("DELETE FROM `$table` WHERE deleted_at IS NOT NULL");
         return $count;
