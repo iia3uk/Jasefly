@@ -97,19 +97,19 @@
                 "elType": "widget",
                 "widgetType": "maps.map",
                 "settings": {
-                  "title": "Как нас найти",
-                  "address": "г. Москва (демо-точка модуля Maps)",
-                  "center_lat": 55.7558,
-                  "center_lng": 37.6173,
-                  "zoom": 14,
-                  "marker_title": "Jasefly",
-                  "marker_description": "Демонстрационная точка. Замените координаты в билдере или в Контакты → map_lat / map_lng.",
-                  "height": 360,
+                  "title": "На карте",
+                  "address": "Красная площадь, Москва",
+                  "center_lat": 55.7539,
+                  "center_lng": 37.6208,
+                  "zoom": 16,
+                  "marker_title": "Красная площадь",
+                  "marker_description": "Москва, Красная площадь — пример точки модуля Maps",
+                  "height": 380,
                   "interactive": true,
                   "scroll_wheel_zoom": false,
                   "show_directions": true,
                   "fit_bounds": false,
-                  "provider": "osm",
+                  "provider": "yandex",
                   "map_style": "default"
                 }
               }

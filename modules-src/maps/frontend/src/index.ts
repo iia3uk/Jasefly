@@ -35,7 +35,7 @@ export type PlatformFrontendContext = {
 
 export const JaseflyFrontendModule = {
   slug: 'maps',
-  version: '1.0.0',
+  version: '1.0.1',
   sdkVersion: 1,
 
   async register(_ctx: PlatformFrontendContext): Promise<void> {

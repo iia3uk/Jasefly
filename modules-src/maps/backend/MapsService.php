@@ -23,7 +23,7 @@ final class MapsService
             return $this->defaults();
         }
         return [
-            'provider' => (string) ($row['provider'] ?? 'osm'),
+            'provider' => (string) ($row['provider'] ?? 'yandex'),
             'api_key' => (string) ($row['api_key'] ?? ''),
             'locale' => (string) ($row['locale'] ?? 'ru'),
             'map_style' => (string) ($row['map_style'] ?? 'default'),
@@ -120,12 +120,12 @@ final class MapsService
     private function defaults(): array
     {
         return [
-            'provider' => 'osm',
+            'provider' => 'yandex',
             'api_key' => '',
             'locale' => 'ru',
             'map_style' => 'default',
-            'default_lat' => 55.7558,
-            'default_lng' => 37.6173,
+            'default_lat' => 55.7539,
+            'default_lng' => 37.6208,
             'default_zoom' => 12,
             'fallback_title' => 'Карта недоступна',
             'fallback_hint' => 'Не удалось загрузить карту. Откройте маршрут во внешнем сервисе.',
@@ -137,11 +137,11 @@ final class MapsService
     {
         $p = strtolower(trim($provider));
         if ($p === '') {
-            return 'osm';
+            return 'yandex';
         }
-        // Future: google, yandex, mapbox — accept id without enabling adapter yet
+        // Future: google, mapbox — accept id without enabling adapter yet
         if (!preg_match('/^[a-z0-9_-]{1,64}$/', $p)) {
-            return 'osm';
+            return 'yandex';
         }
         return $p;
     }

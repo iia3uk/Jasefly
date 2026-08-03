@@ -1,6 +1,6 @@
 /**
- * Jasefly Maps — Platform SDK frontend module (v1.0.0)
- * Provider adapter architecture; first adapter: OpenStreetMap + Leaflet.
+ * Jasefly Maps — Platform SDK frontend module (v1.0.1)
+ * Provider adapters: Yandex (default, РФ) + optional OpenStreetMap/Leaflet.
  */
 import {
   buildDirectionsUrl,
@@ -14,7 +14,7 @@ import {
 } from './maps-core.js'
 
 const SLUG = 'maps'
-const VERSION = '1.0.0'
+const VERSION = '1.0.1'
 const API = '/api/v1'
 
 export {
@@ -93,7 +93,175 @@ export function loadLeaflet(assetBase) {
   return leafletLoading
 }
 
-// ─── OSM / Leaflet adapter ─────────────────────────────────────────
+// ─── Default pin (SVG — no broken Leaflet PNG paths) ───────────────
+
+function ensureMarkerCss() {
+  if (typeof document === 'undefined') return
+  if (document.getElementById('jasefly-maps-marker-css')) return
+  const style = document.createElement('style')
+  style.id = 'jasefly-maps-marker-css'
+  style.textContent = `
+    .jasefly-map-pin-wrap { background: transparent !important; border: 0 !important; }
+    .jasefly-map-pin { width: 32px; height: 42px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
+    .jasefly-map-pin svg { display: block; width: 32px; height: 42px; }
+  `
+  document.head.appendChild(style)
+}
+
+function defaultPinSvg(color = '#e11d48') {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 42" width="32" height="42" aria-hidden="true">
+    <path fill="${color}" d="M16 0C7.7 0 1 6.7 1 15c0 10.5 13.2 25.4 13.8 26.1a1.5 1.5 0 0 0 2.4 0C17.8 40.4 31 25.5 31 15 31 6.7 24.3 0 16 0z"/>
+    <circle fill="#fff" cx="16" cy="15" r="6"/>
+  </svg>`
+}
+
+function leafletDefaultIcon(L) {
+  ensureMarkerCss()
+  return L.divIcon({
+    className: 'jasefly-map-pin-wrap',
+    html: `<div class="jasefly-map-pin">${defaultPinSvg()}</div>`,
+    iconSize: [32, 42],
+    iconAnchor: [16, 40],
+    popupAnchor: [0, -36],
+  })
+}
+
+// ─── Yandex Maps adapter (default for РФ; official map-widget) ─────
+
+function createYandexAdapter() {
+  return {
+    id: 'yandex',
+    label: 'Яндекс Карты',
+    async load() {
+      /* iframe widget — no SDK download required */
+    },
+    createMap(container, options) {
+      const state = {
+        center: { lat: options.center.lat, lng: options.center.lng },
+        zoom: options.zoom || 15,
+        markers: new Map(),
+        listeners: {},
+        interactive: !!options.interactive,
+        scrollWheelZoom: !!options.scrollWheelZoom,
+      }
+      const wrap = document.createElement('div')
+      wrap.style.cssText = 'position:relative;width:100%;height:100%;min-height:220px;'
+      const iframe = document.createElement('iframe')
+      iframe.title = 'Яндекс Карта'
+      iframe.loading = 'lazy'
+      iframe.setAttribute('allowfullscreen', 'true')
+      iframe.referrerPolicy = 'origin'
+      iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;display:block;'
+      wrap.appendChild(iframe)
+      container.innerHTML = ''
+      container.appendChild(wrap)
+
+      const emit = (event, ...args) => {
+        const set = state.listeners[event]
+        if (!set) return
+        for (const fn of set) {
+          try { fn(...args) } catch { /* */ }
+        }
+      }
+
+      const rebuild = () => {
+        const params = new URLSearchParams()
+        // Yandex widget uses lng,lat
+        params.set('ll', `${state.center.lng},${state.center.lat}`)
+        params.set('z', String(Math.max(1, Math.min(21, state.zoom))))
+        params.set('l', options.mapStyle === 'sat' ? 'sat,skl' : 'map')
+        params.set('lang', (options.locale || 'ru').startsWith('en') ? 'en_US' : 'ru_RU')
+        if (!state.interactive || !state.scrollWheelZoom) params.set('scroll', 'false')
+        const pts = [...state.markers.values()].map((m) => `${m.lng},${m.lat},pm2rdm`)
+        if (pts.length) params.set('pt', pts.join('~'))
+        iframe.src = `https://yandex.ru/map-widget/v1/?${params.toString()}`
+      }
+
+      iframe.addEventListener('load', () => emit('ready'))
+      rebuild()
+
+      const approxBounds = () => {
+        // rough viewport estimate for event parity
+        const d = 180 / (2 ** state.zoom)
+        return {
+          south: state.center.lat - d * 0.35,
+          north: state.center.lat + d * 0.35,
+          west: state.center.lng - d * 0.55,
+          east: state.center.lng + d * 0.55,
+        }
+      }
+
+      const handle = {
+        __yandex: { wrap, iframe, state },
+        setView(center, zoom) {
+          state.center = { lat: center.lat, lng: center.lng }
+          if (zoom != null) state.zoom = zoom
+          rebuild()
+          emit('moveend', approxBounds())
+        },
+        setZoom(zoom) {
+          state.zoom = zoom
+          rebuild()
+          emit('zoom', state.zoom)
+        },
+        fitBounds(bounds) {
+          const midLat = (bounds.south + bounds.north) / 2
+          const midLng = (bounds.west + bounds.east) / 2
+          const latSpan = Math.max(0.0001, bounds.north - bounds.south)
+          const lngSpan = Math.max(0.0001, bounds.east - bounds.west)
+          const span = Math.max(latSpan, lngSpan)
+          let z = 16
+          if (span > 0.5) z = 9
+          else if (span > 0.2) z = 11
+          else if (span > 0.05) z = 13
+          else if (span > 0.01) z = 15
+          state.center = { lat: midLat, lng: midLng }
+          state.zoom = z
+          rebuild()
+          emit('moveend', approxBounds())
+        },
+        addMarker(marker) {
+          state.markers.set(marker.id, {
+            id: marker.id,
+            lat: marker.lat,
+            lng: marker.lng,
+            title: marker.title,
+            description: marker.description,
+            onClick: marker.onClick,
+          })
+          rebuild()
+        },
+        removeMarker(id) {
+          state.markers.delete(id)
+          rebuild()
+        },
+        clearMarkers() {
+          state.markers.clear()
+          rebuild()
+        },
+        openPopup() { /* widget balloons are limited without JS API key */ },
+        getBounds() { return approxBounds() },
+        getZoom() { return state.zoom },
+        getCenter() { return { ...state.center } },
+        on(event, handler) {
+          if (!state.listeners[event]) state.listeners[event] = new Set()
+          state.listeners[event].add(handler)
+        },
+        off(event, handler) { state.listeners[event]?.delete(handler) },
+      }
+      return handle
+    },
+    destroy(handle) {
+      const bag = handle?.__yandex
+      if (!bag) return
+      try { bag.wrap.remove() } catch { /* */ }
+      for (const key of Object.keys(bag.state.listeners)) bag.state.listeners[key]?.clear()
+      bag.state.markers.clear()
+    },
+  }
+}
+
+// ─── OSM / Leaflet adapter (optional; SVG markers, no Leaflet flag prefix) ─
 
 function createOsmAdapter() {
   return {
@@ -105,11 +273,13 @@ function createOsmAdapter() {
     createMap(container, options) {
       const L = window.L
       if (!L) throw new Error('Leaflet not loaded')
+      ensureMarkerCss()
       const map = L.map(container, {
         center: [options.center.lat, options.center.lng],
         zoom: options.zoom,
         zoomControl: false,
-        attributionControl: true,
+        // Disable default prefix (includes political flag in recent Leaflet)
+        attributionControl: false,
         dragging: options.interactive && options.dragging,
         scrollWheelZoom: options.interactive && options.scrollWheelZoom,
         doubleClickZoom: options.interactive,
@@ -117,12 +287,13 @@ function createOsmAdapter() {
         keyboard: options.interactive,
         touchZoom: options.interactive,
       })
+      L.control.attribution({ prefix: false, position: 'bottomright' }).addTo(map)
       const tileUrl = options.mapStyle === 'hot'
         ? 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png'
         : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
       L.tileLayer(tileUrl, {
         maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        attribution: '&copy; OpenStreetMap',
       }).addTo(map)
 
       const listeners = {}
@@ -174,8 +345,10 @@ function createOsmAdapter() {
               iconAnchor: [size[0] / 2, size[1]],
               popupAnchor: [0, -Math.round(size[1] * 0.875)],
             })
+          } else {
+            icon = leafletDefaultIcon(L)
           }
-          const m = L.marker([marker.lat, marker.lng], icon ? { icon } : undefined)
+          const m = L.marker([marker.lat, marker.lng], { icon })
           const html = [
             marker.title ? `<strong>${escapeHtml(marker.title)}</strong>` : '',
             marker.description ? `<div>${escapeHtml(marker.description)}</div>` : '',
@@ -220,7 +393,9 @@ function createOsmAdapter() {
 }
 
 export const defaultRegistry = createProviderRegistry()
+defaultRegistry.register(createYandexAdapter())
 defaultRegistry.register(createOsmAdapter())
+defaultRegistry.setDefault('yandex')
 
 // ─── UI helpers ────────────────────────────────────────────────────
 
@@ -399,7 +574,7 @@ export function createMapsApi(ui, options = {}) {
       fitBounds = false,
       showReset = true,
       showZoomControls = true,
-      provider = 'osm',
+      provider = 'yandex',
       apiKey,
       mapStyle,
       locale,
@@ -420,7 +595,7 @@ export function createMapsApi(ui, options = {}) {
     const resolvedCenter = resolveCenter(center, markers)
     const initialZoom = Number.isFinite(Number(zoom)) ? Number(zoom) : 15
     const dirTarget = directionsTargetFromProps({ directions, address, center }, markers)
-    const dirService = directions?.service || 'osm'
+    const dirService = directions?.service || (provider === 'google' ? 'google' : provider === 'osm' ? 'osm' : 'yandex')
     const directionsUrl = dirTarget ? buildDirectionsUrl(dirTarget, dirService) : null
 
     const [phase, setPhase] = useState(
@@ -680,9 +855,16 @@ function createMapWidget(ui) {
         scrollWheelZoom: settings.scroll_wheel_zoom !== false && settings.scroll_wheel_zoom !== 0 && settings.scroll_wheel_zoom !== '0',
         fitBounds: !!settings.fit_bounds,
         showDirectionsLink: settings.show_directions !== false && settings.show_directions !== 0 && settings.show_directions !== '0',
-        provider: settings.provider || 'osm',
+        provider: settings.provider || 'yandex',
         mapStyle: settings.map_style || 'default',
         showZoomControls: !editMode || settings.show_controls !== false,
+        directions: {
+          target: settings.address
+            || (Number.isFinite(Number(settings.center_lat)) && Number.isFinite(Number(settings.center_lng))
+              ? { lat: Number(settings.center_lat), lng: Number(settings.center_lng) }
+              : markers[0]),
+          service: (settings.provider || 'yandex') === 'osm' ? 'osm' : 'yandex',
+        },
       }),
     )
   }
@@ -735,13 +917,13 @@ function createAdminPage(ui) {
       label,
       type === 'select'
         ? h('select', {
-          value: settings[key] || 'osm',
+          value: settings[key] || 'yandex',
           onChange: (e) => set(key, e.target.value),
           style: inputStyle,
         },
-          h('option', { value: 'osm' }, 'OpenStreetMap'),
+          h('option', { value: 'yandex' }, 'Яндекс Карты (рекомендуется для РФ)'),
+          h('option', { value: 'osm' }, 'OpenStreetMap (Leaflet)'),
           h('option', { value: 'google', disabled: true }, 'Google Maps (скоро)'),
-          h('option', { value: 'yandex', disabled: true }, 'Яндекс Карты (скоро)'),
           h('option', { value: 'mapbox', disabled: true }, 'Mapbox (скоро)'),
         )
         : h('input', {
@@ -757,17 +939,17 @@ function createAdminPage(ui) {
       h('p', { style: { margin: 0, fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#38bdf8' } }, 'Модуль'),
       h('h1', { style: { margin: '6px 0 8px', fontSize: 26, fontWeight: 650, color: '#fafafa' } }, 'Карты'),
       h('p', { style: { margin: '0 0 18px', fontSize: 14, lineHeight: 1.55, color: '#a1a1aa' } },
-        'Универсальный модуль интерактивных карт. Провайдер по умолчанию — OpenStreetMap. Виджет билдера: maps.map. Демо: /maps-demo.'),
+        'Универсальный модуль карт. По умолчанию — Яндекс Карты (виджет). OSM/Leaflet оставлен как опция. Виджет: maps.map · Демо: /maps-demo.'),
       h('div', {
         style: {
           border: '1px solid #27272a', borderRadius: 16, background: 'rgba(24,24,27,.55)',
           padding: 18, marginBottom: 14,
         },
       },
-        field('Провайдер', 'provider', 'select', 'Google / Яндекс / Mapbox можно добавить адаптером без смены публичного API.'),
-        field('API-ключ (если потребуется)', 'api_key', 'text', 'Для OSM не нужен. Не отдаётся в публичный /maps/config.'),
+        field('Провайдер', 'provider', 'select', 'Для РФ используйте Яндекс. OSM — запасной вариант.'),
+        field('API-ключ (опционально)', 'api_key', 'text', 'Для Яндекс-виджета не нужен. Не отдаётся в публичный /maps/config.'),
         field('Локаль', 'locale', 'text'),
-        field('Стиль карты', 'map_style', 'text', 'default | hot'),
+        field('Стиль карты', 'map_style', 'text', 'yandex: default|sat · osm: default|hot'),
         field('Широта по умолчанию', 'default_lat', 'number'),
         field('Долгота по умолчанию', 'default_lng', 'number'),
         field('Zoom по умолчанию', 'default_zoom', 'number'),
@@ -842,15 +1024,16 @@ function createDemoPage(ui) {
 
       section('Одна точка', 'Минимальный сценарий для контактов / клиники.',
         h(Map, {
-          center: { lat: 55.7558, lng: 37.6173 },
-          zoom: 15,
-          address: 'г. Москва, ул. Примерная, д. 123',
+          provider: 'yandex',
+          center: { lat: 55.7539, lng: 37.6208 },
+          zoom: 16,
+          address: 'Красная площадь, Москва',
           markers: [{
             id: 'clinic',
-            lat: 55.7558,
-            lng: 37.6173,
-            title: 'Стоматологическая клиника',
-            description: 'г. Москва, ул. Примерная, д. 123',
+            lat: 55.7539,
+            lng: 37.6208,
+            title: 'Красная площадь',
+            description: 'Москва — пример точки на Яндекс Картах',
           }],
           onMapClick: (ll) => setLastEvent(`mapClick ${ll.lat.toFixed(5)}, ${ll.lng.toFixed(5)}`),
           onMarkerClick: (m) => setLastEvent(`markerClick ${m.id}`),
@@ -860,28 +1043,30 @@ function createDemoPage(ui) {
 
       section('Несколько точек', 'Автоматическое масштабирование по всем маркерам (fitBounds).',
         h(Map, {
+          provider: 'yandex',
           fitBounds: true,
           height: 360,
           markers: [
-            { id: 'a', lat: 55.75, lng: 37.62, title: 'Точка A', description: 'Центр' },
-            { id: 'b', lat: 55.76, lng: 37.64, title: 'Точка B', description: 'Северо-восток' },
-            { id: 'c', lat: 55.74, lng: 37.60, title: 'Точка C', description: 'Юго-запад' },
+            { id: 'a', lat: 55.7539, lng: 37.6208, title: 'Красная площадь' },
+            { id: 'b', lat: 55.76, lng: 37.64, title: 'Точка B' },
+            { id: 'c', lat: 55.74, lng: 37.60, title: 'Точка C' },
           ],
           onBoundsChange: () => setLastEvent('boundsChange'),
           onZoomChange: (z) => setLastEvent(`zoom ${z}`),
         }),
       ),
 
-      section('Пользовательский маркер', 'Своя иконка через iconUrl.',
+      section('Пользовательский маркер (OSM)', 'Своя иконка через iconUrl — адаптер OpenStreetMap.',
         h(Map, {
-          center: { lat: 55.751244, lng: 37.618423 },
-          zoom: 14,
+          provider: 'osm',
+          center: { lat: 55.7539, lng: 37.6208 },
+          zoom: 15,
           markers: [{
             id: 'custom',
-            lat: 55.751244,
-            lng: 37.618423,
-            title: 'Кастомная иконка',
-            description: 'Иконка из ассетов модуля',
+            lat: 55.7539,
+            lng: 37.6208,
+            title: 'SVG / custom pin',
+            description: 'По умолчанию SVG-пин; iconUrl — кастом',
             iconUrl: `${moduleAssetBase()}/images/marker-icon.png`,
             iconSize: [25, 41],
           }],
@@ -895,18 +1080,19 @@ function createDemoPage(ui) {
             zoom: 14,
             address: 'Красная площадь, Москва',
             showDirectionsLink: true,
-            directions: { target: { lat: 55.7558, lng: 37.6173, address: 'Красная площадь' }, service: 'osm' },
-            markers: [{ id: 'kremlin', lat: 55.7558, lng: 37.6173, title: 'Красная площадь' }],
+            provider: 'yandex',
+            directions: { target: { lat: 55.7539, lng: 37.6208, address: 'Красная площадь' }, service: 'yandex' },
+            markers: [{ id: 'kremlin', lat: 55.7539, lng: 37.6208, title: 'Красная площадь' }],
             height: 280,
           }),
           h('p', { style: { marginTop: 10, fontSize: 13, color: '#a1a1aa' } },
-            'Google: ',
+            'Маршрут в Яндекс: ',
             h('a', {
-              href: buildDirectionsUrl({ lat: 55.7558, lng: 37.6173 }, 'google'),
+              href: buildDirectionsUrl({ lat: 55.7539, lng: 37.6208 }, 'yandex'),
               target: '_blank',
               rel: 'noopener noreferrer',
               style: { color: '#7dd3fc' },
-            }, 'открыть маршрут'),
+            }, 'открыть'),
           ),
         ),
       ),
@@ -973,7 +1159,7 @@ export const JaseflyFrontendModule = {
           interactive: true,
           scroll_wheel_zoom: true,
           show_directions: true,
-          provider: 'osm',
+          provider: 'yandex',
           map_style: 'default',
           markers_json: '',
         },
@@ -997,6 +1183,7 @@ export const JaseflyFrontendModule = {
             label: 'Провайдер',
             type: 'select',
             options: [
+              { value: 'yandex', label: 'Яндекс Карты' },
               { value: 'osm', label: 'OpenStreetMap' },
             ],
           },
@@ -1005,8 +1192,9 @@ export const JaseflyFrontendModule = {
             label: 'Стиль',
             type: 'select',
             options: [
-              { value: 'default', label: 'OSM standard' },
-              { value: 'hot', label: 'Humanitarian' },
+              { value: 'default', label: 'Схема' },
+              { value: 'sat', label: 'Спутник (Яндекс)' },
+              { value: 'hot', label: 'OSM Humanitarian' },
             ],
           },
         ],
