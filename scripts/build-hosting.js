@@ -390,7 +390,8 @@ function rootHtaccess() {
     '  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"',
     '  Header always set Strict-Transport-Security "max-age=31536000"',
     // Compatible CSP: self + Google Fonts + same-origin API/media. No unsafe-eval.
-    "  Header always set Content-Security-Policy \"default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://www.google-analytics.com https://www.googletagmanager.com; media-src 'self' blob: data:; worker-src 'self' blob:\"",
+    // frame-src: Yandex Maps widget (+ Google/OSM embeds for Maps module adapters)
+    "  Header always set Content-Security-Policy \"default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://www.google-analytics.com https://www.googletagmanager.com; media-src 'self' blob: data:; worker-src 'self' blob:; frame-src 'self' https://yandex.ru https://*.yandex.ru https://yandex.com https://*.yandex.com https://api-maps.yandex.ru https://www.google.com https://maps.google.com https://www.openstreetmap.org\"",
     '',
     '  <FilesMatch "\\.(?:js|css|woff2|woff|ttf|png|jpe?g|gif|webp|svg|ico|map)$">',
     '    Header set Cache-Control "public, max-age=31536000, immutable"',

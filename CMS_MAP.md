@@ -131,7 +131,8 @@
 | Forms SDK certification reference | `modules-src/forms-sdk-reference/` |
 | AI Content Optimizer (ZIP, OpenRouter SEO-рерайт) | `modules-src/ai-content-optimizer/` → ZIP `release/modules/`; FE `frontend-dist/index.js` (профили/настройки OpenRouter/лог); job `ai-content-optimizer.tick` |
 | IndexNow (ZIP, Bing/Яндекс/Seznam + rate-limit) | `modules-src/indexnow/` → ZIP `release/modules/`; админка `/admin/indexnow`; ключ `/{key}.txt`; cooldown 429 / URL / debounce; Google≠IndexNow |
-| Карта / maps / leaflet / OSM | ZIP `modules-src/maps/` → виджет `maps.map`, демо `/maps-demo`, админка `/admin/maps`; адаптер OSM+Leaflet; docs `docs/modules/maps.md` |
+| Карта / maps / leaflet / OSM | ZIP `modules-src/maps/` → виджет `maps.map`, демо `/maps-demo`, админка `/admin/maps`; default Яндекс; docs `docs/modules/maps.md` |
+| CSP блокирует iframe Яндекс Карт | `frame-src` в `frontend/public/.htaccess` + `scripts/build-hosting.js` `rootHtaccess()` (yandex.ru / *.yandex.ru) |
 | Контакты: lat/lng + embed | singleton `contact-info` (`map_lat`/`map_lng`/`map_embed`) в `SitePages.tsx`; интерактивная карта — виджет `maps.map` |
 | Журнал MCP / activity время не МСК | `admin/lib/formatDateTime.ts` (naive DATETIME = Moscow); Dashboard/Enterprise; BE `APP_TIMEZONE` + MySQL `SET time_zone` |
 | Контент на проде (текст/страницы) | MCP `cms_site_map` → `cms_get` / `cms_bulk` / `cms_put_singleton` |

@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-08-03 — Allow Yandex Maps iframes in Content-Security-Policy
+
+- Add frame-src for yandex.ru (and related map hosts) in public .htaccess / hosting CSP
+- Unblocks maps.map Yandex widget on /contact
+
+## 2026-08-03 — Maps module support: contact map_lat/map_lng + CMS_MAP docs
+
+- Admin contact-info exposes map_lat/map_lng for interactive maps
+- CMS_MAP and docs/modules/maps.md for Maps ZIP package
+- Contact layout pack includes maps.map widget placeholder
+
+
 ## 2026-08-02 — Demo: Builder и Admin — разные входы
 
 - /demo?to=builder → page builder; /demo?to=admin → dashboard
