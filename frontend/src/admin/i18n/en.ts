@@ -642,6 +642,8 @@ export const fields: Record<string, string> = {
   copyright_text: 'Copyright',
   tagline: 'Tagline',
   map_embed: 'Map (embed)',
+  map_lat: 'Latitude (map_lat)',
+  map_lng: 'Longitude (map_lng)',
   form_success_message: 'Form success message',
   site_title: 'Site title',
   site_description: 'Site description',

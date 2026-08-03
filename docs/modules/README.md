@@ -12,3 +12,4 @@ Thin pages: what the module owns. Shared lifecycle → [module-system.md](../mod
 | Orders | [orders.md](orders.md) |
 | Comments | [comments.md](comments.md) |
 | Analytics | [analytics.md](analytics.md) |
+| Maps (ZIP) | [maps.md](maps.md) |

@@ -1,0 +1,21 @@
+{
+  "slug": "maps",
+  "version": "1.0.0",
+  "entry": "index.js",
+  "export": "JaseflyFrontendModule",
+  "assets": {
+    "js": ["index.js", "maps-core.js"],
+    "css": ["assets/leaflet.css"],
+    "other": [
+      "assets/leaflet.js",
+      "assets/marker-icon.png",
+      "assets/marker-icon-2x.png",
+      "assets/marker-shadow.png",
+      "assets/images/marker-icon.png",
+      "assets/images/marker-icon-2x.png",
+      "assets/images/marker-shadow.png",
+      "assets/images/layers.png",
+      "assets/images/layers-2x.png"
+    ]
+  }
+}

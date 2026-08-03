@@ -642,6 +642,8 @@ export const fields: Record<string, string> = {
   copyright_text: 'Копирайт',
   tagline: 'Слоган',
   map_embed: 'Карта (embed)',
+  map_lat: 'Широта (map_lat)',
+  map_lng: 'Долгота (map_lng)',
   form_success_message: 'Сообщение после отправки формы',
   site_title: 'Title сайта',
   site_description: 'Description сайта',

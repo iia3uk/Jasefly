@@ -1,48 +1,48 @@
 {
-  "generated_at": "2026-08-02T21:00:55.050Z",
-  "version": "v1.0.0-install-3-gea33180",
-  "commit": "ea33180",
+  "generated_at": "2026-08-03T19:34:45.425Z",
+  "version": "installer_v2-7-gccb3c10",
+  "commit": "ccb3c10",
   "metrics": {
-    "files": 1170,
+    "files": 1211,
     "php_classes": 310,
     "builder_widgets": 62,
     "rest_routes_core": 66,
     "sdk_interfaces": 23,
-    "git_commits": 74,
+    "git_commits": 82,
     "repo_size_mb": 26.4,
     "core_modules": 30,
-    "package_scaffolds": 9
+    "package_scaffolds": 10
   },
   "github": {
     "repo": "iia3uk/jasefly",
     "url": "https://github.com/iia3uk/jasefly",
-    "latest_tag": "v1.0.0-install",
+    "latest_tag": "installer_v2",
     "latest_commit_date": "2026-08-03",
     "commits": [
       {
-        "hash": "ea33180",
+        "hash": "ccb3c10",
         "date": "2026-08-03",
-        "subject": "Sync sitePulse.json after pre-push build."
+        "subject": "Update SoftDeleteService.php"
       },
       {
-        "hash": "21695b4",
+        "hash": "092f898",
         "date": "2026-08-03",
-        "subject": "Ship Demo Sandbox, framework landing widgets, and translate UX fixes."
+        "subject": "Update CMS_MAP.md"
       },
       {
-        "hash": "bdfa980",
-        "date": "2026-08-02",
-        "subject": "Ship admin lattice nav and blog writing studio."
+        "hash": "3e5295b",
+        "date": "2026-08-03",
+        "subject": "Update run.php"
       },
       {
-        "hash": "91a4353",
-        "date": "2026-08-02",
-        "subject": "Update README.md"
+        "hash": "c51acb8",
+        "date": "2026-08-03",
+        "subject": "Create SoftDeleteEmptyTrashTest.php"
       },
       {
-        "hash": "5195220",
-        "date": "2026-08-02",
-        "subject": "Update README.md"
+        "hash": "6596aba",
+        "date": "2026-08-03",
+        "subject": "fix TrashController.php"
       }
     ]
   }

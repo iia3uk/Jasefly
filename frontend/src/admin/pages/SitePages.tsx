@@ -49,7 +49,7 @@ function Save({ run, saving, error }: { run: () => void; saving?: boolean; error
 const singletonFields: Record<string, string[]> = {
   hero: ['headline', 'subheadline', 'badge_text', 'primary_cta_label', 'primary_cta_href', 'secondary_cta_label', 'secondary_cta_href', 'animation_style'],
   footer: ['copyright_text', 'tagline'],
-  'contact-info': ['email', 'phone', 'address', 'city', 'country', 'map_embed', 'form_success_message'],
+  'contact-info': ['email', 'phone', 'address', 'city', 'country', 'map_lat', 'map_lng', 'map_embed', 'form_success_message'],
   seo: ['site_title', 'site_description', 'site_keywords', 'canonical_base_url', 'og_title', 'og_description', 'twitter_card', 'twitter_handle', 'google_analytics_id', 'google_tag_manager_id'],
   'site-settings': [
     'site_name',

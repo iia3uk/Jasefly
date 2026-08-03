@@ -392,6 +392,8 @@ export interface ContactInfo {
   city?: string
   country?: string
   map_embed?: string
+  map_lat?: number | string | null
+  map_lng?: number | string | null
   form_enabled?: boolean | number
   form_success_message?: string
 }
