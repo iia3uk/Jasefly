@@ -1,9 +1,0 @@
-.fsr-widget { padding: 1rem; border: 1px solid rgba(255,255,255,.08); border-radius: .5rem; }
-.fsr-widget label { display: block; font-size: .875rem; margin-bottom: .25rem; }
-.fsr-widget input, .fsr-widget textarea, .fsr-widget select { width: 100%; margin-bottom: .75rem; padding: .5rem; border-radius: .375rem; border: 1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.2); color: inherit; }
-.fsr-widget button { padding: .5rem 1rem; border-radius: .375rem; border: none; background: #2563eb; color: #fff; cursor: pointer; }
-.fsr-admin-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
-.fsr-admin-table th, .fsr-admin-table td { border-bottom: 1px solid rgba(255,255,255,.08); padding: .5rem; text-align: left; }
-.fsr-muted { color: rgba(255,255,255,.5); font-size: .8125rem; }
-.fsr-error { color: #f87171; }
-.fsr-success { color: #86efac; }
