@@ -111,57 +111,69 @@ export function HeroView({ hero, animate = true }: { hero: HeroData; animate?: b
   )
 }
 
-export function ProfileHeroView({ profile }: { profile: Partial<Profile> }) {
+export function ProfileHeroView({
+  profile,
+  bare = false,
+}: {
+  profile: Partial<Profile>
+  /** Without Section/Container — for builder sections that already wrap content. */
+  bare?: boolean
+}) {
   const photo = profilePortrait(profile)
-  return (
-    <Section className="relative overflow-hidden pt-10 pb-6 sm:pt-14">
-      <Container>
-        <div className="grid items-end gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-          <div>
-            {profile.job_title ? (
-              <p className="max-w-xl text-sm font-medium leading-6 tracking-[0.02em] text-[var(--accent)]">
-                {String(profile.job_title)}
-              </p>
-            ) : null}
-            <h1 className="mt-4 font-heading text-[2.15rem] font-semibold leading-[1.05] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
-              {String(profile.name || 'Обо мне')}
-            </h1>
-            {profile.short_bio ? (
-              <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--muted)]">{String(profile.short_bio)}</p>
-            ) : null}
-            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--muted)]">
-              {profile.location ? <span>{String(profile.location)}</span> : null}
-              {profile.availability_status ? <span>{String(profile.availability_status)}</span> : null}
-              {profile.years_experience != null ? (
-                <span>{String(profile.years_experience)}+ лет практики</span>
-              ) : null}
-            </div>
-            {profile.resume_media_id ? (
-              <a
-                className="link-text mt-8 inline-flex items-center gap-2 text-sm"
-                href={mediaUrl(profile.resume_media_id)}
-              >
-                <Download size={16} /> Скачать резюме
-              </a>
+  const body = (
+    <>
+      {/* About hero: top-aligned columns — never items-end (that pinned text under the photo). */}
+      <div className="grid items-start gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-12">
+        <div className="min-w-0 lg:pt-6">
+          {profile.job_title ? (
+            <p className="max-w-xl text-sm font-medium leading-6 tracking-[0.02em] text-[var(--accent)]">
+              {String(profile.job_title)}
+            </p>
+          ) : null}
+          <h1 className="mt-4 font-heading text-[2.15rem] font-semibold leading-[1.05] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
+            {String(profile.name || 'Обо мне')}
+          </h1>
+          {profile.short_bio ? (
+            <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--muted)]">{String(profile.short_bio)}</p>
+          ) : null}
+          <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[var(--muted)]">
+            {profile.location ? <span>{String(profile.location)}</span> : null}
+            {profile.availability_status ? <span>{String(profile.availability_status)}</span> : null}
+            {profile.years_experience != null ? (
+              <span>{String(profile.years_experience)}+ лет практики</span>
             ) : null}
           </div>
-          {photo ? (
-            <div className="relative">
-              <MediaImage
-                media={photo}
-                alt={String(profile.name ?? '')}
-                className="aspect-[4/5] w-full max-w-sm rounded-[calc(var(--radius)+4px)] object-cover sm:max-w-md lg:ml-auto lg:max-w-none"
-              />
-            </div>
+          {profile.resume_media_id ? (
+            <a
+              className="link-text mt-8 inline-flex items-center gap-2 text-sm"
+              href={mediaUrl(profile.resume_media_id)}
+            >
+              <Download size={16} /> Скачать резюме
+            </a>
           ) : null}
         </div>
-        {profile.bio ? (
-          <div className="mt-14 max-w-3xl">
-            <p className="mb-8 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Обо мне</p>
-            <div className="prose prose-lg"><RichText html={String(profile.bio)} /></div>
+        {photo ? (
+          <div className="relative w-full max-w-sm justify-self-start sm:max-w-md lg:max-w-none lg:justify-self-end">
+            <MediaImage
+              media={photo}
+              alt={String(profile.name ?? '')}
+              className="aspect-[4/5] w-full rounded-[calc(var(--radius)+4px)] object-cover"
+            />
           </div>
         ) : null}
-      </Container>
+      </div>
+      {profile.bio ? (
+        <div className="mt-16 max-w-3xl border-t border-white/[0.06] pt-12 sm:mt-20 sm:pt-14">
+          <p className="mb-8 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Обо мне</p>
+          <div className="prose prose-lg"><RichText html={String(profile.bio)} /></div>
+        </div>
+      ) : null}
+    </>
+  )
+  if (bare) return <div className="relative overflow-hidden">{body}</div>
+  return (
+    <Section className="relative overflow-hidden pt-10 pb-6 sm:pt-14">
+      <Container>{body}</Container>
     </Section>
   )
 }

@@ -94,6 +94,8 @@ final class MediaUsageService
 
         if ($publicOnly) {
             $queries[] = "SELECT cover_media_id id FROM projects WHERE cover_media_id IS NOT NULL AND status='published' AND deleted_at IS NULL";
+            $queries[] = "SELECT cover_portrait_media_id id FROM projects WHERE cover_portrait_media_id IS NOT NULL AND status='published' AND deleted_at IS NULL";
+            $queries[] = "SELECT cover_landscape_media_id id FROM projects WHERE cover_landscape_media_id IS NOT NULL AND status='published' AND deleted_at IS NULL";
             $queries[] = "SELECT og_image_id id FROM projects WHERE og_image_id IS NOT NULL AND status='published' AND deleted_at IS NULL";
             $queries[] = "SELECT pm.media_id id FROM project_media pm INNER JOIN projects p ON p.id=pm.project_id WHERE p.status='published' AND p.deleted_at IS NULL";
             $queries[] = "SELECT cover_media_id id FROM blog_posts WHERE cover_media_id IS NOT NULL AND status='published' AND deleted_at IS NULL";
@@ -104,6 +106,8 @@ final class MediaUsageService
             $queries[] = "SELECT media_id id FROM products WHERE media_id IS NOT NULL AND is_visible=1 AND deleted_at IS NULL";
         } else {
             $queries[] = 'SELECT cover_media_id id FROM projects WHERE cover_media_id IS NOT NULL';
+            $queries[] = 'SELECT cover_portrait_media_id id FROM projects WHERE cover_portrait_media_id IS NOT NULL';
+            $queries[] = 'SELECT cover_landscape_media_id id FROM projects WHERE cover_landscape_media_id IS NOT NULL';
             $queries[] = 'SELECT og_image_id id FROM projects WHERE og_image_id IS NOT NULL';
             $queries[] = 'SELECT media_id id FROM project_media';
             $queries[] = 'SELECT cover_media_id id FROM blog_posts WHERE cover_media_id IS NOT NULL';

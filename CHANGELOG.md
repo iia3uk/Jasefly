@@ -1,5 +1,157 @@
 # Changelog
 
+## 2026-08-04 — process-diagram: убраны лишняя петля и шарик
+
+- Удалена пунктирная feedback-полоска под схемой «Как я работаю»
+- Убран бегущий accent-шарик (animateMotion)
+- Оставлены только прямые связи вход → ядро → контур; цикл по-прежнему обозначен бейджем ↺ у «Развитие»
+
+## 2026-08-04 — About hero: текст и фото по верхнему краю
+
+- ProfileHeroView: items-end → items-start
+- текстовая колонка lg:pt-6 (~24px)
+- блок «Обо мне» отделён отрядкой ниже hero
+
+## 2026-08-04 — Showcase cover: absolute fill без letterbox CSS
+
+- ResponsiveProjectCover: img absolute inset-0 object-cover — контейнер заполняется bitmap'ом
+
+## 2026-08-04 — Фиксация геометрии showcase lead-with-stack
+
+- Lead media desktop aspect 2/3 задаёт высоту колонок
+- Secondary: grid rows 1fr/1fr, фиксированный текстовый блок 6.75rem
+- secondary media slot ≈1:1; константы в showcaseGeometry.ts
+
+## 2026-08-04 — Адаптивные обложки проектов portrait/landscape
+
+- Миграция 027: cover_portrait_media_id, cover_landscape_media_id
+- ResponsiveProjectCover + <picture> для lead-with-stack
+- Админка: выбор portrait/landscape обложек
+- Jasefly: portrait asset jase-vert.jpg
+
+## 2026-08-04 — Что я создаю: статичный позиционирующий блок
+
+- features-grid: карточки без ссылок по умолчанию, поле markers
+- усилены отступы/заголовки; hover без сдвига и без cursor:pointer
+- главная: новый подзаголовок и тексты направлений
+
+## 2026-08-04 — Реестр миграции 026 featured_priority
+
+- 026_project_featured_priority.sql добавлена в MigrationService::FILES
+- Showcase: object-top + prefers-reduced-motion на изображениях
+
+## 2026-08-04 — Миграция featured_priority + layout lead-with-stack
+
+- Упрощена 026_project_featured_priority.sql (только ADD COLUMN)
+- Главная: projects-grid layout lead-with-stack, primary_slug jasefly
+
+## 2026-08-04 — Избранные проекты: lead-with-stack showcase
+
+- projects-grid.layout lead-with-stack (lead + 2 secondary)
+- поле featured_priority у проектов
+- данные showcase только из каталога
+- mobile: вертикальный стек основной → вторичные
+
+
+## 2026-08-04 — Главная: process-diagram и выравнивание сетки
+
+- Убрана секция Экосистема
+- features-grid.last_row_alignment center
+- Новый универсальный process-diagram
+- Контраст: spectrum services, quote отзывы, large KPI, CTA panel
+- Избранные проекты — крупные карточки
+
+
+## 2026-08-04 — Hero на весь экран как раньше
+
+- portfolio hero: cms-hero-bleed + 100dvh
+- секция с hero без padding и Container
+- контент под overlay header через cms-hero-inner
+
+
+## 2026-08-04 — Избранные проекты: lead-with-stack showcase
+
+- `projects-grid.layout`: `grid` | `lead-with-stack` (60/40 lead + stack).
+- Поле `featured_priority` у проектов; lead = max priority (или `primary_slug`).
+- Данные только из каталога; короткая мысль через `projectOneLine`.
+
+## 2026-08-04 — Главная: process-diagram + last_row_alignment
+
+- Убрана секция «Экосистема»; порядок: направления → featured → process → KPI → spectrum.
+- `features-grid.last_row_alignment` (start|center|end).
+- Новый универсальный `process-diagram` (system flow, не timeline).
+- Контраст секций: spectrum services, quote testimonials, large stats, CTA panel.
+
+## 2026-08-04 — Hero на весь экран (portfolio hero)
+
+- Виджет `hero`: `cms-hero-bleed` + viewport min-height, как `hero-block`.
+- LayoutRenderer: секция с `hero` без padding/Container — edge-to-edge.
+
+## 2026-08-04 — Главная iia3uk: продуктовый лендинг без дублей
+
+- Новые универсальные виджеты stats-strip и relation-flow
+- hero.show_stats и projects-grid.compact из данных проектов
+- Layout главной: направления / экосистема / featured / процесс / KPI / спектр задач
+- Убраны profile-card, skills, experience с главной
+- Seed buildDefaultHomeLayout под лендинг
+
+## 2026-08-04 — Главная iia3uk: продуктовый лендинг
+
+- Home layout: направления / экосистема / compact featured / процесс / KPI / спектр задач — без дубля About/Skills/Experience.
+- Универсальные виджеты: `stats-strip`, `relation-flow`; `hero.show_stats`, `projects-grid.compact`.
+
+## 2026-08-04 — Живые KPI статистики из проектов
+
+- StatsStrip считает total / completed / in_progress из /projects
+- Игровые движки — уникальные Unity/Unreal/Godot/Source 2
+- Исключён cancelled; fallback на CMS statistics если проектов нет
+- Подключено на /about и profile-card на главной
+
+## 2026-08-04 — About R&D: авто-сетка и стек из проектов
+
+- journey-timeline: autofill_from_projects — карточки и теги из /projects
+- Исключается project_status=cancelled (Джарвис и т.п.)
+- Стек агрегируется из project_technologies без дублей
+- Ссылки на /projects/{slug}
+
+## 2026-08-04 — About: опыт = journey-timeline, образование компактно
+
+- Опыт на /about через JourneyTimelineView (4 направления, featured, milestones, grid)
+- Образование — компактный timeline из 3 пунктов
+- Убрана CMS-разметка опыта и блок «Самостоятельное развитие»
+- journey-timeline: milestones + details_layout=grid
+
+## 2026-08-04 — About: journey-timeline + правки опыта
+
+- Виджет journey-timeline и profile-hero в билдере
+- Секция «Образование и путь» — полноценный таймлайн на /about
+- Опыт: роль без «ведущий разработчик», ~15 ОВЕН СПК110, без проектирования схем
+- Скрыт устаревший Continuous learning в education
+
+
+## 2026-08-03 — Fix two-column layout: map beside contacts
+
+- Section columns use CSS grid so gap no longer stacks 50/50 rows
+- Contact template: map left, details right, green accent bar
+- Spacer widget respects styles (accent bar)
+
+## 2026-08-03 — Contact template: ASCII-safe copy for MySQL collation
+
+- Remove 4-byte emoji from default contact layout HTML
+- Keep map + details two-column template for builder seed
+
+## 2026-08-03 — Contact builder template: map + details columns
+
+- Default contact layout: Yandex map left, company/phone/address/hours/email right
+- Builder «Загрузить шаблон по умолчанию» for /contact
+- Live /contact and content pack updated
+
+
+## 2026-08-03 — Contact builder template: map + details
+
+- Default contact layout: Yandex map left, company/phone/address/hours/email right
+- Builder «Загрузить шаблон по умолчанию» on /contact; content pack + live page
+
 ## 2026-08-03 — Allow Yandex Maps iframes in Content-Security-Policy
 
 - Add frame-src for yandex.ru (and related map hosts) in public .htaccess / hosting CSP

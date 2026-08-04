@@ -24,7 +24,8 @@
 
 ## 3. Деплой и MCP
 
-- Заливка кода на хостинг: MCP **`user-portfolio-cms`** → **`cms_release`** (summary + changes).
+- Заливка кода на хостинг: MCP **`user-jasefly-cms`** → **`cms_release`** (summary + changes + **`site`** при multi).
+- Мульти-сайт: один MCP, несколько хостов (`CMS_SITES` в `mcp-cms/.env`). Перед деплоем/контентом — **`cms_sites`**; если сайтов ≥2 и пользователь не указал куда — **спроси** id/домен, не угадывай.
 - Не invent zip/scp/ручной upload, если пользователь просит «залей / апдейт / на хостинг».
 - Секреты только в `mcp-cms/.env` и `backend/config` — не в чат, не в `mcp.json`, не в коммиты.
 - Не долбить хостинг циклами `cms_list`; bulk ≤ 25; см. `mcp-cms/README.md`.

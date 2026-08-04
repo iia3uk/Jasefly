@@ -4,15 +4,16 @@
  * Site diagnostics (logs) only via mcp_api_token.
  *
  * Env:
- *   CMS_URL, CMS_MCP_TOKEN
+ *   CMS_URL + CMS_MCP_TOKEN (single) OR CMS_SITES + CMS_SITE_{ID}_URL/TOKEN
  *   CMS_REPO_ROOT (optional, default: parent of mcp-cms)
+ *   Remote tools: pass site=id|alias|domain when 2+ sites configured
  */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import fs from 'node:fs';
 import path from 'node:path';
-import { clientFromEnv, RESOURCES, SINGLETONS } from './client.js';
+import { clientForSite, hostingGuardStatus, sitesOverview, RESOURCES, SINGLETONS } from './client.js';
 import { sanitizeLabPayload } from './lab.js';
 import {
   assertDeployAllowed,
@@ -33,7 +34,7 @@ const envInfo = loadMcpEnv();
 
 const server = new McpServer({
   name: 'jasefly-cms',
-  version: '1.5.0',
+  version: '1.6.0',
 });
 
 function ok(data) {
@@ -50,24 +51,55 @@ function fail(err) {
   };
 }
 
-function getClient() {
-  return clientFromEnv();
+/** Optional site id / alias / domain — required when 2+ sites in env. */
+const siteZ = z.string().optional().describe(
+  'ID, alias или домен целевого сайта (обязателен при 2+ сайтах). Список: cms_sites.',
+);
+
+/** @param {Record<string, import('zod').ZodTypeAny>} [extra] */
+function siteSchema(extra = {}) {
+  return { site: siteZ, ...extra };
 }
+
+/** @param {string | undefined} [site] */
+function getClient(site) {
+  return clientForSite(site);
+}
+
+server.tool(
+  'cms_sites',
+  'Список сайтов, доступных этому MCP (id, host, aliases). Без токенов. При 2+ сайтах передавайте site=… во все remote-tools (деплой, контент, модули).',
+  {},
+  async () => {
+    try {
+      const overview = sitesOverview();
+      return ok({
+        ...overview,
+        tip: overview.count > 1
+          ? 'Укажите site (id или домен) в cms_release / cms_site_map / cms_bulk и т.д. Спросите пользователя, если неясно.'
+          : 'Один сайт — параметр site можно не передавать.',
+      });
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
 
 // ─── Pipeline (обязательный порядок для кода) ───────────────────────────────
 
 server.tool(
   'cms_pipeline',
-  'ОБЯЗАТЕЛЬНО читай первым при деплое кода. Порядок: build → test → changelog → deploy → verify (сайт+БД+API) → «Готово». Или одним вызовом cms_release(summary, changes). Без changelog заливка запрещена.',
+  'ОБЯЗАТЕЛЬНО читай первым при деплое кода. Порядок: build → test → changelog → deploy → verify → «Готово». Или cms_release(summary, changes, site). При 2+ сайтах сначала cms_sites / уточните site.',
   {},
   async () => ok({
     repo: repoRoot(),
     env_files_loaded: envInfo.loaded,
-    secrets_hint: 'CMS_URL / CMS_MCP_TOKEN только в mcp-cms/.env (не в чат и не в mcp.json).',
+    secrets_hint: 'CMS_URL/TOKEN или CMS_SITES + CMS_SITE_* только в mcp-cms/.env (не в чат и не в mcp.json).',
+    sites: (() => { try { return sitesOverview(); } catch { return null; } })(),
     hosting: (() => {
-      try { return getClient().guard.status(); } catch { return null; }
+      try { return hostingGuardStatus(); } catch { return null; }
     })(),
-    preferred: 'cms_release({ summary, changes }) — одним вызовом весь пайплайн до «Готово».',
+    preferred: 'cms_release({ summary, changes, site }) — site обязателен при 2+ сайтах.',
     ...pipelineHelp(),
   }),
 );
@@ -101,13 +133,14 @@ server.tool(
 server.tool(
   'cms_changelog',
   'ШАГ 3/5. ОБЯЗАТЕЛЬНО перед деплоем: нейронка пишет changelog (что изменилось). Пишет в CHANGELOG.md + на сайт в журнал MCP. Без этого cms_deploy_update не пустит.',
-  {
+  siteSchema({
     summary: z.string().min(8).describe('Краткий заголовок апдейта (1 строка), напр. «Мобильный логотип + журнал MCP»'),
-    changes: z.array(z.string()).optional().describe('Список пунктов изменений (буллеты)'),
-    body: z.string().optional().describe('Опционально подробный markdown'),
-  },
-  async ({ summary, changes, body }) => {
+        changes: z.array(z.string()).optional().describe('Список пунктов изменений (буллеты)'),
+        body: z.string().optional().describe('Опционально подробный markdown'),
+  }),
+  async ({ site, summary, changes, body }) => {
     try {
+      getClient(site); // при 2+ сайтах нужен site (куда писать журнал MCP)
       const gate = readGate();
       if (!gate.build_ok || !gate.test_ok) {
         return fail(new Error('Сначала cms_local_build и cms_local_test, потом cms_changelog.'));
@@ -122,7 +155,7 @@ server.tool(
 
       let remote = null;
       try {
-        const cms = getClient();
+        const cms = getClient(site);
         const ch = nextGate.changelog || {};
         remote = await cms.post('/admin/mcp/changelog', {
           summary: entry.summary,
@@ -155,19 +188,19 @@ server.tool(
 server.tool(
   'cms_deploy_update',
   'ШАГ 4/5. Залить update ZIP. После заливки автоматически ШАГ 5: снапшот сайта + БД + API → ready. Только после build+test+changelog (или force=true).',
-  {
+  siteSchema({
     force: z.boolean().optional().describe('Обойти гейт (только ЧП)'),
-    zip_path: z.string().optional().describe('Явный путь к ZIP; иначе из гейта'),
-    skip_verify: z.boolean().optional().describe('Не делать пост-проверку (не рекомендуется)'),
-  },
-  async ({ force, zip_path, skip_verify }) => {
+        zip_path: z.string().optional().describe('Явный путь к ZIP; иначе из гейта'),
+        skip_verify: z.boolean().optional().describe('Не делать пост-проверку (не рекомендуется)'),
+  }),
+  async ({ site, force, zip_path, skip_verify }) => {
     try {
+      const cms = getClient(site); // fail-fast: site обязателен при 2+ хостах
       const gateCheck = assertDeployAllowed({ force: !!force });
       if (!gateCheck.ok) {
         return fail(new Error(`${gateCheck.reason}\nСейчас: cms_pipeline → cms_local_build → cms_local_test → cms_changelog → cms_deploy_update.`));
       }
       const zip = zip_path || String(gateCheck.gate.zip_path || '');
-      const cms = getClient();
       const res = await cms.uploadUpdateZip(zip);
       const data = res?.data ?? res;
       markDeployed({ zip, result: data, changelog: gateCheck.gate.changelog || null });
@@ -202,7 +235,7 @@ server.tool(
       });
     } catch (e) {
       try {
-        const cms = getClient();
+        const cms = getClient(site);
         const check = await postDeployVerify(cms, { settleMs: 500 });
         return ok({
           ready: false,
@@ -221,12 +254,12 @@ server.tool(
 server.tool(
   'cms_verify_alive',
   'ШАГ 5/5 (можно отдельно). Снапшот после деплоя: API /health + публичный /site + HTML корень + БД schema + diagnostics. Ответ: ready + «Готово» или список проблем.',
-  {
+  siteSchema({
     settle_ms: z.number().optional().describe('Пауза перед проверкой (мс), по умолчанию 2000'),
-  },
-  async ({ settle_ms }) => {
+  }),
+  async ({ site, settle_ms }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       if (!cms.mcpToken) {
         return fail(new Error('cms_verify_alive требует CMS_MCP_TOKEN'));
       }
@@ -246,17 +279,18 @@ server.tool(
 
 server.tool(
   'cms_release',
-  'Полный релиз одним вызовом: build → test → changelog → deploy → verify (сайт+БД+API). В конце ready=true и message «Готово» или список проблем. Предпочтительный способ заливки кода.',
-  {
+  'Полный релиз одним вызовом: build → test → changelog → deploy → verify. При 2+ сайтах обязателен site (id/домен). Предпочтительный способ заливки кода.',
+  siteSchema({
     summary: z.string().min(8).describe('Заголовок апдейта для журнала MCP'),
-    changes: z.array(z.string()).optional().describe('Буллеты изменений'),
-    body: z.string().optional().describe('Опционально подробный markdown'),
-    force: z.boolean().optional().describe('Обойти гейт при деплое (ЧП)'),
-  },
-  async ({ summary, changes, body, force }) => {
+        changes: z.array(z.string()).optional().describe('Буллеты изменений'),
+        body: z.string().optional().describe('Опционально подробный markdown'),
+        force: z.boolean().optional().describe('Обойти гейт при деплое (ЧП)'),
+  }),
+  async ({ site, summary, changes, body, force }) => {
     /** @type {Record<string, string>} */
     const steps = { build: 'pending', test: 'pending', changelog: 'pending', deploy: 'pending', verify: 'pending' };
     try {
+      getClient(site); // fail-fast до долгого build: при 2+ сайтах нужен site
       const built = localBuild();
       if (!built.ok) {
         steps.build = 'fail';
@@ -288,7 +322,7 @@ server.tool(
       };
       const file = writeChangelogFile(entry);
       const nextGate = markChangelog({ ...entry, file });
-      const cms = getClient();
+      const cms = getClient(site);
       let remoteChangelog = null;
       try {
         const ch = nextGate.changelog || {};
@@ -351,15 +385,23 @@ server.tool(
 
 server.tool(
   'cms_hosting_guard',
-  'Лимиты shared-хостинга: пауза между запросами, max/мин, кэш GET. Не долби сайт циклами cms_list — один cms_site_map, потом правки cms_bulk.',
-  {
-    clear_cache: z.boolean().optional().describe('Сбросить локальный GET-кэш'),
-  },
-  async ({ clear_cache }) => {
+  'Лимиты shared-хостинга: пауза между запросами, max/мин, кэш GET. При multi — передайте site или получите status по всем. Не долби циклами cms_list.',
+  siteSchema({
+    clear_cache: z.boolean().optional().describe('Сбросить локальный GET-кэш выбранного сайта (или всех при multi без site)'),
+  }),
+  async ({ site, clear_cache }) => {
     try {
-      const cms = getClient();
-      if (clear_cache) cms.guard.clearCache();
-      return ok(cms.guard.status());
+      if (clear_cache) {
+        if (site) {
+          getClient(site).guard.clearCache();
+        } else {
+          const overview = sitesOverview();
+          for (const s of overview.sites) {
+            getClient(s.id).guard.clearCache();
+          }
+        }
+      }
+      return ok(hostingGuardStatus(site));
     } catch (e) {
       return fail(e);
     }
@@ -369,10 +411,10 @@ server.tool(
 server.tool(
   'cms_site_diagnostics',
   'Логи сайта (MCP-токен). Зови РЕДКО: после деплоя или если сломано. Не в цикле — результат кэшируется ~90с.',
-  {},
-  async () => {
+  siteSchema(),
+  async ({ site }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       if (!cms.mcpToken) {
         return fail(new Error(
           'cms_site_diagnostics требует CMS_MCP_TOKEN (сайт отдаёт логи только своему MCP-агенту, не по паролю админа).',
@@ -390,10 +432,10 @@ server.tool(
 server.tool(
   'cms_site_last_error',
   'Коротко: последняя ошибка API сайта (только MCP-токен).',
-  {},
-  async () => {
+  siteSchema(),
+  async ({ site }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       if (!cms.mcpToken) {
         return fail(new Error('Нужен CMS_MCP_TOKEN в mcp-cms/.env'));
       }
@@ -408,11 +450,11 @@ server.tool(
 
 server.tool(
   'cms_site_map',
-  'Карта сайта ОДНИМ запросом (страницы+nav+theme). Зови 1 раз перед правками; GET кэшируется ~90с. Не дублируй cms_pages_digest сразу после.',
-  {},
-  async () => {
+  'Карта сайта ОДНИМ запросом (страницы+nav+theme). При 2+ сайтах обязателен site. Зови 1 раз перед правками; GET кэшируется ~90с.',
+  siteSchema(),
+  async ({ site }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       if (!cms.mcpToken) {
         return fail(new Error('Нужен CMS_MCP_TOKEN в mcp-cms/.env'));
       }
@@ -428,14 +470,14 @@ server.tool(
 server.tool(
   'cms_db_schema',
   'Снапшот схемы БД (только MCP-токен): какие таблицы есть, чего не хватает из модулей. После миграций/деплоя — проверить created. detail=names по умолчанию (лёгкий); detail=full или table=имя — колонки. counts=true — COUNT(*) (дорого на shared).',
-  {
+  siteSchema({
     table: z.string().optional().describe('Имя одной таблицы — вернёт колонки и индексы'),
-    detail: z.enum(['names', 'full']).optional().describe('names = список имён (по умолчанию); full = колонки всех таблиц'),
-    counts: z.boolean().optional().describe('Добавить row_count (SELECT COUNT) — по умолчанию false'),
-  },
-  async ({ table, detail, counts }) => {
+        detail: z.enum(['names', 'full']).optional().describe('names = список имён (по умолчанию); full = колонки всех таблиц'),
+        counts: z.boolean().optional().describe('Добавить row_count (SELECT COUNT) — по умолчанию false'),
+  }),
+  async ({ site, table, detail, counts }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       if (!cms.mcpToken) {
         return fail(new Error(
           'cms_db_schema требует CMS_MCP_TOKEN (схема БД только MCP-агенту, не по JWT админа).',
@@ -458,10 +500,10 @@ server.tool(
 server.tool(
   'cms_pages_digest',
   'Выжимки страниц. Если уже брал cms_site_map — обычно хватит его (pages внутри). Не долби оба подряд без нужды.',
-  {},
-  async () => {
+  siteSchema(),
+  async ({ site }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       if (!cms.mcpToken) {
         return fail(new Error('Нужен CMS_MCP_TOKEN в mcp-cms/.env'));
       }
@@ -482,12 +524,12 @@ server.tool(
 server.tool(
   'cms_page_digest',
   'Детальная выжимка одной страницы (id или slug): дерево layout, тексты виджетов, стили — чтобы править самостоятельно.',
-  {
+  siteSchema({
     id_or_slug: z.string().describe('id страницы или slug, например privacy или __home'),
-  },
-  async ({ id_or_slug }) => {
+  }),
+  async ({ site, id_or_slug }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       if (!cms.mcpToken) {
         return fail(new Error('Нужен CMS_MCP_TOKEN в mcp-cms/.env'));
       }
@@ -515,10 +557,10 @@ server.tool(
 server.tool(
   'cms_status',
   'Лёгкая проверка связи (1 запрос /auth/me). Без diagnostics — их зови отдельно и редко. Показывает лимиты хостинга.',
-  {},
-  async () => {
+  siteSchema(),
+  async ({ site }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       await cms.ensureAuth();
       const me = await cms.get('/auth/me').catch(() => null);
       return ok({
@@ -545,12 +587,12 @@ server.tool(
 server.tool(
   'cms_list',
   'Список записей ресурса. НЕ вызывай в цикле по многим ресурсам — лучше cms_site_map. Запросы троттлятся (~2с) и кэшируются.',
-  {
+  siteSchema({
     resource: z.string().describe(`Один из: ${RESOURCES.join(', ')}`),
-  },
-  async ({ resource }) => {
+  }),
+  async ({ site, resource }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const res = await cms.get(`/admin/${resource}`);
       return ok(res?.data ?? res);
     } catch (e) {
@@ -562,13 +604,13 @@ server.tool(
 server.tool(
   'cms_get',
   'Получить одну запись по id.',
-  {
+  siteSchema({
     resource: z.string(),
-    id: z.union([z.string(), z.number()]),
-  },
-  async ({ resource, id }) => {
+        id: z.union([z.string(), z.number()]),
+  }),
+  async ({ site, resource, id }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const res = await cms.get(`/admin/${resource}/${id}`);
       return ok(res?.data ?? res);
     } catch (e) {
@@ -580,13 +622,13 @@ server.tool(
 server.tool(
   'cms_create',
   'Создать запись в ресурсе. data — поля таблицы (title, slug, content, status, …).',
-  {
+  siteSchema({
     resource: z.string(),
-    data: z.record(z.unknown()).describe('Поля новой записи'),
-  },
-  async ({ resource, data }) => {
+        data: z.record(z.unknown()).describe('Поля новой записи'),
+  }),
+  async ({ site, resource, data }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const res = await cms.post(`/admin/${resource}`, data);
       return ok(res?.data ?? res);
     } catch (e) {
@@ -598,14 +640,14 @@ server.tool(
 server.tool(
   'cms_update',
   'Обновить запись по id (частичные поля ок).',
-  {
+  siteSchema({
     resource: z.string(),
-    id: z.union([z.string(), z.number()]),
-    data: z.record(z.unknown()),
-  },
-  async ({ resource, id, data }) => {
+        id: z.union([z.string(), z.number()]),
+        data: z.record(z.unknown()),
+  }),
+  async ({ site, resource, id, data }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const res = await cms.put(`/admin/${resource}/${id}`, data);
       return ok(res?.data ?? res);
     } catch (e) {
@@ -617,13 +659,13 @@ server.tool(
 server.tool(
   'cms_delete',
   'Удалить запись (soft-delete где поддерживается).',
-  {
+  siteSchema({
     resource: z.string(),
-    id: z.union([z.string(), z.number()]),
-  },
-  async ({ resource, id }) => {
+        id: z.union([z.string(), z.number()]),
+  }),
+  async ({ site, resource, id }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const res = await cms.delete(`/admin/${resource}/${id}`);
       return ok(res?.data ?? res ?? { deleted: true });
     } catch (e) {
@@ -635,14 +677,14 @@ server.tool(
 server.tool(
   'cms_publish',
   'Сменить статус публикации blog или projects.',
-  {
+  siteSchema({
     resource: z.enum(['blog', 'projects']),
-    id: z.union([z.string(), z.number()]),
-    status: z.enum(['published', 'draft', 'archived']).default('published'),
-  },
-  async ({ resource, id, status }) => {
+        id: z.union([z.string(), z.number()]),
+        status: z.enum(['published', 'draft', 'archived']).default('published'),
+  }),
+  async ({ site, resource, id, status }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const res = await cms.post(`/admin/${resource}/${id}/publish`, { status });
       return ok(res?.data ?? res);
     } catch (e) {
@@ -654,12 +696,12 @@ server.tool(
 server.tool(
   'cms_get_singleton',
   'Прочитать singleton-настройки: profile, hero, site-settings, seo, theme, contact-info, footer.',
-  {
+  siteSchema({
     name: z.string().describe(`Один из: ${SINGLETONS.join(', ')}`),
-  },
-  async ({ name }) => {
+  }),
+  async ({ site, name }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const res = await cms.get(`/admin/${name}`);
       return ok(res?.data ?? res);
     } catch (e) {
@@ -671,13 +713,13 @@ server.tool(
 server.tool(
   'cms_put_singleton',
   'Обновить singleton-настройки (частичный PATCH через PUT).',
-  {
+  siteSchema({
     name: z.string(),
-    data: z.record(z.unknown()),
-  },
-  async ({ name, data }) => {
+        data: z.record(z.unknown()),
+  }),
+  async ({ site, name, data }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const res = await cms.put(`/admin/${name}`, data);
       return ok(res?.data ?? res);
     } catch (e) {
@@ -689,15 +731,15 @@ server.tool(
 server.tool(
   'cms_upload_media',
   'Загрузить локальный файл в медиатеку сайта.',
-  {
+  siteSchema({
     file_path: z.string().describe('Абсолютный или относительный путь к файлу на этом ПК'),
-    alt_text: z.string().optional(),
-    caption: z.string().optional(),
-    folder_id: z.number().optional(),
-  },
-  async ({ file_path, alt_text, caption, folder_id }) => {
+        alt_text: z.string().optional(),
+        caption: z.string().optional(),
+        folder_id: z.number().optional(),
+  }),
+  async ({ site, file_path, alt_text, caption, folder_id }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const res = await cms.uploadMedia(file_path, { alt_text, caption, folder_id });
       return ok(res?.data ?? res);
     } catch (e) {
@@ -709,22 +751,22 @@ server.tool(
 server.tool(
   'cms_bulk',
   'Пачка create/update/delete за один tool-вызов (на хост уходит по 1 запросу с паузой). Лучше чем 20 отдельных cms_update.',
-  {
+  siteSchema({
     operations: z.array(z.object({
-      op: z.enum(['create', 'update', 'delete', 'put_singleton', 'publish']),
-      resource: z.string().optional(),
-      singleton: z.string().optional(),
-      id: z.union([z.string(), z.number()]).optional(),
-      data: z.record(z.unknown()).optional(),
-      status: z.enum(['published', 'draft', 'archived']).optional(),
-    })).max(25).describe('Макс. 25 операций за раз (защита хостинга)'),
-  },
-  async ({ operations }) => {
+          op: z.enum(['create', 'update', 'delete', 'put_singleton', 'publish']),
+          resource: z.string().optional(),
+          singleton: z.string().optional(),
+          id: z.union([z.string(), z.number()]).optional(),
+          data: z.record(z.unknown()).optional(),
+          status: z.enum(['published', 'draft', 'archived']).optional(),
+        })).max(25).describe('Макс. 25 операций за раз (защита хостинга)'),
+  }),
+  async ({ site, operations }) => {
     try {
       if (operations.length > 25) {
         return fail(new Error('Максимум 25 операций в cms_bulk — разбей на партии.'));
       }
-      const cms = getClient();
+      const cms = getClient(site);
       const results = [];
       for (let i = 0; i < operations.length; i++) {
         const o = operations[i];
@@ -792,12 +834,12 @@ server.tool(
 server.tool(
   'cms_apply_content_pack',
   'Применить content pack на сайт (контент). Гейт билда не требуется. После ошибок зови cms_site_diagnostics.',
-  {
+  siteSchema({
     pack: z.record(z.unknown()).optional().describe('Сам pack; если нет — читается file_path'),
-    file_path: z.string().optional().describe('Локальный JSON pack'),
-    confirm_replace: z.boolean().describe('Должно быть true для replace_content'),
-  },
-  async ({ pack, file_path, confirm_replace }) => {
+        file_path: z.string().optional().describe('Локальный JSON pack'),
+        confirm_replace: z.boolean().describe('Должно быть true для replace_content'),
+  }),
+  async ({ site, pack, file_path, confirm_replace }) => {
     try {
       if (!confirm_replace) {
         return fail(new Error('Передайте confirm_replace: true — иначе сервер отклонит replace.'));
@@ -818,7 +860,7 @@ server.tool(
       if (!payload.version) payload.version = 1;
       if (!payload.mode) payload.mode = 'replace_content';
 
-      const cms = getClient();
+      const cms = getClient(site);
       const res = await cms.post('/admin/content-pack/apply', {
         pack: payload,
         confirm_replace: true,
@@ -862,10 +904,10 @@ server.tool(
 server.tool(
   'list_lab_experiments',
   'Список экспериментов Jasefly Lab (метаданные). Код экспериментов не отдаётся.',
-  {},
-  async () => {
+  siteSchema(),
+  async ({ site }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const res = await cms.get('/admin/lab/experiments');
       return ok(res?.data ?? res);
     } catch (e) {
@@ -877,12 +919,12 @@ server.tool(
 server.tool(
   'get_lab_experiment',
   'Получить эксперимент Lab по id (settings/content JSON, без исходников).',
-  {
+  siteSchema({
     id: z.union([z.string(), z.number()]),
-  },
-  async ({ id }) => {
+  }),
+  async ({ site, id }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const res = await cms.get(`/admin/lab/experiments/${id}`);
       return ok(res?.data ?? res);
     } catch (e) {
@@ -894,12 +936,12 @@ server.tool(
 server.tool(
   'create_lab_experiment',
   'Создать эксперимент Lab. entry_key только из whitelist (GET /admin/lab/entries). Нельзя писать код.',
-  {
+  siteSchema({
     data: z.record(z.unknown()).describe('name, slug, entry_key, status, is_public, noindex, render_mode, settings_json, content_json'),
-  },
-  async ({ data }) => {
+  }),
+  async ({ site, data }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const payload = sanitizeLabPayload(data);
       const res = await cms.post('/admin/lab/experiments', payload);
       return ok(res?.data ?? res);
@@ -912,13 +954,13 @@ server.tool(
 server.tool(
   'update_lab_experiment',
   'Обновить эксперимент Lab (метаданные и JSON-контент). Без загрузки JS/PHP.',
-  {
+  siteSchema({
     id: z.union([z.string(), z.number()]),
-    data: z.record(z.unknown()),
-  },
-  async ({ id, data }) => {
+        data: z.record(z.unknown()),
+  }),
+  async ({ site, id, data }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const payload = sanitizeLabPayload(data);
       const res = await cms.put(`/admin/lab/experiments/${id}`, payload);
       return ok(res?.data ?? res);
@@ -931,13 +973,13 @@ server.tool(
 server.tool(
   'publish_lab_experiment',
   'Активировать / отключить / архивировать эксперимент Lab.',
-  {
+  siteSchema({
     id: z.union([z.string(), z.number()]),
-    action: z.enum(['activate', 'disable', 'archive']).default('activate'),
-  },
-  async ({ id, action }) => {
+        action: z.enum(['activate', 'disable', 'archive']).default('activate'),
+  }),
+  async ({ site, id, action }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const res = await cms.post(`/admin/lab/experiments/${id}/${action}`, {});
       return ok(res?.data ?? res);
     } catch (e) {
@@ -949,12 +991,12 @@ server.tool(
 server.tool(
   'preview_lab_experiment',
   'Получить payload preview эксперимента Lab (для проверки content/settings).',
-  {
+  siteSchema({
     id: z.union([z.string(), z.number()]),
-  },
-  async ({ id }) => {
+  }),
+  async ({ site, id }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const res = await cms.get(`/admin/lab/experiments/${id}/preview`);
       return ok(res?.data ?? res);
     } catch (e) {
@@ -965,9 +1007,10 @@ server.tool(
 
 // ─── Module Package Manager ─────────────────────────────────────────────────
 
-server.tool('cms_modules_list', 'Список установленных package-модулей (installed_modules).', {}, async () => {
+server.tool('cms_modules_list', 'Список установленных package-модулей (installed_modules).', siteSchema(),
+  async ({ site }) => {
   try {
-    return ok((await getClient().get('/admin/modules'))?.data ?? []);
+    return ok((await getClient(site).get('/admin/modules'))?.data ?? []);
   } catch (e) {
     return fail(e);
   }
@@ -976,10 +1019,12 @@ server.tool('cms_modules_list', 'Список установленных package
 server.tool(
   'cms_module_inspect',
   'Загрузить ZIP модуля в staging uploads и вернуть inspect plan (без установки).',
-  { zip_path: z.string().min(1) },
-  async ({ zip_path }) => {
+  siteSchema({
+    zip_path: z.string().min(1)
+  }),
+  async ({ site, zip_path }) => {
     try {
-      const cms = getClient();
+      const cms = getClient(site);
       const up = await cms.uploadModuleZip(zip_path);
       const packageId = up?.data?.package_id ?? up?.package_id;
       if (!packageId) throw new Error('package_id missing from upload');
@@ -994,16 +1039,16 @@ server.tool(
 server.tool(
   'cms_module_install',
   'Установить модуль из уже загруженного package_id. Требует confirm=true.',
-  {
+  siteSchema({
     package_id: z.string().min(1),
-    slug: z.string().min(1),
-    confirm: z.boolean(),
-    content_mode: z.enum(['merge', 'skip', 'replace']).optional(),
-  },
-  async ({ package_id, slug, confirm, content_mode }) => {
+        slug: z.string().min(1),
+        confirm: z.boolean(),
+        content_mode: z.enum(['merge', 'skip', 'replace']).optional(),
+  }),
+  async ({ site, package_id, slug, confirm, content_mode }) => {
     if (!confirm) return fail(new Error('confirm=true required'));
     try {
-      const res = await getClient().post(`/admin/modules/${slug}/install`, {
+      const res = await getClient(site).post(`/admin/modules/${slug}/install`, {
         package_id,
         content_mode: content_mode || 'merge',
       });
@@ -1017,11 +1062,13 @@ server.tool(
 server.tool(
   'cms_module_update',
   'Обновить модуль из package_id. Требует confirm=true.',
-  { package_id: z.string().min(1), slug: z.string().min(1), confirm: z.boolean() },
-  async ({ package_id, slug, confirm }) => {
+  siteSchema({
+    package_id: z.string().min(1), slug: z.string().min(1), confirm: z.boolean()
+  }),
+  async ({ site, package_id, slug, confirm }) => {
     if (!confirm) return fail(new Error('confirm=true required'));
     try {
-      return ok((await getClient().post(`/admin/modules/${slug}/update`, { package_id }))?.data);
+      return ok((await getClient(site).post(`/admin/modules/${slug}/update`, { package_id }))?.data);
     } catch (e) {
       return fail(e);
     }
@@ -1031,11 +1078,13 @@ server.tool(
 server.tool(
   'cms_module_enable',
   'Включить установленный модуль.',
-  { slug: z.string().min(1), confirm: z.boolean() },
-  async ({ slug, confirm }) => {
+  siteSchema({
+    slug: z.string().min(1), confirm: z.boolean()
+  }),
+  async ({ site, slug, confirm }) => {
     if (!confirm) return fail(new Error('confirm=true required'));
     try {
-      return ok((await getClient().post(`/admin/modules/${slug}/enable`, {}))?.data);
+      return ok((await getClient(site).post(`/admin/modules/${slug}/enable`, {}))?.data);
     } catch (e) {
       return fail(e);
     }
@@ -1045,11 +1094,13 @@ server.tool(
 server.tool(
   'cms_module_disable',
   'Отключить модуль без удаления файлов/данных.',
-  { slug: z.string().min(1), confirm: z.boolean() },
-  async ({ slug, confirm }) => {
+  siteSchema({
+    slug: z.string().min(1), confirm: z.boolean()
+  }),
+  async ({ site, slug, confirm }) => {
     if (!confirm) return fail(new Error('confirm=true required'));
     try {
-      return ok((await getClient().post(`/admin/modules/${slug}/disable`, {}))?.data);
+      return ok((await getClient(site).post(`/admin/modules/${slug}/disable`, {}))?.data);
     } catch (e) {
       return fail(e);
     }
@@ -1059,10 +1110,12 @@ server.tool(
 server.tool(
   'cms_module_health',
   'Health-check установленного модуля.',
-  { slug: z.string().min(1) },
-  async ({ slug }) => {
+  siteSchema({
+    slug: z.string().min(1)
+  }),
+  async ({ site, slug }) => {
     try {
-      return ok((await getClient().get(`/admin/modules/${slug}/health`))?.data);
+      return ok((await getClient(site).get(`/admin/modules/${slug}/health`))?.data);
     } catch (e) {
       return fail(e);
     }
@@ -1072,27 +1125,31 @@ server.tool(
 server.tool(
   'cms_module_compatibility',
   'Compatibility Report (SDK score, forbidden imports, capabilities) для установленного модуля.',
-  { slug: z.string().min(1) },
-  async ({ slug }) => {
+  siteSchema({
+    slug: z.string().min(1)
+  }),
+  async ({ site, slug }) => {
     try {
-      return ok((await getClient().get(`/admin/modules/${slug}/compatibility`))?.data);
+      return ok((await getClient(site).get(`/admin/modules/${slug}/compatibility`))?.data);
     } catch (e) {
       return fail(e);
     }
   },
 );
 
-server.tool('cms_sdk_report', 'Отчёт Platform SDK (версии, публичные API).', {}, async () => {
+server.tool('cms_sdk_report', 'Отчёт Platform SDK (версии, публичные API).', siteSchema(),
+  async ({ site }) => {
   try {
-    return ok((await getClient().get('/admin/platform/sdk'))?.data);
+    return ok((await getClient(site).get('/admin/platform/sdk'))?.data);
   } catch (e) {
     return fail(e);
   }
 });
 
-server.tool('cms_capability_report', 'Capability Registry: возможности платформы и провайдеры.', {}, async () => {
+server.tool('cms_capability_report', 'Capability Registry: возможности платформы и провайдеры.', siteSchema(),
+  async ({ site }) => {
   try {
-    return ok((await getClient().get('/admin/platform/capabilities'))?.data);
+    return ok((await getClient(site).get('/admin/platform/capabilities'))?.data);
   } catch (e) {
     return fail(e);
   }
@@ -1165,9 +1222,10 @@ server.tool('cms_sdk_deprecations', 'Platform SDK deprecation report (php bin/sd
   }
 });
 
-server.tool('cms_module_operations', 'Журнал операций Module Package Manager.', {}, async () => {
+server.tool('cms_module_operations', 'Журнал операций Module Package Manager.', siteSchema(),
+  async ({ site }) => {
   try {
-    return ok((await getClient().get('/admin/module-operations'))?.data ?? []);
+    return ok((await getClient(site).get('/admin/module-operations'))?.data ?? []);
   } catch (e) {
     return fail(e);
   }
@@ -1176,11 +1234,13 @@ server.tool('cms_module_operations', 'Журнал операций Module Packa
 server.tool(
   'cms_module_rollback',
   'Rollback последнего update модуля (если есть snapshot). Требует confirm=true.',
-  { slug: z.string().min(1), confirm: z.boolean() },
-  async ({ slug, confirm }) => {
+  siteSchema({
+    slug: z.string().min(1), confirm: z.boolean()
+  }),
+  async ({ site, slug, confirm }) => {
     if (!confirm) return fail(new Error('confirm=true required'));
     try {
-      return ok((await getClient().post(`/admin/modules/${slug}/rollback`, {}))?.data);
+      return ok((await getClient(site).post(`/admin/modules/${slug}/rollback`, {}))?.data);
     } catch (e) {
       return fail(e);
     }
@@ -1189,16 +1249,16 @@ server.tool(
 
 server.tool(
   'cms_module_release',
-  'Собрать module ZIP локально (scripts/build-module.js). Не деплоит Core. upload=true → staging; install=true+confirm → upload + install/update + enable на хостинге.',
-  {
+  'Собрать module ZIP локально (scripts/build-module.js). Не деплоит Core. upload/install → нужен site при 2+ сайтах. install=true+confirm → upload + install/update + enable.',
+  siteSchema({
     module: z.string().min(1),
-    version: z.string().optional(),
-    upload: z.boolean().optional(),
-    install: z.boolean().optional().describe('После upload: установить или обновить модуль на сайте и включить'),
-    confirm: z.boolean().optional().describe('Обязателен при install=true'),
-    content_mode: z.enum(['merge', 'skip', 'replace']).optional(),
-  },
-  async ({ module, version, upload, install, confirm, content_mode }) => {
+        version: z.string().optional(),
+        upload: z.boolean().optional(),
+        install: z.boolean().optional().describe('После upload: установить или обновить модуль на сайте и включить'),
+        confirm: z.boolean().optional().describe('Обязателен при install=true'),
+        content_mode: z.enum(['merge', 'skip', 'replace']).optional(),
+  }),
+  async ({ site, module, version, upload, install, confirm, content_mode }) => {
     try {
       if (install && !confirm) {
         return fail(new Error('install=true требует confirm=true'));
@@ -1219,7 +1279,7 @@ server.tool(
       const zipPath = zips.length ? path.join(outDir, zips[zips.length - 1]) : null;
       let remote = null;
       if (doUpload && zipPath) {
-        const cms = getClient();
+        const cms = getClient(site);
         const up = await cms.uploadModuleZip(zipPath);
         const packageId = up?.data?.package_id ?? up?.package_id;
         const plan = packageId
@@ -1292,12 +1352,12 @@ function normalizeAdminPath(raw) {
 server.tool(
   'cms_plugins_list',
   'Каталог плагинов/модулей сайта (GET /admin/plugins): name, enabled, settings schema, missing deps. До выключения/включения — cms_plugin_toggle.',
-  {
+  siteSchema({
     enabled_only: z.boolean().optional().describe('Вернуть только включённые'),
-  },
-  async ({ enabled_only }) => {
+  }),
+  async ({ site, enabled_only }) => {
     try {
-      const res = await getClient().get('/admin/plugins');
+      const res = await getClient(site).get('/admin/plugins');
       let list = res?.data ?? res;
       if (!Array.isArray(list)) list = [];
       if (enabled_only) {
@@ -1321,16 +1381,16 @@ server.tool(
 server.tool(
   'cms_plugin_toggle',
   'Включить/выключить плагин (POST /admin/plugins/{name}/toggle). Ядро system/users отключить нельзя. Требует confirm=true.',
-  {
+  siteSchema({
     name: z.string().min(1).describe('slug плагина, напр. portfolio, translate, overload'),
-    enabled: z.boolean(),
-    confirm: z.boolean(),
-    auto_enable_deps: z.boolean().optional().describe('Авто-включить зависимости (default true)'),
-  },
-  async ({ name, enabled, confirm, auto_enable_deps }) => {
+        enabled: z.boolean(),
+        confirm: z.boolean(),
+        auto_enable_deps: z.boolean().optional().describe('Авто-включить зависимости (default true)'),
+  }),
+  async ({ site, name, enabled, confirm, auto_enable_deps }) => {
     if (!confirm) return fail(new Error('confirm=true required'));
     try {
-      const res = await getClient().post(`/admin/plugins/${encodeURIComponent(name)}/toggle`, {
+      const res = await getClient(site).post(`/admin/plugins/${encodeURIComponent(name)}/toggle`, {
         enabled: !!enabled,
         auto_enable_deps: auto_enable_deps !== false,
       });
@@ -1346,20 +1406,20 @@ server.tool(
 server.tool(
   'cms_admin_request',
   'Произвольный авторизованный запрос к /admin/* (модули IndexNow/Optimizer, settings плагинов, health). Мутации (POST/PUT/PATCH/DELETE) требуют confirm=true. Не для публичных URL.',
-  {
+  siteSchema({
     method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
-    path: z.string().min(1).describe('Относительный путь, напр. /admin/indexnow/setup или /admin/plugins/translate/settings'),
-    body: z.record(z.unknown()).optional().describe('JSON body для POST/PUT/PATCH'),
-    confirm: z.boolean().optional().describe('Обязателен для не-GET'),
-  },
-  async ({ method, path: adminPath, body, confirm }) => {
+        path: z.string().min(1).describe('Относительный путь, напр. /admin/indexnow/setup или /admin/plugins/translate/settings'),
+        body: z.record(z.unknown()).optional().describe('JSON body для POST/PUT/PATCH'),
+        confirm: z.boolean().optional().describe('Обязателен для не-GET'),
+  }),
+  async ({ site, method, path: adminPath, body, confirm }) => {
     try {
       const m = String(method || 'GET').toUpperCase();
       if (m !== 'GET' && !confirm) {
         return fail(new Error(`${m} требует confirm=true`));
       }
       const p = normalizeAdminPath(adminPath);
-      const cms = getClient();
+      const cms = getClient(site);
       let res;
       if (m === 'GET') res = await cms.get(p);
       else if (m === 'POST') res = await cms.post(p, body ?? {});

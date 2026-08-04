@@ -18,7 +18,7 @@
 | Admin Hero без превью, на сайте есть | `cmsSync`: `hero-block.media_id` ↔ `hero_settings.background_media_id`; heal в `SitePages` + push при сохранении Admin Hero |
 | Билдер: ложный dirty / hotkeys | bake-on-open без dirty; undo к baseline save; Ctrl+C/V не перехватывают text selection; Delete (не Backspace) удаляет виджет |
 | Иконки палитры билдера | `builder/lib/widgetIcons.tsx` + CSS `.builder-palette-tile` в `frontend/src/index.css` |
-| Виджет (heading/text/hero/…) | `builder/widgets/{basic,structure,blocks,portfolio,landing,framework,frameworkPulse,commerce,auth,access}.tsx`; универсальные: `hero-block` `showcase-block` `compare-block` `cta-block` `steps-row` `media-placeholder` `stat-row`; framework: `architecture-stack` `code-snippet` `code-tabs` `status-roadmap` `dev-journey` `repo-tree` `status-timeline` `github-pulse` `explore-doors`; секции: glow/overlay/animation/responsive в `lib/sectionEffects.tsx` |
+| Виджет (heading/text/hero/…) | `builder/widgets/{basic,structure,blocks,portfolio,landing,processDiagram,journey,framework,frameworkPulse,commerce,auth,access}.tsx`; универсальные: `hero-block` `showcase-block` `compare-block` `cta-block` `steps-row` `media-placeholder` `stat-row` `stats-strip` `relation-flow` `process-diagram` `features-grid` (`last_row_alignment`, optional `href`/`markers`) `projects-grid` (`layout: grid\|lead-with-stack`, `featured_priority`, cover portrait/landscape) `journey-timeline` `profile-hero`; framework: `architecture-stack` `code-snippet` `code-tabs` `status-roadmap` `dev-journey` `repo-tree` `status-timeline` `github-pulse` `explore-doors`; секции: glow/overlay/animation/responsive в `lib/sectionEffects.tsx`; /about hero: `shared/views` `ProfileHeroView` (`items-start`); journey: `shared/aboutJourneyContent.ts`; showcase: `ProjectShowcase.tsx` + `ResponsiveProjectCover` + `shared/projectCover.ts` + `shared/showcaseGeometry.ts` (secondary media ≈1:1); process: `shared/processDiagram.ts`; лендинг seed: `migrateHome.buildDefaultHomeLayout` |
 | Access / paywall / «кто видит блок» | Platform `Access/` + `Modules/Access/` (`GET/POST /access/*`); виджет «Доступ» (`access-container`) + `edit/AccessRuleEditor.tsx`; описания в `PluginCatalogMeta`; публичный `filterLayout` в `PublicController`; ZIP: `modules-src/{user-groups,subscriptions,wallet}/` |
 | Admin ACL / роли / capabilities | `Platform/Access/Acl/*` + provider `capability`; `PermissionService` adapter; `GET /auth/me` caps; `GET /admin/access/bootstrap`; FE `AuthContext.can` (не `role===admin`); Users/Roles UI; миграция `024_admin_access_layer.sql` |
 | Корзина empty-all 500 / нет deleted_at | `SoftDeleteService::emptyTrash`/`restore`/`trash` → `hasDeletedAt`; TRASHABLE: pages/education без колонки; UI `EnterprisePages` + `TrashController` |
@@ -52,7 +52,8 @@
 | История чата после reload | `GET /support/active` + cookie/localStorage `visitor_key` |
 | Звук чата (виджет / inbox) | `lib/supportNotifySound.ts` + `SupportWidget` / `SupportInboxPage` |
 | Стили/цвет/шрифт/градиент текста | `builder/edit/StyleFields.tsx`, `ColorControl.tsx`, `colorUtils.ts`, `lib/googleFonts.ts` |
-| Seed-лейауты страниц (home/about/…) | `frontend/src/builder/migrateHome.ts` |
+| Seed-лейауты страниц (home/about/…) | `frontend/src/builder/migrateHome.ts` (`buildDefaultContactLayout` — карта+контакты 2 кол.) |
+| Билдер: 2 колонки съезжают в столбец | `LayoutRenderer` секция = CSS grid `Nfr` (не flex %+gap) |
 | Публичный рендер страницы из layout | `builder/public/CmsPages.tsx`, `builder/public/parseLayout.ts`, `builder/render/LayoutRenderer.tsx` |
 | «Сайт не из pages / не из БД» | `isSeedLayout` (`CmsPages.tsx`): seed/пусто → classic `HomePage` из `hero_settings`+секций; `useOnSite:true` → `pages.layout_json`. Файлы `content/jasefly-official/` только apply в БД, не runtime |
 | Админ «Главная» / Оформление | Редирект в билдер `pages` is_home (`SitePages.HomepagePage`). Не путать с пустой `homepage_sections` — контент в `pages.layout_json` |
@@ -92,6 +93,7 @@
 | Тесты / CI / cms_local_test | `backend/tests/run.php` (+ Permission/API/CleanInstall/…/PackageEnableSync/ProjectsSoftApi/MigrationSqliteCompat/ContractGovernance/…), `backend/bin/certify-lifecycle.php`, `mcp-cms/src/local.js`, `.github/workflows/platform-sdk.yml`, `frontend` vitest (`npm test`) |
 | Локально как GitHub sdk перед push | `node scripts/ci-sdk-check.js` (или `--fast`); pre-push: `git config core.hooksPath scripts/githooks` |
 | SQLite migrate: OLD.id / MODIFY / prefix(191) | `Core/Db/SqlTranspiler.php` (rowid triggers, skip MODIFY, strip index prefix lengths); smoke: `MigrationSmokeTest` / `MigrationSqliteCompatTest` |
+| Новая SQL-миграция на хостинге «не применяется» (pending пуст) | файл есть в `backend/migrations/`, но **не в** `MigrationService::FILES` — без строки в константе файл игнорируется |
 | Contract governance (snapshots) | `Platform/Manifest/{api-snapshot,capabilities,permissions-core,events-core}.v1.json` · `mcp-cms/manifest/mcp-tools.v1.json` · `builder/manifest/widget-types.v1.json` · `ContractGovernanceTest.php` · vitest `widget-types.test.ts` · regen: `node backend/tests/gen-contract-snapshots.js` |
 | Security verification (SSRF/2FA/upload) | `Support/SsrfGuard.php` · `SecurityVerificationTest.php` · `TotpService` · `BackupService` · `MediaService` · `AuthController::refresh` (rotation) · `WebhooksModule` (HMAC + SSRF) |
 | Maintainability helpers | `Support/{SsrfGuard,OutboundHttp,SecretRedactor}.php` · `Response::error(..., $extra)` · `MaintainabilityTest.php` |
@@ -161,7 +163,7 @@ portfolio/
     Modules/{Name}/   ← фича-пакеты (*Module.php)
     Controllers/      ← системные (auth, media, public…)
   backend/migrations/ ← схема
-  mcp-cms/            ← MCP-сервер деплоя/контента
+  mcp-cms/            ← MCP-сервер деплоя/контента (multi-site: src/sites.js)
   content/            ← контент-паки (импорт)
 ```
 
@@ -258,11 +260,12 @@ portfolio/
 
 ## MCP (хостинг / контент)
 
-Сервер: `user-jasefly-cms` (`mcp-cms/`). Секреты только в `mcp-cms/.env`.
+Сервер: `user-jasefly-cms` (`mcp-cms/`). Секреты только в `mcp-cms/.env`. Мульти-сайт: `CMS_SITES` + `CMS_SITE_{ID}_*` → параметр **`site`** (id/alias/домен); список — **`cms_sites`** (`mcp-cms/src/sites.js`).
 
 | Инструмент | Когда |
 | --- | --- |
-| **`cms_release`** | Любая заливка кода (build→test→changelog→deploy→verify) |
+| **`cms_sites`** | Список хостов MCP (без токенов); при ≥2 сайтах спроси пользователя и передай `site` |
+| **`cms_release`** | Любая заливка кода (build→test→changelog→deploy→verify); при multi — `site` обязателен |
 | Не те модули / старая админка после «успешного» деплоя | Проверь `release/jasefly-cms-update-*.zip` (не legacy `portfolio-hosting-update-*`); `mcp-cms/src/local.js` → `findLatestUpdateZip`; явный `cms_deploy_update(zip_path=…)` |
 | `cms_site_map` | Карта живого сайта перед правками контента |
 | `cms_pages_digest` / `cms_page_digest` | Короткие выжимки страниц |

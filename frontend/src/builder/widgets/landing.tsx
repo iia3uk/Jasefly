@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronDown } from 'lucide-react'
+import { ArrowDown, ChevronDown } from 'lucide-react'
 import { MediaImage } from '@/components/ui'
 import { registerWidget } from '@/builder/registry'
 import type { SettingsField } from '@/builder/types'
@@ -9,6 +9,9 @@ import { readStyles, stylesToCss } from '@/builder/edit/StyleFields'
 import { chooseVideoSource, isGeoRiskyPlatform, resolveVideoUrl } from '@/builder/lib/videoEmbed'
 import { mediaUrl } from '@/lib/api'
 import { ProjectGallery } from '@/modules/projects/components/ProjectGallery'
+import { StatsStrip, useLivePortfolioStats } from '@/shared/StatsStrip'
+import { chainOrder, normalizeRelationFlow, type RelationNode } from '@/shared/relationFlow'
+import { normalizeLastRowAlignment, parseFeatureMarkers } from '@/shared/featuresGridLayout'
 import {
   PlAudience,
   PlCompare,
@@ -201,13 +204,13 @@ function PricingRender({ settings }: { settings: Record<string, unknown> }) {
 }
 
 /* ——— Features ——— */
-function featuresGridClass(cols: number): string {
+function featuresItemWidthClass(cols: number): string {
   const n = Math.min(4, Math.max(1, cols))
-  if (n <= 1) return 'grid-cols-1'
-  if (n === 2) return 'grid-cols-1 sm:grid-cols-2'
-  // 3–4 cols: single column on phones so titles/body don't crush
-  if (n === 3) return 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
-  return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+  if (n <= 1) return 'w-full'
+  if (n === 2) return 'w-full sm:w-[calc((100%-1.25rem)/2)]'
+  // 3 cols: 1 → 2 → 3; equal card width, last incomplete row centers via flex justify
+  if (n === 3) return 'w-full sm:w-[calc((100%-1.25rem)/2)] md:w-[calc((100%-2.5rem)/3)]'
+  return 'w-full sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-3.75rem)/4)]'
 }
 
 function FeatureCardLink({
@@ -239,34 +242,54 @@ function FeaturesRender({ settings }: { settings: Record<string, unknown> }) {
   const cols = Number(settings.columns || 3)
   const styles = stylesToCss(readStyles(settings))
   const accented = settings.accented === true || settings.accented === 1 || settings.accented === '1'
+  const lastAlign = normalizeLastRowAlignment(settings.last_row_alignment)
+  const justify =
+    lastAlign === 'center' ? 'justify-center' : lastAlign === 'end' ? 'justify-end' : 'justify-start'
+  const widthClass = featuresItemWidthClass(cols)
   return (
     <div className="min-w-0" style={styles}>
       <SectionTitle title={String(settings.title || 'Возможности')} subtitle={String(settings.subtitle || '')} />
-      <div className={clsx('grid gap-4 sm:gap-5', accented && 'fw-features-accent', featuresGridClass(cols))}>
+      <div className={clsx('flex flex-wrap gap-4 sm:gap-5', justify, accented && 'fw-features-accent')}>
         {items.length ? items.map((item, i) => {
           const href = String(item.href || '').trim()
-          const cta = String(item.cta || item.cta_label || (href ? 'Open live →' : ''))
+          const cta = href ? String(item.cta || item.cta_label || '').trim() : ''
+          const markers = parseFeatureMarkers(item)
           const className = clsx(
-            'fw-feature-card relative min-w-0 overflow-hidden rounded-[var(--radius)] border border-white/[0.08] bg-white/[0.02] p-4 transition duration-300 sm:p-6',
+            'fw-feature-card relative flex min-w-0 flex-col overflow-hidden rounded-[var(--radius)] border border-white/[0.08] bg-white/[0.02] p-5 sm:p-7',
+            widthClass,
             accented && `fw-feature-tone-${(i % 6) + 1}`,
-            href && 'hover:-translate-y-0.5 hover:border-[color:var(--primary)]/35 hover:shadow-[0_16px_40px_-28px_var(--primary)]',
+            href ? 'fw-feature-card--link' : 'fw-feature-card--static',
           )
           const body = (
             <>
               {accented ? <span className="fw-feature-bar" aria-hidden /> : null}
               {item.icon ? (
-                <span className="fw-feature-icon mb-3 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] sm:mb-4 sm:h-11 sm:w-11">
-                  <AppIcon name={String(item.icon)} size={18} />
+                <span className="fw-feature-icon mb-4 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] sm:mb-5 sm:h-12 sm:w-12">
+                  <AppIcon name={String(item.icon)} size={20} />
                 </span>
               ) : null}
-              <h3 className="break-words font-heading text-base font-semibold sm:text-lg">{String(item.title || 'Фича')}</h3>
+              <h3 className="break-words font-heading text-lg font-semibold tracking-[-0.02em] sm:text-xl">
+                {String(item.title || 'Фича')}
+              </h3>
               {item.body ? (
-                <p className="mt-2 break-words text-sm leading-6 text-[var(--muted)]">{String(item.body)}</p>
+                <p className="mt-2.5 break-words text-sm leading-6 text-[var(--muted)] sm:text-[0.95rem] sm:leading-7">
+                  {String(item.body)}
+                </p>
+              ) : null}
+              {markers.length ? (
+                <ul className="mt-auto flex list-none flex-wrap gap-1.5 pt-5" aria-label="Технологии">
+                  {markers.map((m) => (
+                    <li
+                      key={m}
+                      className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 text-[0.7rem] font-medium tracking-wide text-[var(--muted)]"
+                    >
+                      {m}
+                    </li>
+                  ))}
+                </ul>
               ) : null}
               {cta ? (
-                <p className={clsx('mt-3 text-sm font-medium', href ? 'text-[color:var(--primary)]' : 'text-[color:var(--muted)]')}>
-                  {cta}
-                </p>
+                <p className="mt-4 text-sm font-medium text-[color:var(--primary)]">{cta}</p>
               ) : null}
             </>
           )
@@ -283,6 +306,127 @@ function FeaturesRender({ settings }: { settings: Record<string, unknown> }) {
           <p className="text-sm text-[var(--muted)]">Добавьте карточки возможностей</p>
         )}
       </div>
+    </div>
+  )
+}
+
+/* ——— Stats strip (live projects + static KPIs) ——— */
+function StatsStripWidget({ settings }: { settings: Record<string, unknown> }) {
+  const live = useLivePortfolioStats()
+  const staticItems = asItems(settings.items).map((row, i) => {
+    const raw = row.value
+    const value: string | number =
+      typeof raw === 'number' || typeof raw === 'string' ? raw : String(raw ?? '')
+    return {
+      id: `static-${i}`,
+      value,
+      suffix: row.suffix != null ? String(row.suffix) : '',
+      label: String(row.label || ''),
+    }
+  }).filter((s) => String(s.value) !== '' || s.label)
+  const autofill = settings.autofill_from_projects !== false
+  const items = autofill ? [...staticItems, ...live] : staticItems
+  const styles = stylesToCss(readStyles(settings))
+  const large = String(settings.size || '') === 'lg'
+  return (
+    <div style={styles} className={clsx(large && 'stats-strip--lg')}>
+      <SectionTitle title={String(settings.title || '')} subtitle={String(settings.subtitle || '')} />
+      <StatsStrip
+        items={items}
+        className={clsx(
+          'grid grid-cols-2 gap-6 border-y border-white/[0.08] py-8 sm:gap-10 sm:py-12 lg:grid-cols-4',
+          large && 'lg:gap-12 lg:py-16',
+        )}
+      />
+    </div>
+  )
+}
+
+/* ——— Relation / ecosystem flow ——— */
+function RelationNodeCard({ node }: { node: RelationNode }) {
+  const inner = (
+    <>
+      <p className="font-heading text-base font-semibold tracking-[-0.02em] sm:text-lg">{node.label}</p>
+      {node.note ? <p className="mt-1 text-xs leading-5 text-[var(--muted)] sm:text-sm">{node.note}</p> : null}
+    </>
+  )
+  const className =
+    'block min-w-0 rounded-[calc(var(--radius)+2px)] border border-white/[0.1] bg-white/[0.03] px-4 py-3 transition hover:border-[color-mix(in_srgb,var(--accent)_45%,transparent)] hover:bg-white/[0.05] sm:px-5 sm:py-4'
+  if (!node.href) return <div className={className}>{inner}</div>
+  const external = node.href.startsWith('http') || node.href.startsWith('mailto:')
+  if (external) {
+    return (
+      <a href={node.href} target="_blank" rel="noopener noreferrer" className={className}>
+        {inner}
+      </a>
+    )
+  }
+  return (
+    <Link to={node.href} className={className}>
+      {inner}
+    </Link>
+  )
+}
+
+function RelationFlowWidget({ settings }: { settings: Record<string, unknown> }) {
+  const model = useMemo(() => normalizeRelationFlow(settings), [settings])
+  const styles = stylesToCss(readStyles(settings))
+  const ordered = useMemo(() => chainOrder(model.nodes, model.edges), [model.nodes, model.edges])
+
+  if (!model.nodes.length) {
+    return (
+      <div style={styles}>
+        <SectionTitle title={String(settings.title || 'Экосистема')} subtitle={String(settings.subtitle || '')} />
+        <p className="text-sm text-[var(--muted)]">Добавьте узлы экосистемы</p>
+      </div>
+    )
+  }
+
+  if (model.layout === 'hub' && model.nodes.length) {
+    const hub = model.nodes[0]
+    const satellites = model.nodes.slice(1)
+    return (
+      <div style={styles}>
+        <SectionTitle title={String(settings.title || 'Экосистема')} subtitle={String(settings.subtitle || '')} />
+        <div className="flex flex-col items-stretch gap-4">
+          <div className="mx-auto w-full max-w-md">
+            <RelationNodeCard node={hub} />
+          </div>
+          {satellites.length ? (
+            <div className="flex justify-center" aria-hidden>
+              <ArrowDown className="text-[var(--muted)] opacity-60" size={18} />
+            </div>
+          ) : null}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {satellites.map((node) => (
+              <RelationNodeCard key={node.id} node={node} />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={styles}>
+      <SectionTitle title={String(settings.title || 'Экосистема')} subtitle={String(settings.subtitle || '')} />
+      <ol className="flex flex-col gap-0 lg:flex-row lg:items-stretch lg:gap-0">
+        {ordered.map((node, index) => (
+          <li key={node.id} className="flex min-w-0 flex-1 flex-col lg:flex-row lg:items-stretch">
+            <div className="min-w-0 flex-1">
+              <RelationNodeCard node={node} />
+            </div>
+            {index < ordered.length - 1 ? (
+              <div
+                className="flex items-center justify-center py-2 text-[var(--muted)] opacity-60 lg:w-10 lg:shrink-0 lg:py-0"
+                aria-hidden
+              >
+                <ArrowDown className="lg:-rotate-90" size={18} />
+              </div>
+            ) : null}
+          </li>
+        ))}
+      </ol>
     </div>
   )
 }
@@ -497,6 +641,7 @@ export function registerLandingWidgets() {
       subtitle: '',
       columns: 3,
       accented: false,
+      last_row_alignment: 'start',
       items: [
         { icon: 'sparkles', title: 'Быстро', body: 'Запуск без лишней сложности.' },
         { icon: 'shield', title: 'Надёжно', body: 'Стабильная база и бэкапы.' },
@@ -509,6 +654,16 @@ export function registerLandingWidgets() {
       { key: 'columns', label: 'Колонки', type: 'number' },
       { key: 'accented', label: 'Цветные акценты карточек', type: 'toggle' },
       {
+        key: 'last_row_alignment',
+        label: 'Неполный последний ряд',
+        type: 'select',
+        options: [
+          { value: 'start', label: 'По левому краю' },
+          { value: 'center', label: 'По центру' },
+          { value: 'end', label: 'По правому краю' },
+        ],
+      },
+      {
         key: 'items',
         label: 'Карточки',
         type: 'custom',
@@ -517,19 +672,135 @@ export function registerLandingWidgets() {
             value={value}
             onChange={onChange}
             addLabel="Карточка"
-            blank={() => ({ icon: '', title: '', body: '', href: '', cta: '' })}
+            blank={() => ({ icon: '', title: '', body: '', markers: '', href: '', cta: '' })}
             fields={[
               { key: 'icon', label: 'Иконка (имя)', kind: 'text' },
               { key: 'title', label: 'Заголовок', kind: 'text' },
               { key: 'body', label: 'Текст', kind: 'textarea' },
-              { key: 'href', label: 'Ссылка (live)', kind: 'url' },
-              { key: 'cta', label: 'CTA (напр. Open live →)', kind: 'text' },
+              { key: 'markers', label: 'Маркеры (через · или запятую)', kind: 'text' },
+              { key: 'href', label: 'Ссылка (опционально)', kind: 'url' },
+              { key: 'cta', label: 'CTA (только со ссылкой)', kind: 'text' },
             ]}
           />
         ),
       },
     ),
     Render: FeaturesRender,
+  })
+
+  registerWidget({
+    type: 'stats-strip',
+    label: 'Полоса статистики',
+    category: 'landing',
+    defaultSettings: {
+      title: 'Результаты',
+      subtitle: '',
+      autofill_from_projects: true,
+      items: [
+        { value: '6+', label: 'Лет автоматизации' },
+        { value: '15', label: 'PLC в контуре' },
+      ],
+    },
+    settingsFields: fields(
+      { key: 'title', label: 'Заголовок', type: 'text' },
+      { key: 'subtitle', label: 'Подзаголовок', type: 'textarea' },
+      { key: 'autofill_from_projects', label: 'Подтянуть KPI из проектов', type: 'toggle' },
+      {
+        key: 'size',
+        label: 'Размер цифр',
+        type: 'select',
+        options: [
+          { value: 'md', label: 'Обычный' },
+          { value: 'lg', label: 'Крупный' },
+        ],
+      },
+      {
+        key: 'items',
+        label: 'Доп. метрики (статика)',
+        type: 'custom',
+        component: ({ value, onChange }) => (
+          <ItemsEditor
+            value={value}
+            onChange={onChange}
+            addLabel="Метрика"
+            blank={() => ({ value: '', suffix: '', label: '' })}
+            fields={[
+              { key: 'value', label: 'Значение', kind: 'text' },
+              { key: 'suffix', label: 'Суффикс', kind: 'text' },
+              { key: 'label', label: 'Подпись', kind: 'text' },
+            ]}
+          />
+        ),
+      },
+    ),
+    Render: StatsStripWidget,
+  })
+
+  registerWidget({
+    type: 'relation-flow',
+    label: 'Связи / экосистема',
+    category: 'landing',
+    defaultSettings: {
+      title: 'Экосистема',
+      subtitle: 'Продукты связаны общей архитектурой и практикой.',
+      layout: 'chain',
+      nodes: [
+        { id: 'a', label: 'Продукт A', href: '', note: '' },
+        { id: 'b', label: 'Продукт B', href: '', note: '' },
+        { id: 'c', label: 'Продукт C', href: '', note: '' },
+      ],
+      edges: [],
+    },
+    settingsFields: fields(
+      { key: 'title', label: 'Заголовок', type: 'text' },
+      { key: 'subtitle', label: 'Подзаголовок', type: 'textarea' },
+      {
+        key: 'layout',
+        label: 'Раскладка',
+        type: 'select',
+        options: [
+          { value: 'chain', label: 'Цепочка' },
+          { value: 'hub', label: 'Хаб' },
+        ],
+      },
+      {
+        key: 'nodes',
+        label: 'Узлы',
+        type: 'custom',
+        component: ({ value, onChange }) => (
+          <ItemsEditor
+            value={value}
+            onChange={onChange}
+            addLabel="Узел"
+            blank={() => ({ id: '', label: '', href: '', note: '' })}
+            fields={[
+              { key: 'id', label: 'ID', kind: 'text' },
+              { key: 'label', label: 'Название', kind: 'text' },
+              { key: 'note', label: 'Короткая мысль', kind: 'text' },
+              { key: 'href', label: 'Ссылка', kind: 'url' },
+            ]}
+          />
+        ),
+      },
+      {
+        key: 'edges',
+        label: 'Связи (from → to по ID; пусто = цепочка по порядку)',
+        type: 'custom',
+        component: ({ value, onChange }) => (
+          <ItemsEditor
+            value={value}
+            onChange={onChange}
+            addLabel="Связь"
+            blank={() => ({ from: '', to: '' })}
+            fields={[
+              { key: 'from', label: 'От (id)', kind: 'text' },
+              { key: 'to', label: 'К (id)', kind: 'text' },
+            ]}
+          />
+        ),
+      },
+    ),
+    Render: RelationFlowWidget,
   })
 
   registerWidget({

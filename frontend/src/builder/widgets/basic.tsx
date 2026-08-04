@@ -200,7 +200,13 @@ function ButtonRender({ settings, editMode }: { settings: Record<string, unknown
 }
 
 function SpacerRender({ settings }: { settings: Record<string, unknown> }) {
-  return <div style={{ height: String(settings.height || '2rem') }} aria-hidden />
+  const styles = stylesToCss(readStyles(settings))
+  return (
+    <div
+      style={{ height: String(settings.height || '2rem'), ...styles }}
+      aria-hidden
+    />
+  )
 }
 
 function DividerRender() {

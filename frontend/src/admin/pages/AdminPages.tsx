@@ -428,6 +428,7 @@ export function CrudEditPage({ resource, basePath }: { resource: string; basePat
         percentage: form.percentage != null && form.percentage !== '' ? Number(form.percentage) : undefined,
         category_id: form.category_id != null && form.category_id !== '' ? Number(form.category_id) : undefined,
         sort_order: form.sort_order != null && form.sort_order !== '' ? Number(form.sort_order) : undefined,
+        featured_priority: form.featured_priority != null && form.featured_priority !== '' ? Number(form.featured_priority) : undefined,
         technologies: form.technologies ? asText(form.technologies).split(',').map(x => x.trim()).filter(Boolean) : undefined,
         features: form.features ? asText(form.features).split(',').map(x => x.trim()).filter(Boolean) : undefined,
       },
@@ -706,7 +707,23 @@ export function ProjectEditPage() {
             <Text label={fieldLabel('video_url')} value={form.video_url} onChange={v => set('video_url', v)} />
             <Text label={fieldLabel('tags')} value={asText(form.tags)} onChange={v => set('tags', v)} />
             <Check label={t.featured} checked={form.is_featured} onChange={v => set('is_featured', v)} />
+            <Text
+              type="number"
+              label={fieldLabel('featured_priority')}
+              value={form.featured_priority ?? 0}
+              onChange={v => set('featured_priority', v === '' ? 0 : Number(v))}
+            />
             <MediaPicker label={fieldLabel('cover_image')} value={form.cover_media_id} onChange={v => set('cover_media_id', v)} />
+            <MediaPicker
+              label={fieldLabel('cover_portrait')}
+              value={form.cover_portrait_media_id}
+              onChange={v => set('cover_portrait_media_id', v)}
+            />
+            <MediaPicker
+              label={fieldLabel('cover_landscape')}
+              value={form.cover_landscape_media_id}
+              onChange={v => set('cover_landscape_media_id', v)}
+            />
             <div className={adminFormFullClass}>
               <GalleryPicker value={form.media} onChange={v => set('media', v)} />
             </div>

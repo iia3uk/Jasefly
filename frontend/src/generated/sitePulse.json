@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-03T19:34:45.425Z",
-  "version": "installer_v2-7-gccb3c10",
-  "commit": "ccb3c10",
+  "generated_at": "2026-08-04T19:51:24.640Z",
+  "version": "installer_v2-12-gb84d580",
+  "commit": "b84d580",
   "metrics": {
-    "files": 1211,
+    "files": 1239,
     "php_classes": 310,
-    "builder_widgets": 62,
+    "builder_widgets": 68,
     "rest_routes_core": 66,
     "sdk_interfaces": 23,
-    "git_commits": 82,
+    "git_commits": 87,
     "repo_size_mb": 26.4,
     "core_modules": 30,
     "package_scaffolds": 10
@@ -17,32 +17,32 @@
     "repo": "iia3uk/jasefly",
     "url": "https://github.com/iia3uk/jasefly",
     "latest_tag": "installer_v2",
-    "latest_commit_date": "2026-08-03",
+    "latest_commit_date": "2026-08-04",
     "commits": [
       {
-        "hash": "ccb3c10",
-        "date": "2026-08-03",
-        "subject": "Update SoftDeleteService.php"
+        "hash": "b84d580",
+        "date": "2026-08-04",
+        "subject": "﻿Stop publishing modules-src to the public repo."
       },
       {
-        "hash": "092f898",
+        "hash": "69a3cea",
         "date": "2026-08-03",
-        "subject": "Update CMS_MAP.md"
+        "subject": "fix(maps): hide overlay zoom controls on Yandex provider."
       },
       {
-        "hash": "3e5295b",
+        "hash": "e9b4a7d",
         "date": "2026-08-03",
-        "subject": "Update run.php"
+        "subject": "fix(csp): allow Yandex Maps iframes in frame-src."
       },
       {
-        "hash": "c51acb8",
+        "hash": "96eb975",
         "date": "2026-08-03",
-        "subject": "Create SoftDeleteEmptyTrashTest.php"
+        "subject": "fix(maps): default to Yandex Maps and restore visible markers."
       },
       {
-        "hash": "6596aba",
+        "hash": "b443c53",
         "date": "2026-08-03",
-        "subject": "fix TrashController.php"
+        "subject": "Add Maps ZIP module with OSM adapter and contact map fields."
       }
     ]
   }

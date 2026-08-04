@@ -11,6 +11,8 @@ export interface MediaAsset {
   filename?: string
   folder_id?: ID | null
   size_bytes?: number
+  width?: number | null
+  height?: number | null
   missing?: boolean
 }
 
@@ -260,9 +262,17 @@ export interface Project {
   content?: string
   cover_media_id?: ID | null
   cover?: MediaAsset | null
+  /** Tall showcase lead (desktop); falls back to `cover`. */
+  cover_portrait_media_id?: ID | null
+  cover_portrait?: MediaAsset | null
+  /** Wide stack/mobile card; falls back to `cover`. */
+  cover_landscape_media_id?: ID | null
+  cover_landscape?: MediaAsset | null
   status?: string
   project_status?: string
   is_featured?: boolean | number
+  /** Higher = showcase lead in lead-with-stack layouts. */
+  featured_priority?: number
   sort_order?: number
   role?: string
   team_size?: number

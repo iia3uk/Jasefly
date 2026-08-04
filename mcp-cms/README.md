@@ -33,6 +33,32 @@ MCP_API_TOKEN=тот_же_секрет
 ```
 (или `mcp_api_token` в `config.local.php`)
 
+## Несколько сайтов (один MCP)
+
+Один процесс Cursor MCP может управлять несколькими инсталляциями Jasefly (контент + деплой). Секреты — в `mcp-cms/.env`:
+
+```env
+CMS_SITES=jasefly,iia3uk
+
+CMS_SITE_JASEFLY_URL=https://jasefly.com
+CMS_SITE_JASEFLY_TOKEN=…
+CMS_SITE_JASEFLY_ALIASES=jasefly.com,www.jasefly.com,official
+
+CMS_SITE_IIA3UK_URL=https://iia3uk.ru
+CMS_SITE_IIA3UK_TOKEN=…
+CMS_SITE_IIA3UK_ALIASES=iia3uk.ru,www.iia3uk.ru
+```
+
+- Список без токенов: **`cms_sites`**
+- Во все remote-tools передавайте **`site`**: id (`jasefly`), alias (`official`) или домен (`iia3uk.ru`)
+- При **2+** сайтах без `site` tool вернёт ошибку со списком — агент должен спросить пользователя
+- При **одном** сайте (или legacy `CMS_URL`) параметр `site` можно не передавать
+- Локальные `cms_local_build` / `cms_local_test` без `site`
+- Fan-out «залей на все» нет — каждый вызов на один хост
+- После смены `.env` перезапустите MCP в Cursor
+
+Пример: `cms_release({ summary: "…", changes: ["…"], site: "iia3uk" })`
+
 ## Module packages
 
 MCP tools: `cms_modules_list`, `cms_module_inspect`, `cms_module_install`, `cms_module_update`, `cms_module_enable`, `cms_module_disable`, `cms_module_health`, `cms_module_operations`, `cms_module_rollback`, `cms_module_release`.
@@ -98,8 +124,9 @@ Dangerous ops require `confirm: true`. Build locally: `cms_module_release({ modu
 
 **Предпочтительно одним вызовом:**
 ```
-cms_release({ summary: "…", changes: ["…"] })
+cms_release({ summary: "…", changes: ["…"], site: "jasefly" })
 ```
+(`site` обязателен, если в `.env` настроено больше одного сайта.)
 
 Отдельно перепроверить прод: `cms_verify_alive`.
 

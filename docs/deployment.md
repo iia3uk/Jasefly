@@ -8,7 +8,7 @@ Explain how code is packaged and shipped to shared hosting.
 
 Production runtime is PHP + MySQL; Node is not required on the host. Packaging: `scripts/build-hosting.js` builds the frontend, copies backend into `release/hosting-package`, writes root `index.php` / `.htaccess`, and zips install (`--mode=full`) or update (`--mode=update`).
 
-Operator path for this repo: MCP server `mcp-cms` tool **`cms_release(summary, changes)`** — one call for the full gate.
+Operator path for this repo: MCP server `mcp-cms` tool **`cms_release(summary, changes, site?)`** — one call for the full gate. With multiple hosts in `CMS_SITES`, pass **`site`** (id/alias/domain); list via **`cms_sites`**.
 
 Secrets stay in `mcp-cms/.env` and `backend/config` (never in `mcp.json` or git).
 

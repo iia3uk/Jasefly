@@ -1274,10 +1274,22 @@ html.cms-snap-paging .cms-snap-enter-down {
   font-variant-ligatures: none;
 }
 .fw-feature-card {
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.fw-feature-card--static {
+  cursor: default;
+}
+.fw-feature-card--static:hover {
+  border-color: color-mix(in srgb, var(--fw-tone, var(--primary)) 35%, transparent);
+  box-shadow: 0 0 44px -20px var(--fw-tone, var(--primary));
+}
+.fw-feature-card--link {
   transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
-.fw-feature-card:hover {
+.fw-feature-card--link:hover {
   transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+  box-shadow: 0 16px 40px -28px var(--primary);
 }
 .fw-feature-bar {
   position: absolute;
@@ -1305,6 +1317,9 @@ html.cms-snap-paging .cms-snap-enter-down {
   border-color: color-mix(in srgb, var(--fw-tone, var(--accent)) 35%, transparent);
   background: color-mix(in srgb, var(--fw-tone, var(--accent)) 12%, transparent);
 }
+.fw-features-accent .fw-feature-card--static:hover {
+  box-shadow: 0 0 52px -16px var(--fw-tone, var(--primary));
+}
 @media (prefers-reduced-motion: reduce) {
   .fw-arch-card,
   .fw-roadmap-col,
@@ -1313,7 +1328,24 @@ html.cms-snap-paging .cms-snap-enter-down {
   }
   .fw-arch-card:hover,
   .fw-roadmap-col:hover,
-  .fw-feature-card:hover {
+  .fw-feature-card--link:hover {
     transform: none !important;
   }
+  .pd-path-draw {
+    animation: none !important;
+  }
+}
+
+/* process-diagram: draw connectors (desktop) */
+.pd-path-draw {
+  stroke-dasharray: 420;
+  stroke-dashoffset: 420;
+  animation: pd-draw 1.1s ease forwards;
+}
+@keyframes pd-draw {
+  to { stroke-dashoffset: 0; }
+}
+.stats-strip--lg p.font-heading {
+  font-size: clamp(2rem, 4vw, 3.75rem);
+  letter-spacing: -0.04em;
 }

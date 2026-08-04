@@ -7,111 +7,131 @@
   "layout": {
     "version": 1,
     "meta": {
-      "product": "jasefly-official"
+      "product": "jasefly-official",
+      "useOnSite": true
     },
     "elements": [
       {
-        "id": "s_4f",
+        "id": "sec_contact_map",
         "elType": "section",
         "settings": {
           "paddingY": "3.5rem",
+          "gap": "2.5rem",
+          "columns": 2,
+          "content_max_width": "1120px"
+        },
+        "elements": [
+          {
+            "id": "col_contact_map",
+            "elType": "column",
+            "settings": {
+              "width": 55
+            },
+            "elements": [
+              {
+                "id": "w_contact_map",
+                "elType": "widget",
+                "widgetType": "maps.map",
+                "settings": {
+                  "title": "",
+                  "address": "г. Москва, Красная площадь, 1",
+                  "center_lat": 55.7539,
+                  "center_lng": 37.6208,
+                  "zoom": 16,
+                  "marker_title": "Офис",
+                  "marker_description": "г. Москва, Красная площадь, 1",
+                  "height": 440,
+                  "interactive": true,
+                  "scroll_wheel_zoom": false,
+                  "show_directions": false,
+                  "fit_bounds": false,
+                  "provider": "yandex",
+                  "map_style": "default"
+                },
+                "elements": []
+              }
+            ]
+          },
+          {
+            "id": "col_contact_info",
+            "elType": "column",
+            "settings": {
+              "width": 45
+            },
+            "elements": [
+              {
+                "id": "w_contact_title",
+                "elType": "widget",
+                "widgetType": "heading",
+                "settings": {
+                  "text": "Контакты",
+                  "tag": "h1",
+                  "size": "xl",
+                  "align": "left",
+                  "styles": {
+                    "margin": "0 0 0.5rem"
+                  }
+                },
+                "elements": []
+              },
+              {
+                "id": "w_contact_accent",
+                "elType": "widget",
+                "widgetType": "spacer",
+                "settings": {
+                  "height": "4px",
+                  "styles": {
+                    "backgroundColor": "#3cb54a",
+                    "width": "3rem",
+                    "borderRadius": "2px",
+                    "margin": "0 0 1.5rem"
+                  }
+                },
+                "elements": []
+              },
+              {
+                "id": "w_contact_details",
+                "elType": "widget",
+                "widgetType": "text",
+                "settings": {
+                  "html": "<p><strong>Ваша компания</strong></p><p>Тел.: <a href=\"tel:+79990000000\">+7 (999) 000-00-00</a></p><p>г. Москва, Красная площадь, 1<br><a href=\"https://yandex.ru/maps/?rtext=~55.7539,37.6208\" target=\"_blank\" rel=\"noopener noreferrer\">Построить маршрут в Яндекс Навигаторе</a><br><a href=\"https://www.google.com/maps/dir/?api=1&amp;destination=55.7539,37.6208\" target=\"_blank\" rel=\"noopener noreferrer\">Построить маршрут в Google картах</a></p><p>Понедельник - Суббота: с 09:00 до 20:00<br>Воскресенье: с 10:00 до 18:00</p><p>Email: <a href=\"mailto:info@example.com\">info@example.com</a></p><p><em>Будем рады, если Вы станете нашими клиентами!</em></p>",
+                  "align": "left",
+                  "styles": {
+                    "fontSize": "1rem",
+                    "lineHeight": "1.75"
+                  }
+                },
+                "elements": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "sec_contact_form",
+        "elType": "section",
+        "settings": {
+          "paddingY": "2.5rem",
           "gap": "1.5rem",
           "columns": 1
         },
         "elements": [
           {
-            "id": "c_4e",
+            "id": "col_contact_form",
             "elType": "column",
             "settings": {
               "width": 100
             },
             "elements": [
               {
-                "id": "w_4a",
-                "elType": "widget",
-                "widgetType": "heading",
-                "settings": {
-                  "text": "Контакты",
-                  "tag": "h1",
-                  "size": "2xl",
-                  "align": "left"
-                }
-              },
-              {
-                "id": "w_4b",
-                "elType": "widget",
-                "widgetType": "text",
-                "settings": {
-                  "html": "<p>Если хотите обсудить Jasefly CMS, предложить улучшение, сообщить об ошибке, идее модуля или возможном сотрудничестве — напишите через форму. Публичный email и соцсети появятся здесь, когда будут официально опубликованы.</p>",
-                  "align": "left"
-                }
-              },
-              {
-                "id": "w_4c",
-                "elType": "widget",
-                "widgetType": "features-grid",
-                "settings": {
-                  "title": "О чём можно написать",
-                  "subtitle": "",
-                  "columns": 2,
-                  "items": [
-                    {
-                      "icon": "message",
-                      "title": "Вопросы о CMS",
-                      "body": "Как устроены модули, MCP, деплой и shared-хостинг."
-                    },
-                    {
-                      "icon": "code",
-                      "title": "Разработка",
-                      "body": "Предложения по доработке и интеграции."
-                    },
-                    {
-                      "icon": "bug",
-                      "title": "Ошибки",
-                      "body": "Баги публичного сайта или сценариев установки/обновления."
-                    },
-                    {
-                      "icon": "puzzle",
-                      "title": "Модули",
-                      "body": "Идеи дополнительных модулей и виджетов."
-                    },
-                    {
-                      "icon": "handshake",
-                      "title": "Сотрудничество",
-                      "body": "Совместные проекты без обещаний SLA и выдуманных контактов."
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "w_4d",
+                "id": "w_contact_form",
                 "elType": "widget",
                 "widgetType": "contact-form",
                 "settings": {
-                  "title": "Форма сообщения",
-                  "subtitle": "Опишите задачу или вопрос."
-                }
-              },
-              {
-                "id": "w_4e_map",
-                "elType": "widget",
-                "widgetType": "maps.map",
-                "settings": {
-                  "title": "На карте",
-                  "address": "Красная площадь, Москва",
-                  "center_lat": 55.7539,
-                  "center_lng": 37.6208,
-                  "zoom": 16,
-                  "marker_title": "Красная площадь",
-                  "marker_description": "Москва, Красная площадь — пример точки модуля Maps",
-                  "height": 380,
-                  "interactive": true,
-                  "scroll_wheel_zoom": false,
-                  "show_directions": true,
-                  "fit_bounds": false,
-                  "provider": "yandex",
-                  "map_style": "default"
-                }
+                  "title": "Написать нам",
+                  "subtitle": "Опишите задачу или вопрос - ответим в рабочие дни."
+                },
+                "elements": []
               }
             ]
           }

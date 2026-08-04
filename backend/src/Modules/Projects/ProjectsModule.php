@@ -133,6 +133,9 @@ final class ProjectsModule extends AbstractModule
                             ['value' => 'cancelled', 'label' => 'Cancelled'],
                         ]],
                     'is_featured' => ['type' => 'bool', 'widget' => 'toggle', 'default' => false, 'label' => 'Featured'],
+                    'featured_priority' => ['type' => 'int', 'widget' => 'number', 'default' => 0, 'label' => 'Featured priority (showcase lead)'],
+                    'cover_portrait_media_id' => ['type' => 'int', 'widget' => 'media', 'nullable' => true, 'label' => 'Cover portrait (showcase lead)'],
+                    'cover_landscape_media_id' => ['type' => 'int', 'widget' => 'media', 'nullable' => true, 'label' => 'Cover landscape (mobile / secondary)'],
                     'sort_order' => ['type' => 'int', 'widget' => 'number', 'default' => 0, 'label' => 'Sort order'],
                     'role' => ['type' => 'string', 'widget' => 'text', 'label' => 'Role'],
                     'github_url' => ['type' => 'string', 'widget' => 'url', 'label' => 'GitHub URL'],
@@ -142,6 +145,7 @@ final class ProjectsModule extends AbstractModule
                 'indexes' => [
                     ['name' => 'idx_projects_status', 'columns' => ['status'], 'type' => 'index'],
                     ['name' => 'idx_projects_featured', 'columns' => ['is_featured'], 'type' => 'index'],
+                    ['name' => 'idx_projects_featured_priority', 'columns' => ['featured_priority'], 'type' => 'index'],
                 ],
                 'permissions' => ['content.view', 'content.edit', 'content.delete'],
             ],

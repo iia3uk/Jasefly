@@ -18,7 +18,6 @@ import { sanitizeEmbed } from '@/shared/sanitize'
 import {
   useBlog,
   useContactInfo,
-  useEducation,
   useExperience,
   usePage,
   usePost,
@@ -29,7 +28,6 @@ import {
   useServices,
   useSite,
   useSkills,
-  useStatistics,
   useTestimonials,
 } from '@/hooks/useApi'
 import { ProductEntityProvider } from '@/builder/context/ProductEntityContext'
@@ -41,14 +39,15 @@ import type { HomepageSection } from '@/types'
 import { SkillsBlock } from '@/shared/SkillsBlock'
 import {
   BlogPostView,
-  ExperienceItemView,
   HeroView,
   ProfileHeroView,
   ProjectDetailView,
   ServiceCardView,
-  formatRange,
   profilePortrait,
 } from '@/shared/views'
+import { JourneyTimelineView } from '@/builder/widgets/journey'
+import { ABOUT_EDUCATION, ABOUT_EXPERIENCE } from '@/shared/aboutJourneyContent'
+import { LivePortfolioStatsStrip } from '@/shared/StatsStrip'
 import { LayoutRenderer } from '@/builder/render/LayoutRenderer'
 import { initBuilderWidgets } from '@/builder/widgets'
 import { siteHasPlugin } from '@/core/pluginGates'
@@ -70,22 +69,6 @@ const Reveal = ({ children, className = '' }: { children: React.ReactNode; class
 
 function sectionMap(sections: HomepageSection[] = []) {
   return Object.fromEntries(sections.map((s) => [s.section_key, s])) as Record<string, HomepageSection>
-}
-
-function StatsStrip({ items }: { items: Array<{ id?: string | number; value?: string | number | null; suffix?: string | null; label?: string | null }> }) {
-  if (!items.length) return null
-  return (
-    <div className="grid grid-cols-2 gap-4 border-y border-white/[0.08] py-6 sm:gap-8 sm:py-10 lg:grid-cols-4">
-      {items.map((stat) => (
-        <div key={String(stat.id)} className="min-w-0">
-          <p className="break-words font-heading text-2xl font-semibold tracking-[-0.04em] tabular-nums sm:text-3xl lg:text-4xl">
-            {stat.value}{stat.suffix}
-          </p>
-          <p className="mt-2 text-xs text-[var(--muted)] sm:text-sm">{stat.label}</p>
-        </div>
-      ))}
-    </div>
-  )
 }
 
 function PageIntro({
@@ -110,10 +93,7 @@ function PageIntro({
 
 export function AboutPage() {
   const profile = useProfile()
-  const xp = useExperience()
-  const education = useEducation()
   const skills = useSkills()
-  const stats = useStatistics()
   const p = profile.data
 
   return (
@@ -124,28 +104,21 @@ export function AboutPage() {
         <Section className="pt-10"><Container><Skeleton className="h-64" /></Container></Section>
       )}
 
-      {!!stats.data?.length && (
-        <Section className="!py-10 sm:!py-14">
-          <Container>
-            <StatsStrip items={stats.data} />
-          </Container>
-        </Section>
-      )}
+      <Section className="!py-10 sm:!py-14">
+        <Container>
+          <LivePortfolioStatsStrip />
+        </Container>
+      </Section>
 
-      {!!xp.data?.length && (
-        <Section>
-          <Container>
-            <SectionHeading title="Опыт" subtitle="Где и чем занимался end-to-end." />
-            <div className="mt-2">
-              {xp.data.map((item) => (
-                <Reveal key={String(item.id)}>
-                  <ExperienceItemView item={item} />
-                </Reveal>
-              ))}
-            </div>
-          </Container>
-        </Section>
-      )}
+      <Section>
+        <Container>
+          <JourneyTimelineView
+            title={ABOUT_EXPERIENCE.title}
+            subtitle={ABOUT_EXPERIENCE.subtitle}
+            items={ABOUT_EXPERIENCE.path_items}
+          />
+        </Container>
+      </Section>
 
       {!!skills.data?.length && (
         <Section>
@@ -156,32 +129,14 @@ export function AboutPage() {
         </Section>
       )}
 
-      {!!education.data?.length && (
-        <Section>
-          <Container>
-            <SectionHeading title="Образование и путь" />
-            <div className="mt-2 divide-y divide-white/[0.06] border-t border-white/[0.08]">
-              {education.data.map((item) => (
-                <article key={String(item.id)} className="grid gap-3 py-8 md:grid-cols-[7.5rem_1fr] md:gap-10">
-                  <p className="text-sm tabular-nums text-[var(--muted)]">
-                    {formatRange(item.start_date, item.end_date)}
-                  </p>
-                  <div>
-                    <h3 className="font-heading text-xl font-semibold">{item.degree}</h3>
-                    <p className="mt-1 text-sm text-[var(--muted)]">
-                      {item.institution}
-                      {item.field_of_study ? ` · ${item.field_of_study}` : ''}
-                    </p>
-                    {item.description && (
-                      <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">{item.description}</p>
-                    )}
-                  </div>
-                </article>
-              ))}
-            </div>
-          </Container>
-        </Section>
-      )}
+      <Section className="!py-10 sm:!py-12">
+        <Container>
+          <JourneyTimelineView
+            title={ABOUT_EDUCATION.title}
+            items={ABOUT_EDUCATION.path_items}
+          />
+        </Container>
+      </Section>
     </>
   )
 }
@@ -211,7 +166,6 @@ export function HomePage() {
   const skills = useSkills()
   const experience = useExperience()
   const blog = useBlog()
-  const stats = useStatistics()
   const profile = useProfile()
 
   const sections = sectionMap(site?.homepage_sections)
@@ -288,7 +242,9 @@ export function HomePage() {
                       ) : null
                     }
                   />
-                  {!!stats.data?.length && <StatsStrip items={stats.data} />}
+                  <div className="mt-8">
+                    <LivePortfolioStatsStrip className="grid grid-cols-2 gap-6 border-y border-white/[0.08] py-8 sm:gap-8 lg:grid-cols-4" />
+                  </div>
                 </div>
               </div>
             </Reveal>

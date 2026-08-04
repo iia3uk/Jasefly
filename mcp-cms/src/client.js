@@ -1,10 +1,18 @@
 /**
  * Jasefly CMS HTTP client — JWT or long-lived MCP token.
  * All remote calls go through HostingGuard (throttle + GET cache).
+ * Multi-site: clientForSite(query) → per-site CmsClient + HostingGuard.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { guardFromEnv, HostingGuard } from './throttle.js';
+import {
+  apiBaseFromSiteUrl,
+  listSitesPublic,
+  loadSites,
+  resolveSite,
+  siteCount,
+} from './sites.js';
 
 export class CmsClient {
   /**
@@ -273,31 +281,88 @@ export class CmsClient {
   }
 }
 
-/** @type {CmsClient | null} */
-let sharedClient = null;
+/** @type {Map<string, CmsClient>} */
+const clientsById = new Map();
 
-/** @returns {CmsClient} */
-export function clientFromEnv() {
-  if (sharedClient) return sharedClient;
-
-  const site = (process.env.CMS_URL || process.env.CMS_BASE_URL || '').replace(/\/$/, '');
-  if (!site) {
-    throw new Error('CMS_URL не задан в mcp-cms/.env (например https://example.com)');
-  }
-  const baseUrl = site.includes('/api/')
-    ? site.replace(/\/$/, '')
-    : `${site}/api/v1`;
-
-  sharedClient = new CmsClient({
-    baseUrl,
-    mcpToken: process.env.CMS_MCP_TOKEN || process.env.MCP_API_TOKEN || '',
-    email: process.env.CMS_EMAIL || '',
-    password: process.env.CMS_PASSWORD || '',
-    totpCode: process.env.CMS_TOTP_CODE || '',
+/**
+ * @param {import('./sites.js').SiteConfig} cfg
+ * @returns {CmsClient}
+ */
+function buildClient(cfg) {
+  return new CmsClient({
+    baseUrl: apiBaseFromSiteUrl(cfg.url),
+    mcpToken: cfg.token,
+    email: cfg.email,
+    password: cfg.password,
+    totpCode: cfg.totpCode,
+    // Fresh guard per site so throttle/cache do not mix across hosts
     guard: guardFromEnv(),
   });
-  return sharedClient;
 }
+
+/**
+ * Resolve site (id / alias / domain) and return cached CmsClient.
+ * Omit query only when exactly one site is configured (legacy compat).
+ * @param {string | undefined | null} [query]
+ * @returns {CmsClient}
+ */
+export function clientForSite(query) {
+  const cfg = resolveSite(query);
+  const cached = clientsById.get(cfg.id);
+  if (cached) return cached;
+  const client = buildClient(cfg);
+  /** @type {string | undefined} */
+  client.siteId = cfg.id;
+  /** @type {string | undefined} */
+  client.siteHost = cfg.host;
+  clientsById.set(cfg.id, client);
+  return client;
+}
+
+/**
+ * Legacy helper: same as clientForSite() with no query (single-site only).
+ * @returns {CmsClient}
+ */
+export function clientFromEnv() {
+  return clientForSite(undefined);
+}
+
+/** @returns {{ sites: ReturnType<typeof listSitesPublic>, count: number }} */
+export function sitesOverview() {
+  return { count: siteCount(), sites: listSitesPublic() };
+}
+
+/**
+ * Hosting guard status for one site or all registered sites (no extra HTTP).
+ * @param {string | undefined | null} [query]
+ */
+export function hostingGuardStatus(query) {
+  const q = query != null && String(query).trim() !== '' ? String(query) : '';
+  if (q || siteCount() === 1) {
+    const cms = clientForSite(q || undefined);
+    return {
+      site: cms.siteId || resolveSite(q || undefined).id,
+      host: cms.siteHost || null,
+      ...cms.guard.status(),
+    };
+  }
+  // Multi: status for each site (creates clients lazily for accurate cache stats)
+  const sites = loadSites();
+  return {
+    multi: true,
+    hint: 'Передайте site для одного хоста. Список: cms_sites.',
+    sites: sites.map((s) => {
+      const cms = clientForSite(s.id);
+      return {
+        site: s.id,
+        host: s.host,
+        ...cms.guard.status(),
+      };
+    }),
+  };
+}
+
+export { listSitesPublic, siteCount, resolveSite, loadSites };
 
 export const RESOURCES = [
   'pages',

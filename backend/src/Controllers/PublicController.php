@@ -624,7 +624,12 @@ final class PublicController
 
     private function enrichProject(array $project, bool $full = true): array
     {
-        $project = $this->hydrateMedia($project, ['cover_media_id', 'og_image_id']);
+        $project = $this->hydrateMedia($project, [
+            'cover_media_id',
+            'cover_portrait_media_id',
+            'cover_landscape_media_id',
+            'og_image_id',
+        ]);
         $id = (int) $project['id'];
         $project['technologies'] = $this->db->all(
             'SELECT * FROM project_technologies WHERE project_id=? ORDER BY sort_order, id',
@@ -739,7 +744,7 @@ final class PublicController
             $id = $row[$key] ?? null;
             if ($id !== null && $id !== '' && (int) $id > 0) {
                 $row[$mediaKey] = $this->db->one(
-                    "SELECT id, path, thumbnail_path, webp_path, alt_text, mime_type FROM media WHERE id=? AND {$mediaAlive}",
+                    "SELECT id, path, thumbnail_path, webp_path, alt_text, mime_type, width, height FROM media WHERE id=? AND {$mediaAlive}",
                     [(int) $id]
                 );
             } else {

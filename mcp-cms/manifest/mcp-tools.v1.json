@@ -47,6 +47,7 @@
     "cms_site_diagnostics",
     "cms_site_last_error",
     "cms_site_map",
+    "cms_sites",
     "cms_status",
     "cms_update",
     "cms_upload_media",

@@ -250,7 +250,6 @@ function ColumnNode({
   const selected = selectedId === el.id
   const hidden = isBuilderHidden(el)
   const fx = readSectionFx(el.settings)
-  const width = Number(el.settings?.width || 100)
   const styleCss = stylesToCss(readStyles(el.settings))
 
   const onDragOver = (e: React.DragEvent) => {
@@ -274,13 +273,12 @@ function ColumnNode({
       className={clsx(
         'builder-column relative min-w-0 w-full scroll-mt-6',
         sectionResponsiveClass(fx),
-        // На мобиле колонки секции в столбец — иначе 50%/33% сжимают текст
-        width < 100 && 'max-md:!max-w-full max-md:!basis-full max-md:!flex-none',
         editMode && 'rounded-lg border border-dashed border-white/10 p-1.5 transition-[border-color,box-shadow] duration-200',
         selected && 'builder-column--selected',
         hidden && editMode && 'opacity-45',
       )}
-      style={{ flex: `1 1 ${width}%`, maxWidth: editMode ? undefined : `${width}%`, ...styleCss }}
+      // Grid parent owns column widths (fr); avoid flex % + gap wrap that stacked map above contacts.
+      style={{ minWidth: 0, ...styleCss }}
       onClick={(e) => {
         if (!editMode) return
         e.stopPropagation()
@@ -348,13 +346,15 @@ function SectionNode({
   const defaultPad = pageSnap !== 'none' ? 'clamp(2.5rem, 5vh, 4rem)' : '3rem'
   const tint = el.settings?.background ? String(el.settings.background) : ''
   const cols = visibleChildren(el.elements, editMode)
-  // Background hero must fill the device frame — skip Container like full_bleed.
+  // Full-screen heroes must fill the device frame — skip Container + section padding.
   const hasBgHero = cols.some((col) =>
-    (col.elements ?? []).some(
-      (w) =>
+    (col.elements ?? []).some((w) => {
+      if (w.widgetType === 'hero') return true
+      return (
         w.widgetType === 'hero-block'
-        && String(w.settings?.media_mode || 'background') === 'background',
-    ),
+        && String(w.settings?.media_mode || 'background') === 'background'
+      )
+    }),
   )
   const fullBleed = fx.fullBleed || hasBgHero
   const style: CSSProperties = {
@@ -367,13 +367,19 @@ function SectionNode({
     ...styleCss,
   }
   const gap = String(el.settings?.gap || (pageSnap !== 'none' ? '1.75rem' : '1.5rem'))
+  const colTemplate = cols
+    .map((col) => `${Math.max(1, Number(col.settings?.width || 100))}fr`)
+    .join(' ')
 
   const contentStyle: CSSProperties | undefined = fx.contentMaxWidth && !hasBgHero
     ? { maxWidth: fx.contentMaxWidth, marginLeft: 'auto', marginRight: 'auto', width: '100%' }
     : undefined
 
   const inner = (
-    <div className="relative z-10 flex w-full flex-wrap" style={{ gap, ...contentStyle }}>
+    <div
+      className="relative z-10 grid w-full max-md:!grid-cols-1"
+      style={{ gap, gridTemplateColumns: colTemplate || '1fr', ...contentStyle }}
+    >
       {cols.map((col) => (
         <ColumnNode
           key={col.id}

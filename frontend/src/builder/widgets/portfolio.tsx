@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Container, MediaImage, RichText, Section, SectionHeading, SurfacePanel } from '@/components/ui'
+import { MediaImage, RichText, SectionHeading, SurfacePanel } from '@/components/ui'
 import {
   useBlog,
   useContactInfo,
@@ -9,12 +9,13 @@ import {
   useProjects,
   useServices,
   useSkills,
-  useStatistics,
   useTestimonials,
 } from '@/hooks/useApi'
-import { profilePortrait } from '@/shared/views'
+import { profilePortrait, ProfileHeroView } from '@/shared/views'
 import { SkillsBlock } from '@/shared/SkillsBlock'
+import { LivePortfolioStatsStrip } from '@/shared/StatsStrip'
 import { ProjectCard } from '@/modules/projects/components/ProjectCard'
+import { ProjectLeadStack } from '@/modules/projects/components/ProjectShowcase'
 import { registerWidget } from '@/builder/registry'
 import type { SettingsField } from '@/builder/types'
 import { EditableButton, EditableText } from '@/builder/edit/Editable'
@@ -81,8 +82,14 @@ function HeroWidget({ settings, editMode }: { settings: Record<string, unknown>;
   const hasBg = !!bgMedia
   const bgFieldCss = stylesToCss(readFieldStyles(settings, 'background_media_id'))
 
+  const viewportMin =
+    'var(--cms-hero-vh, var(--cms-snap-vh, calc(100dvh - var(--admin-bar-h, 0px))))'
+
   return (
-    <Section className="relative flex min-h-[min(72vh,36rem)] items-center overflow-hidden !py-0 sm:min-h-[min(84vh,52rem)]" style={styles}>
+    <div
+      className="cms-hero-bleed relative flex w-full items-center overflow-hidden"
+      style={{ ...styles, minHeight: editMode ? 'min(36rem, 92cqi)' : viewportMin }}
+    >
       {hasBg && (
         <MediaImage
           media={bgMedia as never}
@@ -103,7 +110,12 @@ function HeroWidget({ settings, editMode }: { settings: Record<string, unknown>;
         }}
         aria-hidden
       />
-      <Container className={clsx('relative flex w-full flex-col py-10 sm:py-12 lg:py-14', items)}>
+      <div
+        className={clsx(
+          'cms-hero-inner relative z-10 mx-auto flex w-full max-w-[var(--container,72rem)] flex-col px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-20',
+          items,
+        )}
+      >
         {(badge || editMode) && (
           <EditableText
             field="badge_text"
@@ -132,6 +144,11 @@ function HeroWidget({ settings, editMode }: { settings: Record<string, unknown>;
             placeholder="Подзаголовок"
           />
         )}
+        {settings.show_stats ? (
+          <div className={clsx('mt-8 w-full max-w-3xl', align === 'center' && 'mx-auto')}>
+            <LivePortfolioStatsStrip className="grid grid-cols-2 gap-4 border-y border-white/[0.08] py-5 sm:gap-6 sm:py-6 lg:grid-cols-4" />
+          </div>
+        ) : null}
         <div className={clsx('mt-8 flex w-full flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:gap-4', justify)}>
           {(primaryLabel || editMode) && (
             <EditableButton
@@ -153,26 +170,40 @@ function HeroWidget({ settings, editMode }: { settings: Record<string, unknown>;
             />
           )}
         </div>
-      </Container>
-    </Section>
+      </div>
+    </div>
   )
 }
 
 /** Content-only: LayoutRenderer already provides section + site Container. */
 function ProjectsGridWidget({ settings }: { settings: Record<string, unknown> }) {
   const featuredOnly = Boolean(settings.featured_only)
+  const compact = Boolean(settings.compact)
+  const layout = String(settings.layout || 'grid')
+  const primarySlug = String(settings.primary_slug || '').trim()
   const featured = useProjects(true)
   const all = useProjects(false)
   const limit = Number(settings.limit || 6)
-  const list = (featuredOnly && featured.data?.length ? featured.data : all.data)?.slice(0, limit) ?? []
+  const source = (featuredOnly && featured.data?.length ? featured.data : all.data) ?? []
   return (
     <>
       {(settings.title || settings.subtitle) ? (
         <SectionHeading title={String(settings.title || 'Проекты')} subtitle={settings.subtitle ? String(settings.subtitle) : undefined} />
       ) : null}
-      <div className="grid gap-x-6 gap-y-10 sm:gap-x-8 sm:gap-y-12 md:grid-cols-2">
-        {list.map((p) => <ProjectCard key={String(p.id)} project={p} />)}
-      </div>
+      {layout === 'lead-with-stack' ? (
+        <ProjectLeadStack
+          projects={source}
+          primarySlug={primarySlug || undefined}
+          limit={Math.min(3, Math.max(1, limit))}
+        />
+      ) : (
+        <div className={clsx(
+          'grid gap-x-6 gap-y-10 sm:gap-x-8 sm:gap-y-12',
+          compact ? 'sm:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2',
+        )}>
+          {source.slice(0, limit).map((p) => <ProjectCard key={String(p.id)} project={p} compact={compact} />)}
+        </div>
+      )}
     </>
   )
 }
@@ -224,22 +255,37 @@ function ExperienceWidget({ settings }: { settings: Record<string, unknown> }) {
 
 function ServicesWidget({ settings }: { settings: Record<string, unknown> }) {
   const { data } = useServices()
+  const spectrum = String(settings.preset || settings.variant || '') === 'spectrum'
   return (
     <>
       {(settings.title || settings.subtitle) ? (
         <SectionHeading title={String(settings.title || 'Услуги')} subtitle={settings.subtitle ? String(settings.subtitle) : undefined} />
       ) : null}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {data?.map((service, i) => (
-          <SurfacePanel key={String(service.id)} className="p-5 sm:p-7">
-            <span className="font-heading text-[0.65rem] tracking-[0.18em] text-[var(--muted)]">
-              {String(i + 1).padStart(2, '0')}
-            </span>
-            <h3 className="mt-3 font-heading text-xl font-semibold">{service.title}</h3>
-            <p className="mt-3 text-sm text-[var(--muted)]">{service.short_description}</p>
-          </SurfacePanel>
-        ))}
-      </div>
+      {spectrum ? (
+        <div className="flex flex-wrap gap-2.5 sm:gap-3">
+          {data?.map((service) => (
+            <div
+              key={String(service.id)}
+              className="min-w-0 max-w-full rounded-full border border-white/[0.1] bg-white/[0.03] px-4 py-2.5 sm:px-5"
+              title={String(service.short_description || '')}
+            >
+              <span className="text-sm font-medium tracking-[-0.01em]">{service.title}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {data?.map((service, i) => (
+            <SurfacePanel key={String(service.id)} className="p-5 sm:p-7">
+              <span className="font-heading text-[0.65rem] tracking-[0.18em] text-[var(--muted)]">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <h3 className="mt-3 font-heading text-xl font-semibold">{service.title}</h3>
+              <p className="mt-3 text-sm text-[var(--muted)]">{service.short_description}</p>
+            </SurfacePanel>
+          ))}
+        </div>
+      )}
     </>
   )
 }
@@ -251,16 +297,21 @@ function TestimonialsWidget({ settings }: { settings: Record<string, unknown> })
       {(settings.title || settings.subtitle) ? (
         <SectionHeading title={String(settings.title || 'Отзывы')} subtitle={settings.subtitle ? String(settings.subtitle) : undefined} />
       ) : null}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 md:gap-8">
         {data?.map((item) => (
-          <SurfacePanel key={String(item.id)} className="p-6 sm:p-8">
-            <p className="text-base leading-8 sm:text-lg">“{item.content}”</p>
-            <p className="mt-6 text-sm text-[var(--muted)]">
+          <blockquote
+            key={String(item.id)}
+            className="border-l-2 border-[color-mix(in_srgb,var(--primary)_55%,transparent)] pl-5 sm:pl-6"
+          >
+            <p className="font-heading text-lg leading-8 tracking-[-0.02em] sm:text-xl sm:leading-9">
+              “{item.content}”
+            </p>
+            <footer className="mt-5 text-sm text-[var(--muted)]">
               {item.author_name}
               {(item.author_role || item.author_company) &&
                 ` — ${[item.author_role, item.author_company].filter(Boolean).join(', ')}`}
-            </p>
-          </SurfacePanel>
+            </footer>
+          </blockquote>
         ))}
       </div>
     </>
@@ -335,9 +386,16 @@ function ContactFormWidget({ settings }: { settings: Record<string, unknown> }) 
   )
 }
 
+function ProfileHeroWidget() {
+  const { data: profile } = useProfile()
+  if (!profile) {
+    return <p className="text-sm text-[var(--muted)]">Профиль…</p>
+  }
+  return <ProfileHeroView profile={profile} bare />
+}
+
 function ProfileCardWidget({ settings }: { settings: Record<string, unknown> }) {
   const { data: profile } = useProfile()
-  const { data: stats } = useStatistics()
   // Text comes from layout settings (CMS about_preview is baked on open/save).
   const title = String(settings.title || 'Обо мне')
   const subtitle = String(settings.subtitle || '')
@@ -370,18 +428,9 @@ function ProfileCardWidget({ settings }: { settings: Record<string, unknown> }) 
             ) : null
           }
         />
-        {!!stats?.length && (
-          <div className="mt-8 grid grid-cols-2 gap-6 border-y border-white/[0.08] py-8 sm:gap-8 lg:grid-cols-4">
-            {stats.map((stat) => (
-              <div key={String(stat.id)} className="min-w-0">
-                <p className="font-heading text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">
-                  {stat.value}{stat.suffix}
-                </p>
-                <p className="mt-2 text-sm text-[var(--muted)]">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="mt-8">
+          <LivePortfolioStatsStrip className="grid grid-cols-2 gap-6 border-y border-white/[0.08] py-8 sm:gap-8 lg:grid-cols-4" />
+        </div>
       </div>
     </div>
   )
@@ -391,13 +440,19 @@ function CtaBannerWidget({ settings, editMode }: { settings: Record<string, unkn
   const label = String(settings.cta_label || '')
   const href = String(settings.cta_href || '/contact')
   return (
-    <SurfacePanel className="px-5 py-10 sm:px-10 sm:py-12">
+    <div
+      className="relative overflow-hidden rounded-[calc(var(--radius)+8px)] border border-[color-mix(in_srgb,var(--primary)_35%,transparent)] px-5 py-12 sm:px-12 sm:py-16"
+      style={{
+        background:
+          'radial-gradient(900px 320px at 12% 20%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 60%), radial-gradient(700px 280px at 90% 80%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 55%), color-mix(in srgb, var(--surface) 88%, var(--background))',
+      }}
+    >
       <EditableText
         field="title"
         label="Заголовок"
         value={String(settings.title || 'Готовы начать?')}
         as="h2"
-        className="max-w-2xl font-heading text-[1.75rem] font-semibold sm:text-3xl"
+        className="max-w-3xl font-heading text-[1.85rem] font-semibold tracking-[-0.03em] sm:text-4xl"
       />
       {(settings.subtitle || editMode) ? (
         <EditableText
@@ -406,12 +461,12 @@ function CtaBannerWidget({ settings, editMode }: { settings: Record<string, unkn
           value={String(settings.subtitle || '')}
           as="p"
           multiline
-          className="mt-4 max-w-xl text-[var(--muted)]"
+          className="mt-4 max-w-xl text-base text-[var(--muted)] sm:text-lg"
           placeholder="Подзаголовок"
         />
       ) : null}
       {(label || editMode) ? (
-        <div className="mt-8">
+        <div className="mt-8 sm:mt-10">
           <EditableButton
             labelField="cta_label"
             hrefField="cta_href"
@@ -421,7 +476,7 @@ function CtaBannerWidget({ settings, editMode }: { settings: Record<string, unkn
           />
         </div>
       ) : null}
-    </SurfacePanel>
+    </div>
   )
 }
 
@@ -440,6 +495,7 @@ export function registerPortfolioWidgets() {
       badge_text: '',
       headline: '',
       subheadline: '',
+      show_stats: false,
       primary_cta_label: '',
       primary_cta_href: '',
       secondary_cta_label: '',
@@ -450,6 +506,7 @@ export function registerPortfolioWidgets() {
       { key: 'badge_text', label: 'Бейдж', type: 'text' },
       { key: 'headline', label: 'Заголовок', type: 'text' },
       { key: 'subheadline', label: 'Подзаголовок', type: 'textarea' },
+      { key: 'show_stats', label: 'Показать статистику проектов', type: 'toggle' },
       { key: 'primary_cta_label', label: 'Кнопка 1 — текст', type: 'text' },
       { key: 'primary_cta_href', label: 'Кнопка 1 — ссылка', type: 'url' },
       { key: 'secondary_cta_label', label: 'Кнопка 2 — текст', type: 'text' },
@@ -464,8 +521,31 @@ export function registerPortfolioWidgets() {
     label: 'Сетка проектов',
     category: 'portfolio',
     plugin: 'portfolio',
-    defaultSettings: { title: 'Проекты', subtitle: '', limit: 6, featured_only: false },
-    settingsFields: [...titleFields, { key: 'limit', label: 'Лимит', type: 'number' }, { key: 'featured_only', label: 'Только избранные', type: 'toggle' }],
+    defaultSettings: {
+      title: 'Проекты',
+      subtitle: '',
+      limit: 6,
+      featured_only: false,
+      compact: false,
+      layout: 'grid',
+      primary_slug: '',
+    },
+    settingsFields: [
+      ...titleFields,
+      { key: 'limit', label: 'Лимит', type: 'number' },
+      { key: 'featured_only', label: 'Только избранные', type: 'toggle' },
+      {
+        key: 'layout',
+        label: 'Композиция',
+        type: 'select',
+        options: [
+          { value: 'grid', label: 'Сетка' },
+          { value: 'lead-with-stack', label: 'Lead + стек (showcase)' },
+        ],
+      },
+      { key: 'primary_slug', label: 'Slug основного проекта (опционально)', type: 'text' },
+      { key: 'compact', label: 'Компактные карточки (только для сетки)', type: 'toggle' },
+    ],
     Render: ProjectsGridWidget,
   })
 
@@ -524,8 +604,19 @@ export function registerPortfolioWidgets() {
     label: 'Услуги',
     category: 'portfolio',
     plugin: 'portfolio',
-    defaultSettings: { title: 'Услуги', subtitle: '' },
-    settingsFields: titleFields,
+    defaultSettings: { title: 'Услуги', subtitle: '', preset: 'cards' },
+    settingsFields: [
+      ...titleFields,
+      {
+        key: 'preset',
+        label: 'Вид',
+        type: 'select',
+        options: [
+          { value: 'cards', label: 'Карточки' },
+          { value: 'spectrum', label: 'Компактный спектр' },
+        ],
+      },
+    ],
     Render: ServicesWidget,
   })
 
@@ -557,6 +648,16 @@ export function registerPortfolioWidgets() {
     defaultSettings: { title: 'Связаться', subtitle: '' },
     settingsFields: titleFields,
     Render: ContactFormWidget,
+  })
+
+  registerWidget({
+    type: 'profile-hero',
+    label: 'Профиль (hero)',
+    category: 'portfolio',
+    plugin: 'portfolio',
+    defaultSettings: {},
+    settingsFields: [],
+    Render: ProfileHeroWidget,
   })
 
   registerWidget({

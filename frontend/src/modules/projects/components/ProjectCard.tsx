@@ -3,10 +3,37 @@ import { ArrowUpRight } from 'lucide-react'
 import { MediaImage, SurfacePanel } from '@/shared/ui'
 import type { Project } from '@/modules/projects/types'
 import { projectStatusLabel, projectStatusTone } from '@/modules/projects/projectStatus'
+import { projectOneLine } from '@/shared/projectPortfolioFeed'
 
 /** Reusable project card — no page-specific fetch logic */
-export function ProjectCard({ project }: { project: Project }) {
+export function ProjectCard({ project, compact = false }: { project: Project; compact?: boolean }) {
   const statusLabel = projectStatusLabel(project.project_status)
+  const oneLine = projectOneLine(project, compact ? 96 : 160)
+
+  if (compact) {
+    return (
+      <Link to={`/projects/${project.slug}`} className="link-card group block min-w-0">
+        <SurfacePanel className="link-card-surface overflow-hidden">
+          <div className="relative aspect-[16/10] overflow-hidden bg-white/[0.03]">
+            <MediaImage
+              media={project.cover ?? project.cover_media_id}
+              alt={project.title}
+              className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]"
+            />
+          </div>
+        </SurfacePanel>
+        <div className="mt-4 min-w-0">
+          <h3 className="font-heading text-lg font-semibold tracking-[-0.03em] transition group-hover:text-[var(--accent)]">
+            {project.title}
+          </h3>
+          {oneLine ? (
+            <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--muted)]">{oneLine}</p>
+          ) : null}
+          <p className="mt-3 text-sm font-medium text-[var(--accent)]">Смотреть →</p>
+        </div>
+      </Link>
+    )
+  }
 
   return (
     <Link to={`/projects/${project.slug}`} className="link-card group block min-w-0">

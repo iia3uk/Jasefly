@@ -247,75 +247,86 @@ function StepsRowRender({ settings, editMode }: { settings: Record<string, unkno
   const insetRight = String(settings.line_inset_right || '8%')
   const lineTop = String(settings.line_top || '1.5rem')
 
-  return (
-    <div ref={ref} className="relative min-w-0" style={styles}>
-      {showLine ? (
-        <SelectablePart
-          field="connector"
-          label="Линия пайплайна"
-          className="absolute z-0 hidden lg:block"
-          style={{
-            left: insetLeft,
-            right: insetRight,
-            top: lineTop,
-            height: lineStyles.height || '1px',
-            backgroundColor: lineStyles.backgroundColor || 'rgba(255,255,255,0.1)',
-            ...lineStyles,
-          }}
-        />
-      ) : null}
+  const title = String(settings.title || '')
+  const subtitle = String(settings.subtitle || '')
 
-      {/* Mobile/tablet: stack or 2-col. Desktop: all steps in one row (was always N-col → squeezed on phones). */}
-      <div
-        className="relative z-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:gap-2 lg:[grid-template-columns:repeat(var(--steps-n),minmax(0,1fr))]"
-        style={{ ['--steps-n' as string]: String(stepCount) }}
-      >
-        {(items.length ? items : editMode ? [{ badge: '1', title: 'Шаг', text: 'Описание' }] : []).map((item, index) => {
-          const filled = index < active
-          const badgeClass = clsx(
-            'flex size-11 shrink-0 items-center justify-center rounded-full border text-sm font-semibold transition-colors duration-300 sm:size-12 lg:mx-auto lg:mb-5',
-            filled
-              ? 'border-[color:var(--primary)] bg-[color:var(--primary)] text-[color:var(--background)]'
-              : 'border-white/15 bg-[color:var(--background)] text-[color:var(--muted)]',
-          )
-          return (
-            <div key={index} className="relative z-10 flex min-w-0 gap-3.5 sm:gap-4 lg:block lg:text-center">
-              <StepFieldEdit
-                items={items}
-                index={index}
-                itemKey="badge"
-                label={`Шаг ${index + 1} · номер`}
-                value={String(item.badge || index + 1)}
-                as="span"
-                className={badgeClass}
-                placeholder={String(index + 1)}
-              />
-              <div className="min-w-0">
+  return (
+    <div ref={ref} className="min-w-0" style={styles}>
+      {(title || subtitle) ? (
+        <div className="mb-8 max-w-2xl">
+          {title ? <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">{title}</h2> : null}
+          {subtitle ? <p className="mt-2 text-[var(--muted)]">{subtitle}</p> : null}
+        </div>
+      ) : null}
+      <div className="relative min-w-0">
+        {showLine ? (
+          <SelectablePart
+            field="connector"
+            label="Линия пайплайна"
+            className="absolute z-0 hidden lg:block"
+            style={{
+              left: insetLeft,
+              right: insetRight,
+              top: lineTop,
+              height: lineStyles.height || '1px',
+              backgroundColor: lineStyles.backgroundColor || 'rgba(255,255,255,0.1)',
+              ...lineStyles,
+            }}
+          />
+        ) : null}
+
+        {/* Mobile/tablet: stack or 2-col. Desktop: all steps in one row (was always N-col → squeezed on phones). */}
+        <div
+          className="relative z-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:gap-2 lg:[grid-template-columns:repeat(var(--steps-n),minmax(0,1fr))]"
+          style={{ ['--steps-n' as string]: String(stepCount) }}
+        >
+          {(items.length ? items : editMode ? [{ badge: '1', title: 'Шаг', text: 'Описание' }] : []).map((item, index) => {
+            const filled = index < active
+            const badgeClass = clsx(
+              'flex size-11 shrink-0 items-center justify-center rounded-full border text-sm font-semibold transition-colors duration-300 sm:size-12 lg:mx-auto lg:mb-5',
+              filled
+                ? 'border-[color:var(--primary)] bg-[color:var(--primary)] text-[color:var(--background)]'
+                : 'border-white/15 bg-[color:var(--background)] text-[color:var(--muted)]',
+            )
+            return (
+              <div key={index} className="relative z-10 flex min-w-0 gap-3.5 sm:gap-4 lg:block lg:text-center">
                 <StepFieldEdit
                   items={items}
                   index={index}
-                  itemKey="title"
-                  label={`Шаг ${index + 1} · имя`}
-                  value={String(item.title || '')}
-                  as="h3"
-                  className="break-words font-semibold text-[color:var(--text)]"
-                  placeholder="Шаг"
+                  itemKey="badge"
+                  label={`Шаг ${index + 1} · номер`}
+                  value={String(item.badge || index + 1)}
+                  as="span"
+                  className={badgeClass}
+                  placeholder={String(index + 1)}
                 />
-                <StepFieldEdit
-                  items={items}
-                  index={index}
-                  itemKey="text"
-                  label={`Шаг ${index + 1} · текст`}
-                  value={String(item.text || '')}
-                  as="p"
-                  multiline
-                  className="mt-1 break-words text-sm leading-6 text-[color:var(--muted)]"
-                  placeholder="Описание"
-                />
+                <div className="min-w-0">
+                  <StepFieldEdit
+                    items={items}
+                    index={index}
+                    itemKey="title"
+                    label={`Шаг ${index + 1} · имя`}
+                    value={String(item.title || '')}
+                    as="h3"
+                    className="break-words font-semibold text-[color:var(--text)]"
+                    placeholder="Шаг"
+                  />
+                  <StepFieldEdit
+                    items={items}
+                    index={index}
+                    itemKey="text"
+                    label={`Шаг ${index + 1} · текст`}
+                    value={String(item.text || '')}
+                    as="p"
+                    multiline
+                    className="mt-1 break-words text-sm leading-6 text-[color:var(--muted)]"
+                    placeholder="Описание"
+                  />
+                </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
     </div>
   )
@@ -428,6 +439,8 @@ export function registerStructureWidgets() {
     label: 'Ряд шагов (пайплайн)',
     category: 'basic',
     defaultSettings: {
+      title: '',
+      subtitle: '',
       animate: true,
       show_line: true,
       line_inset_left: '8%',
@@ -436,6 +449,8 @@ export function registerStructureWidgets() {
       items: DEFAULT_STEPS,
     },
     settingsFields: fields(
+      { key: 'title', label: 'Заголовок секции', type: 'text' },
+      { key: 'subtitle', label: 'Подзаголовок', type: 'textarea' },
       { key: 'animate', label: 'Анимация заливки', type: 'toggle' },
       { key: 'show_line', label: 'Показывать линию', type: 'toggle' },
       { key: 'line_inset_left', label: 'Линия: отступ слева', type: 'text' },

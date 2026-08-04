@@ -3,9 +3,11 @@ import { registerStructureWidgets } from '@/builder/widgets/structure'
 import { registerBlockWidgets } from '@/builder/widgets/blocks'
 import { registerPanelWidgets } from '@/builder/widgets/panels'
 import { registerLandingWidgets } from '@/builder/widgets/landing'
+import { registerProcessDiagramWidgets } from '@/builder/widgets/processDiagram'
 import { registerFrameworkWidgets } from '@/builder/widgets/framework'
 import { registerFrameworkPulseWidgets } from '@/builder/widgets/frameworkPulse'
 import { registerPortfolioWidgets } from '@/builder/widgets/portfolio'
+import { registerJourneyWidgets } from '@/builder/widgets/journey'
 import { registerCommerceWidgets } from '@/builder/widgets/commerce'
 import { registerAuthWidgets } from '@/builder/widgets/auth'
 import { registerAccessWidgets } from '@/builder/widgets/access'
@@ -25,9 +27,11 @@ export function initBuilderWidgets() {
   registerBlockWidgets()
   registerPanelWidgets()
   registerLandingWidgets()
+  registerProcessDiagramWidgets()
   registerFrameworkWidgets()
   registerFrameworkPulseWidgets()
   registerPortfolioWidgets()
+  registerJourneyWidgets()
   registerCommerceWidgets()
   registerAuthWidgets()
   registerAccessWidgets()
