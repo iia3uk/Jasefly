@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Forms SDK Reference",
+  "slug": "forms-sdk-reference",
+  "version": "1.0.0",
+  "description": "Official Platform SDK certification reference — Forms Engine reimplemented via public SDK only.",
+  "author": {"name": "Jasefly CMS", "url": "https://jasefly.com"},
+  "license": "MIT",
+  "jasefly": {"min_version": "1.0.0", "api_version": 1, "sdk_version": 1},
+  "php": {"min_version": "8.1", "extensions": []},
+  "dependencies": {"required": {"system": ">=1.0.0"}, "optional": {}, "conflicts": {}},
+  "capabilities": {
+    "requires": ["http.client", "api.routes", "admin.pages", "permissions.check", "storage.files", "events.publish", "settings.module", "builder.widgets"],
+    "provides": ["forms-ref.engine"]
+  },
+  "entrypoints": {
+    "backend": "backend/FormsSdkReferenceModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json"
+  },
+  "migrations": {"path": "migrations", "namespace": "forms-sdk-reference", "uninstall_path": "migrations/uninstall"},
+  "permissions": [
+    "forms-ref.view", "forms-ref.manage",
+    "forms-ref.submissions.view", "forms-ref.submissions.manage", "forms-ref.export"
+  ],
+  "install": {"preserve_data_on_uninstall": true, "allow_downgrade": false},
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php",
+    "after_update": "hooks/PostUpdateHook.php"
+  }
+}

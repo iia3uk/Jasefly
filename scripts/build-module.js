@@ -24,9 +24,20 @@ if (!slug) {
   process.exit(1)
 }
 
-const src = path.join(root, 'modules-src', slug)
-if (!fs.existsSync(src)) {
-  console.error('Module source not found:', src)
+function resolveModuleSrc(name) {
+  for (const c of [
+    path.join(root, 'modules-src', name),
+    // CI/public reference packages when modules-src is gitignored
+    path.join(root, 'backend', 'tests', 'fixtures', 'modules', name),
+  ]) {
+    if (fs.existsSync(c)) return c
+  }
+  return null
+}
+
+const src = resolveModuleSrc(slug)
+if (!src) {
+  console.error('Module source not found:', slug, '(modules-src/ or backend/tests/fixtures/modules/)')
   process.exit(1)
 }
 

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Demo Kit",
+  "slug": "demo-kit",
+  "version": "1.1.0",
+  "description": "Reference package module for Jasefly Platform SDK + Module Package Manager.",
+  "author": {
+    "name": "Jasefly CMS",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": []
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {},
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": ["http.client", "storage.files", "events.publish", "permissions.check"],
+    "provides": ["demo-kit.ping"]
+  },
+  "entrypoints": {
+    "backend": "backend/DemoKitModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "demo-kit"
+  },
+  "permissions": [
+    "demo-kit.view"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  }
+}

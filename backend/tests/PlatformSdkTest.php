@@ -124,6 +124,9 @@ assert_true($hasServiceFinding, 'service(evil) caught by analyzer');
 @rmdir($evilTmp);
 
 $demo = dirname(__DIR__, 2) . '/modules-src/demo-kit';
+if (!is_dir($demo)) {
+    $demo = dirname(__DIR__) . '/tests/fixtures/modules/demo-kit';
+}
 if (is_dir($demo)) {
     $report = (new CompatibilityChecker())->checkDirectory($demo);
     assert_true(isset($report['score']), 'demo has score');

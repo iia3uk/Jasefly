@@ -139,7 +139,11 @@ foreach ($findingList as $f) {
 assert_true($hasForbiddenNs, 'fixtures/bad-module forbidden Core import detected');
 
 // —— permissions policy: manifest lists perms; registerPermissions must not auto-grant roles ——
-$refManifest = json_decode((string) file_get_contents(dirname(__DIR__, 2) . '/modules-src/forms-sdk-reference/module.json'), true);
+$refManifestPath = dirname(__DIR__, 2) . '/modules-src/forms-sdk-reference/module.json';
+if (!is_file($refManifestPath)) {
+    $refManifestPath = __DIR__ . '/fixtures/modules/forms-sdk-reference/module.json';
+}
+$refManifest = json_decode((string) file_get_contents($refManifestPath), true);
 assert_true(is_array($refManifest), 'forms-sdk-reference module.json readable');
 $m = ModuleManifest::fromArray($refManifest);
 assert_true(count($m->permissions()) >= 3, 'manifest declares module permissions');

@@ -120,11 +120,15 @@ if (!/\bpdo_sqlite\b/i.test(modOut)) {
 const phpArgs = (...rest) => [...php.args, ...rest]
 run('PHP unit tests', php.bin, phpArgs('backend/tests/run.php'))
 run('SDK API diff', php.bin, phpArgs('backend/bin/sdk.php', 'api-diff'))
-run('Certify demo-kit', php.bin, phpArgs('backend/bin/sdk.php', 'certify', 'modules-src/demo-kit'))
+run('Certify demo-kit', php.bin, phpArgs(
+  'backend/bin/sdk.php',
+  'certify',
+  'backend/tests/fixtures/modules/demo-kit',
+))
 run('Certify forms-sdk-reference', php.bin, phpArgs(
   'backend/bin/sdk.php',
   'certify',
-  'modules-src/forms-sdk-reference',
+  'backend/tests/fixtures/modules/forms-sdk-reference',
 ))
 
 if (!fs.existsSync(path.join(frontend, 'node_modules'))) {

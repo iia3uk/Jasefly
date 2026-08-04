@@ -47,11 +47,10 @@ final class SdkCliService
         if (is_dir($arg)) {
             return realpath($arg) ?: $arg;
         }
-        $src = $this->repoRoot . '/modules-src/' . $arg;
-        if (is_dir($src)) {
-            return realpath($src) ?: $src;
-        }
         foreach ([
+            $this->repoRoot . '/modules-src/' . $arg,
+            // CI/public reference packages (modules-src is local-only / gitignored)
+            $this->repoRoot . '/backend/tests/fixtures/modules/' . $arg,
             dirname($this->repoRoot) . '/modules/' . $arg,
             $this->repoRoot . '/../modules/' . $arg,
             $this->repoRoot . '/modules/' . $arg,

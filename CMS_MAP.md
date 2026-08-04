@@ -128,9 +128,10 @@
 | Module Package Manager (install/update ZIP) | `Modules/ModuleManager/ModuleManagerModule.php`, `Services/Modules/ModulePackageService.php`, `ModulePluginMirror.php`, `bin/modules.php` (`reconcile-mirror`), `Core/Modules/*`, `migrations/020_installed_modules.sql` |
 | ZIP module quarantine (broken ≠ kill API) | `ModuleQuarantine` + `ModuleQuarantinePolicy` + `ModuleQuarantineReason`; критерии: exception / bootstrap_timeout / memory_limit / route_conflict / missing_dependency / sdk_incompatible / migration_failed; `Router` duplicate → `RouteConflictException`; admin `quarantine.reason`; tests `ModuleQuarantineIsolationTest` + `ModuleQuarantinePolicyTest`; emergency `public/emergency-module-quarantine.php` |
 | ZIP enable SoT (installed_modules vs plugins) | Canonical: `installed_modules.status`; mirror: `modules.is_enabled` via `ModulePluginMirror`; Plugins toggle for packages → `ModulePackageService`; CLI `modules.php reconcile-mirror` |
-| Demo package module source | `modules-src/demo-kit/` |
-| Access ZIP scaffolds (group / subscription / wallet) | `modules-src/{user-groups,subscriptions,wallet}/` → register AccessProviders |
-| Forms SDK certification reference | `modules-src/forms-sdk-reference/` |
+| Demo package module source | локально `modules-src/demo-kit/`; CI/public: `backend/tests/fixtures/modules/demo-kit/` |
+| Access ZIP scaffolds (group / subscription / wallet) | `modules-src/{user-groups,subscriptions,wallet}/` → register AccessProviders (local-only) |
+| Forms SDK certification reference | локально `modules-src/forms-sdk-reference/`; CI/public: `backend/tests/fixtures/modules/forms-sdk-reference/` |
+| modules-src нет в git / CI падает на certify | эталоны в `backend/tests/fixtures/modules/`; resolve: `SdkCliService` + `scripts/build-module.js` |
 | AI Content Optimizer (ZIP, OpenRouter SEO-рерайт) | `modules-src/ai-content-optimizer/` → ZIP `release/modules/`; FE `frontend-dist/index.js` (профили/настройки OpenRouter/лог); job `ai-content-optimizer.tick` |
 | IndexNow (ZIP, Bing/Яндекс/Seznam + rate-limit) | `modules-src/indexnow/` → ZIP `release/modules/`; админка `/admin/indexnow`; ключ `/{key}.txt`; cooldown 429 / URL / debounce; Google≠IndexNow |
 | Карта / maps / leaflet / OSM | ZIP `modules-src/maps/` → виджет `maps.map`, демо `/maps-demo`, админка `/admin/maps`; default Яндекс; docs `docs/modules/maps.md` |

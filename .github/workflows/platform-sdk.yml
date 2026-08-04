@@ -29,10 +29,10 @@ jobs:
         run: php backend/bin/sdk.php api-diff
 
       - name: Certify demo-kit
-        run: php backend/bin/sdk.php certify modules-src/demo-kit
+        run: php backend/bin/sdk.php certify backend/tests/fixtures/modules/demo-kit
 
       - name: Certify forms-sdk-reference
-        run: php backend/bin/sdk.php certify modules-src/forms-sdk-reference
+        run: php backend/bin/sdk.php certify backend/tests/fixtures/modules/forms-sdk-reference
 
       - name: Frontend install, unit tests, build
         working-directory: frontend

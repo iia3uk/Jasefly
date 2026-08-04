@@ -11,6 +11,9 @@ use App\Platform\Analysis\SdkCliService;
 
 $repoRoot = dirname(__DIR__, 2);
 $fsr = $repoRoot . '/modules-src/forms-sdk-reference';
+if (!is_dir($fsr)) {
+    $fsr = $repoRoot . '/backend/tests/fixtures/modules/forms-sdk-reference';
+}
 
 assert_true(is_dir($fsr), 'forms-sdk-reference directory exists');
 

@@ -18,6 +18,9 @@ require_once "$root/src/Bootstrap.php";
 $repoRoot = dirname($root);
 $slug = 'forms-sdk-reference';
 $moduleSrc = $repoRoot . '/modules-src/' . $slug;
+if (!is_dir($moduleSrc)) {
+    $moduleSrc = $repoRoot . '/backend/tests/fixtures/modules/' . $slug;
+}
 $manifestPath = $moduleSrc . '/module.json';
 
 $result = [
