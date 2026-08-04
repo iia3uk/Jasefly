@@ -24,6 +24,9 @@ Thumbs.db
 *.code-workspace
 .dev/
 
+# ZIP module sources stay local — not published to the public repo
+/modules-src/
+
 # Backend secrets & runtime
 backend/config/config.local.php
 backend/config/.env
