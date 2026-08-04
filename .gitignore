@@ -89,3 +89,12 @@ Desktop.ini
 /general/
 /good.png
 /good_2.png
+
+# Site-specific local dumps (keep on disk, never publish)
+/yandex_*.html
+/sitemap.xml
+/blog_img/
+/content/jasefly-official/
+# Loose scratch photos at repo root (logo.png / og.png stay tracked)
+/*.jpg
+/*.jpeg

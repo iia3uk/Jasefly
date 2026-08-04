@@ -55,7 +55,7 @@
 | Seed-лейауты страниц (home/about/…) | `frontend/src/builder/migrateHome.ts` (`buildDefaultContactLayout` — карта+контакты 2 кол.) |
 | Билдер: 2 колонки съезжают в столбец | `LayoutRenderer` секция = CSS grid `Nfr` (не flex %+gap) |
 | Публичный рендер страницы из layout | `builder/public/CmsPages.tsx`, `builder/public/parseLayout.ts`, `builder/render/LayoutRenderer.tsx` |
-| «Сайт не из pages / не из БД» | `isSeedLayout` (`CmsPages.tsx`): seed/пусто → classic `HomePage` из `hero_settings`+секций; `useOnSite:true` → `pages.layout_json`. Файлы `content/jasefly-official/` только apply в БД, не runtime |
+| «Сайт не из pages / не из БД» | `isSeedLayout` (`CmsPages.tsx`): seed/пусто → classic `HomePage` из `hero_settings`+секций; `useOnSite:true` → `pages.layout_json`. Локальный apply-пак `content/jasefly-official/` (gitignored) — только apply в БД, не runtime |
 | Админ «Главная» / Оформление | Редирект в билдер `pages` is_home (`SitePages.HomepagePage`). Не путать с пустой `homepage_sections` — контент в `pages.layout_json` |
 | Черновик на живом URL (только админ) | `backend/.../PublicController.php` → `page()` + `CmsPages.tsx` баннер |
 | SEO страницы (title/desc/OG/расписание) | `builder/editor/PageBuilderPage.tsx` → `PageSettings`; `SeoHead` в `SiteLayout.tsx` |
@@ -139,7 +139,7 @@
 | Контакты: lat/lng + embed | singleton `contact-info` (`map_lat`/`map_lng`/`map_embed`) в `SitePages.tsx`; интерактивная карта — виджет `maps.map` |
 | Журнал MCP / activity время не МСК | `admin/lib/formatDateTime.ts` (naive DATETIME = Moscow); Dashboard/Enterprise; BE `APP_TIMEZONE` + MySQL `SET time_zone` |
 | Контент на проде (текст/страницы) | MCP `cms_site_map` → `cms_get` / `cms_bulk` / `cms_put_singleton` |
-| Публичная API-документация (люди + агенты) | страница CMS `/api-docs` + `GET /api/v1/docs` ([backend/docs/openapi.php](backend/docs/openapi.php)); локальный черновик `content/jasefly-official/apply-api-docs.mjs` |
+| Публичная API-документация (люди + агенты) | страница CMS `/api-docs` + `GET /api/v1/docs` ([backend/docs/openapi.php](backend/docs/openapi.php)); локальный apply `content/jasefly-official/apply-api-docs.mjs` (gitignored) |
 | Публичная страница модулей (не `/modules` — конфликт с asset dir) | CMS slug `/cms-modules`; Apache `RewriteRule ^modules/?$ /cms-modules` в `frontend/public/.htaccess` + `scripts/build-hosting.js` |
 
 ---
