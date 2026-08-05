@@ -37,7 +37,9 @@ MCP_API_TOKEN=тот_же_секрет
 
 ## Несколько сайтов (один MCP)
 
-Один процесс Cursor MCP может управлять несколькими инсталляциями Jasefly (контент + деплой). Секреты — в `mcp-cms/.env`:
+Полный гайд: [`docs/mcp-multi-site.md`](../docs/mcp-multi-site.md).
+
+Один процесс Cursor MCP может управлять несколькими инсталляциями Jasefly (контент + деплой; PHP shared и Node VPS в одном агенте). Секреты — в `mcp-cms/.env`:
 
 ```env
 CMS_SITES=jasefly,iia3uk

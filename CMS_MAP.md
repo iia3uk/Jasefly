@@ -263,7 +263,7 @@ portfolio/
 
 ## MCP (хостинг / контент)
 
-Сервер: `user-jasefly-cms` (`mcp-cms/`). Секреты только в `mcp-cms/.env`. Мульти-сайт: `CMS_SITES` + `CMS_SITE_{ID}_*` → параметр **`site`** (id/alias/домен); список — **`cms_sites`** (`mcp-cms/src/sites.js`).
+Сервер: `user-jasefly-cms` (`mcp-cms/`). Секреты только в `mcp-cms/.env`. Мульти-сайт: `CMS_SITES` + `CMS_SITE_{ID}_*` → параметр **`site`** (id/alias/домен); список — **`cms_sites`** (`mcp-cms/src/sites.js`). Гайд: [`docs/mcp-multi-site.md`](docs/mcp-multi-site.md).
 
 | Инструмент | Когда |
 | --- | --- |

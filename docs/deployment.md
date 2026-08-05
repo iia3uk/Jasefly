@@ -32,7 +32,7 @@ Built via `jasefly build --runtime=node` / MCP `cms_local_build({ target: 'vps' 
 
 ### MCP operator path
 
-MCP server `mcp-cms` tool **`cms_release(summary, changes, site?)`** — one call for the full gate (typically PHP shared today). With multiple hosts in `CMS_SITES`, pass **`site`** (id/alias/domain); list via **`cms_sites`**.
+MCP server `mcp-cms` tool **`cms_release(summary, changes, site?)`** — one call for the full gate (typically PHP shared today). With multiple hosts in `CMS_SITES`, pass **`site`** (id/alias/domain); list via **`cms_sites`**. Full multi-site / multi-runtime guide: [mcp-multi-site.md](mcp-multi-site.md).
 
 Secrets stay in `mcp-cms/.env` and `backend/config` (never in `mcp.json` or git).
 

@@ -155,7 +155,7 @@ Preferred one-shot: `cms_release({ summary, changes, site? })`.
 
 Also covered:
 
-- **Multi-site orchestration** — `CMS_SITES`; pass `site` when ≥2 hosts
+- **Multi-site orchestration** — one MCP agent for many hosts (`CMS_SITES`); pass `site` when ≥2 — [docs/mcp-multi-site.md](docs/mcp-multi-site.md)
 - **Content** — digests, CRUD, singletons, bulk (bounded)
 - **Module lifecycle** — inspect / install / update / enable / disable / health / rollback
 - **Backup before production operations**
