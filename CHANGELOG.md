@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-08-05 — Fix stale AdminBar after expired /auth/me session
+
+- On /auth/me 401 try silent refresh then clear tokens
+- Do not keep AdminBar via stale localStorage role
+- On public site clear chrome without forced login redirect; admin routes still redirect to login
+
+## 2026-08-05 — Security fixes: ACL, XSS, SSRF, Host URLs, MCP rollback
+
+- Content CRUD and revision restore require content capabilities
+- Webhook mutations require integrations.manage
+- Sanitize deny_template_html via sanitizeHtml
+- Node webhook SSRF guard with DNS pin and redirect revalidation
+- Payment/verification URLs prefer configured app_url (PublicOrigin)
+- cms_rollback release stamp strict validation
+- Parity scrub db_version for dual 879/879
+
 ## 2026-08-05 — Не дергать /translate/* когда плагин выключен
 
 - TranslateWidget fail-closed до гидрации enabled_plugins и без site.translate

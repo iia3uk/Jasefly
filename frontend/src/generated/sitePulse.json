@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-05T22:02:10.577Z",
-  "version": "backup-before-author-rewrite-11-g8b79dd1",
-  "commit": "8b79dd1",
+  "generated_at": "2026-08-05T22:16:36.732Z",
+  "version": "backup-before-author-rewrite-13-g45c1d6a",
+  "commit": "45c1d6a",
   "metrics": {
-    "files": 3430,
+    "files": 3445,
     "php_classes": 311,
     "builder_widgets": 68,
     "rest_routes_core": 66,
     "sdk_interfaces": 23,
-    "git_commits": 103,
+    "git_commits": 105,
     "repo_size_mb": 27.9,
     "core_modules": 30,
     "package_scaffolds": 10
@@ -19,6 +19,16 @@
     "latest_tag": "backup-before-author-rewrite",
     "latest_commit_date": "2026-08-06",
     "commits": [
+      {
+        "hash": "45c1d6a",
+        "date": "2026-08-06",
+        "subject": "fix(auth): clear AdminBar when /auth/me session is dead"
+      },
+      {
+        "hash": "8f43451",
+        "date": "2026-08-06",
+        "subject": "fix(security): close ACL, XSS, SSRF, Host, and MCP rollback gaps"
+      },
       {
         "hash": "8b79dd1",
         "date": "2026-08-06",
@@ -33,16 +43,6 @@
         "hash": "d5f7df1",
         "date": "2026-08-05",
         "subject": "docs: align entry docs with dual-runtime platform"
-      },
-      {
-        "hash": "5de63a9",
-        "date": "2026-08-05",
-        "subject": "docs: rewrite README for dual-runtime platform"
-      },
-      {
-        "hash": "7522776",
-        "date": "2026-08-05",
-        "subject": "fix(ci): scrub prerender bytes beside html_preview"
       }
     ]
   }
