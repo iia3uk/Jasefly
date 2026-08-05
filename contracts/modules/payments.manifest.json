@@ -1,0 +1,12 @@
+{
+  "id": "payments",
+  "name": "Payments",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Payments",
+    "node": "runtime-node/src/modules/payments"
+  }
+}

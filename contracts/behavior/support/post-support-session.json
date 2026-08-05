@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "kind": "behavior",
+  "id": "POST /support/session",
+  "module": "support",
+  "method": "POST",
+  "path": "/support/session",
+  "authentication": "public",
+  "permission": null,
+  "permission_middleware": false,
+  "capabilities": [],
+  "http_statuses": [
+    200,
+    404
+  ],
+  "request_schema": "json-object",
+  "response_schema": "contracts/schema/envelope.success.v1.json",
+  "error_schema": "contracts/schema/envelope.error.v1.json",
+  "database_tables": [
+    "support_tickets",
+    "support_messages",
+    "support_faq"
+  ],
+  "events": [],
+  "side_effects": [],
+  "lifecycle_transitions": [],
+  "module_default_enabled": true,
+  "requires_module_enabled": false,
+  "scenarios": [
+    {
+      "id": "public-mutate",
+      "auth": "none",
+      "path_params": {},
+      "body": {},
+      "expect": {
+        "status": [
+          200,
+          201,
+          202,
+          400,
+          401,
+          403,
+          404,
+          409,
+          422,
+          429,
+          503
+        ],
+        "success": null
+      },
+      "compare": {
+        "http_status": true,
+        "json_envelope": true,
+        "error_code": true,
+        "deep_json": "shape",
+        "db": false,
+        "events": false
+      }
+    }
+  ],
+  "content_hash": "a09efdc94cb5fb13"
+}

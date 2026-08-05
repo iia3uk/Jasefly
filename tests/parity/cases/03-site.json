@@ -1,0 +1,12 @@
+{
+  "id": "site",
+  "method": "GET",
+  "path": "/site",
+  "expect": {
+    "status": 200,
+    "success": true,
+    "data_contains": {
+      "enabled_plugins": true
+    }
+  }
+}

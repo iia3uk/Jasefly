@@ -1,0 +1,10 @@
+{
+  "id": "access-providers",
+  "method": "GET",
+  "path": "/access/providers",
+  "parity": false,
+  "expect": {
+    "status": 200,
+    "data_is_array": true
+  }
+}

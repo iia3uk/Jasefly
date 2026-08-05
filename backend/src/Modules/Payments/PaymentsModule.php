@@ -35,13 +35,16 @@ final class PaymentsModule extends AbstractModule
         $checkoutRate = new \App\Middleware\RateLimitMiddleware($db, 20, 60);
 
         $resources = ['payments'];
+        // OrdersModule owns /admin/orders when on. No DB row ⇒ default-on (PluginStateService).
+        // Only register legacy orders CRUD when Orders is explicitly disabled.
         try {
             $orders = $db->one("SELECT is_enabled FROM modules WHERE name='orders' LIMIT 1");
-            if ((int) ($orders['is_enabled'] ?? 0) !== 1) {
+            $ordersOn = $orders === null ? true : (int) ($orders['is_enabled'] ?? 0) === 1;
+            if (!$ordersOn) {
                 array_unshift($resources, 'orders');
             }
         } catch (\Throwable) {
-            array_unshift($resources, 'orders');
+            // Table missing — OrdersModule still registers when discoverable; avoid conflict.
         }
         foreach ($resources as $resource) {
             $base = $p("/admin/$resource");

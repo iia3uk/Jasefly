@@ -41,6 +41,30 @@ jobs:
           npm test
           npm run build
 
+      - name: Runtime-node install + test
+        working-directory: runtime-node
+        run: |
+          npm ci
+          npm test
+          npm run typecheck
+
+      - name: Behavior extract + generate + contracts gate
+        run: |
+          node scripts/behavior/extract-behavior.mjs
+          node scripts/behavior/generate-cases.mjs
+          BASELINE_REQUIRE_FULL=1 node scripts/contracts/validate-contracts.js
+
+      - name: Behavioral parity PHP ↔ Node (auth + happy-get + missing + mutate + FE dual)
+        env:
+          # Full deep-scenario gate (shape compare). Fail CI on any drift in this set.
+          BEHAVIOR_SCENARIOS: unauthenticated,invalid-token,happy-get,missing-resource,public-mutate
+          BEHAVIOR_REQUIRE: all
+          BEHAVIOR_CHUNK: '200'
+        run: |
+          node scripts/behavior/run-all.mjs
+          test -f tmp/behavior-results/last.json
+          node scripts/behavior/module-status.mjs
+
       - name: Build demo-kit package
         run: node scripts/build-module.js demo-kit --yes
 

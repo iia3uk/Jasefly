@@ -1,0 +1,12 @@
+{
+  "id": "system",
+  "name": "System",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/System",
+    "node": "runtime-node/src/modules/system"
+  }
+}

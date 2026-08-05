@@ -28,6 +28,8 @@ import {
 import { localBuild, localTest } from './local.js';
 import { loadMcpEnv } from './loadEnv.js';
 import { postDeployVerify } from './verify.js';
+import { deployVpsAtomic, rollbackVps, vpsStatus } from './deploy/vps.js';
+import { resolveSite } from './sites.js';
 
 // Secrets only from .env (or pre-set process env) — never hardcode in mcp.json
 const envInfo = loadMcpEnv();
@@ -106,11 +108,39 @@ server.tool(
 
 server.tool(
   'cms_local_build',
-  'ШАГ 1/5. Локальный билд: frontend npm run build + hosting update ZIP. Без этого деплой запрещён.',
+  'ШАГ 1/5. Локальный билд. target=shared (default): FE + hosting ZIP. target=vps: Node runtime artifact. Без билда деплой запрещён.',
+  {
+    target: z.enum(['shared', 'vps']).optional().describe('Build target: shared (PHP ZIP) или vps (Node artifact)'),
+  },
+  async ({ target }) => {
+    try {
+      return ok(localBuild({ target: target || 'shared' }));
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool(
+  'cms_vps_build',
+  'Сборка VPS Node artifact (alias cms_local_build target=vps).',
   {},
   async () => {
     try {
-      return ok(localBuild());
+      return ok(localBuild({ target: 'vps' }));
+    } catch (e) {
+      return fail(e);
+    }
+  },
+);
+
+server.tool(
+  'cms_shared_build',
+  'Сборка shared PHP hosting ZIP (alias cms_local_build target=shared).',
+  {},
+  async () => {
+    try {
+      return ok(localBuild({ target: 'shared' }));
     } catch (e) {
       return fail(e);
     }
@@ -187,28 +217,47 @@ server.tool(
 
 server.tool(
   'cms_deploy_update',
-  'ШАГ 4/5. Залить update ZIP. После заливки автоматически ШАГ 5: снапшот сайта + БД + API → ready. Только после build+test+changelog (или force=true).',
+  'ШАГ 4/5. Деплой артефакта. shared/php → ZIP SiteUpdater; node-vps → SSH atomic releases (confirm=true). Затем verify.',
   siteSchema({
     force: z.boolean().optional().describe('Обойти гейт (только ЧП)'),
-        zip_path: z.string().optional().describe('Явный путь к ZIP; иначе из гейта'),
-        skip_verify: z.boolean().optional().describe('Не делать пост-проверку (не рекомендуется)'),
+    zip_path: z.string().optional().describe('Явный путь к артефакту; иначе из гейта'),
+    skip_verify: z.boolean().optional().describe('Не делать пост-проверку (не рекомендуется)'),
+    confirm: z.boolean().optional().describe('Обязателен для VPS SSH deploy'),
   }),
-  async ({ site, force, zip_path, skip_verify }) => {
+  async ({ site, force, zip_path, skip_verify, confirm }) => {
     try {
-      const cms = getClient(site); // fail-fast: site обязателен при 2+ хостах
+      const siteCfg = resolveSite(site);
       const gateCheck = assertDeployAllowed({ force: !!force });
       if (!gateCheck.ok) {
         return fail(new Error(`${gateCheck.reason}\nСейчас: cms_pipeline → cms_local_build → cms_local_test → cms_changelog → cms_deploy_update.`));
       }
       const zip = zip_path || String(gateCheck.gate.zip_path || '');
+
+      if (siteCfg.runtime === 'node-vps' || siteCfg.deployment === 'vps') {
+        const deployed = deployVpsAtomic(siteCfg, zip, { confirm: !!confirm });
+        if (!deployed.ok) return fail(new Error(deployed.error || JSON.stringify(deployed)));
+        markDeployed({ zip, result: deployed, changelog: gateCheck.gate.changelog || null, runtime: 'node-vps' });
+        return ok({
+          ready: Boolean(deployed.ok),
+          message: 'VPS atomic deploy выполнен. Проверьте healthcheck / cms_verify_alive.',
+          runtime: 'node-vps',
+          deployed,
+          changelog: gateCheck.gate.changelog || null,
+          gate: readGate(),
+          next: 'cms_verify_alive',
+        });
+      }
+
+      const cms = getClient(site);
       const res = await cms.uploadUpdateZip(zip);
       const data = res?.data ?? res;
-      markDeployed({ zip, result: data, changelog: gateCheck.gate.changelog || null });
+      markDeployed({ zip, result: data, changelog: gateCheck.gate.changelog || null, runtime: 'php-shared' });
 
       if (skip_verify) {
         return ok({
           ready: false,
           message: 'ZIP залит, но verify пропущен (skip_verify). Вызови cms_verify_alive.',
+          runtime: 'php-shared',
           deployed: data,
           changelog: gateCheck.gate.changelog || null,
           next: 'cms_verify_alive',
@@ -220,6 +269,7 @@ server.tool(
       return ok({
         ready: check.ready,
         message: check.message,
+        runtime: 'php-shared',
         steps: {
           build: 'ok',
           test: 'ok',
@@ -247,6 +297,27 @@ server.tool(
       } catch {
         return fail(e);
       }
+    }
+  },
+);
+
+server.tool(
+  'cms_rollback',
+  'Откат VPS Node release (symlink на previous/to). Только node-vps. Требует site + confirm=true.',
+  siteSchema({
+    confirm: z.boolean().describe('Явное подтверждение destructive rollback'),
+    to: z.string().optional().describe('Имя release stamp; иначе предыдущий'),
+  }),
+  async ({ site, confirm, to }) => {
+    try {
+      const siteCfg = resolveSite(site);
+      if (siteCfg.runtime !== 'node-vps' && siteCfg.deployment !== 'vps') {
+        return fail(new Error('cms_rollback поддерживается только для runtime=node-vps. Shared: DB backup / ручной откат.'));
+      }
+      if (!confirm) return fail(new Error('Укажите confirm=true'));
+      return ok(rollbackVps(siteCfg, { confirm: true, to }));
+    } catch (e) {
+      return fail(e);
     }
   },
 );

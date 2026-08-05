@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "envelope": {
+    "success": "boolean",
+    "data": "mixed|null",
+    "error": "string|null",
+    "errors": "object|array|null",
+    "meta": {
+      "api_version": "v1"
+    }
+  },
+  "codes": {
+    "invalid_credentials": {
+      "http": 401,
+      "error": "Invalid credentials"
+    },
+    "unauthorized": {
+      "http": 401,
+      "error": "Unauthorized"
+    },
+    "forbidden": {
+      "http": 403,
+      "error": "Forbidden"
+    },
+    "not_found": {
+      "http": 404,
+      "error": "Not found"
+    },
+    "unknown_resource": {
+      "http": 404,
+      "error": "Unknown resource"
+    },
+    "validation_failed": {
+      "http": 422,
+      "error": "Validation failed"
+    },
+    "capability_unavailable": {
+      "http": 409,
+      "error": "capability_unavailable"
+    },
+    "plugin_disabled": {
+      "http": 409,
+      "error": "plugin_disabled"
+    },
+    "conflict": {
+      "http": 409,
+      "error": "Conflict"
+    },
+    "rate_limited": {
+      "http": 429,
+      "error": "Too many requests"
+    },
+    "internal_error": {
+      "http": 500,
+      "error": "Internal server error"
+    },
+    "token_expired": {
+      "http": 401,
+      "error": "Token expired"
+    },
+    "invalid_token": {
+      "http": 401,
+      "error": "Invalid token"
+    }
+  }
+}

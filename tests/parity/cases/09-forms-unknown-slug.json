@@ -1,0 +1,10 @@
+{
+  "id": "forms-unknown-slug",
+  "method": "GET",
+  "path": "/forms/no-such-form-slug-xyz",
+  "expect": {
+    "status": 404,
+    "success": false,
+    "error": "Not found"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "health",
+  "method": "GET",
+  "path": "/health",
+  "expect": {
+    "status": 200,
+    "success": true,
+    "data_contains": {
+      "status": "ok",
+      "api_version": "v1"
+    }
+  }
+}

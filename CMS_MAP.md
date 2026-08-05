@@ -77,7 +77,7 @@
 | Ручные 301/302 редиректы | `admin/pages/RedirectsPage.tsx` + `PathRedirectService` + `SeoModule` routes |
 | Telegram с контакт-формы | `Modules/Mail/ContactFormService.php` + `TelegramNotifier.php` + `/admin/mail` |
 | Сообщения / mark-read «зависло» | `UtilityPages.tsx` + `.htaccess`: `/api/*` не кэшировать (`IS_API` / `no-store`); не `max-age` с HTML `index.php` |
-| Module Package Manager / ZIP модули | `Modules/ModuleManager/` + `Services/Modules/*` + `/admin/modules` + `scripts/build-module.js` + `modules-src/` + docs `MODULE-*.md`; FE reload: `packageModuleLoader` `?v=version` + unload on update |
+| Module Package Manager / ZIP модули | `Modules/ModuleManager/` + `Services/Modules/*` + `/admin/modules` + `scripts/build-module.js` + `modules-src/` + docs `MODULE-*.md`; FE reload: `packageModuleLoader` `?v=version` + unload on update; Node VPS: `runtime-node/src/modules/module-manager.ts` + `runtime-node/src/packages/*` |
 | ZIP обновился, админка модуля «старая» | кэш ESM: `packageModuleLoader` должен unload+import `?v=`; Ctrl+F5; на хостинге файл `/modules/{slug}/index.js` уже новый |
 | Плагин → пакетный модуль | `docs/glossary.md` + `docs/package-lifecycle.md` (эталон `modules-src/demo-kit/`) |
 | Platform SDK (ZIP модули) | `backend/src/Platform/` + `frontend/src/platform/` + `docs/platform-sdk.md` |
@@ -267,6 +267,7 @@ portfolio/
 | --- | --- |
 | **`cms_sites`** | Список хостов MCP (без токенов); при ≥2 сайтах спроси пользователя и передай `site` |
 | **`cms_release`** | Любая заливка кода (build→test→changelog→deploy→verify); при multi — `site` обязателен |
+| Dual-runtime PHP Shared ↔ Node VPS | Baseline `contracts/baseline/` · **behavior** `contracts/behavior/` + `scripts/behavior/{extract,generate,run-all,module-status}.mjs` · parity `tests/parity/{behavior-runner,generated}/` · прогресс AUTO `docs/dual-runtime-parity-progress.md` · gate `docs/dual-runtime-verification-report-final.md` · VPS `scripts/vps/package-and-smoke.mjs` · validate `scripts/contracts/validate-contracts.js` |
 | Не те модули / старая админка после «успешного» деплоя | Проверь `release/jasefly-cms-update-*.zip` (не legacy `portfolio-hosting-update-*`); `mcp-cms/src/local.js` → `findLatestUpdateZip`; явный `cms_deploy_update(zip_path=…)` |
 | `cms_site_map` | Карта живого сайта перед правками контента |
 | `cms_pages_digest` / `cms_page_digest` | Короткие выжимки страниц |

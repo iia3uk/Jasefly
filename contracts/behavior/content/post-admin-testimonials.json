@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "kind": "behavior",
+  "id": "POST /admin/testimonials",
+  "module": "content",
+  "method": "POST",
+  "path": "/admin/testimonials",
+  "authentication": "auth",
+  "permission": null,
+  "permission_middleware": true,
+  "capabilities": [],
+  "http_statuses": [
+    200,
+    401,
+    403,
+    404
+  ],
+  "request_schema": "json-object",
+  "response_schema": "contracts/schema/envelope.success.v1.json",
+  "error_schema": "contracts/schema/envelope.error.v1.json",
+  "database_tables": [
+    "testimonials"
+  ],
+  "events": [
+    "resource.afterSave"
+  ],
+  "side_effects": [],
+  "lifecycle_transitions": [],
+  "module_default_enabled": true,
+  "requires_module_enabled": false,
+  "scenarios": [
+    {
+      "id": "unauthenticated",
+      "auth": "none",
+      "path_params": {},
+      "body": {},
+      "expect": {
+        "status": [
+          401,
+          403,
+          405
+        ],
+        "success": false
+      },
+      "compare": {
+        "http_status": true,
+        "json_envelope": true,
+        "error_code": true,
+        "db": false,
+        "events": false
+      }
+    },
+    {
+      "id": "invalid-token",
+      "auth": "invalid",
+      "path_params": {},
+      "body": {},
+      "expect": {
+        "status": [
+          401,
+          405
+        ],
+        "success": false
+      },
+      "compare": {
+        "http_status": true,
+        "json_envelope": true,
+        "error_code": true,
+        "db": false,
+        "events": false
+      }
+    }
+  ],
+  "content_hash": "b5c75a7fe6854adb"
+}

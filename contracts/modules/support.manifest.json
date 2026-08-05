@@ -1,0 +1,12 @@
+{
+  "id": "support",
+  "name": "Support",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Support",
+    "node": "runtime-node/src/modules/support"
+  }
+}

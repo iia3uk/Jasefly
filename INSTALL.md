@@ -40,6 +40,15 @@ Composer не нужен: backend — plain PHP с автозагрузчико�
 - Возможность указать document root на содержимое install-пакета
 - Запись в `api/storage/` (uploads, logs, cache, backups)
 
+### VPS Node runtime (production, optional target)
+
+- **Без PHP** на сервере
+- Node.js 20+, MySQL или PostgreSQL
+- Сборка: `cms_local_build({ target: 'vps' })` или `cd runtime-node && npm run build`
+- Процесс: systemd (`runtime-node/deploy/jasefly-node.service`) или PM2
+- Контракты: общий каталог `contracts/` (SoT для PHP и Node)
+- Подробности: [`docs/dual-runtime.md`](docs/dual-runtime.md)
+
 ---
 
 ## 3. Быстрый старт (Windows)

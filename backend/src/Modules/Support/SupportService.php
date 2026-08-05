@@ -660,13 +660,22 @@ final class SupportService
     private function sanitizeKey(string $key): string
     {
         $key = preg_replace('/[^a-f0-9]/i', '', $key) ?? '';
-        return mb_substr($key, 0, 64);
+        return $this->clip($key, 64);
     }
 
     private function sanitizeBody(string $body): string
     {
         $body = trim(strip_tags($body));
         $body = preg_replace("/\r\n?/", "\n", $body) ?? $body;
-        return mb_substr($body, 0, 4000);
+        return $this->clip($body, 4000);
+    }
+
+    /** Prefer mbstring; fall back so SQLite/parity PHP without ext still answers. */
+    private function clip(string $value, int $max): string
+    {
+        if (\function_exists('mb_substr')) {
+            return \mb_substr($value, 0, $max);
+        }
+        return substr($value, 0, $max);
     }
 }

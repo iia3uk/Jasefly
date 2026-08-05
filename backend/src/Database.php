@@ -90,10 +90,66 @@ final class Database {
     public function dialect(): Dialect { return $this->dialect; }
     public function inspector(): SchemaInspector { return $this->inspector; }
 
-    public function run(string $sql, array $params = []): \PDOStatement { $s=$this->pdo->prepare($sql); $s->execute($params); return $s; }
+    public function run(string $sql, array $params = []): \PDOStatement
+    {
+        $sql = $this->adaptSql($sql);
+        $s = $this->pdo->prepare($sql);
+        $s->execute($params);
+        return $s;
+    }
     public function one(string $sql, array $params = []): ?array { return $this->run($sql,$params)->fetch() ?: null; }
     public function all(string $sql, array $params = []): array { return $this->run($sql,$params)->fetchAll(); }
     public function id(): int { return (int)$this->pdo->lastInsertId(); }
+
+    /**
+     * Runtime MySQL→SQLite helpers used by module queries (INTERVAL/NOW/VERSION).
+     * Migration DDL stays in SqlTranspiler; this covers live SELECT/UPDATE SQL.
+     */
+    private function adaptSql(string $sql): string
+    {
+        if ($this->driver !== 'sqlite') {
+            return $sql;
+        }
+        $sql = preg_replace('/\bNOW\s*\(\s*\)/i', "datetime('now')", $sql) ?? $sql;
+        $sql = preg_replace('/\bCURDATE\s*\(\s*\)/i', "date('now')", $sql) ?? $sql;
+        $sql = preg_replace('/\bVERSION\s*\(\s*\)/i', 'sqlite_version()', $sql) ?? $sql;
+
+        $units = [
+            'SECOND' => 'seconds', 'SECONDS' => 'seconds',
+            'MINUTE' => 'minutes', 'MINUTES' => 'minutes',
+            'HOUR' => 'hours', 'HOURS' => 'hours',
+            'DAY' => 'days', 'DAYS' => 'days',
+            'WEEK' => 'days', 'WEEKS' => 'days',
+            'MONTH' => 'months', 'MONTHS' => 'months',
+            'YEAR' => 'years', 'YEARS' => 'years',
+        ];
+
+        foreach ([['DATE_ADD', '+'], ['DATE_SUB', '-']] as [$fn, $sign]) {
+            $sql = preg_replace_callback(
+                '/\b' . $fn . '\s*\(\s*(.+?)\s*,\s*INTERVAL\s+(\d+)\s+([A-Za-z]+)\s*\)/i',
+                static function (array $m) use ($sign, $units): string {
+                    $unit = $units[strtoupper($m[3])] ?? (strtolower($m[3]) . 's');
+                    $n = (int) $m[2];
+                    if (strtoupper($m[3]) === 'WEEK' || strtoupper($m[3]) === 'WEEKS') {
+                        $n *= 7;
+                    }
+                    return "datetime({$m[1]}, '{$sign}{$n} {$unit}')";
+                },
+                $sql
+            ) ?? $sql;
+
+            $sql = preg_replace_callback(
+                '/\b' . $fn . '\s*\(\s*(.+?)\s*,\s*INTERVAL\s+\?\s+([A-Za-z]+)\s*\)/i',
+                static function (array $m) use ($sign, $units): string {
+                    $unit = $units[strtoupper($m[2])] ?? (strtolower($m[2]) . 's');
+                    return "datetime({$m[1]}, printf('{$sign}%d {$unit}', ?))";
+                },
+                $sql
+            ) ?? $sql;
+        }
+
+        return $sql;
+    }
 
     /**
      * Run $fn inside a PDO transaction. Nested calls reuse the outer transaction

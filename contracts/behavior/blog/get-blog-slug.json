@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "kind": "behavior",
+  "id": "GET /blog/{slug}",
+  "module": "blog",
+  "method": "GET",
+  "path": "/blog/{slug}",
+  "authentication": "public",
+  "permission": null,
+  "permission_middleware": false,
+  "capabilities": [],
+  "http_statuses": [
+    200,
+    404
+  ],
+  "request_schema": null,
+  "response_schema": "contracts/schema/envelope.success.v1.json",
+  "error_schema": "contracts/schema/envelope.error.v1.json",
+  "database_tables": [
+    "blog_posts"
+  ],
+  "events": [],
+  "side_effects": [],
+  "lifecycle_transitions": [],
+  "module_default_enabled": true,
+  "requires_module_enabled": false,
+  "scenarios": [
+    {
+      "id": "missing-resource",
+      "auth": "none",
+      "path_params": {
+        "slug": "no-such-slug-parity-xyz"
+      },
+      "expect": {
+        "status": [
+          200,
+          404,
+          401,
+          403,
+          409
+        ],
+        "success": null
+      },
+      "compare": {
+        "http_status": true,
+        "json_envelope": true,
+        "error_code": true,
+        "deep_json": "shape",
+        "db": false,
+        "events": false
+      }
+    }
+  ],
+  "content_hash": "e4c03cb0fb0b7680"
+}

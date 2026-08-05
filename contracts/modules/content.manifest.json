@@ -1,0 +1,12 @@
+{
+  "id": "content",
+  "name": "Content",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Content",
+    "node": "runtime-node/src/modules/content"
+  }
+}

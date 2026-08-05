@@ -1,0 +1,12 @@
+{
+  "id": "notifications",
+  "name": "Notifications",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Notifications",
+    "node": "runtime-node/src/modules/notifications"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jasefly.local/schemas/envelope.error.v1.json",
+  "title": "ErrorEnvelope",
+  "type": "object",
+  "required": ["success", "error"],
+  "properties": {
+    "success": { "const": false },
+    "error": { "type": "string" },
+    "errors": true,
+    "data": { "type": ["object", "array", "null"] },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "api_version": { "type": "string" },
+        "request_id": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

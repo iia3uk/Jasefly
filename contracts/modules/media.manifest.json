@@ -1,0 +1,12 @@
+{
+  "id": "media",
+  "name": "Media",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Media",
+    "node": "runtime-node/src/modules/media"
+  }
+}

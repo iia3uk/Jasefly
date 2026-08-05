@@ -1,0 +1,12 @@
+{
+  "id": "ddos",
+  "name": "Ddos",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Ddos",
+    "node": "runtime-node/src/modules/ddos"
+  }
+}

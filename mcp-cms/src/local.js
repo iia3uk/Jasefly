@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { repoRoot, markBuild, markTest, readGate, sha256File } from './gate.js';
+import { buildVpsArtifact } from './deploy/vps.js';
 
 /**
  * @param {string} cmd
@@ -126,13 +127,32 @@ export function findLatestUpdateZip() {
 }
 
 /**
- * Step 1: build frontend + hosting update package.
+ * Step 1: build frontend + target package.
+ * @param {{ target?: 'shared' | 'vps' }} [opts]
  * @returns {Record<string, unknown>}
  */
-export function localBuild() {
+export function localBuild(opts = {}) {
+  const target = opts.target === 'vps' ? 'vps' : 'shared';
   const root = repoRoot();
   const frontend = path.join(root, 'frontend');
   const logs = [];
+
+  if (target === 'vps') {
+    const res = buildVpsArtifact();
+    logs.push(...(res.logs || []));
+    if (!res.ok) {
+      markBuild({ build_ok: false, build_log: JSON.stringify(logs), target: 'vps' });
+      return { ok: false, step: res.step || 'vps_build', logs, gate: readGate(), target: 'vps' };
+    }
+    markBuild({
+      build_ok: true,
+      zip_path: res.artifact,
+      zip_sha256: sha256File(res.artifact),
+      build_log: 'ok',
+      target: 'vps',
+    });
+    return { ok: true, target: 'vps', artifact: res.artifact, stamp: res.stamp, logs, gate: readGate() };
+  }
 
   const buildFront = run(npmCmd(), ['run', 'build'], { cwd: frontend, timeoutMs: 10 * 60 * 1000 });
   logs.push({ step: 'frontend_build', ...buildFront });
@@ -163,6 +183,7 @@ export function localBuild() {
     zip_path: zip,
     zip_sha256: sha256File(zip),
     build_log: 'ok',
+    target: 'shared',
   });
 
   return {

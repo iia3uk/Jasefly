@@ -746,10 +746,69 @@ function shouldSkipBackend(absPath, entry) {
   return false;
 }
 
+function assertSharedCapabilityGate() {
+  const modsDir = path.join(ROOT, 'contracts', 'modules');
+  const capsPath = path.join(ROOT, 'contracts', 'capabilities', 'capabilities.v1.json');
+  if (!fs.existsSync(capsPath) || !fs.existsSync(modsDir)) {
+    say(TAG.warn, 'contracts/ missing — skip shared capability gate');
+    return;
+  }
+  const caps = JSON.parse(fs.readFileSync(capsPath, 'utf8'));
+  const extended = new Set(caps.extended || []);
+  const allowSkip = process.env.JASEFLY_ALLOW_SKIP_INCOMPATIBLE_MODULES === '1'
+    || process.argv.includes('--allow-skip-incompatible-modules');
+  /** @type {string[]} */
+  const blocked = [];
+  for (const f of fs.readdirSync(modsDir).filter((x) => x.endsWith('.manifest.json'))) {
+    const m = JSON.parse(fs.readFileSync(path.join(modsDir, f), 'utf8'));
+    const need = (m.runtime && m.runtime.capabilities) || [];
+    const needsExt = need.filter((c) => extended.has(c));
+    if (m.runtime && m.runtime.baseline === false) {
+      blocked.push(`${f}: runtime.baseline=false`);
+    } else if (needsExt.length) {
+      blocked.push(`${f}: requires VPS-only [${needsExt.join(', ')}]`);
+    }
+  }
+  if (blocked.length && !allowSkip) {
+    fail(
+      'Shared hosting compiler rejected VPS-only modules:\n  - '
+      + blocked.join('\n  - ')
+      + '\nSet JASEFLY_ALLOW_SKIP_INCOMPATIBLE_MODULES=1 to exclude them explicitly (never silent).',
+    );
+  }
+  if (blocked.length && allowSkip) {
+    say(TAG.warn, `Skipping incompatible modules (explicit allow): ${blocked.length}`);
+  } else {
+    say(TAG.ok, 'Shared capability gate passed');
+  }
+}
+
 function copyBackend(mode) {
   const dest = path.join(PUBLIC_HTML, 'api');
   say(TAG.info, 'Copying PHP backend runtime files → public_html/api/');
   copyDirFiltered(BACKEND, dest, shouldSkipBackend);
+
+  // Ship contracts SoT subset for runtime capability discovery on shared hosts
+  const contractsSrc = path.join(ROOT, 'contracts');
+  if (fs.existsSync(contractsSrc)) {
+    const contractsDest = path.join(dest, 'contracts');
+    mkdirp(contractsDest);
+    for (const rel of [
+      'capabilities/capabilities.v1.json',
+      'errors/errors.v1.json',
+      'permissions/permissions-core.v1.json',
+      'events/events-core.v1.json',
+      'resources/admin-resources.v1.json',
+      'openapi/jasefly.v1.yaml',
+    ]) {
+      const from = path.join(contractsSrc, rel);
+      if (fs.existsSync(from)) {
+        mkdirp(path.dirname(path.join(contractsDest, rel)));
+        copyFile(from, path.join(contractsDest, rel));
+      }
+    }
+    say(TAG.ok, 'contracts SoT subset → api/contracts/');
+  }
 
   if (mode === 'full') {
     // Storage skeleton (empty, writable) — full install only
@@ -1185,6 +1244,7 @@ async function main() {
 
   // 1–3 checks
   validateProjectStructure();
+  assertSharedCapabilityGate();
 
   if (!which('node')) fail('Node.js not found in PATH.');
   say(TAG.ok, `Node.js ${run('node', ['-v']).stdout}`);

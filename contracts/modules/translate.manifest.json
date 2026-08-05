@@ -1,0 +1,12 @@
+{
+  "id": "translate",
+  "name": "Translate",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Translate",
+    "node": "runtime-node/src/modules/translate"
+  }
+}

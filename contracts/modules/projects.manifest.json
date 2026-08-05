@@ -1,0 +1,12 @@
+{
+  "id": "projects",
+  "name": "Projects",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Projects",
+    "node": "runtime-node/src/modules/projects"
+  }
+}

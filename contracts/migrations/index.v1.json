@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "dialect": "mysql",
+  "install_only": [
+    "001_schema.sql"
+  ],
+  "incremental": [
+    "002_enterprise.sql",
+    "003_site_templates.sql",
+    "004_project_media.sql",
+    "005_page_layouts.sql",
+    "006_page_revisions.sql",
+    "007_plugins.sql",
+    "008_security_2fa.sql",
+    "009_commerce_catalog.sql",
+    "010_maintenance_settings.sql",
+    "011_project_status_cancelled.sql",
+    "012_activity_source.sql",
+    "013_blog_project_link.sql",
+    "014_project_media_url.sql",
+    "015_path_redirects.sql",
+    "016_cookie_consent.sql",
+    "017_admin_base_path.sql",
+    "018_harden_role_permissions.sql",
+    "019_seo_target_regions.sql",
+    "020_installed_modules.sql",
+    "021_platform_sdk.sql",
+    "022_platform_capabilities_ext.sql",
+    "023_theme_header_style.sql",
+    "024_admin_access_layer.sql",
+    "025_demo_sandbox.sql",
+    "026_project_featured_priority.sql",
+    "027_project_cover_orientations.sql"
+  ]
+}

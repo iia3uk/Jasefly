@@ -1,0 +1,12 @@
+{
+  "id": "mail",
+  "name": "Mail",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Mail",
+    "node": "runtime-node/src/modules/mail"
+  }
+}

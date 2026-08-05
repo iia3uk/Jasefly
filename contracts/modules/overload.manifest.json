@@ -1,0 +1,12 @@
+{
+  "id": "overload",
+  "name": "Overload",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Overload",
+    "node": "runtime-node/src/modules/overload"
+  }
+}

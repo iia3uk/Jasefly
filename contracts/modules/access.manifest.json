@@ -1,0 +1,12 @@
+{
+  "id": "access",
+  "name": "Access",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Access",
+    "node": "runtime-node/src/modules/access"
+  }
+}

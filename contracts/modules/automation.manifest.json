@@ -1,0 +1,12 @@
+{
+  "id": "automation",
+  "name": "Automation",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Automation",
+    "node": "runtime-node/src/modules/automation"
+  }
+}

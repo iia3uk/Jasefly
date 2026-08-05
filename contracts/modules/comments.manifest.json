@@ -1,0 +1,12 @@
+{
+  "id": "comments",
+  "name": "Comments",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Comments",
+    "node": "runtime-node/src/modules/comments"
+  }
+}

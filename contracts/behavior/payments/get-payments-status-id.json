@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "behavior",
+  "id": "GET /payments/status/{id}",
+  "module": "payments",
+  "method": "GET",
+  "path": "/payments/status/{id}",
+  "authentication": "public",
+  "permission": null,
+  "permission_middleware": false,
+  "capabilities": [],
+  "http_statuses": [
+    200,
+    404
+  ],
+  "request_schema": null,
+  "response_schema": "contracts/schema/envelope.success.v1.json",
+  "error_schema": "contracts/schema/envelope.error.v1.json",
+  "database_tables": [
+    "payments",
+    "orders"
+  ],
+  "events": [],
+  "side_effects": [],
+  "lifecycle_transitions": [],
+  "module_default_enabled": true,
+  "requires_module_enabled": false,
+  "scenarios": [
+    {
+      "id": "missing-resource",
+      "auth": "none",
+      "path_params": {
+        "id": "999999001"
+      },
+      "expect": {
+        "status": [
+          200,
+          404,
+          401,
+          403,
+          409
+        ],
+        "success": null
+      },
+      "compare": {
+        "http_status": true,
+        "json_envelope": true,
+        "error_code": true,
+        "deep_json": "shape",
+        "db": false,
+        "events": false
+      }
+    }
+  ],
+  "content_hash": "674c46aba22f788a"
+}

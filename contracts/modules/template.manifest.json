@@ -1,0 +1,12 @@
+{
+  "id": "template",
+  "name": "Template",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Template",
+    "node": "runtime-node/src/modules/template"
+  }
+}

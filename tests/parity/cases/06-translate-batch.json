@@ -1,0 +1,18 @@
+{
+  "id": "translate-batch",
+  "method": "POST",
+  "path": "/translate/batch",
+  "body": {
+    "texts": ["Привет, мир"],
+    "source": "ru",
+    "target": "en"
+  },
+  "expect": {
+    "status": 200,
+    "success": true,
+    "data_contains": {
+      "translations": true,
+      "provider": true
+    }
+  }
+}

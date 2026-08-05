@@ -1,0 +1,12 @@
+{
+  "id": "seo",
+  "name": "Seo",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Seo",
+    "node": "runtime-node/src/modules/seo"
+  }
+}

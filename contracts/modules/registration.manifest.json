@@ -1,0 +1,12 @@
+{
+  "id": "registration",
+  "name": "Registration",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Registration",
+    "node": "runtime-node/src/modules/registration"
+  }
+}

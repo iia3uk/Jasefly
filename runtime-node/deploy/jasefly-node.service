@@ -1,0 +1,15 @@
+[Unit]
+Description=Jasefly Node VPS runtime
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/jasefly/current/runtime-node
+EnvironmentFile=/var/www/jasefly/shared/config/runtime.env
+ExecStart=/usr/bin/node dist/index.js
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

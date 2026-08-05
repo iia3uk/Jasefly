@@ -71,6 +71,32 @@ final class SystemModule extends AbstractModule
             'api_version' => 'v1',
         ]]));
 
+        $router->get($p('/capabilities'), function () {
+            $candidates = [
+                dirname(__DIR__, 4) . '/contracts/capabilities/capabilities.v1.json', // monorepo
+                dirname(__DIR__, 3) . '/contracts/capabilities/capabilities.v1.json', // hosting api/contracts
+            ];
+            $doc = ['baseline' => [], 'extended' => [], 'capabilities' => []];
+            foreach ($candidates as $path) {
+                if (is_file($path)) {
+                    $parsed = json_decode((string) file_get_contents($path), true);
+                    if (is_array($parsed)) {
+                        $doc = $parsed;
+                        break;
+                    }
+                }
+            }
+            $baseline = is_array($doc['baseline'] ?? null) ? $doc['baseline'] : [];
+            $extended = is_array($doc['extended'] ?? null) ? $doc['extended'] : [];
+            Response::json(['data' => [
+                'runtime' => 'php-shared',
+                'baseline' => $baseline,
+                'extended' => $extended,
+                // Shared runtime exposes baseline only (VPS extended caps unavailable)
+                'available' => array_values(array_unique($baseline)),
+            ]]);
+        });
+
         $router->get($p('/docs'), fn() => Response::json(['data' => require dirname(__DIR__, 3) . '/docs/openapi.php']));
 
         // Legacy catalog endpoint (installed package manager owns GET /admin/modules).

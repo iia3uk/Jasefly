@@ -1,0 +1,11 @@
+{
+  "id": "login-invalid",
+  "method": "POST",
+  "path": "/auth/login",
+  "body": { "email": "nobody@example.com", "password": "wrong" },
+  "expect": {
+    "status": 401,
+    "success": false,
+    "error": "Invalid credentials"
+  }
+}

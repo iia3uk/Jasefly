@@ -1,0 +1,12 @@
+{
+  "id": "newsletter",
+  "name": "Newsletter",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Newsletter",
+    "node": "runtime-node/src/modules/newsletter"
+  }
+}

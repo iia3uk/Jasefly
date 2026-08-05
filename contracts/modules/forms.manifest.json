@@ -1,0 +1,12 @@
+{
+  "id": "forms",
+  "name": "Forms",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Forms",
+    "node": "runtime-node/src/modules/forms"
+  }
+}

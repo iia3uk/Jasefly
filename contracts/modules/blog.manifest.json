@@ -1,0 +1,12 @@
+{
+  "id": "blog",
+  "name": "Blog",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Blog",
+    "node": "runtime-node/src/modules/blog"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "tables": {
+    "social-links": "social_links",
+    "statistics": "statistics",
+    "experience": "experience",
+    "education": "education",
+    "skill-categories": "skill_categories",
+    "skills": "skills",
+    "projects": "projects",
+    "project-categories": "project_categories",
+    "blog": "blog_posts",
+    "blog-categories": "blog_categories",
+    "blog-tags": "blog_tags",
+    "services": "services",
+    "testimonials": "testimonials",
+    "navigation": "navigation_items",
+    "homepage-sections": "homepage_sections",
+    "pages": "pages",
+    "webhooks": "webhooks",
+    "orders": "orders",
+    "payments": "payments",
+    "products": "products"
+  },
+  "singletons": {
+    "profile": "profile",
+    "contact-info": "contact_info",
+    "footer": "footer_settings",
+    "hero": "hero_settings",
+    "seo": "seo_settings",
+    "site-settings": "site_settings",
+    "theme": "theme_settings",
+    "email-settings": "email_settings"
+  },
+  "slug_tables": {
+    "projects": {
+      "table": "projects",
+      "type": "project"
+    },
+    "blog": {
+      "table": "blog_posts",
+      "type": "blog_post"
+    },
+    "pages": {
+      "table": "pages",
+      "type": "page"
+    },
+    "services": {
+      "table": "services",
+      "type": "service"
+    },
+    "products": {
+      "table": "products",
+      "type": "product"
+    },
+    "project-categories": {
+      "table": "project_categories",
+      "type": "project_category"
+    },
+    "blog-categories": {
+      "table": "blog_categories",
+      "type": "blog_category"
+    },
+    "skill-categories": {
+      "table": "skill_categories",
+      "type": "skill_category"
+    }
+  }
+}

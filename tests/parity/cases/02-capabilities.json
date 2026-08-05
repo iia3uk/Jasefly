@@ -1,0 +1,15 @@
+{
+  "id": "capabilities",
+  "method": "GET",
+  "path": "/capabilities",
+  "parity": false,
+  "expect": {
+    "status": 200,
+    "success": true,
+    "data_contains": {
+      "runtime": true,
+      "baseline": true,
+      "available": true
+    }
+  }
+}

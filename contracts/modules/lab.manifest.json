@@ -1,0 +1,12 @@
+{
+  "id": "lab",
+  "name": "Lab",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Lab",
+    "node": "runtime-node/src/modules/lab"
+  }
+}

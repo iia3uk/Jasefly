@@ -1,0 +1,12 @@
+{
+  "id": "orders",
+  "name": "Orders",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Orders",
+    "node": "runtime-node/src/modules/orders"
+  }
+}

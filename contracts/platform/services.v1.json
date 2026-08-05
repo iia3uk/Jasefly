@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "services": {
+    "database": { "methods": ["all", "one", "run", "lastInsertId", "transaction"] },
+    "storage": { "methods": ["get", "put", "delete", "exists", "list", "publicUrl"] },
+    "events": { "methods": ["publish", "publishLater", "subscribe"] },
+    "scheduler": { "methods": ["enqueue", "cancel", "registerHandler"] },
+    "permissions": { "methods": ["can", "require"] },
+    "capabilities": { "methods": ["has", "require", "list", "register"] },
+    "access": { "methods": ["can", "canCapability", "registerProvider", "registerCapability"] },
+    "media": { "methods": ["store", "url", "delete"] },
+    "settings": { "methods": ["get", "set"] },
+    "logger": { "methods": ["info", "warning", "error"] },
+    "config": { "methods": ["get"] },
+    "http": { "methods": ["request"] },
+    "cache": { "methods": ["get", "set", "delete"] },
+    "mail": { "methods": ["send"] },
+    "notifications": { "methods": ["send"] },
+    "users": { "methods": ["current", "find"] },
+    "content": { "methods": ["getPage", "list"] },
+    "builder": { "methods": ["registerWidget"] },
+    "health": { "methods": ["report"] },
+    "translations": { "methods": ["translate"] },
+    "assets": { "methods": ["url"] }
+  }
+}

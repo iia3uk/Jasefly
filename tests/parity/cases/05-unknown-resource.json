@@ -1,0 +1,11 @@
+{
+  "id": "unknown-resource",
+  "method": "GET",
+  "path": "/admin/not-a-real-resource-xyz",
+  "headers": { "Authorization": "Bearer invalid" },
+  "expect": {
+    "status": 401,
+    "success": false,
+    "error": "Unauthorized"
+  }
+}

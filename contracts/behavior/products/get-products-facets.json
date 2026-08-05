@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "kind": "behavior",
+  "id": "GET /products/facets",
+  "module": "products",
+  "method": "GET",
+  "path": "/products/facets",
+  "authentication": "public",
+  "permission": null,
+  "permission_middleware": false,
+  "capabilities": [],
+  "http_statuses": [
+    200,
+    404
+  ],
+  "request_schema": null,
+  "response_schema": "contracts/schema/envelope.success.v1.json",
+  "error_schema": "contracts/schema/envelope.error.v1.json",
+  "database_tables": [
+    "products"
+  ],
+  "events": [],
+  "side_effects": [],
+  "lifecycle_transitions": [],
+  "module_default_enabled": true,
+  "requires_module_enabled": false,
+  "scenarios": [
+    {
+      "id": "happy-get",
+      "auth": "none",
+      "expect": {
+        "status": [
+          200,
+          400,
+          401,
+          403,
+          404,
+          409,
+          422
+        ],
+        "success": null
+      },
+      "compare": {
+        "http_status": true,
+        "json_envelope": true,
+        "error_code": true,
+        "db": false,
+        "events": false,
+        "deep_json": "shape"
+      }
+    }
+  ],
+  "content_hash": "6e1bbb526be41628"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "webhooks",
+  "name": "Webhooks",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Webhooks",
+    "node": "runtime-node/src/modules/webhooks"
+  }
+}

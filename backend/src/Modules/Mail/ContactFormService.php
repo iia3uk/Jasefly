@@ -197,8 +197,9 @@ final class ContactFormService
         if ($row) {
             $this->db->run('UPDATE rate_limits SET attempts = attempts + 1 WHERE id=?', [$row['id']]);
         } else {
+            $now = $this->db->driver() === 'sqlite' ? "datetime('now')" : 'NOW()';
             $this->db->run(
-                'INSERT INTO rate_limits(ip_address, endpoint, attempts, window_start) VALUES(?,?,1,NOW())',
+                "INSERT INTO rate_limits(ip_address, endpoint, attempts, window_start) VALUES(?,?,1,{$now})",
                 [$ip, $endpoint]
             );
         }

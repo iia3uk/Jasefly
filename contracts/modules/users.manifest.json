@@ -1,0 +1,12 @@
+{
+  "id": "users",
+  "name": "Users",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Users",
+    "node": "runtime-node/src/modules/users"
+  }
+}

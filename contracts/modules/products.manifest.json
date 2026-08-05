@@ -1,0 +1,12 @@
+{
+  "id": "products",
+  "name": "Products",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Products",
+    "node": "runtime-node/src/modules/products"
+  }
+}

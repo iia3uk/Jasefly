@@ -1,0 +1,12 @@
+{
+  "id": "module-manager",
+  "name": "ModuleManager",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/ModuleManager",
+    "node": "runtime-node/src/modules/module-manager"
+  }
+}

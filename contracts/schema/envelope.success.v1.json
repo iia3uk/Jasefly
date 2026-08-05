@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jasefly.local/schemas/envelope.success.v1.json",
+  "title": "SuccessEnvelope",
+  "type": "object",
+  "required": ["success", "data", "meta"],
+  "properties": {
+    "success": { "const": true },
+    "data": true,
+    "meta": {
+      "type": "object",
+      "required": ["api_version"],
+      "properties": {
+        "api_version": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

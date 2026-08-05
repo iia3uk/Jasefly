@@ -1,0 +1,14 @@
+{
+  "id": "payments-config",
+  "method": "GET",
+  "path": "/payments/config",
+  "parity": false,
+  "expect": {
+    "status": 200,
+    "success": true,
+    "data_contains": {
+      "currency": true,
+      "provider": true
+    }
+  }
+}

@@ -1,0 +1,2092 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-04T23:03:14.094Z",
+  "count": 411,
+  "modules": {
+    "analytics": 6,
+    "automation": 8,
+    "content": 82,
+    "blog": 8,
+    "comments": 5,
+    "system": 74,
+    "forms": 14,
+    "lab": 14,
+    "media": 14,
+    "module-manager": 23,
+    "newsletter": 20,
+    "notifications": 9,
+    "payments": 16,
+    "products": 11,
+    "projects": 12,
+    "seo": 8,
+    "support": 22,
+    "users": 9,
+    "webhooks": 5,
+    "access": 8,
+    "ddos": 5,
+    "demo": 5,
+    "orders": 8,
+    "overload": 3,
+    "scheduler": 6,
+    "translate": 5,
+    "registration": 6,
+    "mail": 5
+  },
+  "routes": [
+    {
+      "id": "DELETE /admin/analytics/goals/{id}",
+      "module": "analytics",
+      "file": "contracts/behavior/analytics/delete-admin-analytics-goals-id.json"
+    },
+    {
+      "id": "DELETE /admin/automations/{id}",
+      "module": "automation",
+      "file": "contracts/behavior/automation/delete-admin-automations-id.json"
+    },
+    {
+      "id": "DELETE /admin/blog-categories/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/delete-admin-blog-categories-id.json"
+    },
+    {
+      "id": "DELETE /admin/blog-tags/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/delete-admin-blog-tags-id.json"
+    },
+    {
+      "id": "DELETE /admin/blog/{id}",
+      "module": "blog",
+      "file": "contracts/behavior/blog/delete-admin-blog-id.json"
+    },
+    {
+      "id": "DELETE /admin/comments/{id}",
+      "module": "comments",
+      "file": "contracts/behavior/comments/delete-admin-comments-id.json"
+    },
+    {
+      "id": "DELETE /admin/contact-messages/{id}",
+      "module": "system",
+      "file": "contracts/behavior/system/delete-admin-contact-messages-id.json"
+    },
+    {
+      "id": "DELETE /admin/education/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/delete-admin-education-id.json"
+    },
+    {
+      "id": "DELETE /admin/experience/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/delete-admin-experience-id.json"
+    },
+    {
+      "id": "DELETE /admin/form-submissions/{id}",
+      "module": "forms",
+      "file": "contracts/behavior/forms/delete-admin-form-submissions-id.json"
+    },
+    {
+      "id": "DELETE /admin/forms/{id}",
+      "module": "forms",
+      "file": "contracts/behavior/forms/delete-admin-forms-id.json"
+    },
+    {
+      "id": "DELETE /admin/homepage-sections/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/delete-admin-homepage-sections-id.json"
+    },
+    {
+      "id": "DELETE /admin/lab/experiments/{id}",
+      "module": "lab",
+      "file": "contracts/behavior/lab/delete-admin-lab-experiments-id.json"
+    },
+    {
+      "id": "DELETE /admin/media/folders/{id}",
+      "module": "media",
+      "file": "contracts/behavior/media/delete-admin-media-folders-id.json"
+    },
+    {
+      "id": "DELETE /admin/media/{id}",
+      "module": "media",
+      "file": "contracts/behavior/media/delete-admin-media-id.json"
+    },
+    {
+      "id": "DELETE /admin/modules/{slug}",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/delete-admin-modules-slug.json"
+    },
+    {
+      "id": "DELETE /admin/navigation/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/delete-admin-navigation-id.json"
+    },
+    {
+      "id": "DELETE /admin/newsletter/campaigns/{id}",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/delete-admin-newsletter-campaigns-id.json"
+    },
+    {
+      "id": "DELETE /admin/newsletter/lists/{id}",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/delete-admin-newsletter-lists-id.json"
+    },
+    {
+      "id": "DELETE /admin/newsletter/subscribers/{id}",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/delete-admin-newsletter-subscribers-id.json"
+    },
+    {
+      "id": "DELETE /admin/notification-templates/{id}",
+      "module": "notifications",
+      "file": "contracts/behavior/notifications/delete-admin-notification-templates-id.json"
+    },
+    {
+      "id": "DELETE /admin/orders/{id}",
+      "module": "payments",
+      "file": "contracts/behavior/payments/delete-admin-orders-id.json"
+    },
+    {
+      "id": "DELETE /admin/pages/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/delete-admin-pages-id.json"
+    },
+    {
+      "id": "DELETE /admin/payments/{id}",
+      "module": "payments",
+      "file": "contracts/behavior/payments/delete-admin-payments-id.json"
+    },
+    {
+      "id": "DELETE /admin/products/{id}",
+      "module": "products",
+      "file": "contracts/behavior/products/delete-admin-products-id.json"
+    },
+    {
+      "id": "DELETE /admin/project-categories/{id}",
+      "module": "projects",
+      "file": "contracts/behavior/projects/delete-admin-project-categories-id.json"
+    },
+    {
+      "id": "DELETE /admin/projects/{id}",
+      "module": "projects",
+      "file": "contracts/behavior/projects/delete-admin-projects-id.json"
+    },
+    {
+      "id": "DELETE /admin/redirects/slug/{id}",
+      "module": "seo",
+      "file": "contracts/behavior/seo/delete-admin-redirects-slug-id.json"
+    },
+    {
+      "id": "DELETE /admin/redirects/{id}",
+      "module": "seo",
+      "file": "contracts/behavior/seo/delete-admin-redirects-id.json"
+    },
+    {
+      "id": "DELETE /admin/services/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/delete-admin-services-id.json"
+    },
+    {
+      "id": "DELETE /admin/skill-categories/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/delete-admin-skill-categories-id.json"
+    },
+    {
+      "id": "DELETE /admin/skills/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/delete-admin-skills-id.json"
+    },
+    {
+      "id": "DELETE /admin/social-links/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/delete-admin-social-links-id.json"
+    },
+    {
+      "id": "DELETE /admin/statistics/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/delete-admin-statistics-id.json"
+    },
+    {
+      "id": "DELETE /admin/support/faq/{id}",
+      "module": "support",
+      "file": "contracts/behavior/support/delete-admin-support-faq-id.json"
+    },
+    {
+      "id": "DELETE /admin/testimonials/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/delete-admin-testimonials-id.json"
+    },
+    {
+      "id": "DELETE /admin/trash/{resource}/{id}",
+      "module": "system",
+      "file": "contracts/behavior/system/delete-admin-trash-resource-id.json"
+    },
+    {
+      "id": "DELETE /admin/users/{id}",
+      "module": "users",
+      "file": "contracts/behavior/users/delete-admin-users-id.json"
+    },
+    {
+      "id": "DELETE /admin/webhooks/{id}",
+      "module": "webhooks",
+      "file": "contracts/behavior/webhooks/delete-admin-webhooks-id.json"
+    },
+    {
+      "id": "GET /access/providers",
+      "module": "access",
+      "file": "contracts/behavior/access/get-access-providers.json"
+    },
+    {
+      "id": "GET /admin/access/bootstrap",
+      "module": "access",
+      "file": "contracts/behavior/access/get-admin-access-bootstrap.json"
+    },
+    {
+      "id": "GET /admin/access/users/{id}/effective",
+      "module": "access",
+      "file": "contracts/behavior/access/get-admin-access-users-id-effective.json"
+    },
+    {
+      "id": "GET /admin/access/users/{id}/overrides",
+      "module": "access",
+      "file": "contracts/behavior/access/get-admin-access-users-id-overrides.json"
+    },
+    {
+      "id": "GET /admin/activity",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-activity.json"
+    },
+    {
+      "id": "GET /admin/analytics/goals",
+      "module": "analytics",
+      "file": "contracts/behavior/analytics/get-admin-analytics-goals.json"
+    },
+    {
+      "id": "GET /admin/analytics/overview",
+      "module": "analytics",
+      "file": "contracts/behavior/analytics/get-admin-analytics-overview.json"
+    },
+    {
+      "id": "GET /admin/automations",
+      "module": "automation",
+      "file": "contracts/behavior/automation/get-admin-automations.json"
+    },
+    {
+      "id": "GET /admin/automations/{id}",
+      "module": "automation",
+      "file": "contracts/behavior/automation/get-admin-automations-id.json"
+    },
+    {
+      "id": "GET /admin/automations/{id}/runs",
+      "module": "automation",
+      "file": "contracts/behavior/automation/get-admin-automations-id-runs.json"
+    },
+    {
+      "id": "GET /admin/blocks",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-blocks.json"
+    },
+    {
+      "id": "GET /admin/blog",
+      "module": "blog",
+      "file": "contracts/behavior/blog/get-admin-blog.json"
+    },
+    {
+      "id": "GET /admin/blog-categories",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-blog-categories.json"
+    },
+    {
+      "id": "GET /admin/blog-categories/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-blog-categories-id.json"
+    },
+    {
+      "id": "GET /admin/blog-tags",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-blog-tags.json"
+    },
+    {
+      "id": "GET /admin/blog-tags/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-blog-tags-id.json"
+    },
+    {
+      "id": "GET /admin/blog/{id}",
+      "module": "blog",
+      "file": "contracts/behavior/blog/get-admin-blog-id.json"
+    },
+    {
+      "id": "GET /admin/blueprints",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-blueprints.json"
+    },
+    {
+      "id": "GET /admin/blueprints/{key}",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-blueprints-key.json"
+    },
+    {
+      "id": "GET /admin/comments",
+      "module": "comments",
+      "file": "contracts/behavior/comments/get-admin-comments.json"
+    },
+    {
+      "id": "GET /admin/contact-info",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-contact-info.json"
+    },
+    {
+      "id": "GET /admin/contact-messages",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-contact-messages.json"
+    },
+    {
+      "id": "GET /admin/content-pack/info",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-content-pack-info.json"
+    },
+    {
+      "id": "GET /admin/dashboard",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-dashboard.json"
+    },
+    {
+      "id": "GET /admin/ddos/providers",
+      "module": "ddos",
+      "file": "contracts/behavior/ddos/get-admin-ddos-providers.json"
+    },
+    {
+      "id": "GET /admin/ddos/status",
+      "module": "ddos",
+      "file": "contracts/behavior/ddos/get-admin-ddos-status.json"
+    },
+    {
+      "id": "GET /admin/demo/bootstrap",
+      "module": "demo",
+      "file": "contracts/behavior/demo/get-admin-demo-bootstrap.json"
+    },
+    {
+      "id": "GET /admin/education",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-education.json"
+    },
+    {
+      "id": "GET /admin/education/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-education-id.json"
+    },
+    {
+      "id": "GET /admin/email-settings",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-email-settings.json"
+    },
+    {
+      "id": "GET /admin/events",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-events.json"
+    },
+    {
+      "id": "GET /admin/experience",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-experience.json"
+    },
+    {
+      "id": "GET /admin/experience/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-experience-id.json"
+    },
+    {
+      "id": "GET /admin/footer",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-footer.json"
+    },
+    {
+      "id": "GET /admin/form-submissions",
+      "module": "forms",
+      "file": "contracts/behavior/forms/get-admin-form-submissions.json"
+    },
+    {
+      "id": "GET /admin/form-submissions/{id}",
+      "module": "forms",
+      "file": "contracts/behavior/forms/get-admin-form-submissions-id.json"
+    },
+    {
+      "id": "GET /admin/forms",
+      "module": "forms",
+      "file": "contracts/behavior/forms/get-admin-forms.json"
+    },
+    {
+      "id": "GET /admin/forms/{id}",
+      "module": "forms",
+      "file": "contracts/behavior/forms/get-admin-forms-id.json"
+    },
+    {
+      "id": "GET /admin/forms/{id}/export",
+      "module": "forms",
+      "file": "contracts/behavior/forms/get-admin-forms-id-export.json"
+    },
+    {
+      "id": "GET /admin/forms/{id}/submissions",
+      "module": "forms",
+      "file": "contracts/behavior/forms/get-admin-forms-id-submissions.json"
+    },
+    {
+      "id": "GET /admin/hero",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-hero.json"
+    },
+    {
+      "id": "GET /admin/homepage-sections",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-homepage-sections.json"
+    },
+    {
+      "id": "GET /admin/homepage-sections/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-homepage-sections-id.json"
+    },
+    {
+      "id": "GET /admin/lab/entries",
+      "module": "lab",
+      "file": "contracts/behavior/lab/get-admin-lab-entries.json"
+    },
+    {
+      "id": "GET /admin/lab/experiments",
+      "module": "lab",
+      "file": "contracts/behavior/lab/get-admin-lab-experiments.json"
+    },
+    {
+      "id": "GET /admin/lab/experiments/{id}",
+      "module": "lab",
+      "file": "contracts/behavior/lab/get-admin-lab-experiments-id.json"
+    },
+    {
+      "id": "GET /admin/lab/experiments/{id}/preview",
+      "module": "lab",
+      "file": "contracts/behavior/lab/get-admin-lab-experiments-id-preview.json"
+    },
+    {
+      "id": "GET /admin/mcp/diagnostics",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-mcp-diagnostics.json"
+    },
+    {
+      "id": "GET /admin/mcp/last-error",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-mcp-last-error.json"
+    },
+    {
+      "id": "GET /admin/mcp/pages-digest",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-mcp-pages-digest.json"
+    },
+    {
+      "id": "GET /admin/mcp/pages-digest/{idOrSlug}",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-mcp-pages-digest-idorslug.json"
+    },
+    {
+      "id": "GET /admin/mcp/schema",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-mcp-schema.json"
+    },
+    {
+      "id": "GET /admin/mcp/site-map",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-mcp-site-map.json"
+    },
+    {
+      "id": "GET /admin/media",
+      "module": "media",
+      "file": "contracts/behavior/media/get-admin-media.json"
+    },
+    {
+      "id": "GET /admin/media/folders",
+      "module": "media",
+      "file": "contracts/behavior/media/get-admin-media-folders.json"
+    },
+    {
+      "id": "GET /admin/media/missing",
+      "module": "media",
+      "file": "contracts/behavior/media/get-admin-media-missing.json"
+    },
+    {
+      "id": "GET /admin/media/unused",
+      "module": "media",
+      "file": "contracts/behavior/media/get-admin-media-unused.json"
+    },
+    {
+      "id": "GET /admin/migrations",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-migrations.json"
+    },
+    {
+      "id": "GET /admin/module-catalog",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-module-catalog.json"
+    },
+    {
+      "id": "GET /admin/module-operations",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/get-admin-module-operations.json"
+    },
+    {
+      "id": "GET /admin/module-operations/{id}",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/get-admin-module-operations-id.json"
+    },
+    {
+      "id": "GET /admin/modules",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/get-admin-modules.json"
+    },
+    {
+      "id": "GET /admin/modules/runtime",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/get-admin-modules-runtime.json"
+    },
+    {
+      "id": "GET /admin/modules/{slug}",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/get-admin-modules-slug.json"
+    },
+    {
+      "id": "GET /admin/modules/{slug}/compatibility",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/get-admin-modules-slug-compatibility.json"
+    },
+    {
+      "id": "GET /admin/modules/{slug}/files",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/get-admin-modules-slug-files.json"
+    },
+    {
+      "id": "GET /admin/modules/{slug}/health",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/get-admin-modules-slug-health.json"
+    },
+    {
+      "id": "GET /admin/modules/{slug}/migrations",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/get-admin-modules-slug-migrations.json"
+    },
+    {
+      "id": "GET /admin/navigation",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-navigation.json"
+    },
+    {
+      "id": "GET /admin/navigation/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-navigation-id.json"
+    },
+    {
+      "id": "GET /admin/newsletter/campaigns",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/get-admin-newsletter-campaigns.json"
+    },
+    {
+      "id": "GET /admin/newsletter/lists",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/get-admin-newsletter-lists.json"
+    },
+    {
+      "id": "GET /admin/newsletter/subscribers",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/get-admin-newsletter-subscribers.json"
+    },
+    {
+      "id": "GET /admin/newsletter/subscribers/export",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/get-admin-newsletter-subscribers-export.json"
+    },
+    {
+      "id": "GET /admin/notification-templates",
+      "module": "notifications",
+      "file": "contracts/behavior/notifications/get-admin-notification-templates.json"
+    },
+    {
+      "id": "GET /admin/notifications",
+      "module": "notifications",
+      "file": "contracts/behavior/notifications/get-admin-notifications.json"
+    },
+    {
+      "id": "GET /admin/notifications/unread-count",
+      "module": "notifications",
+      "file": "contracts/behavior/notifications/get-admin-notifications-unread-count.json"
+    },
+    {
+      "id": "GET /admin/orders",
+      "module": "payments",
+      "file": "contracts/behavior/payments/get-admin-orders.json"
+    },
+    {
+      "id": "GET /admin/orders/export",
+      "module": "orders",
+      "file": "contracts/behavior/orders/get-admin-orders-export.json"
+    },
+    {
+      "id": "GET /admin/orders/{id}",
+      "module": "payments",
+      "file": "contracts/behavior/payments/get-admin-orders-id.json"
+    },
+    {
+      "id": "GET /admin/overload/status",
+      "module": "overload",
+      "file": "contracts/behavior/overload/get-admin-overload-status.json"
+    },
+    {
+      "id": "GET /admin/page-templates",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-page-templates.json"
+    },
+    {
+      "id": "GET /admin/pages",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-pages.json"
+    },
+    {
+      "id": "GET /admin/pages/revisions/{revisionId}",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-pages-revisions-revisionid.json"
+    },
+    {
+      "id": "GET /admin/pages/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-pages-id.json"
+    },
+    {
+      "id": "GET /admin/pages/{id}/revisions",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-pages-id-revisions.json"
+    },
+    {
+      "id": "GET /admin/payments",
+      "module": "payments",
+      "file": "contracts/behavior/payments/get-admin-payments.json"
+    },
+    {
+      "id": "GET /admin/payments/{id}",
+      "module": "payments",
+      "file": "contracts/behavior/payments/get-admin-payments-id.json"
+    },
+    {
+      "id": "GET /admin/permissions",
+      "module": "users",
+      "file": "contracts/behavior/users/get-admin-permissions.json"
+    },
+    {
+      "id": "GET /admin/platform/capabilities",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/get-admin-platform-capabilities.json"
+    },
+    {
+      "id": "GET /admin/platform/sdk",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/get-admin-platform-sdk.json"
+    },
+    {
+      "id": "GET /admin/plugins",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-plugins.json"
+    },
+    {
+      "id": "GET /admin/products",
+      "module": "products",
+      "file": "contracts/behavior/products/get-admin-products.json"
+    },
+    {
+      "id": "GET /admin/products-meta/templates",
+      "module": "products",
+      "file": "contracts/behavior/products/get-admin-products-meta-templates.json"
+    },
+    {
+      "id": "GET /admin/products/{id}",
+      "module": "products",
+      "file": "contracts/behavior/products/get-admin-products-id.json"
+    },
+    {
+      "id": "GET /admin/profile",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-profile.json"
+    },
+    {
+      "id": "GET /admin/project-categories",
+      "module": "projects",
+      "file": "contracts/behavior/projects/get-admin-project-categories.json"
+    },
+    {
+      "id": "GET /admin/project-categories/{id}",
+      "module": "projects",
+      "file": "contracts/behavior/projects/get-admin-project-categories-id.json"
+    },
+    {
+      "id": "GET /admin/projects",
+      "module": "projects",
+      "file": "contracts/behavior/projects/get-admin-projects.json"
+    },
+    {
+      "id": "GET /admin/projects/{id}",
+      "module": "projects",
+      "file": "contracts/behavior/projects/get-admin-projects-id.json"
+    },
+    {
+      "id": "GET /admin/public-routes",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-public-routes.json"
+    },
+    {
+      "id": "GET /admin/redirects",
+      "module": "seo",
+      "file": "contracts/behavior/seo/get-admin-redirects.json"
+    },
+    {
+      "id": "GET /admin/redirects/slug",
+      "module": "seo",
+      "file": "contracts/behavior/seo/get-admin-redirects-slug.json"
+    },
+    {
+      "id": "GET /admin/roles",
+      "module": "users",
+      "file": "contracts/behavior/users/get-admin-roles.json"
+    },
+    {
+      "id": "GET /admin/roles/{id}/permissions",
+      "module": "users",
+      "file": "contracts/behavior/users/get-admin-roles-id-permissions.json"
+    },
+    {
+      "id": "GET /admin/scheduler/jobs",
+      "module": "scheduler",
+      "file": "contracts/behavior/scheduler/get-admin-scheduler-jobs.json"
+    },
+    {
+      "id": "GET /admin/scheduler/stats",
+      "module": "scheduler",
+      "file": "contracts/behavior/scheduler/get-admin-scheduler-stats.json"
+    },
+    {
+      "id": "GET /admin/search",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-search.json"
+    },
+    {
+      "id": "GET /admin/seo",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-seo.json"
+    },
+    {
+      "id": "GET /admin/seo/prerender-preview",
+      "module": "seo",
+      "file": "contracts/behavior/seo/get-admin-seo-prerender-preview.json"
+    },
+    {
+      "id": "GET /admin/services",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-services.json"
+    },
+    {
+      "id": "GET /admin/services/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-services-id.json"
+    },
+    {
+      "id": "GET /admin/site-settings",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-site-settings.json"
+    },
+    {
+      "id": "GET /admin/skill-categories",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-skill-categories.json"
+    },
+    {
+      "id": "GET /admin/skill-categories/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-skill-categories-id.json"
+    },
+    {
+      "id": "GET /admin/skills",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-skills.json"
+    },
+    {
+      "id": "GET /admin/skills/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-skills-id.json"
+    },
+    {
+      "id": "GET /admin/social-links",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-social-links.json"
+    },
+    {
+      "id": "GET /admin/social-links/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-social-links-id.json"
+    },
+    {
+      "id": "GET /admin/statistics",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-statistics.json"
+    },
+    {
+      "id": "GET /admin/statistics/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-statistics-id.json"
+    },
+    {
+      "id": "GET /admin/support/faq",
+      "module": "support",
+      "file": "contracts/behavior/support/get-admin-support-faq.json"
+    },
+    {
+      "id": "GET /admin/support/tickets",
+      "module": "support",
+      "file": "contracts/behavior/support/get-admin-support-tickets.json"
+    },
+    {
+      "id": "GET /admin/support/tickets/{id}",
+      "module": "support",
+      "file": "contracts/behavior/support/get-admin-support-tickets-id.json"
+    },
+    {
+      "id": "GET /admin/system/last-error",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-system-last-error.json"
+    },
+    {
+      "id": "GET /admin/system/status",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-system-status.json"
+    },
+    {
+      "id": "GET /admin/testimonials",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-testimonials.json"
+    },
+    {
+      "id": "GET /admin/testimonials/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-admin-testimonials-id.json"
+    },
+    {
+      "id": "GET /admin/theme",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-theme.json"
+    },
+    {
+      "id": "GET /admin/translate/status",
+      "module": "translate",
+      "file": "contracts/behavior/translate/get-admin-translate-status.json"
+    },
+    {
+      "id": "GET /admin/trash",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-trash.json"
+    },
+    {
+      "id": "GET /admin/updates",
+      "module": "system",
+      "file": "contracts/behavior/system/get-admin-updates.json"
+    },
+    {
+      "id": "GET /admin/users",
+      "module": "users",
+      "file": "contracts/behavior/users/get-admin-users.json"
+    },
+    {
+      "id": "GET /admin/users/{id}",
+      "module": "users",
+      "file": "contracts/behavior/users/get-admin-users-id.json"
+    },
+    {
+      "id": "GET /admin/webhooks",
+      "module": "webhooks",
+      "file": "contracts/behavior/webhooks/get-admin-webhooks.json"
+    },
+    {
+      "id": "GET /auth/me",
+      "module": "system",
+      "file": "contracts/behavior/system/get-auth-me.json"
+    },
+    {
+      "id": "GET /auth/verify-email",
+      "module": "registration",
+      "file": "contracts/behavior/registration/get-auth-verify-email.json"
+    },
+    {
+      "id": "GET /blog",
+      "module": "blog",
+      "file": "contracts/behavior/blog/get-blog.json"
+    },
+    {
+      "id": "GET /blog/{slug}",
+      "module": "blog",
+      "file": "contracts/behavior/blog/get-blog-slug.json"
+    },
+    {
+      "id": "GET /capabilities",
+      "module": "system",
+      "file": "contracts/behavior/system/get-capabilities.json"
+    },
+    {
+      "id": "GET /comments",
+      "module": "comments",
+      "file": "contracts/behavior/comments/get-comments.json"
+    },
+    {
+      "id": "GET /commerce/catalog",
+      "module": "payments",
+      "file": "contracts/behavior/payments/get-commerce-catalog.json"
+    },
+    {
+      "id": "GET /commerce/item",
+      "module": "payments",
+      "file": "contracts/behavior/payments/get-commerce-item.json"
+    },
+    {
+      "id": "GET /contact-info",
+      "module": "content",
+      "file": "contracts/behavior/content/get-contact-info.json"
+    },
+    {
+      "id": "GET /docs",
+      "module": "system",
+      "file": "contracts/behavior/system/get-docs.json"
+    },
+    {
+      "id": "GET /education",
+      "module": "content",
+      "file": "contracts/behavior/content/get-education.json"
+    },
+    {
+      "id": "GET /experience",
+      "module": "content",
+      "file": "contracts/behavior/content/get-experience.json"
+    },
+    {
+      "id": "GET /forms/{slug}",
+      "module": "forms",
+      "file": "contracts/behavior/forms/get-forms-slug.json"
+    },
+    {
+      "id": "GET /health",
+      "module": "system",
+      "file": "contracts/behavior/system/get-health.json"
+    },
+    {
+      "id": "GET /lab/{slug}",
+      "module": "lab",
+      "file": "contracts/behavior/lab/get-lab-slug.json"
+    },
+    {
+      "id": "GET /mail/config",
+      "module": "mail",
+      "file": "contracts/behavior/mail/get-mail-config.json"
+    },
+    {
+      "id": "GET /mail/csrf",
+      "module": "mail",
+      "file": "contracts/behavior/mail/get-mail-csrf.json"
+    },
+    {
+      "id": "GET /media/{id}",
+      "module": "media",
+      "file": "contracts/behavior/media/get-media-id.json"
+    },
+    {
+      "id": "GET /modules/runtime-assets",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/get-modules-runtime-assets.json"
+    },
+    {
+      "id": "GET /newsletter/confirm",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/get-newsletter-confirm.json"
+    },
+    {
+      "id": "GET /newsletter/unsubscribe",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/get-newsletter-unsubscribe.json"
+    },
+    {
+      "id": "GET /orders/cart",
+      "module": "orders",
+      "file": "contracts/behavior/orders/get-orders-cart.json"
+    },
+    {
+      "id": "GET /pages/{slug}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-pages-slug.json"
+    },
+    {
+      "id": "GET /payments/config",
+      "module": "payments",
+      "file": "contracts/behavior/payments/get-payments-config.json"
+    },
+    {
+      "id": "GET /payments/status/{id}",
+      "module": "payments",
+      "file": "contracts/behavior/payments/get-payments-status-id.json"
+    },
+    {
+      "id": "GET /products",
+      "module": "products",
+      "file": "contracts/behavior/products/get-products.json"
+    },
+    {
+      "id": "GET /products/config",
+      "module": "products",
+      "file": "contracts/behavior/products/get-products-config.json"
+    },
+    {
+      "id": "GET /products/facets",
+      "module": "products",
+      "file": "contracts/behavior/products/get-products-facets.json"
+    },
+    {
+      "id": "GET /products/{slug}",
+      "module": "products",
+      "file": "contracts/behavior/products/get-products-slug.json"
+    },
+    {
+      "id": "GET /profile",
+      "module": "content",
+      "file": "contracts/behavior/content/get-profile.json"
+    },
+    {
+      "id": "GET /projects",
+      "module": "content",
+      "file": "contracts/behavior/content/get-projects.json"
+    },
+    {
+      "id": "GET /projects/{slug}",
+      "module": "content",
+      "file": "contracts/behavior/content/get-projects-slug.json"
+    },
+    {
+      "id": "GET /registration/config",
+      "module": "registration",
+      "file": "contracts/behavior/registration/get-registration-config.json"
+    },
+    {
+      "id": "GET /robots.txt",
+      "module": "content",
+      "file": "contracts/behavior/content/get-robots-txt.json"
+    },
+    {
+      "id": "GET /services",
+      "module": "content",
+      "file": "contracts/behavior/content/get-services.json"
+    },
+    {
+      "id": "GET /site",
+      "module": "content",
+      "file": "contracts/behavior/content/get-site.json"
+    },
+    {
+      "id": "GET /sitemap.xml",
+      "module": "content",
+      "file": "contracts/behavior/content/get-sitemap-xml.json"
+    },
+    {
+      "id": "GET /skills",
+      "module": "content",
+      "file": "contracts/behavior/content/get-skills.json"
+    },
+    {
+      "id": "GET /statistics",
+      "module": "content",
+      "file": "contracts/behavior/content/get-statistics.json"
+    },
+    {
+      "id": "GET /support/active",
+      "module": "support",
+      "file": "contracts/behavior/support/get-support-active.json"
+    },
+    {
+      "id": "GET /support/config",
+      "module": "support",
+      "file": "contracts/behavior/support/get-support-config.json"
+    },
+    {
+      "id": "GET /support/faq",
+      "module": "support",
+      "file": "contracts/behavior/support/get-support-faq.json"
+    },
+    {
+      "id": "GET /support/tickets/{publicId}",
+      "module": "support",
+      "file": "contracts/behavior/support/get-support-tickets-publicid.json"
+    },
+    {
+      "id": "GET /support/tickets/{publicId}/messages",
+      "module": "support",
+      "file": "contracts/behavior/support/get-support-tickets-publicid-messages.json"
+    },
+    {
+      "id": "GET /testimonials",
+      "module": "content",
+      "file": "contracts/behavior/content/get-testimonials.json"
+    },
+    {
+      "id": "POST /access/can",
+      "module": "access",
+      "file": "contracts/behavior/access/post-access-can.json"
+    },
+    {
+      "id": "POST /admin/access/batch-can",
+      "module": "access",
+      "file": "contracts/behavior/access/post-admin-access-batch-can.json"
+    },
+    {
+      "id": "POST /admin/analytics/aggregate",
+      "module": "analytics",
+      "file": "contracts/behavior/analytics/post-admin-analytics-aggregate.json"
+    },
+    {
+      "id": "POST /admin/analytics/goals",
+      "module": "analytics",
+      "file": "contracts/behavior/analytics/post-admin-analytics-goals.json"
+    },
+    {
+      "id": "POST /admin/automations",
+      "module": "automation",
+      "file": "contracts/behavior/automation/post-admin-automations.json"
+    },
+    {
+      "id": "POST /admin/automations/{id}/run",
+      "module": "automation",
+      "file": "contracts/behavior/automation/post-admin-automations-id-run.json"
+    },
+    {
+      "id": "POST /admin/automations/{id}/test",
+      "module": "automation",
+      "file": "contracts/behavior/automation/post-admin-automations-id-test.json"
+    },
+    {
+      "id": "POST /admin/backup",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-backup.json"
+    },
+    {
+      "id": "POST /admin/blog",
+      "module": "blog",
+      "file": "contracts/behavior/blog/post-admin-blog.json"
+    },
+    {
+      "id": "POST /admin/blog-categories",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-blog-categories.json"
+    },
+    {
+      "id": "POST /admin/blog-tags",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-blog-tags.json"
+    },
+    {
+      "id": "POST /admin/blog/{id}/publish",
+      "module": "blog",
+      "file": "contracts/behavior/blog/post-admin-blog-id-publish.json"
+    },
+    {
+      "id": "POST /admin/comments/{id}/moderate",
+      "module": "comments",
+      "file": "contracts/behavior/comments/post-admin-comments-id-moderate.json"
+    },
+    {
+      "id": "POST /admin/contact-messages/{id}/mark-read",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-contact-messages-id-mark-read.json"
+    },
+    {
+      "id": "POST /admin/content-pack/apply",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-content-pack-apply.json"
+    },
+    {
+      "id": "POST /admin/ddos/providers/{id}/toggle",
+      "module": "ddos",
+      "file": "contracts/behavior/ddos/post-admin-ddos-providers-id-toggle.json"
+    },
+    {
+      "id": "POST /admin/ddos/sync-cloudflare-ips",
+      "module": "ddos",
+      "file": "contracts/behavior/ddos/post-admin-ddos-sync-cloudflare-ips.json"
+    },
+    {
+      "id": "POST /admin/ddos/under-attack",
+      "module": "ddos",
+      "file": "contracts/behavior/ddos/post-admin-ddos-under-attack.json"
+    },
+    {
+      "id": "POST /admin/demo/cleanup",
+      "module": "demo",
+      "file": "contracts/behavior/demo/post-admin-demo-cleanup.json"
+    },
+    {
+      "id": "POST /admin/education",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-education.json"
+    },
+    {
+      "id": "POST /admin/experience",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-experience.json"
+    },
+    {
+      "id": "POST /admin/form-submissions/bulk-status",
+      "module": "forms",
+      "file": "contracts/behavior/forms/post-admin-form-submissions-bulk-status.json"
+    },
+    {
+      "id": "POST /admin/forms",
+      "module": "forms",
+      "file": "contracts/behavior/forms/post-admin-forms.json"
+    },
+    {
+      "id": "POST /admin/homepage-sections",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-homepage-sections.json"
+    },
+    {
+      "id": "POST /admin/lab/experiments",
+      "module": "lab",
+      "file": "contracts/behavior/lab/post-admin-lab-experiments.json"
+    },
+    {
+      "id": "POST /admin/lab/experiments/{id}/activate",
+      "module": "lab",
+      "file": "contracts/behavior/lab/post-admin-lab-experiments-id-activate.json"
+    },
+    {
+      "id": "POST /admin/lab/experiments/{id}/archive",
+      "module": "lab",
+      "file": "contracts/behavior/lab/post-admin-lab-experiments-id-archive.json"
+    },
+    {
+      "id": "POST /admin/lab/experiments/{id}/disable",
+      "module": "lab",
+      "file": "contracts/behavior/lab/post-admin-lab-experiments-id-disable.json"
+    },
+    {
+      "id": "POST /admin/lab/experiments/{id}/duplicate",
+      "module": "lab",
+      "file": "contracts/behavior/lab/post-admin-lab-experiments-id-duplicate.json"
+    },
+    {
+      "id": "POST /admin/lab/experiments/{id}/reset-content",
+      "module": "lab",
+      "file": "contracts/behavior/lab/post-admin-lab-experiments-id-reset-content.json"
+    },
+    {
+      "id": "POST /admin/lab/experiments/{id}/restore",
+      "module": "lab",
+      "file": "contracts/behavior/lab/post-admin-lab-experiments-id-restore.json"
+    },
+    {
+      "id": "POST /admin/mail/test",
+      "module": "mail",
+      "file": "contracts/behavior/mail/post-admin-mail-test.json"
+    },
+    {
+      "id": "POST /admin/mail/test-telegram",
+      "module": "mail",
+      "file": "contracts/behavior/mail/post-admin-mail-test-telegram.json"
+    },
+    {
+      "id": "POST /admin/mcp/changelog",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-mcp-changelog.json"
+    },
+    {
+      "id": "POST /admin/media",
+      "module": "media",
+      "file": "contracts/behavior/media/post-admin-media.json"
+    },
+    {
+      "id": "POST /admin/media/folders",
+      "module": "media",
+      "file": "contracts/behavior/media/post-admin-media-folders.json"
+    },
+    {
+      "id": "POST /admin/media/purge-missing",
+      "module": "media",
+      "file": "contracts/behavior/media/post-admin-media-purge-missing.json"
+    },
+    {
+      "id": "POST /admin/media/{id}/destroy",
+      "module": "media",
+      "file": "contracts/behavior/media/post-admin-media-id-destroy.json"
+    },
+    {
+      "id": "POST /admin/media/{id}/replace",
+      "module": "media",
+      "file": "contracts/behavior/media/post-admin-media-id-replace.json"
+    },
+    {
+      "id": "POST /admin/migrations/blueprints",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-migrations-blueprints.json"
+    },
+    {
+      "id": "POST /admin/migrations/retry",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-migrations-retry.json"
+    },
+    {
+      "id": "POST /admin/modules/inspect",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/post-admin-modules-inspect.json"
+    },
+    {
+      "id": "POST /admin/modules/reconcile-mirror",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/post-admin-modules-reconcile-mirror.json"
+    },
+    {
+      "id": "POST /admin/modules/upload",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/post-admin-modules-upload.json"
+    },
+    {
+      "id": "POST /admin/modules/{slug}/disable",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/post-admin-modules-slug-disable.json"
+    },
+    {
+      "id": "POST /admin/modules/{slug}/enable",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/post-admin-modules-slug-enable.json"
+    },
+    {
+      "id": "POST /admin/modules/{slug}/health",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/post-admin-modules-slug-health.json"
+    },
+    {
+      "id": "POST /admin/modules/{slug}/install",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/post-admin-modules-slug-install.json"
+    },
+    {
+      "id": "POST /admin/modules/{slug}/rollback",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/post-admin-modules-slug-rollback.json"
+    },
+    {
+      "id": "POST /admin/modules/{slug}/uninstall",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/post-admin-modules-slug-uninstall.json"
+    },
+    {
+      "id": "POST /admin/modules/{slug}/update",
+      "module": "module-manager",
+      "file": "contracts/behavior/module-manager/post-admin-modules-slug-update.json"
+    },
+    {
+      "id": "POST /admin/navigation",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-navigation.json"
+    },
+    {
+      "id": "POST /admin/navigation/reorder",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-navigation-reorder.json"
+    },
+    {
+      "id": "POST /admin/newsletter/campaigns",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/post-admin-newsletter-campaigns.json"
+    },
+    {
+      "id": "POST /admin/newsletter/campaigns/{id}/pause",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/post-admin-newsletter-campaigns-id-pause.json"
+    },
+    {
+      "id": "POST /admin/newsletter/campaigns/{id}/send",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/post-admin-newsletter-campaigns-id-send.json"
+    },
+    {
+      "id": "POST /admin/newsletter/campaigns/{id}/test",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/post-admin-newsletter-campaigns-id-test.json"
+    },
+    {
+      "id": "POST /admin/newsletter/lists",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/post-admin-newsletter-lists.json"
+    },
+    {
+      "id": "POST /admin/newsletter/subscribers",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/post-admin-newsletter-subscribers.json"
+    },
+    {
+      "id": "POST /admin/newsletter/subscribers/import",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/post-admin-newsletter-subscribers-import.json"
+    },
+    {
+      "id": "POST /admin/notification-templates",
+      "module": "notifications",
+      "file": "contracts/behavior/notifications/post-admin-notification-templates.json"
+    },
+    {
+      "id": "POST /admin/notifications/read-all",
+      "module": "notifications",
+      "file": "contracts/behavior/notifications/post-admin-notifications-read-all.json"
+    },
+    {
+      "id": "POST /admin/notifications/test",
+      "module": "notifications",
+      "file": "contracts/behavior/notifications/post-admin-notifications-test.json"
+    },
+    {
+      "id": "POST /admin/notifications/{id}/read",
+      "module": "notifications",
+      "file": "contracts/behavior/notifications/post-admin-notifications-id-read.json"
+    },
+    {
+      "id": "POST /admin/orders",
+      "module": "payments",
+      "file": "contracts/behavior/payments/post-admin-orders.json"
+    },
+    {
+      "id": "POST /admin/orders/{id}/notes",
+      "module": "orders",
+      "file": "contracts/behavior/orders/post-admin-orders-id-notes.json"
+    },
+    {
+      "id": "POST /admin/orders/{id}/refunds",
+      "module": "orders",
+      "file": "contracts/behavior/orders/post-admin-orders-id-refunds.json"
+    },
+    {
+      "id": "POST /admin/orders/{id}/status",
+      "module": "orders",
+      "file": "contracts/behavior/orders/post-admin-orders-id-status.json"
+    },
+    {
+      "id": "POST /admin/overload/clear-events",
+      "module": "overload",
+      "file": "contracts/behavior/overload/post-admin-overload-clear-events.json"
+    },
+    {
+      "id": "POST /admin/overload/test-notify",
+      "module": "overload",
+      "file": "contracts/behavior/overload/post-admin-overload-test-notify.json"
+    },
+    {
+      "id": "POST /admin/page-templates/ensure",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-page-templates-ensure.json"
+    },
+    {
+      "id": "POST /admin/pages",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-pages.json"
+    },
+    {
+      "id": "POST /admin/pages/revisions/{revisionId}/restore",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-pages-revisions-revisionid-restore.json"
+    },
+    {
+      "id": "POST /admin/pages/{id}/copy-layout",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-pages-id-copy-layout.json"
+    },
+    {
+      "id": "POST /admin/pages/{id}/revisions",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-pages-id-revisions.json"
+    },
+    {
+      "id": "POST /admin/payments",
+      "module": "payments",
+      "file": "contracts/behavior/payments/post-admin-payments.json"
+    },
+    {
+      "id": "POST /admin/plugins/{name}/seed-pages",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-plugins-name-seed-pages.json"
+    },
+    {
+      "id": "POST /admin/plugins/{name}/toggle",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-plugins-name-toggle.json"
+    },
+    {
+      "id": "POST /admin/products",
+      "module": "products",
+      "file": "contracts/behavior/products/post-admin-products.json"
+    },
+    {
+      "id": "POST /admin/project-categories",
+      "module": "projects",
+      "file": "contracts/behavior/projects/post-admin-project-categories.json"
+    },
+    {
+      "id": "POST /admin/projects",
+      "module": "projects",
+      "file": "contracts/behavior/projects/post-admin-projects.json"
+    },
+    {
+      "id": "POST /admin/projects/reorder",
+      "module": "projects",
+      "file": "contracts/behavior/projects/post-admin-projects-reorder.json"
+    },
+    {
+      "id": "POST /admin/projects/{id}/publish",
+      "module": "projects",
+      "file": "contracts/behavior/projects/post-admin-projects-id-publish.json"
+    },
+    {
+      "id": "POST /admin/redirects",
+      "module": "seo",
+      "file": "contracts/behavior/seo/post-admin-redirects.json"
+    },
+    {
+      "id": "POST /admin/scheduler/jobs/{id}/cancel",
+      "module": "scheduler",
+      "file": "contracts/behavior/scheduler/post-admin-scheduler-jobs-id-cancel.json"
+    },
+    {
+      "id": "POST /admin/scheduler/jobs/{id}/retry",
+      "module": "scheduler",
+      "file": "contracts/behavior/scheduler/post-admin-scheduler-jobs-id-retry.json"
+    },
+    {
+      "id": "POST /admin/scheduler/tick",
+      "module": "scheduler",
+      "file": "contracts/behavior/scheduler/post-admin-scheduler-tick.json"
+    },
+    {
+      "id": "POST /admin/seo/prerender-flush",
+      "module": "seo",
+      "file": "contracts/behavior/seo/post-admin-seo-prerender-flush.json"
+    },
+    {
+      "id": "POST /admin/services",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-services.json"
+    },
+    {
+      "id": "POST /admin/skill-categories",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-skill-categories.json"
+    },
+    {
+      "id": "POST /admin/skills",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-skills.json"
+    },
+    {
+      "id": "POST /admin/skills/reorder",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-skills-reorder.json"
+    },
+    {
+      "id": "POST /admin/social-links",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-social-links.json"
+    },
+    {
+      "id": "POST /admin/statistics",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-statistics.json"
+    },
+    {
+      "id": "POST /admin/support/faq",
+      "module": "support",
+      "file": "contracts/behavior/support/post-admin-support-faq.json"
+    },
+    {
+      "id": "POST /admin/support/presence",
+      "module": "support",
+      "file": "contracts/behavior/support/post-admin-support-presence.json"
+    },
+    {
+      "id": "POST /admin/support/test-telegram",
+      "module": "support",
+      "file": "contracts/behavior/support/post-admin-support-test-telegram.json"
+    },
+    {
+      "id": "POST /admin/support/tickets/{id}/assign",
+      "module": "support",
+      "file": "contracts/behavior/support/post-admin-support-tickets-id-assign.json"
+    },
+    {
+      "id": "POST /admin/support/tickets/{id}/close",
+      "module": "support",
+      "file": "contracts/behavior/support/post-admin-support-tickets-id-close.json"
+    },
+    {
+      "id": "POST /admin/support/tickets/{id}/messages",
+      "module": "support",
+      "file": "contracts/behavior/support/post-admin-support-tickets-id-messages.json"
+    },
+    {
+      "id": "POST /admin/system/last-error/clear",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-system-last-error-clear.json"
+    },
+    {
+      "id": "POST /admin/testimonials",
+      "module": "content",
+      "file": "contracts/behavior/content/post-admin-testimonials.json"
+    },
+    {
+      "id": "POST /admin/translate/purge-invalid",
+      "module": "translate",
+      "file": "contracts/behavior/translate/post-admin-translate-purge-invalid.json"
+    },
+    {
+      "id": "POST /admin/translate/warmup",
+      "module": "translate",
+      "file": "contracts/behavior/translate/post-admin-translate-warmup.json"
+    },
+    {
+      "id": "POST /admin/trash/empty-all",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-trash-empty-all.json"
+    },
+    {
+      "id": "POST /admin/trash/{resource}/empty",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-trash-resource-empty.json"
+    },
+    {
+      "id": "POST /admin/trash/{resource}/{id}/restore",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-trash-resource-id-restore.json"
+    },
+    {
+      "id": "POST /admin/updates",
+      "module": "system",
+      "file": "contracts/behavior/system/post-admin-updates.json"
+    },
+    {
+      "id": "POST /admin/users",
+      "module": "users",
+      "file": "contracts/behavior/users/post-admin-users.json"
+    },
+    {
+      "id": "POST /admin/webhooks",
+      "module": "webhooks",
+      "file": "contracts/behavior/webhooks/post-admin-webhooks.json"
+    },
+    {
+      "id": "POST /analytics/collect",
+      "module": "analytics",
+      "file": "contracts/behavior/analytics/post-analytics-collect.json"
+    },
+    {
+      "id": "POST /auth/2fa/disable",
+      "module": "system",
+      "file": "contracts/behavior/system/post-auth-2fa-disable.json"
+    },
+    {
+      "id": "POST /auth/2fa/enable",
+      "module": "system",
+      "file": "contracts/behavior/system/post-auth-2fa-enable.json"
+    },
+    {
+      "id": "POST /auth/2fa/setup",
+      "module": "system",
+      "file": "contracts/behavior/system/post-auth-2fa-setup.json"
+    },
+    {
+      "id": "POST /auth/2fa/verify",
+      "module": "system",
+      "file": "contracts/behavior/system/post-auth-2fa-verify.json"
+    },
+    {
+      "id": "POST /auth/demo/end",
+      "module": "demo",
+      "file": "contracts/behavior/demo/post-auth-demo-end.json"
+    },
+    {
+      "id": "POST /auth/demo/reset",
+      "module": "demo",
+      "file": "contracts/behavior/demo/post-auth-demo-reset.json"
+    },
+    {
+      "id": "POST /auth/demo/start",
+      "module": "demo",
+      "file": "contracts/behavior/demo/post-auth-demo-start.json"
+    },
+    {
+      "id": "POST /auth/login",
+      "module": "system",
+      "file": "contracts/behavior/system/post-auth-login.json"
+    },
+    {
+      "id": "POST /auth/logout",
+      "module": "system",
+      "file": "contracts/behavior/system/post-auth-logout.json"
+    },
+    {
+      "id": "POST /auth/refresh",
+      "module": "system",
+      "file": "contracts/behavior/system/post-auth-refresh.json"
+    },
+    {
+      "id": "POST /auth/register",
+      "module": "registration",
+      "file": "contracts/behavior/registration/post-auth-register.json"
+    },
+    {
+      "id": "POST /auth/resend-verification",
+      "module": "registration",
+      "file": "contracts/behavior/registration/post-auth-resend-verification.json"
+    },
+    {
+      "id": "POST /auth/verify-email",
+      "module": "registration",
+      "file": "contracts/behavior/registration/post-auth-verify-email.json"
+    },
+    {
+      "id": "POST /comments",
+      "module": "comments",
+      "file": "contracts/behavior/comments/post-comments.json"
+    },
+    {
+      "id": "POST /contact",
+      "module": "content",
+      "file": "contracts/behavior/content/post-contact.json"
+    },
+    {
+      "id": "POST /forms/{slug}/submit",
+      "module": "forms",
+      "file": "contracts/behavior/forms/post-forms-slug-submit.json"
+    },
+    {
+      "id": "POST /mail/contact",
+      "module": "mail",
+      "file": "contracts/behavior/mail/post-mail-contact.json"
+    },
+    {
+      "id": "POST /newsletter/subscribe",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/post-newsletter-subscribe.json"
+    },
+    {
+      "id": "POST /orders/cart/items",
+      "module": "orders",
+      "file": "contracts/behavior/orders/post-orders-cart-items.json"
+    },
+    {
+      "id": "POST /orders/checkout",
+      "module": "orders",
+      "file": "contracts/behavior/orders/post-orders-checkout.json"
+    },
+    {
+      "id": "POST /payments/checkout",
+      "module": "payments",
+      "file": "contracts/behavior/payments/post-payments-checkout.json"
+    },
+    {
+      "id": "POST /payments/webhook",
+      "module": "payments",
+      "file": "contracts/behavior/payments/post-payments-webhook.json"
+    },
+    {
+      "id": "POST /registration/register",
+      "module": "registration",
+      "file": "contracts/behavior/registration/post-registration-register.json"
+    },
+    {
+      "id": "POST /support/faq/{id}/ask",
+      "module": "support",
+      "file": "contracts/behavior/support/post-support-faq-id-ask.json"
+    },
+    {
+      "id": "POST /support/heartbeat",
+      "module": "support",
+      "file": "contracts/behavior/support/post-support-heartbeat.json"
+    },
+    {
+      "id": "POST /support/session",
+      "module": "support",
+      "file": "contracts/behavior/support/post-support-session.json"
+    },
+    {
+      "id": "POST /support/tickets",
+      "module": "support",
+      "file": "contracts/behavior/support/post-support-tickets.json"
+    },
+    {
+      "id": "POST /support/tickets/{publicId}/contact",
+      "module": "support",
+      "file": "contracts/behavior/support/post-support-tickets-publicid-contact.json"
+    },
+    {
+      "id": "POST /support/tickets/{publicId}/messages",
+      "module": "support",
+      "file": "contracts/behavior/support/post-support-tickets-publicid-messages.json"
+    },
+    {
+      "id": "POST /system/scheduler/tick",
+      "module": "scheduler",
+      "file": "contracts/behavior/scheduler/post-system-scheduler-tick.json"
+    },
+    {
+      "id": "POST /translate/auto-warmup",
+      "module": "translate",
+      "file": "contracts/behavior/translate/post-translate-auto-warmup.json"
+    },
+    {
+      "id": "POST /translate/batch",
+      "module": "translate",
+      "file": "contracts/behavior/translate/post-translate-batch.json"
+    },
+    {
+      "id": "POST /webhooks/test",
+      "module": "webhooks",
+      "file": "contracts/behavior/webhooks/post-webhooks-test.json"
+    },
+    {
+      "id": "PUT /admin/access/users/{id}/overrides",
+      "module": "access",
+      "file": "contracts/behavior/access/put-admin-access-users-id-overrides.json"
+    },
+    {
+      "id": "PUT /admin/access/users/{id}/roles",
+      "module": "access",
+      "file": "contracts/behavior/access/put-admin-access-users-id-roles.json"
+    },
+    {
+      "id": "PUT /admin/automations/{id}",
+      "module": "automation",
+      "file": "contracts/behavior/automation/put-admin-automations-id.json"
+    },
+    {
+      "id": "PUT /admin/blog-categories/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/put-admin-blog-categories-id.json"
+    },
+    {
+      "id": "PUT /admin/blog-tags/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/put-admin-blog-tags-id.json"
+    },
+    {
+      "id": "PUT /admin/blog/{id}",
+      "module": "blog",
+      "file": "contracts/behavior/blog/put-admin-blog-id.json"
+    },
+    {
+      "id": "PUT /admin/contact-info",
+      "module": "system",
+      "file": "contracts/behavior/system/put-admin-contact-info.json"
+    },
+    {
+      "id": "PUT /admin/education/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/put-admin-education-id.json"
+    },
+    {
+      "id": "PUT /admin/email-settings",
+      "module": "system",
+      "file": "contracts/behavior/system/put-admin-email-settings.json"
+    },
+    {
+      "id": "PUT /admin/experience/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/put-admin-experience-id.json"
+    },
+    {
+      "id": "PUT /admin/footer",
+      "module": "system",
+      "file": "contracts/behavior/system/put-admin-footer.json"
+    },
+    {
+      "id": "PUT /admin/form-submissions/{id}",
+      "module": "forms",
+      "file": "contracts/behavior/forms/put-admin-form-submissions-id.json"
+    },
+    {
+      "id": "PUT /admin/forms/{id}",
+      "module": "forms",
+      "file": "contracts/behavior/forms/put-admin-forms-id.json"
+    },
+    {
+      "id": "PUT /admin/hero",
+      "module": "system",
+      "file": "contracts/behavior/system/put-admin-hero.json"
+    },
+    {
+      "id": "PUT /admin/homepage-sections/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/put-admin-homepage-sections-id.json"
+    },
+    {
+      "id": "PUT /admin/lab/experiments/{id}",
+      "module": "lab",
+      "file": "contracts/behavior/lab/put-admin-lab-experiments-id.json"
+    },
+    {
+      "id": "PUT /admin/media/folders/{id}",
+      "module": "media",
+      "file": "contracts/behavior/media/put-admin-media-folders-id.json"
+    },
+    {
+      "id": "PUT /admin/media/{id}",
+      "module": "media",
+      "file": "contracts/behavior/media/put-admin-media-id.json"
+    },
+    {
+      "id": "PUT /admin/navigation/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/put-admin-navigation-id.json"
+    },
+    {
+      "id": "PUT /admin/newsletter/campaigns/{id}",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/put-admin-newsletter-campaigns-id.json"
+    },
+    {
+      "id": "PUT /admin/newsletter/lists/{id}",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/put-admin-newsletter-lists-id.json"
+    },
+    {
+      "id": "PUT /admin/newsletter/subscribers/{id}",
+      "module": "newsletter",
+      "file": "contracts/behavior/newsletter/put-admin-newsletter-subscribers-id.json"
+    },
+    {
+      "id": "PUT /admin/notification-templates/{id}",
+      "module": "notifications",
+      "file": "contracts/behavior/notifications/put-admin-notification-templates-id.json"
+    },
+    {
+      "id": "PUT /admin/orders/{id}",
+      "module": "payments",
+      "file": "contracts/behavior/payments/put-admin-orders-id.json"
+    },
+    {
+      "id": "PUT /admin/pages/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/put-admin-pages-id.json"
+    },
+    {
+      "id": "PUT /admin/payments/{id}",
+      "module": "payments",
+      "file": "contracts/behavior/payments/put-admin-payments-id.json"
+    },
+    {
+      "id": "PUT /admin/plugins/{name}/settings",
+      "module": "system",
+      "file": "contracts/behavior/system/put-admin-plugins-name-settings.json"
+    },
+    {
+      "id": "PUT /admin/products-meta/templates",
+      "module": "products",
+      "file": "contracts/behavior/products/put-admin-products-meta-templates.json"
+    },
+    {
+      "id": "PUT /admin/products/{id}",
+      "module": "products",
+      "file": "contracts/behavior/products/put-admin-products-id.json"
+    },
+    {
+      "id": "PUT /admin/profile",
+      "module": "system",
+      "file": "contracts/behavior/system/put-admin-profile.json"
+    },
+    {
+      "id": "PUT /admin/project-categories/{id}",
+      "module": "projects",
+      "file": "contracts/behavior/projects/put-admin-project-categories-id.json"
+    },
+    {
+      "id": "PUT /admin/projects/{id}",
+      "module": "projects",
+      "file": "contracts/behavior/projects/put-admin-projects-id.json"
+    },
+    {
+      "id": "PUT /admin/redirects/{id}",
+      "module": "seo",
+      "file": "contracts/behavior/seo/put-admin-redirects-id.json"
+    },
+    {
+      "id": "PUT /admin/roles/{id}/permissions",
+      "module": "users",
+      "file": "contracts/behavior/users/put-admin-roles-id-permissions.json"
+    },
+    {
+      "id": "PUT /admin/seo",
+      "module": "system",
+      "file": "contracts/behavior/system/put-admin-seo.json"
+    },
+    {
+      "id": "PUT /admin/services/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/put-admin-services-id.json"
+    },
+    {
+      "id": "PUT /admin/site-settings",
+      "module": "system",
+      "file": "contracts/behavior/system/put-admin-site-settings.json"
+    },
+    {
+      "id": "PUT /admin/skill-categories/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/put-admin-skill-categories-id.json"
+    },
+    {
+      "id": "PUT /admin/skills/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/put-admin-skills-id.json"
+    },
+    {
+      "id": "PUT /admin/social-links/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/put-admin-social-links-id.json"
+    },
+    {
+      "id": "PUT /admin/statistics/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/put-admin-statistics-id.json"
+    },
+    {
+      "id": "PUT /admin/support/faq/{id}",
+      "module": "support",
+      "file": "contracts/behavior/support/put-admin-support-faq-id.json"
+    },
+    {
+      "id": "PUT /admin/testimonials/{id}",
+      "module": "content",
+      "file": "contracts/behavior/content/put-admin-testimonials-id.json"
+    },
+    {
+      "id": "PUT /admin/theme",
+      "module": "system",
+      "file": "contracts/behavior/system/put-admin-theme.json"
+    },
+    {
+      "id": "PUT /admin/users/password",
+      "module": "system",
+      "file": "contracts/behavior/system/put-admin-users-password.json"
+    },
+    {
+      "id": "PUT /admin/users/{id}",
+      "module": "users",
+      "file": "contracts/behavior/users/put-admin-users-id.json"
+    },
+    {
+      "id": "PUT /admin/webhooks/{id}",
+      "module": "webhooks",
+      "file": "contracts/behavior/webhooks/put-admin-webhooks-id.json"
+    },
+    {
+      "id": "PUT /orders/cart/items/{id}",
+      "module": "orders",
+      "file": "contracts/behavior/orders/put-orders-cart-items-id.json"
+    }
+  ]
+}

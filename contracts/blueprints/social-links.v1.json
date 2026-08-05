@@ -1,0 +1,41 @@
+{
+  "key": "social-links",
+  "table": "social_links",
+  "label": "Social links",
+  "group": "Site",
+  "orderable": true,
+  "columns": {
+    "platform": {
+      "type": "string",
+      "widget": "text",
+      "required": true
+    },
+    "label": {
+      "type": "string",
+      "widget": "text"
+    },
+    "url": {
+      "type": "string",
+      "widget": "url",
+      "required": true
+    },
+    "icon": {
+      "type": "string",
+      "widget": "text"
+    },
+    "sort_order": {
+      "type": "int",
+      "widget": "number",
+      "default": 0
+    },
+    "is_visible": {
+      "type": "bool",
+      "widget": "toggle",
+      "default": true
+    }
+  },
+  "permissions": [
+    "content.view",
+    "content.edit"
+  ]
+}

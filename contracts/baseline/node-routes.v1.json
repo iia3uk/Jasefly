@@ -1,0 +1,2670 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-04T21:27:26.527Z",
+  "generator": "scripts/contracts/extract-node-routes.mjs",
+  "route_count": 424,
+  "routes": [
+    {
+      "id": "DELETE /admin/{resource}/{id}",
+      "method": "DELETE",
+      "path": "/admin/{resource}/{id}",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
+      "id": "DELETE /admin/analytics/goals/{id}",
+      "method": "DELETE",
+      "path": "/admin/analytics/goals/{id}",
+      "file": "runtime-node/src/modules/analytics.ts"
+    },
+    {
+      "id": "DELETE /admin/automations/{id}",
+      "method": "DELETE",
+      "path": "/admin/automations/{id}",
+      "file": "runtime-node/src/modules/automation.ts"
+    },
+    {
+      "id": "DELETE /admin/blog-categories/{id}",
+      "method": "DELETE",
+      "path": "/admin/blog-categories/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/blog-tags/{id}",
+      "method": "DELETE",
+      "path": "/admin/blog-tags/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/blog/{id}",
+      "method": "DELETE",
+      "path": "/admin/blog/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/comments/{id}",
+      "method": "DELETE",
+      "path": "/admin/comments/{id}",
+      "file": "runtime-node/src/modules/comments.ts"
+    },
+    {
+      "id": "DELETE /admin/contact-messages/{id}",
+      "method": "DELETE",
+      "path": "/admin/contact-messages/{id}",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "DELETE /admin/education/{id}",
+      "method": "DELETE",
+      "path": "/admin/education/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/experience/{id}",
+      "method": "DELETE",
+      "path": "/admin/experience/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/form-submissions/{id}",
+      "method": "DELETE",
+      "path": "/admin/form-submissions/{id}",
+      "file": "runtime-node/src/modules/forms.ts"
+    },
+    {
+      "id": "DELETE /admin/forms/{id}",
+      "method": "DELETE",
+      "path": "/admin/forms/{id}",
+      "file": "runtime-node/src/modules/forms.ts"
+    },
+    {
+      "id": "DELETE /admin/homepage-sections/{id}",
+      "method": "DELETE",
+      "path": "/admin/homepage-sections/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/lab/experiments/{id}",
+      "method": "DELETE",
+      "path": "/admin/lab/experiments/{id}",
+      "file": "runtime-node/src/modules/lab.ts"
+    },
+    {
+      "id": "DELETE /admin/media/{id}",
+      "method": "DELETE",
+      "path": "/admin/media/{id}",
+      "file": "runtime-node/src/modules/media.ts"
+    },
+    {
+      "id": "DELETE /admin/media/folders/{id}",
+      "method": "DELETE",
+      "path": "/admin/media/folders/{id}",
+      "file": "runtime-node/src/modules/media.ts"
+    },
+    {
+      "id": "DELETE /admin/modules/{slug}",
+      "method": "DELETE",
+      "path": "/admin/modules/{slug}",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "DELETE /admin/navigation/{id}",
+      "method": "DELETE",
+      "path": "/admin/navigation/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/newsletter/campaigns/{id}",
+      "method": "DELETE",
+      "path": "/admin/newsletter/campaigns/{id}",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "DELETE /admin/newsletter/lists/{id}",
+      "method": "DELETE",
+      "path": "/admin/newsletter/lists/{id}",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "DELETE /admin/newsletter/subscribers/{id}",
+      "method": "DELETE",
+      "path": "/admin/newsletter/subscribers/{id}",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "DELETE /admin/notification-templates/{id}",
+      "method": "DELETE",
+      "path": "/admin/notification-templates/{id}",
+      "file": "runtime-node/src/modules/notifications.ts"
+    },
+    {
+      "id": "DELETE /admin/orders/{id}",
+      "method": "DELETE",
+      "path": "/admin/orders/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/pages/{id}",
+      "method": "DELETE",
+      "path": "/admin/pages/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/payments/{id}",
+      "method": "DELETE",
+      "path": "/admin/payments/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/products/{id}",
+      "method": "DELETE",
+      "path": "/admin/products/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/project-categories/{id}",
+      "method": "DELETE",
+      "path": "/admin/project-categories/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/projects/{id}",
+      "method": "DELETE",
+      "path": "/admin/projects/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/redirects/{id}",
+      "method": "DELETE",
+      "path": "/admin/redirects/{id}",
+      "file": "runtime-node/src/modules/seo.ts"
+    },
+    {
+      "id": "DELETE /admin/redirects/slug/{id}",
+      "method": "DELETE",
+      "path": "/admin/redirects/slug/{id}",
+      "file": "runtime-node/src/modules/seo.ts"
+    },
+    {
+      "id": "DELETE /admin/services/{id}",
+      "method": "DELETE",
+      "path": "/admin/services/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/skill-categories/{id}",
+      "method": "DELETE",
+      "path": "/admin/skill-categories/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/skills/{id}",
+      "method": "DELETE",
+      "path": "/admin/skills/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/social-links/{id}",
+      "method": "DELETE",
+      "path": "/admin/social-links/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/statistics/{id}",
+      "method": "DELETE",
+      "path": "/admin/statistics/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/support/faq/{id}",
+      "method": "DELETE",
+      "path": "/admin/support/faq/{id}",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "DELETE /admin/testimonials/{id}",
+      "method": "DELETE",
+      "path": "/admin/testimonials/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "DELETE /admin/trash/{resource}/{id}",
+      "method": "DELETE",
+      "path": "/admin/trash/{resource}/{id}",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "DELETE /admin/users/{id}",
+      "method": "DELETE",
+      "path": "/admin/users/{id}",
+      "file": "runtime-node/src/modules/users.ts"
+    },
+    {
+      "id": "DELETE /admin/webhooks/{id}",
+      "method": "DELETE",
+      "path": "/admin/webhooks/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /access/providers",
+      "method": "GET",
+      "path": "/access/providers",
+      "file": "runtime-node/src/modules/access.ts"
+    },
+    {
+      "id": "GET /admin/{resource}",
+      "method": "GET",
+      "path": "/admin/{resource}",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
+      "id": "GET /admin/{resource}/{id}",
+      "method": "GET",
+      "path": "/admin/{resource}/{id}",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
+      "id": "GET /admin/access/bootstrap",
+      "method": "GET",
+      "path": "/admin/access/bootstrap",
+      "file": "runtime-node/src/modules/access.ts"
+    },
+    {
+      "id": "GET /admin/access/users/{id}/effective",
+      "method": "GET",
+      "path": "/admin/access/users/{id}/effective",
+      "file": "runtime-node/src/modules/access.ts"
+    },
+    {
+      "id": "GET /admin/access/users/{id}/overrides",
+      "method": "GET",
+      "path": "/admin/access/users/{id}/overrides",
+      "file": "runtime-node/src/modules/access.ts"
+    },
+    {
+      "id": "GET /admin/activity",
+      "method": "GET",
+      "path": "/admin/activity",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/analytics/goals",
+      "method": "GET",
+      "path": "/admin/analytics/goals",
+      "file": "runtime-node/src/modules/analytics.ts"
+    },
+    {
+      "id": "GET /admin/analytics/overview",
+      "method": "GET",
+      "path": "/admin/analytics/overview",
+      "file": "runtime-node/src/modules/analytics.ts"
+    },
+    {
+      "id": "GET /admin/automations",
+      "method": "GET",
+      "path": "/admin/automations",
+      "file": "runtime-node/src/modules/automation.ts"
+    },
+    {
+      "id": "GET /admin/automations/{id}",
+      "method": "GET",
+      "path": "/admin/automations/{id}",
+      "file": "runtime-node/src/modules/automation.ts"
+    },
+    {
+      "id": "GET /admin/automations/{id}/runs",
+      "method": "GET",
+      "path": "/admin/automations/{id}/runs",
+      "file": "runtime-node/src/modules/automation.ts"
+    },
+    {
+      "id": "GET /admin/blocks",
+      "method": "GET",
+      "path": "/admin/blocks",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/blog",
+      "method": "GET",
+      "path": "/admin/blog",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/blog-categories",
+      "method": "GET",
+      "path": "/admin/blog-categories",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/blog-categories/{id}",
+      "method": "GET",
+      "path": "/admin/blog-categories/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/blog-tags",
+      "method": "GET",
+      "path": "/admin/blog-tags",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/blog-tags/{id}",
+      "method": "GET",
+      "path": "/admin/blog-tags/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/blog/{id}",
+      "method": "GET",
+      "path": "/admin/blog/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/blueprints",
+      "method": "GET",
+      "path": "/admin/blueprints",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/blueprints/{key}",
+      "method": "GET",
+      "path": "/admin/blueprints/{key}",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/comments",
+      "method": "GET",
+      "path": "/admin/comments",
+      "file": "runtime-node/src/modules/comments.ts"
+    },
+    {
+      "id": "GET /admin/contact-info",
+      "method": "GET",
+      "path": "/admin/contact-info",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/contact-messages",
+      "method": "GET",
+      "path": "/admin/contact-messages",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/content-pack/info",
+      "method": "GET",
+      "path": "/admin/content-pack/info",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/dashboard",
+      "method": "GET",
+      "path": "/admin/dashboard",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/ddos/providers",
+      "method": "GET",
+      "path": "/admin/ddos/providers",
+      "file": "runtime-node/src/modules/ddos.ts"
+    },
+    {
+      "id": "GET /admin/ddos/status",
+      "method": "GET",
+      "path": "/admin/ddos/status",
+      "file": "runtime-node/src/modules/ddos.ts"
+    },
+    {
+      "id": "GET /admin/demo/bootstrap",
+      "method": "GET",
+      "path": "/admin/demo/bootstrap",
+      "file": "runtime-node/src/modules/demo.ts"
+    },
+    {
+      "id": "GET /admin/education",
+      "method": "GET",
+      "path": "/admin/education",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/education/{id}",
+      "method": "GET",
+      "path": "/admin/education/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/email-settings",
+      "method": "GET",
+      "path": "/admin/email-settings",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/events",
+      "method": "GET",
+      "path": "/admin/events",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/experience",
+      "method": "GET",
+      "path": "/admin/experience",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/experience/{id}",
+      "method": "GET",
+      "path": "/admin/experience/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/footer",
+      "method": "GET",
+      "path": "/admin/footer",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/form-submissions",
+      "method": "GET",
+      "path": "/admin/form-submissions",
+      "file": "runtime-node/src/modules/forms.ts"
+    },
+    {
+      "id": "GET /admin/form-submissions/{id}",
+      "method": "GET",
+      "path": "/admin/form-submissions/{id}",
+      "file": "runtime-node/src/modules/forms.ts"
+    },
+    {
+      "id": "GET /admin/forms",
+      "method": "GET",
+      "path": "/admin/forms",
+      "file": "runtime-node/src/modules/forms.ts"
+    },
+    {
+      "id": "GET /admin/forms/{id}",
+      "method": "GET",
+      "path": "/admin/forms/{id}",
+      "file": "runtime-node/src/modules/forms.ts"
+    },
+    {
+      "id": "GET /admin/forms/{id}/export",
+      "method": "GET",
+      "path": "/admin/forms/{id}/export",
+      "file": "runtime-node/src/modules/forms.ts"
+    },
+    {
+      "id": "GET /admin/forms/{id}/submissions",
+      "method": "GET",
+      "path": "/admin/forms/{id}/submissions",
+      "file": "runtime-node/src/modules/forms.ts"
+    },
+    {
+      "id": "GET /admin/hero",
+      "method": "GET",
+      "path": "/admin/hero",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/homepage-sections",
+      "method": "GET",
+      "path": "/admin/homepage-sections",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/homepage-sections/{id}",
+      "method": "GET",
+      "path": "/admin/homepage-sections/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/lab/entries",
+      "method": "GET",
+      "path": "/admin/lab/entries",
+      "file": "runtime-node/src/modules/lab.ts"
+    },
+    {
+      "id": "GET /admin/lab/experiments",
+      "method": "GET",
+      "path": "/admin/lab/experiments",
+      "file": "runtime-node/src/modules/lab.ts"
+    },
+    {
+      "id": "GET /admin/lab/experiments/{id}",
+      "method": "GET",
+      "path": "/admin/lab/experiments/{id}",
+      "file": "runtime-node/src/modules/lab.ts"
+    },
+    {
+      "id": "GET /admin/lab/experiments/{id}/preview",
+      "method": "GET",
+      "path": "/admin/lab/experiments/{id}/preview",
+      "file": "runtime-node/src/modules/lab.ts"
+    },
+    {
+      "id": "GET /admin/mcp/diagnostics",
+      "method": "GET",
+      "path": "/admin/mcp/diagnostics",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/mcp/last-error",
+      "method": "GET",
+      "path": "/admin/mcp/last-error",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/mcp/pages-digest",
+      "method": "GET",
+      "path": "/admin/mcp/pages-digest",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/mcp/pages-digest/{idOrSlug}",
+      "method": "GET",
+      "path": "/admin/mcp/pages-digest/{idOrSlug}",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/mcp/schema",
+      "method": "GET",
+      "path": "/admin/mcp/schema",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/mcp/site-map",
+      "method": "GET",
+      "path": "/admin/mcp/site-map",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/media",
+      "method": "GET",
+      "path": "/admin/media",
+      "file": "runtime-node/src/modules/media.ts"
+    },
+    {
+      "id": "GET /admin/media/folders",
+      "method": "GET",
+      "path": "/admin/media/folders",
+      "file": "runtime-node/src/modules/media.ts"
+    },
+    {
+      "id": "GET /admin/media/missing",
+      "method": "GET",
+      "path": "/admin/media/missing",
+      "file": "runtime-node/src/modules/media.ts"
+    },
+    {
+      "id": "GET /admin/media/unused",
+      "method": "GET",
+      "path": "/admin/media/unused",
+      "file": "runtime-node/src/modules/media.ts"
+    },
+    {
+      "id": "GET /admin/migrations",
+      "method": "GET",
+      "path": "/admin/migrations",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/module-catalog",
+      "method": "GET",
+      "path": "/admin/module-catalog",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/module-operations",
+      "method": "GET",
+      "path": "/admin/module-operations",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "GET /admin/module-operations/{id}",
+      "method": "GET",
+      "path": "/admin/module-operations/{id}",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "GET /admin/modules",
+      "method": "GET",
+      "path": "/admin/modules",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "GET /admin/modules/{slug}",
+      "method": "GET",
+      "path": "/admin/modules/{slug}",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "GET /admin/modules/{slug}/compatibility",
+      "method": "GET",
+      "path": "/admin/modules/{slug}/compatibility",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "GET /admin/modules/{slug}/files",
+      "method": "GET",
+      "path": "/admin/modules/{slug}/files",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "GET /admin/modules/{slug}/health",
+      "method": "GET",
+      "path": "/admin/modules/{slug}/health",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "GET /admin/modules/{slug}/migrations",
+      "method": "GET",
+      "path": "/admin/modules/{slug}/migrations",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "GET /admin/modules/runtime",
+      "method": "GET",
+      "path": "/admin/modules/runtime",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "GET /admin/navigation",
+      "method": "GET",
+      "path": "/admin/navigation",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/navigation/{id}",
+      "method": "GET",
+      "path": "/admin/navigation/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/newsletter/campaigns",
+      "method": "GET",
+      "path": "/admin/newsletter/campaigns",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "GET /admin/newsletter/lists",
+      "method": "GET",
+      "path": "/admin/newsletter/lists",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "GET /admin/newsletter/subscribers",
+      "method": "GET",
+      "path": "/admin/newsletter/subscribers",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "GET /admin/newsletter/subscribers/export",
+      "method": "GET",
+      "path": "/admin/newsletter/subscribers/export",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "GET /admin/notification-templates",
+      "method": "GET",
+      "path": "/admin/notification-templates",
+      "file": "runtime-node/src/modules/notifications.ts"
+    },
+    {
+      "id": "GET /admin/notifications",
+      "method": "GET",
+      "path": "/admin/notifications",
+      "file": "runtime-node/src/modules/notifications.ts"
+    },
+    {
+      "id": "GET /admin/notifications/unread-count",
+      "method": "GET",
+      "path": "/admin/notifications/unread-count",
+      "file": "runtime-node/src/modules/notifications.ts"
+    },
+    {
+      "id": "GET /admin/orders",
+      "method": "GET",
+      "path": "/admin/orders",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/orders/{id}",
+      "method": "GET",
+      "path": "/admin/orders/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/orders/export",
+      "method": "GET",
+      "path": "/admin/orders/export",
+      "file": "runtime-node/src/modules/orders.ts"
+    },
+    {
+      "id": "GET /admin/overload/status",
+      "method": "GET",
+      "path": "/admin/overload/status",
+      "file": "runtime-node/src/modules/overload.ts"
+    },
+    {
+      "id": "GET /admin/page-templates",
+      "method": "GET",
+      "path": "/admin/page-templates",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/pages",
+      "method": "GET",
+      "path": "/admin/pages",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/pages/{id}",
+      "method": "GET",
+      "path": "/admin/pages/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/pages/{id}/revisions",
+      "method": "GET",
+      "path": "/admin/pages/{id}/revisions",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/pages/revisions/{revisionId}",
+      "method": "GET",
+      "path": "/admin/pages/revisions/{revisionId}",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/payments",
+      "method": "GET",
+      "path": "/admin/payments",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/payments/{id}",
+      "method": "GET",
+      "path": "/admin/payments/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/permissions",
+      "method": "GET",
+      "path": "/admin/permissions",
+      "file": "runtime-node/src/modules/users.ts"
+    },
+    {
+      "id": "GET /admin/platform/capabilities",
+      "method": "GET",
+      "path": "/admin/platform/capabilities",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "GET /admin/platform/sdk",
+      "method": "GET",
+      "path": "/admin/platform/sdk",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "GET /admin/plugins",
+      "method": "GET",
+      "path": "/admin/plugins",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/products",
+      "method": "GET",
+      "path": "/admin/products",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/products-meta/templates",
+      "method": "GET",
+      "path": "/admin/products-meta/templates",
+      "file": "runtime-node/src/modules/products.ts"
+    },
+    {
+      "id": "GET /admin/products/{id}",
+      "method": "GET",
+      "path": "/admin/products/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/profile",
+      "method": "GET",
+      "path": "/admin/profile",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/project-categories",
+      "method": "GET",
+      "path": "/admin/project-categories",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/project-categories/{id}",
+      "method": "GET",
+      "path": "/admin/project-categories/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/projects",
+      "method": "GET",
+      "path": "/admin/projects",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/projects/{id}",
+      "method": "GET",
+      "path": "/admin/projects/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/public-routes",
+      "method": "GET",
+      "path": "/admin/public-routes",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/redirects",
+      "method": "GET",
+      "path": "/admin/redirects",
+      "file": "runtime-node/src/modules/seo.ts"
+    },
+    {
+      "id": "GET /admin/redirects/slug",
+      "method": "GET",
+      "path": "/admin/redirects/slug",
+      "file": "runtime-node/src/modules/seo.ts"
+    },
+    {
+      "id": "GET /admin/roles",
+      "method": "GET",
+      "path": "/admin/roles",
+      "file": "runtime-node/src/modules/users.ts"
+    },
+    {
+      "id": "GET /admin/roles/{id}/permissions",
+      "method": "GET",
+      "path": "/admin/roles/{id}/permissions",
+      "file": "runtime-node/src/modules/users.ts"
+    },
+    {
+      "id": "GET /admin/scheduler/jobs",
+      "method": "GET",
+      "path": "/admin/scheduler/jobs",
+      "file": "runtime-node/src/modules/scheduler.ts"
+    },
+    {
+      "id": "GET /admin/scheduler/stats",
+      "method": "GET",
+      "path": "/admin/scheduler/stats",
+      "file": "runtime-node/src/modules/scheduler.ts"
+    },
+    {
+      "id": "GET /admin/search",
+      "method": "GET",
+      "path": "/admin/search",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/seo",
+      "method": "GET",
+      "path": "/admin/seo",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/seo/prerender-preview",
+      "method": "GET",
+      "path": "/admin/seo/prerender-preview",
+      "file": "runtime-node/src/modules/seo.ts"
+    },
+    {
+      "id": "GET /admin/services",
+      "method": "GET",
+      "path": "/admin/services",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/services/{id}",
+      "method": "GET",
+      "path": "/admin/services/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/site-settings",
+      "method": "GET",
+      "path": "/admin/site-settings",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/skill-categories",
+      "method": "GET",
+      "path": "/admin/skill-categories",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/skill-categories/{id}",
+      "method": "GET",
+      "path": "/admin/skill-categories/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/skills",
+      "method": "GET",
+      "path": "/admin/skills",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/skills/{id}",
+      "method": "GET",
+      "path": "/admin/skills/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/social-links",
+      "method": "GET",
+      "path": "/admin/social-links",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/social-links/{id}",
+      "method": "GET",
+      "path": "/admin/social-links/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/statistics",
+      "method": "GET",
+      "path": "/admin/statistics",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/statistics/{id}",
+      "method": "GET",
+      "path": "/admin/statistics/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/support/faq",
+      "method": "GET",
+      "path": "/admin/support/faq",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "GET /admin/support/tickets",
+      "method": "GET",
+      "path": "/admin/support/tickets",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "GET /admin/support/tickets/{id}",
+      "method": "GET",
+      "path": "/admin/support/tickets/{id}",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "GET /admin/system/last-error",
+      "method": "GET",
+      "path": "/admin/system/last-error",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/system/status",
+      "method": "GET",
+      "path": "/admin/system/status",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/testimonials",
+      "method": "GET",
+      "path": "/admin/testimonials",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/testimonials/{id}",
+      "method": "GET",
+      "path": "/admin/testimonials/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/theme",
+      "method": "GET",
+      "path": "/admin/theme",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/translate/status",
+      "method": "GET",
+      "path": "/admin/translate/status",
+      "file": "runtime-node/src/modules/translate.ts"
+    },
+    {
+      "id": "GET /admin/trash",
+      "method": "GET",
+      "path": "/admin/trash",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/updates",
+      "method": "GET",
+      "path": "/admin/updates",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /admin/users",
+      "method": "GET",
+      "path": "/admin/users",
+      "file": "runtime-node/src/modules/users.ts"
+    },
+    {
+      "id": "GET /admin/users/{id}",
+      "method": "GET",
+      "path": "/admin/users/{id}",
+      "file": "runtime-node/src/modules/users.ts"
+    },
+    {
+      "id": "GET /admin/webhooks",
+      "method": "GET",
+      "path": "/admin/webhooks",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /admin/webhooks/{id}",
+      "method": "GET",
+      "path": "/admin/webhooks/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "GET /auth/me",
+      "method": "GET",
+      "path": "/auth/me",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
+      "id": "GET /auth/verify-email",
+      "method": "GET",
+      "path": "/auth/verify-email",
+      "file": "runtime-node/src/modules/registration.ts"
+    },
+    {
+      "id": "GET /blog",
+      "method": "GET",
+      "path": "/blog",
+      "file": "runtime-node/src/modules/blog.ts"
+    },
+    {
+      "id": "GET /blog/{slug}",
+      "method": "GET",
+      "path": "/blog/{slug}",
+      "file": "runtime-node/src/modules/blog.ts"
+    },
+    {
+      "id": "GET /capabilities",
+      "method": "GET",
+      "path": "/capabilities",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
+      "id": "GET /comments",
+      "method": "GET",
+      "path": "/comments",
+      "file": "runtime-node/src/modules/comments.ts"
+    },
+    {
+      "id": "GET /commerce/catalog",
+      "method": "GET",
+      "path": "/commerce/catalog",
+      "file": "runtime-node/src/modules/payments.ts"
+    },
+    {
+      "id": "GET /commerce/item",
+      "method": "GET",
+      "path": "/commerce/item",
+      "file": "runtime-node/src/modules/payments.ts"
+    },
+    {
+      "id": "GET /contact-info",
+      "method": "GET",
+      "path": "/contact-info",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "GET /docs",
+      "method": "GET",
+      "path": "/docs",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "GET /education",
+      "method": "GET",
+      "path": "/education",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "GET /experience",
+      "method": "GET",
+      "path": "/experience",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "GET /forms/{slug}",
+      "method": "GET",
+      "path": "/forms/{slug}",
+      "file": "runtime-node/src/modules/forms.ts"
+    },
+    {
+      "id": "GET /health",
+      "method": "GET",
+      "path": "/health",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
+      "id": "GET /lab/{slug}",
+      "method": "GET",
+      "path": "/lab/{slug}",
+      "file": "runtime-node/src/modules/lab.ts"
+    },
+    {
+      "id": "GET /mail/config",
+      "method": "GET",
+      "path": "/mail/config",
+      "file": "runtime-node/src/modules/mail.ts"
+    },
+    {
+      "id": "GET /mail/csrf",
+      "method": "GET",
+      "path": "/mail/csrf",
+      "file": "runtime-node/src/modules/mail.ts"
+    },
+    {
+      "id": "GET /media/{id}",
+      "method": "GET",
+      "path": "/media/{id}",
+      "file": "runtime-node/src/modules/media.ts"
+    },
+    {
+      "id": "GET /modules/runtime-assets",
+      "method": "GET",
+      "path": "/modules/runtime-assets",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "GET /newsletter/confirm",
+      "method": "GET",
+      "path": "/newsletter/confirm",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "GET /newsletter/unsubscribe",
+      "method": "GET",
+      "path": "/newsletter/unsubscribe",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "GET /orders/cart",
+      "method": "GET",
+      "path": "/orders/cart",
+      "file": "runtime-node/src/modules/orders.ts"
+    },
+    {
+      "id": "GET /pages/{slug}",
+      "method": "GET",
+      "path": "/pages/{slug}",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "GET /payments/config",
+      "method": "GET",
+      "path": "/payments/config",
+      "file": "runtime-node/src/modules/payments.ts"
+    },
+    {
+      "id": "GET /payments/status/{id}",
+      "method": "GET",
+      "path": "/payments/status/{id}",
+      "file": "runtime-node/src/modules/payments.ts"
+    },
+    {
+      "id": "GET /products",
+      "method": "GET",
+      "path": "/products",
+      "file": "runtime-node/src/modules/products.ts"
+    },
+    {
+      "id": "GET /products/{slug}",
+      "method": "GET",
+      "path": "/products/{slug}",
+      "file": "runtime-node/src/modules/products.ts"
+    },
+    {
+      "id": "GET /products/config",
+      "method": "GET",
+      "path": "/products/config",
+      "file": "runtime-node/src/modules/products.ts"
+    },
+    {
+      "id": "GET /products/facets",
+      "method": "GET",
+      "path": "/products/facets",
+      "file": "runtime-node/src/modules/products.ts"
+    },
+    {
+      "id": "GET /profile",
+      "method": "GET",
+      "path": "/profile",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "GET /projects",
+      "method": "GET",
+      "path": "/projects",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "GET /projects/{slug}",
+      "method": "GET",
+      "path": "/projects/{slug}",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "GET /registration/config",
+      "method": "GET",
+      "path": "/registration/config",
+      "file": "runtime-node/src/modules/registration.ts"
+    },
+    {
+      "id": "GET /robots.txt",
+      "method": "GET",
+      "path": "/robots.txt",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "GET /search",
+      "method": "GET",
+      "path": "/search",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "GET /services",
+      "method": "GET",
+      "path": "/services",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "GET /site",
+      "method": "GET",
+      "path": "/site",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
+      "id": "GET /sitemap.xml",
+      "method": "GET",
+      "path": "/sitemap.xml",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "GET /skills",
+      "method": "GET",
+      "path": "/skills",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "GET /statistics",
+      "method": "GET",
+      "path": "/statistics",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "GET /support/active",
+      "method": "GET",
+      "path": "/support/active",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "GET /support/config",
+      "method": "GET",
+      "path": "/support/config",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "GET /support/faq",
+      "method": "GET",
+      "path": "/support/faq",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "GET /support/tickets/{publicId}",
+      "method": "GET",
+      "path": "/support/tickets/{publicId}",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "GET /support/tickets/{publicId}/messages",
+      "method": "GET",
+      "path": "/support/tickets/{publicId}/messages",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "GET /testimonials",
+      "method": "GET",
+      "path": "/testimonials",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "POST /access/can",
+      "method": "POST",
+      "path": "/access/can",
+      "file": "runtime-node/src/modules/access.ts"
+    },
+    {
+      "id": "POST /admin/{resource}",
+      "method": "POST",
+      "path": "/admin/{resource}",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
+      "id": "POST /admin/access/batch-can",
+      "method": "POST",
+      "path": "/admin/access/batch-can",
+      "file": "runtime-node/src/modules/access.ts"
+    },
+    {
+      "id": "POST /admin/analytics/aggregate",
+      "method": "POST",
+      "path": "/admin/analytics/aggregate",
+      "file": "runtime-node/src/modules/analytics.ts"
+    },
+    {
+      "id": "POST /admin/analytics/goals",
+      "method": "POST",
+      "path": "/admin/analytics/goals",
+      "file": "runtime-node/src/modules/analytics.ts"
+    },
+    {
+      "id": "POST /admin/automations",
+      "method": "POST",
+      "path": "/admin/automations",
+      "file": "runtime-node/src/modules/automation.ts"
+    },
+    {
+      "id": "POST /admin/automations/{id}/run",
+      "method": "POST",
+      "path": "/admin/automations/{id}/run",
+      "file": "runtime-node/src/modules/automation.ts"
+    },
+    {
+      "id": "POST /admin/automations/{id}/test",
+      "method": "POST",
+      "path": "/admin/automations/{id}/test",
+      "file": "runtime-node/src/modules/automation.ts"
+    },
+    {
+      "id": "POST /admin/backup",
+      "method": "POST",
+      "path": "/admin/backup",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/blog",
+      "method": "POST",
+      "path": "/admin/blog",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/blog-categories",
+      "method": "POST",
+      "path": "/admin/blog-categories",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/blog-tags",
+      "method": "POST",
+      "path": "/admin/blog-tags",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/blog/{id}/publish",
+      "method": "POST",
+      "path": "/admin/blog/{id}/publish",
+      "file": "runtime-node/src/modules/blog.ts"
+    },
+    {
+      "id": "POST /admin/comments/{id}/moderate",
+      "method": "POST",
+      "path": "/admin/comments/{id}/moderate",
+      "file": "runtime-node/src/modules/comments.ts"
+    },
+    {
+      "id": "POST /admin/contact-messages/{id}/mark-read",
+      "method": "POST",
+      "path": "/admin/contact-messages/{id}/mark-read",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/content-pack/apply",
+      "method": "POST",
+      "path": "/admin/content-pack/apply",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/ddos/providers/{id}/toggle",
+      "method": "POST",
+      "path": "/admin/ddos/providers/{id}/toggle",
+      "file": "runtime-node/src/modules/ddos.ts"
+    },
+    {
+      "id": "POST /admin/ddos/sync-cloudflare-ips",
+      "method": "POST",
+      "path": "/admin/ddos/sync-cloudflare-ips",
+      "file": "runtime-node/src/modules/ddos.ts"
+    },
+    {
+      "id": "POST /admin/ddos/under-attack",
+      "method": "POST",
+      "path": "/admin/ddos/under-attack",
+      "file": "runtime-node/src/modules/ddos.ts"
+    },
+    {
+      "id": "POST /admin/demo/cleanup",
+      "method": "POST",
+      "path": "/admin/demo/cleanup",
+      "file": "runtime-node/src/modules/demo.ts"
+    },
+    {
+      "id": "POST /admin/education",
+      "method": "POST",
+      "path": "/admin/education",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/experience",
+      "method": "POST",
+      "path": "/admin/experience",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/form-submissions/bulk-status",
+      "method": "POST",
+      "path": "/admin/form-submissions/bulk-status",
+      "file": "runtime-node/src/modules/forms.ts"
+    },
+    {
+      "id": "POST /admin/forms",
+      "method": "POST",
+      "path": "/admin/forms",
+      "file": "runtime-node/src/modules/forms.ts"
+    },
+    {
+      "id": "POST /admin/homepage-sections",
+      "method": "POST",
+      "path": "/admin/homepage-sections",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/lab/experiments",
+      "method": "POST",
+      "path": "/admin/lab/experiments",
+      "file": "runtime-node/src/modules/lab.ts"
+    },
+    {
+      "id": "POST /admin/lab/experiments/{id}/activate",
+      "method": "POST",
+      "path": "/admin/lab/experiments/{id}/activate",
+      "file": "runtime-node/src/modules/lab.ts"
+    },
+    {
+      "id": "POST /admin/lab/experiments/{id}/archive",
+      "method": "POST",
+      "path": "/admin/lab/experiments/{id}/archive",
+      "file": "runtime-node/src/modules/lab.ts"
+    },
+    {
+      "id": "POST /admin/lab/experiments/{id}/disable",
+      "method": "POST",
+      "path": "/admin/lab/experiments/{id}/disable",
+      "file": "runtime-node/src/modules/lab.ts"
+    },
+    {
+      "id": "POST /admin/lab/experiments/{id}/duplicate",
+      "method": "POST",
+      "path": "/admin/lab/experiments/{id}/duplicate",
+      "file": "runtime-node/src/modules/lab.ts"
+    },
+    {
+      "id": "POST /admin/lab/experiments/{id}/reset-content",
+      "method": "POST",
+      "path": "/admin/lab/experiments/{id}/reset-content",
+      "file": "runtime-node/src/modules/lab.ts"
+    },
+    {
+      "id": "POST /admin/lab/experiments/{id}/restore",
+      "method": "POST",
+      "path": "/admin/lab/experiments/{id}/restore",
+      "file": "runtime-node/src/modules/lab.ts"
+    },
+    {
+      "id": "POST /admin/mail/test",
+      "method": "POST",
+      "path": "/admin/mail/test",
+      "file": "runtime-node/src/modules/mail.ts"
+    },
+    {
+      "id": "POST /admin/mail/test-telegram",
+      "method": "POST",
+      "path": "/admin/mail/test-telegram",
+      "file": "runtime-node/src/modules/mail.ts"
+    },
+    {
+      "id": "POST /admin/mcp/changelog",
+      "method": "POST",
+      "path": "/admin/mcp/changelog",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/media",
+      "method": "POST",
+      "path": "/admin/media",
+      "file": "runtime-node/src/modules/media.ts"
+    },
+    {
+      "id": "POST /admin/media/{id}/destroy",
+      "method": "POST",
+      "path": "/admin/media/{id}/destroy",
+      "file": "runtime-node/src/modules/media.ts"
+    },
+    {
+      "id": "POST /admin/media/{id}/replace",
+      "method": "POST",
+      "path": "/admin/media/{id}/replace",
+      "file": "runtime-node/src/modules/media.ts"
+    },
+    {
+      "id": "POST /admin/media/folders",
+      "method": "POST",
+      "path": "/admin/media/folders",
+      "file": "runtime-node/src/modules/media.ts"
+    },
+    {
+      "id": "POST /admin/media/purge-missing",
+      "method": "POST",
+      "path": "/admin/media/purge-missing",
+      "file": "runtime-node/src/modules/media.ts"
+    },
+    {
+      "id": "POST /admin/migrations/blueprints",
+      "method": "POST",
+      "path": "/admin/migrations/blueprints",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/migrations/retry",
+      "method": "POST",
+      "path": "/admin/migrations/retry",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/migrations/run",
+      "method": "POST",
+      "path": "/admin/migrations/run",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/modules/{slug}/disable",
+      "method": "POST",
+      "path": "/admin/modules/{slug}/disable",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "POST /admin/modules/{slug}/enable",
+      "method": "POST",
+      "path": "/admin/modules/{slug}/enable",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "POST /admin/modules/{slug}/health",
+      "method": "POST",
+      "path": "/admin/modules/{slug}/health",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "POST /admin/modules/{slug}/install",
+      "method": "POST",
+      "path": "/admin/modules/{slug}/install",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "POST /admin/modules/{slug}/rollback",
+      "method": "POST",
+      "path": "/admin/modules/{slug}/rollback",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "POST /admin/modules/{slug}/uninstall",
+      "method": "POST",
+      "path": "/admin/modules/{slug}/uninstall",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "POST /admin/modules/{slug}/update",
+      "method": "POST",
+      "path": "/admin/modules/{slug}/update",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "POST /admin/modules/inspect",
+      "method": "POST",
+      "path": "/admin/modules/inspect",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "POST /admin/modules/reconcile-mirror",
+      "method": "POST",
+      "path": "/admin/modules/reconcile-mirror",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "POST /admin/modules/upload",
+      "method": "POST",
+      "path": "/admin/modules/upload",
+      "file": "runtime-node/src/modules/module-manager.ts"
+    },
+    {
+      "id": "POST /admin/navigation",
+      "method": "POST",
+      "path": "/admin/navigation",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/navigation/reorder",
+      "method": "POST",
+      "path": "/admin/navigation/reorder",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "POST /admin/newsletter/campaigns",
+      "method": "POST",
+      "path": "/admin/newsletter/campaigns",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "POST /admin/newsletter/campaigns/{id}/pause",
+      "method": "POST",
+      "path": "/admin/newsletter/campaigns/{id}/pause",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "POST /admin/newsletter/campaigns/{id}/send",
+      "method": "POST",
+      "path": "/admin/newsletter/campaigns/{id}/send",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "POST /admin/newsletter/campaigns/{id}/test",
+      "method": "POST",
+      "path": "/admin/newsletter/campaigns/{id}/test",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "POST /admin/newsletter/lists",
+      "method": "POST",
+      "path": "/admin/newsletter/lists",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "POST /admin/newsletter/subscribers",
+      "method": "POST",
+      "path": "/admin/newsletter/subscribers",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "POST /admin/newsletter/subscribers/import",
+      "method": "POST",
+      "path": "/admin/newsletter/subscribers/import",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "POST /admin/notification-templates",
+      "method": "POST",
+      "path": "/admin/notification-templates",
+      "file": "runtime-node/src/modules/notifications.ts"
+    },
+    {
+      "id": "POST /admin/notifications/{id}/read",
+      "method": "POST",
+      "path": "/admin/notifications/{id}/read",
+      "file": "runtime-node/src/modules/notifications.ts"
+    },
+    {
+      "id": "POST /admin/notifications/read-all",
+      "method": "POST",
+      "path": "/admin/notifications/read-all",
+      "file": "runtime-node/src/modules/notifications.ts"
+    },
+    {
+      "id": "POST /admin/notifications/test",
+      "method": "POST",
+      "path": "/admin/notifications/test",
+      "file": "runtime-node/src/modules/notifications.ts"
+    },
+    {
+      "id": "POST /admin/orders",
+      "method": "POST",
+      "path": "/admin/orders",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/orders/{id}/notes",
+      "method": "POST",
+      "path": "/admin/orders/{id}/notes",
+      "file": "runtime-node/src/modules/orders.ts"
+    },
+    {
+      "id": "POST /admin/orders/{id}/refunds",
+      "method": "POST",
+      "path": "/admin/orders/{id}/refunds",
+      "file": "runtime-node/src/modules/orders.ts"
+    },
+    {
+      "id": "POST /admin/orders/{id}/status",
+      "method": "POST",
+      "path": "/admin/orders/{id}/status",
+      "file": "runtime-node/src/modules/orders.ts"
+    },
+    {
+      "id": "POST /admin/overload/clear-events",
+      "method": "POST",
+      "path": "/admin/overload/clear-events",
+      "file": "runtime-node/src/modules/overload.ts"
+    },
+    {
+      "id": "POST /admin/overload/test-notify",
+      "method": "POST",
+      "path": "/admin/overload/test-notify",
+      "file": "runtime-node/src/modules/overload.ts"
+    },
+    {
+      "id": "POST /admin/page-templates/ensure",
+      "method": "POST",
+      "path": "/admin/page-templates/ensure",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/pages",
+      "method": "POST",
+      "path": "/admin/pages",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/pages/{id}/copy-layout",
+      "method": "POST",
+      "path": "/admin/pages/{id}/copy-layout",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/pages/{id}/publish",
+      "method": "POST",
+      "path": "/admin/pages/{id}/publish",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "POST /admin/pages/{id}/revisions",
+      "method": "POST",
+      "path": "/admin/pages/{id}/revisions",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/pages/revisions/{revisionId}/restore",
+      "method": "POST",
+      "path": "/admin/pages/revisions/{revisionId}/restore",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/payments",
+      "method": "POST",
+      "path": "/admin/payments",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/plugins/{name}/seed-pages",
+      "method": "POST",
+      "path": "/admin/plugins/{name}/seed-pages",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/plugins/{name}/toggle",
+      "method": "POST",
+      "path": "/admin/plugins/{name}/toggle",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/products",
+      "method": "POST",
+      "path": "/admin/products",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/project-categories",
+      "method": "POST",
+      "path": "/admin/project-categories",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/projects",
+      "method": "POST",
+      "path": "/admin/projects",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/projects/{id}/publish",
+      "method": "POST",
+      "path": "/admin/projects/{id}/publish",
+      "file": "runtime-node/src/modules/projects.ts"
+    },
+    {
+      "id": "POST /admin/projects/reorder",
+      "method": "POST",
+      "path": "/admin/projects/reorder",
+      "file": "runtime-node/src/modules/projects.ts"
+    },
+    {
+      "id": "POST /admin/redirects",
+      "method": "POST",
+      "path": "/admin/redirects",
+      "file": "runtime-node/src/modules/seo.ts"
+    },
+    {
+      "id": "POST /admin/scheduler/jobs/{id}/cancel",
+      "method": "POST",
+      "path": "/admin/scheduler/jobs/{id}/cancel",
+      "file": "runtime-node/src/modules/scheduler.ts"
+    },
+    {
+      "id": "POST /admin/scheduler/jobs/{id}/retry",
+      "method": "POST",
+      "path": "/admin/scheduler/jobs/{id}/retry",
+      "file": "runtime-node/src/modules/scheduler.ts"
+    },
+    {
+      "id": "POST /admin/scheduler/tick",
+      "method": "POST",
+      "path": "/admin/scheduler/tick",
+      "file": "runtime-node/src/modules/scheduler.ts"
+    },
+    {
+      "id": "POST /admin/seo/prerender-flush",
+      "method": "POST",
+      "path": "/admin/seo/prerender-flush",
+      "file": "runtime-node/src/modules/seo.ts"
+    },
+    {
+      "id": "POST /admin/seo/prerender/flush",
+      "method": "POST",
+      "path": "/admin/seo/prerender/flush",
+      "file": "runtime-node/src/modules/seo.ts"
+    },
+    {
+      "id": "POST /admin/services",
+      "method": "POST",
+      "path": "/admin/services",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/skill-categories",
+      "method": "POST",
+      "path": "/admin/skill-categories",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/skills",
+      "method": "POST",
+      "path": "/admin/skills",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/skills/reorder",
+      "method": "POST",
+      "path": "/admin/skills/reorder",
+      "file": "runtime-node/src/modules/content.ts"
+    },
+    {
+      "id": "POST /admin/social-links",
+      "method": "POST",
+      "path": "/admin/social-links",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/statistics",
+      "method": "POST",
+      "path": "/admin/statistics",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/support/faq",
+      "method": "POST",
+      "path": "/admin/support/faq",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "POST /admin/support/presence",
+      "method": "POST",
+      "path": "/admin/support/presence",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "POST /admin/support/test-telegram",
+      "method": "POST",
+      "path": "/admin/support/test-telegram",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "POST /admin/support/tickets/{id}/assign",
+      "method": "POST",
+      "path": "/admin/support/tickets/{id}/assign",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "POST /admin/support/tickets/{id}/close",
+      "method": "POST",
+      "path": "/admin/support/tickets/{id}/close",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "POST /admin/support/tickets/{id}/messages",
+      "method": "POST",
+      "path": "/admin/support/tickets/{id}/messages",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "POST /admin/system/last-error/clear",
+      "method": "POST",
+      "path": "/admin/system/last-error/clear",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/testimonials",
+      "method": "POST",
+      "path": "/admin/testimonials",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /admin/translate/purge-invalid",
+      "method": "POST",
+      "path": "/admin/translate/purge-invalid",
+      "file": "runtime-node/src/modules/translate.ts"
+    },
+    {
+      "id": "POST /admin/translate/warmup",
+      "method": "POST",
+      "path": "/admin/translate/warmup",
+      "file": "runtime-node/src/modules/translate.ts"
+    },
+    {
+      "id": "POST /admin/trash/{resource}/{id}/restore",
+      "method": "POST",
+      "path": "/admin/trash/{resource}/{id}/restore",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/trash/{resource}/empty",
+      "method": "POST",
+      "path": "/admin/trash/{resource}/empty",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/trash/empty-all",
+      "method": "POST",
+      "path": "/admin/trash/empty-all",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/updates",
+      "method": "POST",
+      "path": "/admin/updates",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/users",
+      "method": "POST",
+      "path": "/admin/users",
+      "file": "runtime-node/src/modules/users.ts"
+    },
+    {
+      "id": "POST /admin/webhooks",
+      "method": "POST",
+      "path": "/admin/webhooks",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "POST /analytics/collect",
+      "method": "POST",
+      "path": "/analytics/collect",
+      "file": "runtime-node/src/modules/analytics.ts"
+    },
+    {
+      "id": "POST /auth/2fa/disable",
+      "method": "POST",
+      "path": "/auth/2fa/disable",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /auth/2fa/enable",
+      "method": "POST",
+      "path": "/auth/2fa/enable",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /auth/2fa/setup",
+      "method": "POST",
+      "path": "/auth/2fa/setup",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /auth/2fa/verify",
+      "method": "POST",
+      "path": "/auth/2fa/verify",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
+      "id": "POST /auth/demo/end",
+      "method": "POST",
+      "path": "/auth/demo/end",
+      "file": "runtime-node/src/modules/demo.ts"
+    },
+    {
+      "id": "POST /auth/demo/reset",
+      "method": "POST",
+      "path": "/auth/demo/reset",
+      "file": "runtime-node/src/modules/demo.ts"
+    },
+    {
+      "id": "POST /auth/demo/start",
+      "method": "POST",
+      "path": "/auth/demo/start",
+      "file": "runtime-node/src/modules/demo.ts"
+    },
+    {
+      "id": "POST /auth/login",
+      "method": "POST",
+      "path": "/auth/login",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
+      "id": "POST /auth/logout",
+      "method": "POST",
+      "path": "/auth/logout",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
+      "id": "POST /auth/refresh",
+      "method": "POST",
+      "path": "/auth/refresh",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
+      "id": "POST /auth/register",
+      "method": "POST",
+      "path": "/auth/register",
+      "file": "runtime-node/src/modules/registration.ts"
+    },
+    {
+      "id": "POST /auth/resend-verification",
+      "method": "POST",
+      "path": "/auth/resend-verification",
+      "file": "runtime-node/src/modules/registration.ts"
+    },
+    {
+      "id": "POST /auth/verify-email",
+      "method": "POST",
+      "path": "/auth/verify-email",
+      "file": "runtime-node/src/modules/registration.ts"
+    },
+    {
+      "id": "POST /comments",
+      "method": "POST",
+      "path": "/comments",
+      "file": "runtime-node/src/modules/comments.ts"
+    },
+    {
+      "id": "POST /contact",
+      "method": "POST",
+      "path": "/contact",
+      "file": "runtime-node/src/modules/mail.ts"
+    },
+    {
+      "id": "POST /forms/{slug}/submit",
+      "method": "POST",
+      "path": "/forms/{slug}/submit",
+      "file": "runtime-node/src/modules/forms.ts"
+    },
+    {
+      "id": "POST /mail/contact",
+      "method": "POST",
+      "path": "/mail/contact",
+      "file": "runtime-node/src/modules/mail.ts"
+    },
+    {
+      "id": "POST /newsletter/subscribe",
+      "method": "POST",
+      "path": "/newsletter/subscribe",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "POST /orders/cart/items",
+      "method": "POST",
+      "path": "/orders/cart/items",
+      "file": "runtime-node/src/modules/orders.ts"
+    },
+    {
+      "id": "POST /orders/checkout",
+      "method": "POST",
+      "path": "/orders/checkout",
+      "file": "runtime-node/src/modules/orders.ts"
+    },
+    {
+      "id": "POST /payments/checkout",
+      "method": "POST",
+      "path": "/payments/checkout",
+      "file": "runtime-node/src/modules/payments.ts"
+    },
+    {
+      "id": "POST /payments/webhook",
+      "method": "POST",
+      "path": "/payments/webhook",
+      "file": "runtime-node/src/modules/payments.ts"
+    },
+    {
+      "id": "POST /payments/webhook/{provider}",
+      "method": "POST",
+      "path": "/payments/webhook/{provider}",
+      "file": "runtime-node/src/modules/payments.ts"
+    },
+    {
+      "id": "POST /registration/register",
+      "method": "POST",
+      "path": "/registration/register",
+      "file": "runtime-node/src/modules/registration.ts"
+    },
+    {
+      "id": "POST /support/faq/{id}/ask",
+      "method": "POST",
+      "path": "/support/faq/{id}/ask",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "POST /support/heartbeat",
+      "method": "POST",
+      "path": "/support/heartbeat",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "POST /support/session",
+      "method": "POST",
+      "path": "/support/session",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "POST /support/tickets",
+      "method": "POST",
+      "path": "/support/tickets",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "POST /support/tickets/{publicId}/contact",
+      "method": "POST",
+      "path": "/support/tickets/{publicId}/contact",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "POST /support/tickets/{publicId}/messages",
+      "method": "POST",
+      "path": "/support/tickets/{publicId}/messages",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "POST /system/scheduler/tick",
+      "method": "POST",
+      "path": "/system/scheduler/tick",
+      "file": "runtime-node/src/modules/scheduler.ts"
+    },
+    {
+      "id": "POST /translate/auto-warmup",
+      "method": "POST",
+      "path": "/translate/auto-warmup",
+      "file": "runtime-node/src/modules/translate.ts"
+    },
+    {
+      "id": "POST /translate/batch",
+      "method": "POST",
+      "path": "/translate/batch",
+      "file": "runtime-node/src/modules/translate.ts"
+    },
+    {
+      "id": "POST /webhooks/test",
+      "method": "POST",
+      "path": "/webhooks/test",
+      "file": "runtime-node/src/modules/webhooks.ts"
+    },
+    {
+      "id": "PUT /admin/{resource}",
+      "method": "PUT",
+      "path": "/admin/{resource}",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
+      "id": "PUT /admin/{resource}/{id}",
+      "method": "PUT",
+      "path": "/admin/{resource}/{id}",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
+      "id": "PUT /admin/access/users/{id}/overrides",
+      "method": "PUT",
+      "path": "/admin/access/users/{id}/overrides",
+      "file": "runtime-node/src/modules/access.ts"
+    },
+    {
+      "id": "PUT /admin/access/users/{id}/roles",
+      "method": "PUT",
+      "path": "/admin/access/users/{id}/roles",
+      "file": "runtime-node/src/modules/access.ts"
+    },
+    {
+      "id": "PUT /admin/automations/{id}",
+      "method": "PUT",
+      "path": "/admin/automations/{id}",
+      "file": "runtime-node/src/modules/automation.ts"
+    },
+    {
+      "id": "PUT /admin/blog-categories/{id}",
+      "method": "PUT",
+      "path": "/admin/blog-categories/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/blog-tags/{id}",
+      "method": "PUT",
+      "path": "/admin/blog-tags/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/blog/{id}",
+      "method": "PUT",
+      "path": "/admin/blog/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/contact-info",
+      "method": "PUT",
+      "path": "/admin/contact-info",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/education/{id}",
+      "method": "PUT",
+      "path": "/admin/education/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/email-settings",
+      "method": "PUT",
+      "path": "/admin/email-settings",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/experience/{id}",
+      "method": "PUT",
+      "path": "/admin/experience/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/footer",
+      "method": "PUT",
+      "path": "/admin/footer",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/form-submissions/{id}",
+      "method": "PUT",
+      "path": "/admin/form-submissions/{id}",
+      "file": "runtime-node/src/modules/forms.ts"
+    },
+    {
+      "id": "PUT /admin/forms/{id}",
+      "method": "PUT",
+      "path": "/admin/forms/{id}",
+      "file": "runtime-node/src/modules/forms.ts"
+    },
+    {
+      "id": "PUT /admin/hero",
+      "method": "PUT",
+      "path": "/admin/hero",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/homepage-sections/{id}",
+      "method": "PUT",
+      "path": "/admin/homepage-sections/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/lab/experiments/{id}",
+      "method": "PUT",
+      "path": "/admin/lab/experiments/{id}",
+      "file": "runtime-node/src/modules/lab.ts"
+    },
+    {
+      "id": "PUT /admin/media/{id}",
+      "method": "PUT",
+      "path": "/admin/media/{id}",
+      "file": "runtime-node/src/modules/media.ts"
+    },
+    {
+      "id": "PUT /admin/media/folders/{id}",
+      "method": "PUT",
+      "path": "/admin/media/folders/{id}",
+      "file": "runtime-node/src/modules/media.ts"
+    },
+    {
+      "id": "PUT /admin/navigation/{id}",
+      "method": "PUT",
+      "path": "/admin/navigation/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/newsletter/campaigns/{id}",
+      "method": "PUT",
+      "path": "/admin/newsletter/campaigns/{id}",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "PUT /admin/newsletter/lists/{id}",
+      "method": "PUT",
+      "path": "/admin/newsletter/lists/{id}",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "PUT /admin/newsletter/subscribers/{id}",
+      "method": "PUT",
+      "path": "/admin/newsletter/subscribers/{id}",
+      "file": "runtime-node/src/modules/newsletter.ts"
+    },
+    {
+      "id": "PUT /admin/notification-templates/{id}",
+      "method": "PUT",
+      "path": "/admin/notification-templates/{id}",
+      "file": "runtime-node/src/modules/notifications.ts"
+    },
+    {
+      "id": "PUT /admin/orders/{id}",
+      "method": "PUT",
+      "path": "/admin/orders/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/overload/settings",
+      "method": "PUT",
+      "path": "/admin/overload/settings",
+      "file": "runtime-node/src/modules/overload.ts"
+    },
+    {
+      "id": "PUT /admin/pages/{id}",
+      "method": "PUT",
+      "path": "/admin/pages/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/payments/{id}",
+      "method": "PUT",
+      "path": "/admin/payments/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/plugins/{name}/settings",
+      "method": "PUT",
+      "path": "/admin/plugins/{name}/settings",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "PUT /admin/products-meta/templates",
+      "method": "PUT",
+      "path": "/admin/products-meta/templates",
+      "file": "runtime-node/src/modules/products.ts"
+    },
+    {
+      "id": "PUT /admin/products/{id}",
+      "method": "PUT",
+      "path": "/admin/products/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/profile",
+      "method": "PUT",
+      "path": "/admin/profile",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/project-categories/{id}",
+      "method": "PUT",
+      "path": "/admin/project-categories/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/projects/{id}",
+      "method": "PUT",
+      "path": "/admin/projects/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/redirects/{id}",
+      "method": "PUT",
+      "path": "/admin/redirects/{id}",
+      "file": "runtime-node/src/modules/seo.ts"
+    },
+    {
+      "id": "PUT /admin/roles/{id}/permissions",
+      "method": "PUT",
+      "path": "/admin/roles/{id}/permissions",
+      "file": "runtime-node/src/modules/users.ts"
+    },
+    {
+      "id": "PUT /admin/seo",
+      "method": "PUT",
+      "path": "/admin/seo",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/services/{id}",
+      "method": "PUT",
+      "path": "/admin/services/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/site-settings",
+      "method": "PUT",
+      "path": "/admin/site-settings",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/skill-categories/{id}",
+      "method": "PUT",
+      "path": "/admin/skill-categories/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/skills/{id}",
+      "method": "PUT",
+      "path": "/admin/skills/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/social-links/{id}",
+      "method": "PUT",
+      "path": "/admin/social-links/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/statistics/{id}",
+      "method": "PUT",
+      "path": "/admin/statistics/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/support/faq/{id}",
+      "method": "PUT",
+      "path": "/admin/support/faq/{id}",
+      "file": "runtime-node/src/modules/support.ts"
+    },
+    {
+      "id": "PUT /admin/testimonials/{id}",
+      "method": "PUT",
+      "path": "/admin/testimonials/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/theme",
+      "method": "PUT",
+      "path": "/admin/theme",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /admin/users/{id}",
+      "method": "PUT",
+      "path": "/admin/users/{id}",
+      "file": "runtime-node/src/modules/users.ts"
+    },
+    {
+      "id": "PUT /admin/users/password",
+      "method": "PUT",
+      "path": "/admin/users/password",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "PUT /admin/webhooks/{id}",
+      "method": "PUT",
+      "path": "/admin/webhooks/{id}",
+      "file": "runtime-node/src/app.ts#AdminCrud",
+      "via": "AdminCrud"
+    },
+    {
+      "id": "PUT /orders/cart/items/{id}",
+      "method": "PUT",
+      "path": "/orders/cart/items/{id}",
+      "file": "runtime-node/src/modules/orders.ts"
+    }
+  ],
+  "coverage_pct": 100,
+  "missing_count": 0
+}

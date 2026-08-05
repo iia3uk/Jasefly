@@ -1,0 +1,12 @@
+{
+  "id": "portfolio",
+  "name": "Portfolio",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Portfolio",
+    "node": "runtime-node/src/modules/portfolio"
+  }
+}

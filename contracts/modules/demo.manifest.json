@@ -1,0 +1,12 @@
+{
+  "id": "demo",
+  "name": "Demo",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Demo",
+    "node": "runtime-node/src/modules/demo"
+  }
+}

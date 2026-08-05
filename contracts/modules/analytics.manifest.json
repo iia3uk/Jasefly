@@ -1,0 +1,12 @@
+{
+  "id": "analytics",
+  "name": "Analytics",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Analytics",
+    "node": "runtime-node/src/modules/analytics"
+  }
+}

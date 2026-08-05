@@ -13,6 +13,17 @@
  *   email: string,
  *   password: string,
  *   totpCode: string,
+ *   runtime: 'php-shared' | 'node-vps',
+ *   deployment: 'shared' | 'vps',
+ *   deployPath: string,
+ *   apiUrl: string,
+ *   healthcheckUrl: string,
+ *   sshHost: string,
+ *   sshUser: string,
+ *   sshKeyPath: string,
+ *   restartCommand: string,
+ *   processManager: string,
+ *   buildCommand: string,
  * }} SiteConfig
  */
 
@@ -68,6 +79,13 @@ function siteFromPrefixedEnv(id) {
     normKey(id),
   ].filter(Boolean))];
 
+  const runtimeRaw = (process.env[`CMS_SITE_${key}_RUNTIME`] || 'php-shared').trim().toLowerCase();
+  const runtime = runtimeRaw === 'node-vps' || runtimeRaw === 'node' || runtimeRaw === 'vps'
+    ? 'node-vps'
+    : 'php-shared';
+  const deploymentRaw = (process.env[`CMS_SITE_${key}_DEPLOYMENT`] || (runtime === 'node-vps' ? 'vps' : 'shared')).trim().toLowerCase();
+  const deployment = deploymentRaw === 'vps' ? 'vps' : 'shared';
+
   return {
     id: String(id).trim(),
     url,
@@ -79,6 +97,17 @@ function siteFromPrefixedEnv(id) {
     email: process.env[`CMS_SITE_${key}_EMAIL`] || '',
     password: process.env[`CMS_SITE_${key}_PASSWORD`] || '',
     totpCode: process.env[`CMS_SITE_${key}_TOTP_CODE`] || '',
+    runtime,
+    deployment,
+    deployPath: process.env[`CMS_SITE_${key}_DEPLOY_PATH`] || '',
+    apiUrl: (process.env[`CMS_SITE_${key}_API_URL`] || `${url}/api/v1`).replace(/\/$/, ''),
+    healthcheckUrl: process.env[`CMS_SITE_${key}_HEALTHCHECK_URL`] || '',
+    sshHost: process.env[`CMS_SITE_${key}_SSH_HOST`] || '',
+    sshUser: process.env[`CMS_SITE_${key}_SSH_USER`] || '',
+    sshKeyPath: process.env[`CMS_SITE_${key}_SSH_KEY_PATH`] || '',
+    restartCommand: process.env[`CMS_SITE_${key}_RESTART_COMMAND`] || '',
+    processManager: process.env[`CMS_SITE_${key}_PROCESS_MANAGER`] || '',
+    buildCommand: process.env[`CMS_SITE_${key}_BUILD_COMMAND`] || '',
   };
 }
 
@@ -103,6 +132,17 @@ function legacySingleSite() {
     email: process.env.CMS_EMAIL || '',
     password: process.env.CMS_PASSWORD || '',
     totpCode: process.env.CMS_TOTP_CODE || '',
+    runtime: 'php-shared',
+    deployment: 'shared',
+    deployPath: '',
+    apiUrl: `${url}/api/v1`,
+    healthcheckUrl: '',
+    sshHost: '',
+    sshUser: '',
+    sshKeyPath: '',
+    restartCommand: '',
+    processManager: '',
+    buildCommand: '',
   }];
 }
 
@@ -164,8 +204,8 @@ export function siteCount() {
 }
 
 /**
- * Public listing — no tokens.
- * @returns {{ id: string, host: string, url: string, aliases: string[] }[]}
+ * Public listing — no tokens / SSH keys / passwords.
+ * @returns {Array<Record<string, unknown>>}
  */
 export function listSitesPublic() {
   return loadSites().map((s) => ({
@@ -173,6 +213,14 @@ export function listSitesPublic() {
     host: s.host,
     url: s.url,
     aliases: s.aliases.filter((a) => a !== normKey(s.id)),
+    runtime: s.runtime || 'php-shared',
+    deployment: s.deployment || 'shared',
+    deploy_path: s.deployPath || null,
+    api_url: s.apiUrl || null,
+    healthcheck_url: s.healthcheckUrl || null,
+    process_manager: s.processManager || null,
+    ssh_configured: Boolean(s.sshHost && s.sshUser),
+    has_mcp_token: Boolean(s.token),
   }));
 }
 

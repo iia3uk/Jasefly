@@ -1,0 +1,12 @@
+{
+  "id": "scheduler",
+  "name": "Scheduler",
+  "runtime": {
+    "baseline": true,
+    "capabilities": []
+  },
+  "impl": {
+    "php": "backend/src/Modules/Scheduler",
+    "node": "runtime-node/src/modules/scheduler"
+  }
+}
