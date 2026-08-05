@@ -97,8 +97,8 @@ function coerce(k, v) {
   return v;
 }
 
-export function scrub(value, parent = null) {
-  if (Array.isArray(value)) return value.map((item) => scrub(item, null));
+export function scrub(value) {
+  if (Array.isArray(value)) return value.map(scrub);
   if (value && typeof value === 'object') {
     const out = {};
     for (const k of Object.keys(value).sort()) {
@@ -107,8 +107,8 @@ export function scrub(value, parent = null) {
         out[k] = '<scrubbed>';
         continue;
       }
-      // prerender-preview `bytes` tracks html_preview length (host-dependent).
-      if (k === 'bytes' && parent && Object.prototype.hasOwnProperty.call(parent, 'html_preview')) {
+      // prerender-preview: `bytes` is strlen(html); sibling of html_preview only.
+      if (k === 'bytes' && Object.prototype.hasOwnProperty.call(value, 'html_preview')) {
         out[k] = '<scrubbed>';
         continue;
       }
@@ -119,7 +119,7 @@ export function scrub(value, parent = null) {
           .replace(/http:\/\/127\.0\.0\.1:\d+/g, 'http://127.0.0.1:<port>');
         continue;
       }
-      out[k] = scrub(v, value);
+      out[k] = scrub(v);
     }
     return out;
   }
