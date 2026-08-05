@@ -1,12 +1,25 @@
-# Jasefly Node runtime (VPS)
+# Jasefly Node runtime (VPS / cloud)
 
-Production TypeScript backend — **no PHP**. Implements the same baseline contracts as `backend/` (PHP shared).
+Production TypeScript backend — **no PHP on the server**. Implements the same baseline contracts as `backend/` (PHP shared hosting).
+
+Product matrix: shared hosting = PHP · VPS/cloud = Node · dual = local/CI harness. See [`../docs/runtime-target-matrix.md`](../docs/runtime-target-matrix.md).
 
 ## Contracts
 
-Source of truth: repo `contracts/`. This runtime must not diverge from OpenAPI / permissions / errors / capabilities / migrations.
+Source of truth: repo [`../contracts/`](../contracts/README.md). Do not diverge from OpenAPI / permissions / errors / capabilities / migrations / behavior manifests.
+
+Parity gate: `node ../scripts/jasefly/cli.mjs test --runtime=dual` (**879/879** covered cases).
 
 ## Quick start
+
+From repo root (preferred):
+
+```bash
+node scripts/jasefly/cli.mjs doctor --runtime=node --target=local
+node scripts/jasefly/cli.mjs dev --runtime=node --target=local
+```
+
+Or inside this package:
 
 ```bash
 cd runtime-node
@@ -16,22 +29,25 @@ npm run migrate -- --install
 npm run dev
 ```
 
-Health: `http://localhost:3080/api/v1/health`
+Health: `http://localhost:3080/api/v1/health` (port may vary).
 
-## Tests
-
-```bash
-npm test
-```
-
-Parity vs PHP (both servers running):
+## Build / test
 
 ```bash
-PHP_BASE=http://127.0.0.1:8080/api/v1 NODE_BASE=http://127.0.0.1:3080/api/v1 node ../tests/parity/runner.mjs
+node ../scripts/jasefly/cli.mjs build --runtime=node --target=vps
+node ../scripts/jasefly/cli.mjs test --runtime=node
 ```
+
+Artifact under `release/jasefly-cms-vps-*.tgz` (`.zip` on Windows) — must not contain the PHP API tree.
 
 ## Deploy
 
-MCP: set `CMS_SITE_{ID}_RUNTIME=node-vps` + SSH env vars, then `cms_local_build({target:'vps'})` → `cms_deploy_update({site, confirm:true})`.
+MCP: set site `runtime` to Node VPS + SSH env, then `cms_local_build({ target: 'vps' })` → `cms_deploy_update({ site, confirm: true })`.
 
-Systemd unit sample: `deploy/jasefly-node.service`.
+Systemd sample: `deploy/jasefly-node.service`.
+
+## See also
+
+- [`../docs/dual-runtime.md`](../docs/dual-runtime.md)
+- [`../docs/deployment.md`](../docs/deployment.md)
+- [`../README.md`](../README.md)

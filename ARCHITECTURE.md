@@ -6,35 +6,59 @@ Show the layer stack and ownership. Detail lives under [`docs/`](docs/README.md)
 
 ## How it works
 
+Jasefly is **one architecture, two production runtimes** (plus a dual harness for dev/CI):
+
 ```
-Frontend (React)     admin · builder · modules · platform FE SDK
-        │
+                         Contracts (SoT)
+                             │
+              ┌──────────────┴──────────────┐
+              │                             │
+         PHP Runtime                   Node Runtime
+         backend/                      runtime-node/
+       Shared Hosting                  VPS / Cloud
+              │                             │
+              └──────────────┬──────────────┘
+                             │
+                    React Frontend
+             Public Site · Admin · Builder
+                             │
+                 Platform SDK · MCP · ZIP modules
+```
+
+**Dual** (`jasefly dev|test --runtime=dual`) boots PHP + Node together for local work and the behavioral parity gate. It is not a separate production server.
+
+Inside each runtime, ownership is the same shape:
+
+```
 REST /api/v1 · /api
         │
-Platform SDK         App\Platform\*  (ZIP packages only)
+Platform SDK         packages → App\Platform\* / FE platform only
         │
-Modules              bundled App\Modules\* · ZIP App\PackageModules\*
+Modules              bundled · ZIP packages
         │
-Core                 Router · Database · Jwt · ModuleRegistry · EventDispatcher · Middleware
+Core / infra         router · DB · auth · registry · events · middleware
         │
-Database             MySQL (prod) · SQLite/Pg via SqlTranspiler
+Database             MySQL (typical prod) · SQLite/Pg via transpiler
 ```
 
-Live HTTP routes are registered by `ModuleRegistry` from modules — not by editing `backend/routes/api_v1.php` (test/legacy).
+Live PHP HTTP routes are registered by `ModuleRegistry` from modules — not by editing `backend/routes/api_v1.php` (test/legacy).
 
-Enable stores and Plugin/Package terminology: [`docs/glossary.md`](docs/glossary.md).
+Enable stores and Plugin/Package terminology: [`docs/glossary.md`](docs/glossary.md). Runtime matrix: [`docs/runtime-target-matrix.md`](docs/runtime-target-matrix.md).
 
 ## Execution flow
 
-See [`docs/bootstrap-and-request.md`](docs/bootstrap-and-request.md).
+- PHP request path: [`docs/bootstrap-and-request.md`](docs/bootstrap-and-request.md)
+- Dual / Node ops: [`docs/dual-runtime.md`](docs/dual-runtime.md)
 
 ## Key components
 
 | Layer | Entry |
 | --- | --- |
-| API front controller | `backend/public/index.php` |
-| Bootstrap | `backend/src/Bootstrap.php` |
-| Registry | `backend/src/Core/ModuleRegistry.php` |
+| Unified CLI | `scripts/jasefly/cli.mjs` |
+| PHP API | `backend/public/index.php` · `backend/src/Bootstrap.php` |
+| Node API | `runtime-node/src/index.ts` |
+| Contracts | `contracts/` |
+| Registry (PHP) | `backend/src/Core/ModuleRegistry.php` |
 | SPA | `frontend/src/main.tsx` |
 
 ## Files involved
@@ -43,6 +67,7 @@ See [`docs/bootstrap-and-request.md`](docs/bootstrap-and-request.md).
 - [`docs/ownership-boundaries.md`](docs/ownership-boundaries.md)
 - [`docs/module-system.md`](docs/module-system.md)
 - [`docs/platform-sdk.md`](docs/platform-sdk.md)
+- [`docs/core-freeze-1.0.md`](docs/core-freeze-1.0.md)
 
 ## Related pages
 

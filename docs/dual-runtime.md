@@ -1,13 +1,14 @@
 # Dual-runtime operations
 
-Jasefly has **one architecture** and **two runtimes**:
+Jasefly has **one architecture** and **two production runtimes**. **Dual** is the local/CI harness that runs both — not a third production server.
 
 | Target | Runtime | Artifact |
 | --- | --- | --- |
-| Shared hosting | PHP (`backend/`) | `scripts/build-hosting.js` ZIP |
-| VPS | Node (`runtime-node/`) | `cms_vps_build` / `cms_local_build({target:'vps'})` |
+| Shared hosting | PHP (`backend/`) | `jasefly build --runtime=php` → hosting ZIP |
+| VPS / cloud | Node (`runtime-node/`) | `jasefly build --runtime=node` / `cms_local_build({target:'vps'})` |
+| Local + CI | Dual | Boots both; parity gate (**879/879**, modules **28/28**) |
 
-**Source of Truth:** [`contracts/`](../contracts/README.md).
+**Source of Truth:** [`contracts/`](../contracts/README.md). Freeze: [core-freeze-1.0.md](core-freeze-1.0.md). Matrix: [runtime-target-matrix.md](runtime-target-matrix.md).
 
 ## Agent / MCP
 
@@ -26,17 +27,14 @@ node scripts/jasefly/cli.mjs test --runtime=dual
 # Node unit
 cd runtime-node && npm test
 
-# HTTP parity (both servers up)
-PHP_BASE=http://127.0.0.1:8080/api/v1 NODE_BASE=http://127.0.0.1:3080/api/v1 node tests/parity/runner.mjs
-
 # Contracts
 node scripts/contracts/validate-contracts.js
 ```
 
-Runtime × target matrix: [runtime-target-matrix.md](runtime-target-matrix.md).
+Progress (AUTO): [dual-runtime-parity-progress.md](dual-runtime-parity-progress.md).
 
 ## Capability gate
 
 Modules declaring VPS-only capabilities (`queue`, `websocket`, …) fail the shared compiler unless `JASEFLY_ALLOW_SKIP_INCOMPATIBLE_MODULES=1` is set **explicitly**.
 
-See plan: [dual-runtime-architecture-plan.md](dual-runtime-architecture-plan.md) · journal: [dual-runtime-progress.md](dual-runtime-progress.md).
+Historical plan/journal: [dual-runtime-architecture-plan.md](dual-runtime-architecture-plan.md) · [dual-runtime-progress.md](dual-runtime-progress.md).

@@ -2,19 +2,30 @@
 
 ## Purpose
 
-Give a new engineer a reading order that matches how the runtime actually boots and extends.
+Give a new engineer a reading order that matches how the platform actually boots and extends.
 
-Jasefly is a **framework** (PHP API + React SPA + modules). The **CMS** surfaces (pages, media, content CRUD) live inside the admin — they are not the product name.
+Jasefly is an **AI-first modular dual-runtime platform**:
+
+| Runtime | Production role |
+| --- | --- |
+| **PHP** (`backend/`) | Shared hosting |
+| **Node** (`runtime-node/`) | VPS / cloud |
+| **Dual** | Local + CI behavioral parity (not a third production server) |
+
+Contracts under [`../contracts/`](../contracts/README.md) are the source of truth. The React SPA (public site, admin, builder) talks to whichever runtime you deploy. CMS surfaces live inside the admin — they are not the product name.
+
+Product overview: [`../README.md`](../README.md). Core freeze: [core-freeze-1.0.md](core-freeze-1.0.md).
 
 ## How it works
 
-Implementation is authoritative. Agent path lookup lives in root [`CMS_MAP.md`](../CMS_MAP.md). Release history lives in [`CHANGELOG.md`](../CHANGELOG.md). This tree explains **what happens**.
+Implementation is authoritative. Agent path lookup: root [`CMS_MAP.md`](../CMS_MAP.md). Release history: [`CHANGELOG.md`](../CHANGELOG.md). This tree explains **what happens**.
 
 ## Execution flow (reading order)
 
+0. **[runtime-target-matrix.md](runtime-target-matrix.md)** · [dual-runtime.md](dual-runtime.md) · **[core-freeze-1.0.md](core-freeze-1.0.md)** — where code runs, what is frozen
 1. [glossary.md](glossary.md) — Module / Plugin / Package / SoftPluginGate
 2. [ownership-boundaries.md](ownership-boundaries.md) — who owns which layer
-3. [bootstrap-and-request.md](bootstrap-and-request.md) — HTTP → handler
+3. [bootstrap-and-request.md](bootstrap-and-request.md) — HTTP → handler (PHP path)
 4. [routing.md](routing.md) — route registration and match
 5. [authentication.md](authentication.md) · [authorization.md](authorization.md)
 6. [module-system.md](module-system.md) — bundled discovery / boot / enable
@@ -24,22 +35,23 @@ Implementation is authoritative. Agent path lookup lives in root [`CMS_MAP.md`](
 10. [frontend-architecture.md](frontend-architecture.md) · [page-builder.md](page-builder.md)
 11. [database-and-migrations.md](database-and-migrations.md)
 12. [diagnostics.md](diagnostics.md) · [cli.md](cli.md) · [testing.md](testing.md)
-13. [deployment.md](deployment.md) · [dual-runtime.md](dual-runtime.md) · [runtime-target-matrix.md](runtime-target-matrix.md) · [dual-runtime-architecture-plan.md](dual-runtime-architecture-plan.md) · [recovery.md](recovery.md) · [security.md](security.md)
-13a. **[core-freeze-1.0.md](core-freeze-1.0.md)** — Final Freeze: what is frozen after Jasefly 1.0 (API / SDK / runtime / migrations / semver)
+13. [deployment.md](deployment.md) · [recovery.md](recovery.md) · [security.md](security.md)
 14. [extension-points.md](extension-points.md) · [content-import.md](content-import.md)
 15. Feature ownership: [modules/](modules/)
 
-SDK details: [sdk-versioning.md](sdk-versioning.md), [sdk-certification.md](sdk-certification.md). Platform folder stubs: [platform/README.md](platform/README.md).
+SDK details: [sdk-versioning.md](sdk-versioning.md), [sdk-certification.md](sdk-certification.md). Platform folder stubs: [platform/README.md](platform/README.md). Architecture plans (historical): [dual-runtime-architecture-plan.md](dual-runtime-architecture-plan.md).
 
 ## Key components
 
 | Area | Entry |
 | --- | --- |
-| API front controller | `backend/public/index.php` |
-| Bootstrap | `backend/src/Bootstrap.php` |
-| Module registry | `backend/src/Core/ModuleRegistry.php` |
-| SPA entry | `frontend/src/main.tsx` |
-| Deploy gate | `mcp-cms/` → `cms_release` |
+| Unified CLI | `scripts/jasefly/cli.mjs` (`jasefly doctor\|dev\|build\|test`) |
+| PHP API | `backend/public/index.php` · `backend/src/Bootstrap.php` |
+| Node API | `runtime-node/src/index.ts` |
+| Contracts SoT | `contracts/` |
+| Module registry (PHP) | `backend/src/Core/ModuleRegistry.php` |
+| SPA | `frontend/src/main.tsx` |
+| Deploy / MCP | `mcp-cms/` → `cms_release` |
 
 ## Files involved
 

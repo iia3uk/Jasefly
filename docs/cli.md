@@ -2,11 +2,31 @@
 
 ## Purpose
 
-List backend CLI entry points and what each bootstraps.
+List operator CLIs: unified runtime CLI first, then PHP backend tools.
 
 ## How it works
 
-Most CLIs require `backend/config/config.local.php` and call `Bootstrap::init()`. `sdk.php` can run offline (autoload only) when DB init fails.
+### Unified CLI (preferred)
+
+```bash
+node scripts/jasefly/cli.mjs doctor [--runtime=dual] [--target=local]
+node scripts/jasefly/cli.mjs dev    --runtime=node|php|dual
+node scripts/jasefly/cli.mjs build  --runtime=node|php|dual [--target=...]
+node scripts/jasefly/cli.mjs test   --runtime=node|php|dual
+```
+
+Bin alias: `jasefly` (root `package.json`). Env: `JASEFLY_RUNTIME`, `JASEFLY_TARGET`. Matrix: [runtime-target-matrix.md](runtime-target-matrix.md).
+
+| Command | Default runtime | Typical use |
+| --- | --- | --- |
+| `doctor` | dual | Check Node/PHP/Docker deps for matrix cell |
+| `dev` | dual | Local servers |
+| `test` | dual | Behavioral parity **879/879** when dual |
+| `build` | **required** | PHP ZIP and/or Node VPS artifact |
+
+### PHP backend CLIs
+
+Most require `backend/config/config.local.php` and call `Bootstrap::init()`. `sdk.php` can run offline (autoload only) when DB init fails.
 
 | Script | Requires DB config | Behavior |
 | --- | --- | --- |
@@ -15,14 +35,11 @@ Most CLIs require `backend/config/config.local.php` and call `Bootstrap::init()`
 | `backend/bin/certify-lifecycle.php` | Optional; full with `JASEFLY_LIFECYCLE_DB=1` | Lifecycle certify JSON |
 | `backend/bin/scheduler.php` | Yes | `SchedulerTick::tick` |
 | `backend/migrate.php` | Yes | `MigrationService::status(true)` |
-| `backend/install.php` | Installer | First-time install (HTTP or CLI depending on hosting flow) |
+| `backend/install.php` | Installer | First-time install (HTTP or CLI; requires explicit strong password) |
 | `backend/import-content.php` | Yes | Content pack import (`--confirm` for wipe) |
 | `backend/seed-demo.php` | Yes | Demo content |
 | `backend/tests/run.php` | Mostly SQLite in-process | Test suite |
 | `backend/router.php` | Dev | PHP built-in server front → `public/index.php` |
-| `scripts/jasefly/cli.mjs` (`jasefly`) | No | Runtime × target: `doctor` / `dev` / `build` / `test` (`--runtime=php\|node\|dual`, `--target=…`) |
-
-See also [runtime-target-matrix.md](runtime-target-matrix.md).
 
 ### `modules.php` commands
 
@@ -48,6 +65,7 @@ Typical package ops:
 
 ## Files involved
 
+- `scripts/jasefly/{cli,config,matrix,doctor}.mjs` · `adapters/{php,node,dual}.mjs`
 - `backend/bin/*.php`
 - `backend/migrate.php`, `install.php`, `import-content.php`
 - `backend/tests/run.php`

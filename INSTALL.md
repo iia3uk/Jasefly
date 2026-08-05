@@ -1,8 +1,10 @@
 # Установка и запуск Jasefly
 
-Полная инструкция: локальная разработка, чистая установка, shared-хостинг, обновления, MCP.
+Полная инструкция: локальная разработка, чистая установка, shared-хостинг, Node VPS, обновления, MCP.
 
-Jasefly — **framework** (PHP API + React). CMS-функции (страницы, медиа, контент) встроены в админку.
+Jasefly — **AI-first modular dual-runtime platform**: PHP для shared hosting, Node для VPS/cloud, dual — для локальной разработки и CI parity. CMS-функции (страницы, медиа, контент) встроены в админку.
+
+Обзор продукта: [`README.md`](README.md) · матрица runtime×target: [`docs/runtime-target-matrix.md`](docs/runtime-target-matrix.md).
 
 Секреты (`JWT_SECRET`, `MCP_API_TOKEN`, пароли БД, `config.local.php`) **никогда** не коммитьте. В репозитории только `*.example`.
 
@@ -12,13 +14,16 @@ Jasefly — **framework** (PHP API + React). CMS-функции (страниц�
 
 | Путь | Назначение |
 | --- | --- |
-| `backend/` | PHP API, инсталлер, миграции, модули/плагины |
-| `frontend/` | Публичный сайт + админка (React / Vite) |
+| `backend/` | PHP runtime (shared hosting): API, инсталлер, миграции, модули |
+| `runtime-node/` | Node runtime (VPS / cloud): тот же контрактный API |
+| `frontend/` | Публичный сайт + админка + билдер (React / Vite) |
+| `contracts/` | Source of truth для PHP ↔ Node |
 | `mcp-cms/` | MCP-сервер для AI-агентов (Cursor и др.) |
-| `scripts/` | Сборка install/update ZIP для хостинга |
-| `content/` | Контент-пакеты и скрипты наполнения (пример: `jasefly-official`) |
+| `scripts/jasefly/` | CLI: `doctor` / `dev` / `build` / `test` |
+| `scripts/` | Сборка PHP ZIP / Node VPS-артефактов |
+| `content/` | Контент-пакеты (пример: `jasefly-official`) |
 
-Composer не нужен: backend — plain PHP с автозагрузчиком.
+Composer не нужен: PHP backend — plain PHP с автозагрузчиком.
 
 ---
 
@@ -51,19 +56,38 @@ Composer не нужен: backend — plain PHP с автозагрузчико�
 
 ---
 
-## 3. Быстрый старт (Windows)
+## 3. Быстрый старт (CLI-first)
 
-1. Клонируйте репозиторий:
+Нужны **Node.js 20+** и npm. Для `runtime=php` или `dual` — ещё **PHP 8.2+** (см. §2). Зависимости сами не появятся, если их нет в системе (на Windows их может поставить `setup.bat` в `.tools/`).
 
-```bat
+```bash
 git clone https://github.com/iia3uk/jasefly.git
 cd jasefly
+npm install
+node scripts/jasefly/cli.mjs doctor
+node scripts/jasefly/cli.mjs dev --runtime=dual --target=local
 ```
+
+Сайт: **http://localhost:5173** · админка: `/admin` (после установки).
+
+Сборка артефактов:
+
+```bash
+node scripts/jasefly/cli.mjs build --runtime=php --target=shared
+node scripts/jasefly/cli.mjs build --runtime=node --target=vps
+node scripts/jasefly/cli.mjs test --runtime=dual
+```
+
+---
+
+## 3a. Быстрый старт (Windows shortcuts)
+
+1. Клонируйте репозиторий (как выше).
 
 2. Дважды кликните **`setup.bat`**  
    (или `install.bat`, если Node и PHP уже установлены)
 
-3. Дважды кликните **`start.bat`**
+3. Дважды кликните **`start.bat`** (PHP API + Vite; dual CLI — §3)
 
 4. Откройте **http://localhost:5173**
 

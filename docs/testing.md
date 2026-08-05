@@ -2,11 +2,23 @@
 
 ## Purpose
 
-Describe how FE, BE, CI, and MCP local tests are ordered.
+Describe how FE, BE, dual parity, CI, and MCP local tests are ordered.
 
 ## How it works
 
-### Backend
+### Unified CLI
+
+```bash
+node scripts/jasefly/cli.mjs test --runtime=dual   # behavioral parity gate (879/879)
+node scripts/jasefly/cli.mjs test --runtime=php    # PHP unit + FE
+node scripts/jasefly/cli.mjs test --runtime=node   # runtime-node unit + VPS smoke
+```
+
+### Dual behavioral parity
+
+`runtime=dual` → `scripts/behavior/run-all.mjs`: seed twin SQLite DBs, boot PHP + Node, compare HTTP cases from `contracts/behavior/`. Module status: [dual-runtime-parity-progress.md](dual-runtime-parity-progress.md) (**28/28** modules, **879/879** cases). Contract-scoped — not absolute identity outside covered scenarios.
+
+### Backend (PHP)
 
 `php backend/tests/run.php` loads suites in a fixed order (no PHPUnit). Includes Forms/Scheduler/Automation unit pieces, package validator/paths, SqlTranspiler, Diagnostics, Platform SDK, package lifecycle (offline), migration smoke/SQLite compat, API route contract, permissions, clean install, package enable sync, SoftPluginGate (`ProjectsSoftApiTest`), operation integrity, Router, ContractGovernance, SecurityVerification, Maintainability.
 
@@ -16,12 +28,16 @@ Lifecycle with DB: `JASEFLY_LIFECYCLE_DB=1 php backend/bin/certify-lifecycle.php
 
 `cd frontend && npm test` → Vitest (`vitest run`). Specs include `api.refresh`, `pluginGates`, builder registry/parseLayout/widget-types, `formatDateTime`, Lab experiment registry.
 
+### Node runtime
+
+`cd runtime-node && npm test`. VPS package smoke: `scripts/vps/package-and-smoke.mjs`.
+
 ### CI
 
-Only workflow: `.github/workflows/platform-sdk.yml`
+Workflow: `.github/workflows/platform-sdk.yml`
 
-- **sdk:** `run.php` → `sdk.php api-diff` → certify demo-kit + forms-sdk-reference → `npm ci` + test + build → `build-module.js` for both packages.
-- **lifecycle:** MySQL 8 → write `config.local.php` → `001_schema` via transpiler → `migrate.php` → lifecycle certify with DB. Blocking.
+- **sdk:** `run.php` → `sdk.php api-diff` → certify demo-kit + forms-sdk-reference → FE test/build → module ZIPs → **behavioral parity** (`run-all.mjs`, dual).
+- **lifecycle:** MySQL 8 → `config.local.php` → migrate → lifecycle certify with DB. Blocking.
 
 ### MCP local test
 
@@ -29,13 +45,16 @@ Only workflow: `.github/workflows/platform-sdk.yml`
 
 ## Execution flow
 
-Preferred release proof: `cms_release` runs build → test → changelog → deploy → verify (see [deployment.md](deployment.md)).
+Preferred release proof: `cms_release` runs build → test → changelog → deploy → verify (see [deployment.md](deployment.md)). For API/module changes, also keep dual parity green.
 
 ## Key components
 
 | Piece | Path |
 | --- | --- |
+| Unified test CLI | `scripts/jasefly/cli.mjs test` |
+| Dual parity | `scripts/behavior/run-all.mjs` · `tests/parity/behavior-runner.mjs` |
 | BE runner | `backend/tests/run.php` |
+| Node tests | `runtime-node` `npm test` |
 | FE vitest | `frontend/package.json` `test` |
 | CI | `.github/workflows/platform-sdk.yml` |
 | MCP test | `mcp-cms/src/local.js` |

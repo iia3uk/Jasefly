@@ -8,27 +8,40 @@ Contributor entry: where code lives and which docs to read before changing it.
 
 | Path | Purpose |
 | --- | --- |
-| `backend/public/index.php` | API front controller |
-| `backend/src/` | Core + services + middleware |
+| `scripts/jasefly/` | Unified CLI: `doctor` / `dev` / `build` / `test` |
+| `contracts/` | Dual-runtime source of truth |
+| `backend/public/index.php` | PHP API front controller |
+| `backend/src/` | PHP Core + services + middleware |
 | `backend/src/Modules/` | Bundled feature modules |
 | `backend/migrations/` | Schema + clean/demo seed PHP |
 | `backend/install.php` / `migrate.php` | First install / incremental migrations |
-| `backend/bin/` | CLI (`modules`, `sdk`, `scheduler`, …) |
+| `backend/bin/` | PHP CLI (`modules`, `sdk`, `scheduler`, …) |
 | `backend/tests/run.php` | PHP test runner |
+| `runtime-node/` | Node VPS runtime (TypeScript) |
 | `frontend/src/modules/` | Compile-time FE modules |
 | `frontend/src/builder/` | Page builder |
 | `frontend/src/platform/` | FE SDK for ZIP packages |
 | `modules-src/` | ZIP package sources |
 | `mcp-cms/` | Deploy/content MCP |
+| `tests/parity/` | Behavioral parity runner |
 
-Autoload is custom (no Composer). Modules are auto-discovered under `src/Modules/*/`.
+PHP autoload is custom (no Composer). Modules are auto-discovered under `backend/src/Modules/*/`.
+
+Preferred local loop:
+
+```bash
+node scripts/jasefly/cli.mjs doctor --runtime=dual --target=local
+node scripts/jasefly/cli.mjs dev --runtime=dual --target=local
+node scripts/jasefly/cli.mjs test --runtime=dual
+```
 
 ## Execution flow
 
-1. Read [`docs/README.md`](docs/README.md) for the topic you touch.
+1. Read [`docs/README.md`](docs/README.md) and [`docs/core-freeze-1.0.md`](docs/core-freeze-1.0.md) for the surface you touch.
 2. Change the owning module/package — not Core — unless you are changing Core itself.
-3. Run tests: see [`docs/testing.md`](docs/testing.md).
-4. ZIP packages: certify — [`docs/sdk-certification.md`](docs/sdk-certification.md).
+3. Keep PHP ↔ Node aligned for contract-covered APIs (`contracts/`, dual parity).
+4. Run tests: see [`docs/testing.md`](docs/testing.md).
+5. ZIP packages: certify — [`docs/sdk-certification.md`](docs/sdk-certification.md).
 
 ## Key components
 
@@ -48,7 +61,9 @@ Documented once:
 
 ## Related pages
 
+- [README.md](README.md)
 - [ARCHITECTURE.md](ARCHITECTURE.md)
+- [docs/runtime-target-matrix.md](docs/runtime-target-matrix.md)
 - [docs/testing.md](docs/testing.md)
 - [INSTALL.md](INSTALL.md)
 

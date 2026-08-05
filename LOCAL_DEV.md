@@ -2,6 +2,16 @@
 
 Double-click these files in the project root — no terminal typing required.
 
+For CLI-first dual runtime (PHP + Node + Vite), prefer:
+
+```bash
+npm install
+node scripts/jasefly/cli.mjs doctor --runtime=dual --target=local
+node scripts/jasefly/cli.mjs dev --runtime=dual --target=local
+```
+
+See [`INSTALL.md`](INSTALL.md) §3 and [`docs/runtime-target-matrix.md`](docs/runtime-target-matrix.md).
+
 | File | What it does |
 | --- | --- |
 | **setup.bat** | **Новый ПК / перенос:** сам скачает portable Node+PHP в `.tools\`, `npm install`, БД (MySQL или SQLite) |
@@ -11,7 +21,7 @@ Double-click these files in the project root — no terminal typing required.
 | **stop.bat** | Runs `dev.js stop` — stops all launcher-managed processes |
 | **restart.bat** | Runs `dev.js restart` — stop then start |
 
-Equivalent commands: `node dev.js [start|stop|restart|install]`
+Equivalent commands: `node dev.js [start|stop|restart|install]` (PHP+Vite path). Dual Node twin: `jasefly dev --runtime=dual`.
 
 ## First run (чистый ПК)
 

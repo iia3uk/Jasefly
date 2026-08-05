@@ -2,10 +2,13 @@
 
 Language-neutral contracts shared by **PHP shared** and **Node VPS** runtimes.
 
+Behavioral parity (covered baseline): **28/28** modules · **879/879** cases — see [`docs/dual-runtime-parity-progress.md`](../docs/dual-runtime-parity-progress.md). Freeze rules: [`docs/core-freeze-1.0.md`](../docs/core-freeze-1.0.md).
+
 | Path | Contents |
 | --- | --- |
 | `openapi/jasefly.v1.yaml` | HTTP API |
 | `schema/` | JSON Schema DTOs |
+| `behavior/` | Dual HTTP case manifests (auth + deep) |
 | `permissions/` | Core permission slugs |
 | `events/` | Core event names |
 | `capabilities/` | Baseline + extended runtime capabilities |
@@ -17,12 +20,14 @@ Language-neutral contracts shared by **PHP shared** and **Node VPS** runtimes.
 | `mcp/` | MCP tool freeze |
 | `builder/` | Widget type freeze |
 | `platform/` | Platform SDK API snapshot |
+| `baseline/` | Route inventories (PHP / Node) |
 
 ## Rules
 
 1. Edit here first; sync copies into PHP/FE paths via `node scripts/contracts/sync-from-contracts.js`.
 2. Validate: `node scripts/contracts/validate-contracts.js`.
-3. Baseline features require PHP **and** Node parity tests green.
+3. Baseline features require PHP **and** Node parity tests green (`jasefly test --runtime=dual`).
 4. Modules requiring `extended` capabilities must declare them; shared compiler hard-fails otherwise.
+5. Do not weaken scrub rules to hide a real divergence — fix the runtime to match the contract.
 
-See `docs/dual-runtime-architecture-plan.md`.
+See [`docs/dual-runtime.md`](../docs/dual-runtime.md) · [`docs/runtime-target-matrix.md`](../docs/runtime-target-matrix.md).

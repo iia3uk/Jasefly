@@ -1,6 +1,8 @@
 # Jasefly — MCP
 
-Code deploy pipeline (authoritative): [`docs/deployment.md`](../docs/deployment.md). Engineer docs: [`docs/README.md`](../docs/README.md).
+AI operator surface for **multi-site** content, module lifecycle, and release gates (build → test → changelog → deploy → verify).
+
+Code deploy pipeline (authoritative): [`docs/deployment.md`](../docs/deployment.md). Runtime matrix: [`docs/runtime-target-matrix.md`](../docs/runtime-target-matrix.md). Engineer docs: [`docs/README.md`](../docs/README.md). Product overview: [`../README.md`](../README.md).
 
 ## Секреты только в `.env`
 

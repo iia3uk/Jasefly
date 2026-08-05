@@ -2,13 +2,37 @@
 
 ## Purpose
 
-Explain how code is packaged and shipped to shared hosting.
+Explain how code is packaged and shipped for each production runtime.
 
 ## How it works
 
-Production runtime is PHP + MySQL; Node is not required on the host. Packaging: `scripts/build-hosting.js` builds the frontend, copies backend into `release/hosting-package`, writes root `index.php` / `.htaccess`, and zips install (`--mode=full`) or update (`--mode=update`).
+| Target | Runtime | Artifact |
+| --- | --- | --- |
+| Shared hosting | **PHP** | `jasefly-cms-install-*.zip` / `jasefly-cms-update-*.zip` — Node not required on host |
+| VPS / cloud | **Node** | `jasefly-cms-vps-*.tgz` (`.zip` on Windows) — PHP API tree not in the package |
+| Dual build | both | emits **both** artifact families |
 
-Operator path for this repo: MCP server `mcp-cms` tool **`cms_release(summary, changes, site?)`** — one call for the full gate. With multiple hosts in `CMS_SITES`, pass **`site`** (id/alias/domain); list via **`cms_sites`**.
+CLI:
+
+```bash
+node scripts/jasefly/cli.mjs build --runtime=php --target=shared
+node scripts/jasefly/cli.mjs build --runtime=node --target=vps
+node scripts/jasefly/cli.mjs build --runtime=dual --target=shared
+```
+
+Matrix: [runtime-target-matrix.md](runtime-target-matrix.md) · dual ops: [dual-runtime.md](dual-runtime.md).
+
+### PHP shared package
+
+`scripts/build-hosting.js` builds the frontend, copies backend into `release/hosting-package`, writes root `index.php` / `.htaccess`, and zips install (`--mode=full`) or update (`--mode=update`). Package must **not** contain `runtime-node/`.
+
+### Node VPS package
+
+Built via `jasefly build --runtime=node` / MCP `cms_local_build({ target: 'vps' })`. Stage must contain **no** PHP API tree. Deploy over SSH (atomic) when site runtime is `node-vps`.
+
+### MCP operator path
+
+MCP server `mcp-cms` tool **`cms_release(summary, changes, site?)`** — one call for the full gate (typically PHP shared today). With multiple hosts in `CMS_SITES`, pass **`site`** (id/alias/domain); list via **`cms_sites`**.
 
 Secrets stay in `mcp-cms/.env` and `backend/config` (never in `mcp.json` or git).
 
