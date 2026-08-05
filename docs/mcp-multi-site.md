@@ -13,6 +13,10 @@ This is **multi-site orchestration**, not multi-tenant DB inside one install.
 | Legacy single site | `CMS_URL` + `CMS_MCP_TOKEN` | `site` optional |
 | Multi-site | `CMS_SITES` + `CMS_SITE_{ID}_*` | `site` **required** when ≥2 hosts |
 
+**Source of truth for hosts = `mcp-cms/.env` only.**  
+Adding / renaming / removing a site = edit env + restart MCP.  
+**Never** edit `mcp-cms/src/sites.js` (or any MCP source) to register a domain — that file is a runtime **parser** of `CMS_SITES` / `CMS_SITE_{ID}_*`, not a site catalog.
+
 Secrets live only in [`mcp-cms/.env`](../mcp-cms/.env.example) (never in `mcp.json`, never in chat).
 
 ```env
@@ -85,12 +89,13 @@ Build target must match the site: shared ZIP vs VPS artifact. Matrix: [runtime-t
 
 ## Files involved
 
-| Piece | Path |
-| --- | --- |
-| Env example | `mcp-cms/.env.example` |
-| Site registry | `mcp-cms/src/sites.js` |
-| MCP server | `mcp-cms/src/index.js` |
-| Operator README | [`mcp-cms/README.md`](../mcp-cms/README.md) |
+| Piece | Path | Who edits |
+| --- | --- | --- |
+| **Host list + secrets** | `mcp-cms/.env` (from `.env.example`) | **Operator / agent** |
+| Env template | `mcp-cms/.env.example` | Docs only |
+| Env parser (not a catalog) | `mcp-cms/src/sites.js` | **Platform maintainers only** — never for “add client site” |
+| MCP server | `mcp-cms/src/index.js` | Platform maintainers |
+| Operator README | [`mcp-cms/README.md`](../mcp-cms/README.md) | — |
 
 ## Related pages
 
@@ -101,6 +106,7 @@ Build target must match the site: shared ZIP vs VPS artifact. Matrix: [runtime-t
 
 ## Common mistakes
 
+- Opening `sites.js` to “add a third site” — wrong; add `CMS_SITE_{ID}_*` to `.env` and append the id to `CMS_SITES`.
 - Configuring two sites but omitting `site` on `cms_release`.
 - Putting tokens in Cursor `mcp.json`.
 - Assuming one deploy updates every host in `CMS_SITES`.

@@ -165,7 +165,7 @@ portfolio/
     Modules/{Name}/   ← фича-пакеты (*Module.php)
     Controllers/      ← системные (auth, media, public…)
   backend/migrations/ ← схема
-  mcp-cms/            ← MCP-сервер деплоя/контента (multi-site: src/sites.js)
+  mcp-cms/            ← MCP-сервер (multi-site: конфиг в .env; sites.js = парсер)
   content/            ← контент-паки (импорт)
 ```
 
@@ -263,7 +263,7 @@ portfolio/
 
 ## MCP (хостинг / контент)
 
-Сервер: `user-jasefly-cms` (`mcp-cms/`). Секреты только в `mcp-cms/.env`. Мульти-сайт: `CMS_SITES` + `CMS_SITE_{ID}_*` → параметр **`site`** (id/alias/домен); список — **`cms_sites`** (`mcp-cms/src/sites.js`). Гайд: [`docs/mcp-multi-site.md`](docs/mcp-multi-site.md).
+Сервер: `user-jasefly-cms` (`mcp-cms/`). Секреты только в `mcp-cms/.env`. Мульти-сайт: **SoT = `.env`** (`CMS_SITES` + `CMS_SITE_{ID}_*`); параметр tool **`site`**; список — **`cms_sites`**. `mcp-cms/src/sites.js` — только парсер env, **не** править чтобы добавить хост. Гайд: [`docs/mcp-multi-site.md`](docs/mcp-multi-site.md).
 
 | Инструмент | Когда |
 | --- | --- |
