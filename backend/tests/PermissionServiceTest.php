@@ -55,4 +55,9 @@ assert_true($perms->isSystemRoute('/api/v1/admin/backup') === true, 'backup is s
 assert_true($perms->isSettingsRoute('/api/v1/admin/seo') === true, 'seo is settings route');
 assert_true($perms->isSettingsRoute('/api/v1/admin/plugins') === false, 'plugins is not settings route');
 
+assert_true($perms->isContentResource('pages') === true, 'pages is content resource');
+assert_true($perms->isContentResource('webhooks') === false, 'webhooks is not content resource');
+assert_true($perms->canMutateContent($editor, 'update') === true, 'editor canMutateContent update');
+assert_true($perms->canMutateContent(['sub' => 0, 'role' => 'member'], 'create') === false, 'member canMutateContent create false');
+
 ($ctx['cleanup'])();

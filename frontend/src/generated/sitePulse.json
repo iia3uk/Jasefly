@@ -1,48 +1,48 @@
 {
-  "generated_at": "2026-08-05T18:22:21.315Z",
-  "version": "installer_v2-17-g6acaf4d",
-  "commit": "6acaf4d",
+  "generated_at": "2026-08-05T22:02:10.577Z",
+  "version": "backup-before-author-rewrite-11-g8b79dd1",
+  "commit": "8b79dd1",
   "metrics": {
-    "files": 3370,
-    "php_classes": 310,
+    "files": 3430,
+    "php_classes": 311,
     "builder_widgets": 68,
     "rest_routes_core": 66,
     "sdk_interfaces": 23,
-    "git_commits": 92,
-    "repo_size_mb": 26.4,
+    "git_commits": 103,
+    "repo_size_mb": 27.9,
     "core_modules": 30,
     "package_scaffolds": 10
   },
   "github": {
     "repo": "iia3uk/jasefly",
     "url": "https://github.com/iia3uk/jasefly",
-    "latest_tag": "installer_v2",
-    "latest_commit_date": "2026-08-05",
+    "latest_tag": "backup-before-author-rewrite",
+    "latest_commit_date": "2026-08-06",
     "commits": [
       {
-        "hash": "6acaf4d",
+        "hash": "8b79dd1",
+        "date": "2026-08-06",
+        "subject": "docs: clarify multi-site SoT is .env, not sites.js"
+      },
+      {
+        "hash": "6a30079",
+        "date": "2026-08-06",
+        "subject": "docs: add MCP multi-site guide (one agent, many hosts)"
+      },
+      {
+        "hash": "d5f7df1",
         "date": "2026-08-05",
-        "subject": "Ship Node VPS runtime and PHP?Node behavioral parity CI gate."
+        "subject": "docs: align entry docs with dual-runtime platform"
       },
       {
-        "hash": "2b47eed",
-        "date": "2026-08-04",
-        "subject": "Stop publishing local site dumps and content packs."
+        "hash": "5de63a9",
+        "date": "2026-08-05",
+        "subject": "docs: rewrite README for dual-runtime platform"
       },
       {
-        "hash": "9845409",
-        "date": "2026-08-04",
-        "subject": "Fix CI after modules-src removal with public SDK fixtures."
-      },
-      {
-        "hash": "1d147c0",
-        "date": "2026-08-04",
-        "subject": "Ship landing showcase widgets and MCP multi-site routing."
-      },
-      {
-        "hash": "d87b7d9",
-        "date": "2026-08-04",
-        "subject": "﻿Stop publishing modules-src to the public repo."
+        "hash": "7522776",
+        "date": "2026-08-05",
+        "subject": "fix(ci): scrub prerender bytes beside html_preview"
       }
     ]
   }

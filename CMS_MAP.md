@@ -97,7 +97,8 @@
 | Новая SQL-миграция на хостинге «не применяется» (pending пуст) | файл есть в `backend/migrations/`, но **не в** `MigrationService::FILES` — без строки в константе файл игнорируется |
 | Contract governance (snapshots) | `Platform/Manifest/{api-snapshot,capabilities,permissions-core,events-core}.v1.json` · `mcp-cms/manifest/mcp-tools.v1.json` · `builder/manifest/widget-types.v1.json` · `ContractGovernanceTest.php` · vitest `widget-types.test.ts` · regen: `node backend/tests/gen-contract-snapshots.js` |
 | Security verification (SSRF/2FA/upload) | `Support/SsrfGuard.php` · `SecurityVerificationTest.php` · `TotpService` · `BackupService` · `MediaService` · `AuthController::refresh` (rotation) · `WebhooksModule` (HMAC + SSRF) |
-| Maintainability helpers | `Support/{SsrfGuard,OutboundHttp,SecretRedactor}.php` · `Response::error(..., $extra)` · `MaintainabilityTest.php` |
+| Content/webhook ACL + Host URLs | `PermissionService::{canMutateContent,requireContentMutation}` · `PermissionMiddleware` · `AdminController` · `WebhooksModule` (`integrations.manage`) · revision restore in `SystemModule` · `Support/PublicOrigin.php` · FE `sanitizeHtml` on `access.tsx` deny_template · Node `ssrfGuard.ts`/`permissionMiddleware.ts` · `ContentAclSecurityTest.php` |
+| Maintainability helpers | `Support/{SsrfGuard,OutboundHttp,SecretRedactor,PublicOrigin}.php` · `Response::error(..., $extra)` · `MaintainabilityTest.php` |
 | Диагностика модулей (load fail / safe-mode) | `ModuleRegistry::loadFailures`, `ModuleSafeMode`, `SystemHealthService` → `/admin/system` (`EnterprisePages.tsx`) |
 | Целостность ops (snapshot/migrate/schedule/content pack) | `ModulePackageService` + `ModuleSnapshotService` + `PageScheduleService` + `ContentPackImporter` / `import-content.php --confirm` |
 | Router 404/405 / CORS OPTIONS / RateLimit | `backend/src/Router.php`, `Request.php`, `public/index.php`, `Middleware/RateLimitMiddleware.php` |

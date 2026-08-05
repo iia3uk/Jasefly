@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-08-05 — Не дергать /translate/* когда плагин выключен
+
+- TranslateWidget fail-closed до гидрации enabled_plugins и без site.translate
+- TranslateAutoWarmup не стартует auto-warmup без включённого translate
+- Убраны ложные POST /translate/batch → 404 при disabled plugin
+
+## 2026-08-05 — Jasefly 1.0 core freeze + runtime-node typecheck fix
+
+- Freeze core 1.0 package on official site
+- runtime-node type contracts aligned for CI
+- TranslateSettings.auto_warmup + capabilities parity gate
+- Production hardening from 1.0 freeze
+
+## 2026-08-05 — Jasefly 1.0 core freeze + runtime-node typecheck fix
+
+- Freeze core 1.0 (release commit on main)
+- runtime-node: MePayload capabilities/is_super, cart totals/currency typing
+- TranslateSettings.auto_warmup + capabilities parity gate for CI
+- Production hardening from 1.0 freeze package
+
+
 ## 2026-08-04 — process-diagram: убраны лишняя петля и шарик
 
 - Удалена пунктирная feedback-полоска под схемой «Как я работаю»

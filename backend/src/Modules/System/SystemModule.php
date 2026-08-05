@@ -506,6 +506,7 @@ final class SystemModule extends AbstractModule
             Response::json(['data' => $svc->list((int) $id)]);
         }, $protected);
         $router->post($p('/admin/pages/{id}/revisions'), function (Request $r, string $id) use ($db) {
+            (new PermissionService($db))->requireContentMutation($r->user ?? [], 'update');
             $svc = new \App\Services\PageRevisionService($db);
             $note = $r->input('note');
             $revId = $svc->snapshot((int) $id, $r->user['id'] ?? null, is_string($note) ? $note : null);
@@ -520,6 +521,7 @@ final class SystemModule extends AbstractModule
             Response::json(['data' => $rev]);
         }, $protected);
         $router->post($p('/admin/pages/revisions/{revisionId}/restore'), function (Request $r, string $revisionId) use ($db) {
+            (new PermissionService($db))->requireContentMutation($r->user ?? [], 'update');
             $svc = new \App\Services\PageRevisionService($db);
             $restored = $svc->restore((int) $revisionId);
             if (!$restored) {
@@ -654,6 +656,7 @@ final class SystemModule extends AbstractModule
 
         // Копировать layout (стиль/структуру) с одной страницы на другую
         $router->post($p('/admin/pages/{id}/copy-layout'), function (Request $r, string $id) use ($db) {
+            (new PermissionService($db))->requireContentMutation($r->user ?? [], 'update');
             $targetId = (int) $id;
             $sourceId = (int) ($r->input('source_id') ?? 0);
             if ($targetId < 1 || $sourceId < 1) {

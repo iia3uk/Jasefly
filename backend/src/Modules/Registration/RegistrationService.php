@@ -294,11 +294,9 @@ final class RegistrationService
         if (($mailSettings['from_email'] ?? '') === '' || ($mailSettings['smtp_host'] ?? '') === '') {
             throw new \RuntimeException('Для подтверждения email настройте плагин «Почта» (SMTP)', 503);
         }
-        $base = rtrim((string) ($this->app['public_url'] ?? $this->app['app_url'] ?? ''), '/');
+        $base = \App\Support\PublicOrigin::resolve($this->db, $this->app);
         if ($base === '') {
-            $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
-            $host = (string) ($_SERVER['HTTP_HOST'] ?? 'localhost');
-            $base = ($https ? 'https' : 'http') . '://' . $host;
+            $base = 'http://localhost';
         }
         $verifyUrl = $base . '/register/verify?token=' . urlencode($token);
         $siteName = (string) ($this->siteName() ?: 'Portfolio');

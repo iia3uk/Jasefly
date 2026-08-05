@@ -1,5 +1,6 @@
 import type { ModuleContext } from '../core/types.js';
 import { requireAdmin } from '../core/authMiddleware.js';
+import { requirePermission } from '../core/permissionMiddleware.js';
 import { ok, fail } from '../http/envelope.js';
 import { notDeletedClause } from './_helpers.js';
 
@@ -32,6 +33,8 @@ const ADMIN_RESOURCES = [
 
 export async function register(ctx: ModuleContext) {
   const admin = requireAdmin(ctx.auth);
+  const perm = requirePermission(ctx.auth);
+  const gate = [admin, perm] as const;
 
   for (const p of ctx.apiPrefixes) {
     ctx.app.get(`${p}/pages/:slug`, async (c) => {
@@ -299,17 +302,17 @@ export async function register(ctx: ModuleContext) {
 
     for (const resource of ADMIN_RESOURCES) {
       const base = `${p}/admin/${resource}`;
-      ctx.app.get(base, admin, async (c) => ctx.crud.list(c, resource));
-      ctx.app.post(base, admin, async (c) => ctx.crud.create(c, resource));
-      ctx.app.get(`${base}/:id`, admin, async (c) => ctx.crud.show(c, resource, c.req.param('id')));
-      ctx.app.put(`${base}/:id`, admin, async (c) => ctx.crud.update(c, resource, c.req.param('id')));
-      ctx.app.delete(`${base}/:id`, admin, async (c) => ctx.crud.remove(c, resource, c.req.param('id')));
+      ctx.app.get(base, ...gate, async (c) => ctx.crud.list(c, resource));
+      ctx.app.post(base, ...gate, async (c) => ctx.crud.create(c, resource));
+      ctx.app.get(`${base}/:id`, ...gate, async (c) => ctx.crud.show(c, resource, c.req.param('id')));
+      ctx.app.put(`${base}/:id`, ...gate, async (c) => ctx.crud.update(c, resource, c.req.param('id')));
+      ctx.app.delete(`${base}/:id`, ...gate, async (c) => ctx.crud.remove(c, resource, c.req.param('id')));
     }
 
-    ctx.app.post(`${p}/admin/pages/:id/publish`, admin, async (c) =>
+    ctx.app.post(`${p}/admin/pages/:id/publish`, ...gate, async (c) =>
       ctx.crud.publish(c, 'pages', c.req.param('id')),
     );
-    ctx.app.post(`${p}/admin/navigation/reorder`, admin, async (c) => ctx.crud.reorder(c, 'navigation'));
-    ctx.app.post(`${p}/admin/skills/reorder`, admin, async (c) => ctx.crud.reorder(c, 'skills'));
+    ctx.app.post(`${p}/admin/navigation/reorder`, ...gate, async (c) => ctx.crud.reorder(c, 'navigation'));
+    ctx.app.post(`${p}/admin/skills/reorder`, ...gate, async (c) => ctx.crud.reorder(c, 'skills'));
   }
 }

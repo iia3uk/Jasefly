@@ -1,8 +1,9 @@
 import crypto from 'node:crypto';
 import type { ModuleContext } from '../core/types.js';
 import { requireAdmin } from '../core/authMiddleware.js';
+import { requirePermission } from '../core/permissionMiddleware.js';
 import { fail, ok } from '../http/envelope.js';
-import { isSafeHttpUrl } from '../support/ssrfGuard.js';
+import { isSafeHttpUrl, safeFetch } from '../support/ssrfGuard.js';
 
 export const name = 'webhooks';
 
@@ -13,11 +14,11 @@ async function postWebhook(url: string, body: { event: string; payload: unknown;
     headers['X-Jasefly-Signature'] =
       `sha256=${crypto.createHmac('sha256', body.secret).update(payload).digest('hex')}`;
   }
-  const res = await fetch(url, {
+  const res = await safeFetch(url, {
     method: 'POST',
     headers,
     body: payload,
-    signal: AbortSignal.timeout(10_000),
+    timeoutMs: 10_000,
   });
   if (!res.ok) {
     throw new Error(`Webhook POST ${url} failed: HTTP ${res.status}`);
@@ -60,6 +61,7 @@ export async function register(ctx: ModuleContext) {
   ctx.events.subscribe('form.submitted', (payload) => dispatchWebhooks(ctx.db, 'form.submitted', payload));
 
   const admin = requireAdmin(ctx.auth);
+  const manage = requirePermission(ctx.auth, 'integrations.manage');
 
   for (const p of ctx.apiPrefixes) {
     const base = `${p}/admin/webhooks`;
@@ -72,7 +74,7 @@ export async function register(ctx: ModuleContext) {
       return ok(c, items);
     });
 
-    ctx.app.post(base, admin, async (c) => {
+    ctx.app.post(base, admin, manage, async (c) => {
       if (!(await ctx.db.tableExists('webhooks'))) return fail(c, 'Not found', 404);
       const body = (await c.req.json().catch(() => ({}))) as {
         event?: string;
@@ -83,7 +85,7 @@ export async function register(ctx: ModuleContext) {
       const url = String(body.url ?? '').trim();
       const secret = String(body.secret ?? '');
       if (!event || !url) return fail(c, 'Validation failed', 422, { message: 'event and url required' });
-      if (!isSafeHttpUrl(url)) return fail(c, 'Invalid or blocked URL', 422);
+      if (!(await isSafeHttpUrl(url))) return fail(c, 'Invalid or blocked URL', 422);
       await ctx.db.run('INSERT INTO webhooks (event, url, secret, is_active) VALUES (?, ?, ?, 1)', [
         event,
         url,
@@ -93,7 +95,7 @@ export async function register(ctx: ModuleContext) {
       return ok(c, { id }, 201);
     });
 
-    ctx.app.put(`${base}/:id`, admin, async (c) => {
+    ctx.app.put(`${base}/:id`, admin, manage, async (c) => {
       if (!(await ctx.db.tableExists('webhooks'))) return fail(c, 'Not found', 404);
       const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
       const sets: string[] = [];
@@ -101,7 +103,7 @@ export async function register(ctx: ModuleContext) {
       for (const field of ['event', 'url', 'secret'] as const) {
         const v = body[field];
         if (typeof v !== 'string') continue;
-        if (field === 'url' && !isSafeHttpUrl(v)) return fail(c, 'Invalid or blocked URL', 422);
+        if (field === 'url' && !(await isSafeHttpUrl(v))) return fail(c, 'Invalid or blocked URL', 422);
         sets.push(`${field}=?`);
         params.push(v);
       }
@@ -115,7 +117,7 @@ export async function register(ctx: ModuleContext) {
       return ok(c, { message: 'Webhook updated' });
     });
 
-    ctx.app.delete(`${base}/:id`, admin, async (c) => {
+    ctx.app.delete(`${base}/:id`, admin, manage, async (c) => {
       if (!(await ctx.db.tableExists('webhooks'))) return fail(c, 'Not found', 404);
       await ctx.db.run('DELETE FROM webhooks WHERE id=?', [c.req.param('id')]);
       return ok(c, { message: 'Webhook deleted' });

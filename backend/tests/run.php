@@ -165,6 +165,9 @@ require_once "$root/tests/ContractGovernanceTest.php";
 echo "Security verification\n";
 require_once "$root/tests/SecurityVerificationTest.php";
 
+echo "Content ACL security\n";
+require_once "$root/tests/ContentAclSecurityTest.php";
+
 echo "Demo sandbox\n";
 require_once "$root/tests/DemoSandboxTest.php";
 

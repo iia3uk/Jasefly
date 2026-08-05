@@ -5,6 +5,7 @@ import type { SettingsField } from '@/builder/types'
 import { AccessRuleEditor } from '@/builder/edit/AccessRuleEditor'
 import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
+import { sanitizeHtml } from '@/shared/sanitize'
 
 function fields(...items: SettingsField[]) {
   return items
@@ -29,7 +30,7 @@ function DenyShell({
     return (
       <div
         className="rounded-[var(--radius)] border border-white/10 bg-white/[0.03] p-6"
-        dangerouslySetInnerHTML={{ __html: template }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(template) }}
       />
     )
   }

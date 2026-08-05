@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Providers;
 
+use App\Core\Container;
 use App\Database;
 use App\Request;
 use App\Response;
+use App\Support\PublicOrigin;
 
 /** Shared checkout payload passed to every provider. */
 final class CheckoutRequest
@@ -91,10 +93,25 @@ final class ProviderContext
         if (preg_match('#^https?://#i', $path)) {
             return $path;
         }
-        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-            || (($_SERVER['SERVER_PORT'] ?? '') === '443');
-        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        return ($https ? 'https' : 'http') . '://' . $host . '/' . ltrim($path, '/');
+        $app = [];
+        try {
+            if (Container::getInstance()->has('app')) {
+                $cfg = Container::getInstance()->get('app');
+                if (is_array($cfg)) {
+                    $app = $cfg;
+                }
+            }
+        } catch (\Throwable) {
+        }
+        $origin = PublicOrigin::resolve($this->db, $app);
+        if ($origin === '') {
+            // Last resort for misconfigured shared hosting — never trust raw Host blindly.
+            $origin = PublicOrigin::fallbackFromRequest($app);
+        }
+        if ($origin === '') {
+            $origin = 'http://localhost';
+        }
+        return rtrim($origin, '/') . '/' . ltrim($path, '/');
     }
 
     public function updatePayment(int $paymentId, string $externalId, string $status, mixed $payload = null): void

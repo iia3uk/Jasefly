@@ -47,6 +47,26 @@ function assertSafeRemoteToken(value, label) {
 }
 
 /**
+ * Strict release stamp grammar for cms_rollback `to` (no shell metacharacters).
+ * Exported for unit tests.
+ * @param {unknown} value
+ * @param {string} [label]
+ */
+export function assertSafeReleaseStamp(value, label = 'release stamp') {
+  if (typeof value !== 'string' || value.length < 1 || value.length > 128) {
+    throw new Error(`unsafe ${label}`);
+  }
+  // Alphanumeric + . _ - only; no quotes, spaces, newlines, backticks, $(), ;, |, &.
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(value)) {
+    throw new Error(`unsafe ${label}`);
+  }
+  if (/['"`;|&$<>\\\s\n\r]/.test(value)) {
+    throw new Error(`unsafe ${label}`);
+  }
+  return value;
+}
+
+/**
  * HTTP healthcheck from the MCP host (not a remote claim).
  * @param {string} url
  * @param {{ timeoutMs?: number, retries?: number }} [opts]
@@ -365,9 +385,13 @@ export function rollbackVps(site, opts) {
     return { ok: false, error: 'VPS SSH/deploy_path not configured' };
   }
   const keyArgs = site.sshKeyPath ? ['-i', site.sshKeyPath] : [];
+  assertSafeRemoteToken(site.sshHost, 'sshHost');
+  assertSafeRemoteToken(site.sshUser, 'sshUser');
   const sshTarget = `${site.sshUser}@${site.sshHost}`;
   const base = site.deployPath.replace(/\/$/, '');
-  const to = opts.to;
+  const to = opts.to !== undefined && opts.to !== null && opts.to !== ''
+    ? assertSafeReleaseStamp(opts.to, 'rollback to')
+    : undefined;
   const script = to
     ? `test -d '${base}/releases/${to}' && ln -sfn '${base}/releases/${to}' '${base}/current.new' && mv -Tf '${base}/current.new' '${base}/current'`
     : `prev=$(ls -1dt '${base}/releases'/* | sed -n '2p'); test -n "$prev" && ln -sfn "$prev" '${base}/current.new' && mv -Tf '${base}/current.new' '${base}/current' && echo "$prev"`;
