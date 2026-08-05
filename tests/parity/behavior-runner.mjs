@@ -50,13 +50,16 @@ if (!PHP_BASE || !NODE_BASE) {
 let adminToken = process.env.BEHAVIOR_ADMIN_TOKEN || '';
 const mcpToken = process.env.BEHAVIOR_MCP_TOKEN || meta?.mcpToken || 'behavior-mcp-token';
 
+/** undici keep-alive wedges php -S after ~130 requests on Linux CI — force close. */
+const NO_KEEPALIVE = { Connection: 'close' };
+
 async function loginAdmin() {
   if (adminToken) return adminToken;
   const email = meta?.adminEmail || 'admin@parity.local';
   const password = meta?.adminPassword || 'Admin123!';
   // Login both runtimes so activity/last_login side effects stay mirrored.
   const body = JSON.stringify({ email, password });
-  const headers = { 'Content-Type': 'application/json' };
+  const headers = { 'Content-Type': 'application/json', ...NO_KEEPALIVE };
   await fetch(`${PHP_BASE}/auth/login`, { method: 'POST', headers, body }).catch(() => null);
   const res = await fetch(`${NODE_BASE}/auth/login`, { method: 'POST', headers, body });
   const json = await res.json().catch(() => ({}));
@@ -141,6 +144,7 @@ async function hit(base, c, token, runtimeLabel = 'runtime') {
   const headers = {
     Accept: 'application/json',
     'Content-Type': 'application/json',
+    ...NO_KEEPALIVE,
     ...(c.headers || {}),
   };
   if (c.auth === 'admin' && token) headers.Authorization = `Bearer ${token}`;
@@ -220,7 +224,10 @@ async function probeHealth(base, label) {
   const timer = setTimeout(() => ac.abort(), fetchMs);
   const started = Date.now();
   try {
-    const res = await fetch(`${base}/health`, { signal: ac.signal });
+    const res = await fetch(`${base}/health`, {
+      signal: ac.signal,
+      headers: { ...NO_KEEPALIVE, Accept: 'application/json' },
+    });
     return { label, ok: res.status === 200, status: res.status, ms: Date.now() - started };
   } catch (e) {
     return { label, ok: false, status: 0, ms: Date.now() - started, error: String(e.message || e) };

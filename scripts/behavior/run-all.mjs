@@ -236,7 +236,7 @@ function buildPhpArgs(phpBin, phpPort) {
       phpArgs.push('-d', 'extension=pdo_sqlite');
     }
   } else {
-    phpArgs.push('-d', 'extension=pdo_sqlite');
+    // Linux/mac (incl. setup-php on GHA): pdo_sqlite already in php.ini — do not -d reload.
   }
   phpArgs.push('-S', `127.0.0.1:${phpPort}`, path.join(root, 'scripts/behavior/php-router.php'));
   return phpArgs;
@@ -266,7 +266,10 @@ async function healthBoth(nodePort, phpPort) {
     const t = setTimeout(() => ac.abort(), 5000);
     const started = Date.now();
     try {
-      const res = await fetch(url, { signal: ac.signal });
+      const res = await fetch(url, {
+        signal: ac.signal,
+        headers: { Connection: 'close', Accept: 'application/json' },
+      });
       return { label, ok: res.status === 200, status: res.status, ms: Date.now() - started };
     } catch (e) {
       return { label, ok: false, status: 0, ms: Date.now() - started, error: String(e.message || e) };
@@ -297,8 +300,8 @@ async function main() {
   const nodePort = await freePort(3081);
   const phpPort = await freePort(3082);
   const phpBin = process.env.PHP_BIN || 'php';
-  // CI sets BEHAVIOR_CHUNK=200. Default: smaller on Windows (php -S), larger elsewhere.
-  const chunkSize = Number(process.env.BEHAVIOR_CHUNK || (process.platform === 'win32' ? 150 : 200));
+  // php -S + undici keep-alive wedges ~130 req/process on Linux CI — keep chunks ≤100.
+  const chunkSize = Number(process.env.BEHAVIOR_CHUNK || 100);
   const logRing = createLogRing();
 
   const nodeEnv = {

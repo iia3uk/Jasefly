@@ -59,7 +59,9 @@ jobs:
           # Full deep-scenario gate (shape compare). Fail CI on any drift in this set.
           BEHAVIOR_SCENARIOS: unauthenticated,invalid-token,happy-get,missing-resource,public-mutate
           BEHAVIOR_REQUIRE: all
-          BEHAVIOR_CHUNK: '200'
+          # php -S wedges ~130 keep-alive requests on ubuntu runners; restart each chunk.
+          BEHAVIOR_CHUNK: '100'
+          BEHAVIOR_PHP_STALL_RETRIES: '5'
         run: |
           node scripts/behavior/run-all.mjs
           test -f tmp/behavior-results/last.json
