@@ -33,6 +33,7 @@
 | Галерея фото+видео | `modules/projects/components/ProjectGallery.tsx` + виджет `image-gallery` в `builder/widgets/landing.tsx` |
 | Lightbox картинок (блог обложка/контент) | `shared/ui/ImageLightbox.tsx` + `MediaImage lightbox` / `RichText` в `shared/ui/index.tsx`, `BlogPostView` |
 | Иконки карточек (features-grid, ?) | `shared/icons.tsx` + `shared/techBrandIcons.ts` (Lucide + Simple Icons) |
+| Переводчик выключен, но FE бьёт `/translate/batch` 404 | `TranslateWidget` / `TranslateAutoWarmup`: fail-closed до гидрации `enabled_plugins` + требовать `site.translate`; `siteHasPlugin` без массива = fail-open |
 | Переводчик / auto-warmup 429 | `TranslateAutoWarmup.tsx` + `SoftRateLimitMiddleware` + `TranslateModule` (batch тоже soft) |
 | Прогрев «Нет прогресса» / en→en | `TranslateModule::allowedTargets` исключает `source_lang`; иначе chunk крутит same-lang и FE стопорится |
 | Переводчик медленный при «всё в кэше» | FE `TranslateWidget`: session/memory map + paint до API; `fill_misses=false` если `cache_ready`; Google без Libre-fallback |
@@ -269,6 +270,7 @@ portfolio/
 | **`cms_sites`** | Список хостов MCP (без токенов); при ≥2 сайтах спроси пользователя и передай `site` |
 | **`cms_release`** | Любая заливка кода (build→test→changelog→deploy→verify); при multi — `site` обязателен |
 | Dual-runtime PHP Shared ↔ Node VPS | Baseline `contracts/baseline/` · **behavior** `contracts/behavior/` + `scripts/behavior/{extract,generate,run-all,module-status}.mjs` · parity `tests/parity/{behavior-runner,generated}/` · прогресс AUTO `docs/dual-runtime-parity-progress.md` · gate `docs/dual-runtime-verification-report-final.md` · VPS `scripts/vps/package-and-smoke.mjs` · validate `scripts/contracts/validate-contracts.js` |
+| CI parity «This operation was aborted» / зависание chunk | `run-all.mjs`: drain php/node stdout (php -S access log → pipe deadlock) + cleanup SIGKILL; `behavior-runner.mjs`: AbortController timeout → exit 2 INFRA (не parity fail), health every N |
 | Runtime × target CLI (`JASEFLY_RUNTIME` / `JASEFLY_TARGET`) | `scripts/jasefly/{cli,config,matrix,doctor}.mjs` + `adapters/{php,node,dual}.mjs` · матрица `docs/runtime-target-matrix.md` · docker `deploy/docker/` · bin `jasefly` (root `package.json`) · MCP gate в `mcp-cms/src/local.js` |
 | Release package identity | root `VERSION` / `LICENSE.md` / `NOTICE` → PHP ZIP (`build-hosting.js`, no `api/tests`) · Node VPS tgz (`mcp-cms/src/deploy/vps.js` + `release-meta.json`) |
 | Core freeze 1.0 (что нельзя ломать) | `docs/core-freeze-1.0.md` |

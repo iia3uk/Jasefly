@@ -110,7 +110,33 @@ function truncateJson(json, max = 12000) {
   }
 }
 
-async function hit(base, c, token) {
+function isAbortError(err) {
+  if (!err) return false;
+  if (err.name === 'AbortError') return true;
+  const msg = String(err.message || err);
+  return /This operation was aborted|The operation was aborted|aborted/i.test(msg);
+}
+
+function isTransportError(err) {
+  if (!err) return false;
+  const msg = String(err.message || err);
+  return /fetch failed|ECONNRESET|ECONNREFUSED|EPIPE|socket hang up|UND_ERR_/i.test(msg);
+}
+
+/**
+ * Infrastructure failure — not a PHP↔Node behavioral diverge.
+ * Runner exits 2; run-all must not count these as parity fails.
+ */
+function infraError(code, message, details = {}) {
+  const e = new Error(message);
+  e.name = 'InfraError';
+  e.infra = true;
+  e.code = code;
+  e.details = details;
+  return e;
+}
+
+async function hit(base, c, token, runtimeLabel = 'runtime') {
   const pth = applyPath(c.path, c.path_params);
   const headers = {
     Accept: 'application/json',
@@ -121,8 +147,10 @@ async function hit(base, c, token) {
   if (c.auth === 'invalid') headers.Authorization = 'Bearer totally-invalid-token';
   if (c.auth === 'mcp') headers.Authorization = `Bearer ${mcpToken}`;
 
+  const fetchMs = Number(process.env.BEHAVIOR_FETCH_MS || 20000);
   const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(), Number(process.env.BEHAVIOR_FETCH_MS || 20000));
+  const timer = setTimeout(() => ac.abort(), fetchMs);
+  const started = Date.now();
   try {
     const res = await fetch(base + pth, {
       method: c.method || 'GET',
@@ -157,7 +185,45 @@ async function hit(base, c, token) {
         }
       }
     }
-    return { status: res.status, json, headers: Object.fromEntries(res.headers.entries()) };
+    return {
+      status: res.status,
+      json,
+      headers: Object.fromEntries(res.headers.entries()),
+      elapsed_ms: Date.now() - started,
+      runtime: runtimeLabel,
+    };
+  } catch (err) {
+    const elapsed = Date.now() - started;
+    if (isAbortError(err)) {
+      throw infraError(
+        'FETCH_TIMEOUT',
+        `INFRA FETCH_TIMEOUT runtime=${runtimeLabel} ${c.method || 'GET'} ${pth} elapsed_ms=${elapsed} limit_ms=${fetchMs}`,
+        { runtime: runtimeLabel, path: pth, method: c.method || 'GET', elapsed_ms: elapsed, limit_ms: fetchMs },
+      );
+    }
+    if (isTransportError(err)) {
+      throw infraError(
+        'RUNTIME_TRANSPORT',
+        `INFRA RUNTIME_TRANSPORT runtime=${runtimeLabel} ${c.method || 'GET'} ${pth} elapsed_ms=${elapsed} err=${err.message || err}`,
+        { runtime: runtimeLabel, path: pth, method: c.method || 'GET', elapsed_ms: elapsed, err: String(err.message || err) },
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function probeHealth(base, label) {
+  const fetchMs = 5000;
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), fetchMs);
+  const started = Date.now();
+  try {
+    const res = await fetch(`${base}/health`, { signal: ac.signal });
+    return { label, ok: res.status === 200, status: res.status, ms: Date.now() - started };
+  } catch (e) {
+    return { label, ok: false, status: 0, ms: Date.now() - started, error: String(e.message || e) };
   } finally {
     clearTimeout(timer);
   }
@@ -294,10 +360,19 @@ async function main() {
   const cases = loadCases();
   let failed = 0;
   let passed = 0;
+  let infra = 0;
   const byModule = {};
   const results = [];
+  let infraHalt = null;
 
-  console.log(`behavior-runner: ${cases.length} cases php=${PHP_BASE} node=${NODE_BASE}`);
+  const nodePid = process.env.BEHAVIOR_NODE_PID || '?';
+  const phpPid = process.env.BEHAVIOR_PHP_PID || '?';
+  const fetchMs = Number(process.env.BEHAVIOR_FETCH_MS || 20000);
+  const healthEvery = Number(process.env.BEHAVIOR_HEALTH_EVERY || 25);
+
+  console.log(
+    `behavior-runner: ${cases.length} cases php=${PHP_BASE} node=${NODE_BASE} fetch_ms=${fetchMs} health_every=${healthEvery} pids node=${nodePid} php=${phpPid}`,
+  );
 
   const progressEvery = Number(process.env.BEHAVIOR_PROGRESS_EVERY || 50);
   for (let i = 0; i < cases.length; i++) {
@@ -306,26 +381,71 @@ async function main() {
     const tables = c.compare?.db ? c.database_tables || [] : [];
     const phpDbBefore = tables.length ? dumpTables(meta?.phpDb, tables) : null;
     const nodeDbBefore = tables.length ? dumpTables(meta?.nodeDb, tables) : null;
+    const scenario = String(c.id).split('::').pop() || '';
+
+    if (healthEvery > 0 && i > 0 && i % healthEvery === 0) {
+      const [ph, nh] = await Promise.all([probeHealth(PHP_BASE, 'php'), probeHealth(NODE_BASE, 'node')]);
+      console.log(
+        `behavior-runner health @${i}: php=${ph.status}/${ph.ms}ms node=${nh.status}/${nh.ms}ms pids node=${nodePid} php=${phpPid}`,
+      );
+      if (!ph.ok || !nh.ok) {
+        infraHalt = infraError(
+          'HEALTH_FAIL',
+          `INFRA HEALTH_FAIL at case_index=${i} php=${JSON.stringify(ph)} node=${JSON.stringify(nh)} pids node=${nodePid} php=${phpPid}`,
+          { php: ph, node: nh, case_index: i },
+        );
+        break;
+      }
+    }
+
+    if (process.env.BEHAVIOR_VERBOSE === '1') {
+      console.log(`[>] ${c.method || 'GET'} ${c.path} ::${scenario} module=${c.module}`);
+    }
 
     let php;
     let node;
     try {
-      // Sequential — PHP built-in server is single-threaded; retry once on abort.
-      const once = async (base) => {
+      // Sequential — PHP built-in server is single-threaded; one retry on infra transport/timeout.
+      const once = async (base, label) => {
         try {
-          return await hit(base, c, adminToken);
+          return await hit(base, c, adminToken, label);
         } catch (e) {
-          const msg = String(e.message || e);
-          if (/abort|fetch failed|ECONNRESET|socket/i.test(msg)) {
+          if (e?.infra) {
             await new Promise((r) => setTimeout(r, 400));
-            return hit(base, c, adminToken);
+            const health = await probeHealth(base, label);
+            if (!health.ok) {
+              throw infraError(
+                'RUNTIME_DOWN',
+                `INFRA RUNTIME_DOWN runtime=${label} after ${e.code || 'error'}; health=${JSON.stringify(health)} pids node=${nodePid} php=${phpPid}`,
+                { cause: e.details || e.message, health, runtime: label },
+              );
+            }
+            // Server answered health — retry the case once.
+            console.error(
+              `[infra-retry] runtime=${label} case=${c.id} code=${e.code} elapsed_ms=${e.details?.elapsed_ms ?? '?'} health_ok=${health.ok}`,
+            );
+            return hit(base, c, adminToken, label);
           }
           throw e;
         }
       };
-      php = await once(PHP_BASE);
-      node = await once(NODE_BASE);
+      php = await once(PHP_BASE, 'php');
+      node = await once(NODE_BASE, 'node');
     } catch (e) {
+      if (e?.infra) {
+        infra++;
+        infraHalt = e;
+        console.error(`[INFRA] ${c.id}: ${e.message}`);
+        console.error(
+          `[INFRA] details=${JSON.stringify({
+            code: e.code,
+            ...(e.details || {}),
+            pids: { node: nodePid, php: phpPid },
+          })}`,
+        );
+        // Do NOT count as behavioral fail — stop the chunk immediately.
+        break;
+      }
       failed++;
       byModule[c.module].fail++;
       results.push({ id: c.id, ok: false, problems: [String(e.message || e)] });
@@ -357,24 +477,36 @@ async function main() {
       passed++;
       byModule[c.module].pass++;
       results.push({ id: c.id, module: c.module, ok: true });
-      if (process.env.BEHAVIOR_VERBOSE === '1') console.log(`[OK] ${c.id}`);
+      if (process.env.BEHAVIOR_VERBOSE === '1') {
+        console.log(`[OK] ${c.id} php_ms=${php.elapsed_ms} node_ms=${node.elapsed_ms}`);
+      }
     }
     if (progressEvery > 0 && (i + 1) % progressEvery === 0) {
-      console.log(`behavior-runner progress ${i + 1}/${cases.length} pass=${passed} fail=${failed}`);
+      console.log(
+        `behavior-runner progress ${i + 1}/${cases.length} pass=${passed} fail=${failed} infra=${infra}`,
+      );
     }
   }
 
   const outDir = path.join(root, 'tmp', 'behavior-results');
   fs.mkdirSync(outDir, { recursive: true });
+  // Count only completed parity comparisons (infra aborts are not behavioral totals).
+  const completed = passed + failed;
   let summary = {
     at: new Date().toISOString(),
     passed,
     failed,
-    total: cases.length,
+    infra,
+    total: completed,
+    planned: cases.length,
     byModule,
     results,
+    infra_halt: infraHalt
+      ? { code: infraHalt.code, message: infraHalt.message, details: infraHalt.details || null }
+      : null,
   };
   const outFile = mergePath || path.join(outDir, 'last.json');
+  const chunkMeta = { offset: caseOffset, limit: cases.length, passed, failed, infra, completed };
   if (mergePath && fs.existsSync(mergePath)) {
     const prev = JSON.parse(fs.readFileSync(mergePath, 'utf8'));
     const mergedBy = { ...(prev.byModule || {}) };
@@ -387,18 +519,31 @@ async function main() {
       at: new Date().toISOString(),
       passed: (prev.passed || 0) + passed,
       failed: (prev.failed || 0) + failed,
-      total: (prev.total || 0) + cases.length,
+      infra: (prev.infra || 0) + infra,
+      total: (prev.total || 0) + completed,
+      planned: (prev.planned || 0) + cases.length,
       byModule: mergedBy,
       results: [...(prev.results || []), ...results],
-      chunks: [...(prev.chunks || []), { offset: caseOffset, limit: cases.length, passed, failed }],
+      chunks: [...(prev.chunks || []), chunkMeta],
+      infra_halt: summary.infra_halt || prev.infra_halt || null,
     };
+  } else {
+    summary.chunks = [chunkMeta];
   }
   fs.writeFileSync(outFile, JSON.stringify(summary, null, 2));
   if (outFile !== path.join(outDir, 'last.json')) {
     fs.copyFileSync(outFile, path.join(outDir, 'last.json'));
   }
-  console.log(`behavior-runner done: passed=${passed} failed=${failed} total=${cases.length}`);
+  console.log(
+    `behavior-runner done: passed=${passed} failed=${failed} infra=${infra} total=${cases.length}`,
+  );
   console.log(`summary → ${outFile}`);
+
+  if (infraHalt) {
+    console.error(`INFRA: ${infraHalt.message}`);
+    process.exit(2);
+  }
+
   const authFailed = summary.results.filter(
     (r) => !r.ok && (String(r.id).includes('::unauthenticated') || String(r.id).includes('::invalid-token')),
   );
@@ -410,6 +555,10 @@ async function main() {
 }
 
 main().catch((e) => {
+  if (e?.infra) {
+    console.error(`INFRA: ${e.message}`);
+    process.exit(2);
+  }
   console.error(e);
   process.exit(1);
 });
