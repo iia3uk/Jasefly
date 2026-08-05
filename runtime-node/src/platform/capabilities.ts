@@ -20,9 +20,10 @@ export function availableCapabilities(cfg: AppConfig): string[] {
   const doc = loadCapabilitiesDoc();
   const parity = process.env.BEHAVIOR_PARITY === '1' || cfg.env === 'test' || cfg.runtime === 'php-shared';
   if (parity) {
-    return [...doc.baseline].sort();
+    // PHP: array_values(array_unique($baseline)) — preserve JSON order, no sort
+    return [...new Set(doc.baseline)];
   }
-  return [...new Set([...doc.baseline, ...doc.extended])].sort();
+  return [...new Set([...doc.baseline, ...doc.extended])];
 }
 
 export function assertModuleAllowedOnShared(manifest: {

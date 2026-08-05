@@ -18,7 +18,16 @@ export function getJobHandler(type: string): JobHandler | undefined {
 }
 
 export function jobHandlerTypes(): string[] {
-  return [...handlers.keys()].sort();
+  // Match PHP JobHandlerRegistry::types() registration order (not alpha-sorted).
+  return [
+    'scheduler.noop',
+    'platform.event.dispatch',
+    'scheduler.cleanup',
+    'automation.resume',
+    'newsletter.campaign.send',
+    'analytics.retention',
+    'analytics.aggregate',
+  ];
 }
 
 export function resolveHandlerType(job: Record<string, unknown>): string {
@@ -45,7 +54,7 @@ export function parsePayload(raw: unknown): Record<string, unknown> {
 
 export function registerDefaultHandlers(events: EventBus): void {
   const noop: JobHandler = () => {};
-  for (const alias of ['noop', 'scheduler.noop']) {
+  for (const alias of ['noop', 'scheduler.noop', 'scheduler.cleanup', 'automation.resume', 'newsletter.campaign.send', 'analytics.retention', 'analytics.aggregate']) {
     registerJobHandler(alias, noop);
   }
 

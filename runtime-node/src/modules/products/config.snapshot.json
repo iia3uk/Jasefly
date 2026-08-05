@@ -1,0 +1,32 @@
+{
+  "storefront_template": "storefront",
+  "page_slug": "product-detail-storefront",
+  "title": "Витрина с тарифами",
+  "templates": [
+    {
+      "id": "simple",
+      "title": "Простой",
+      "page_slug": "product-detail-simple"
+    },
+    {
+      "id": "storefront",
+      "title": "Витрина с тарифами",
+      "page_slug": "product-detail-storefront"
+    },
+    {
+      "id": "marketplace",
+      "title": "Витрина",
+      "page_slug": "product-detail-marketplace"
+    },
+    {
+      "id": "digital",
+      "title": "Цифровой товар",
+      "page_slug": "product-detail-digital"
+    },
+    {
+      "id": "landing",
+      "title": "Лендинг",
+      "page_slug": "product-detail-landing"
+    }
+  ]
+}

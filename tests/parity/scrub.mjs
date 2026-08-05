@@ -9,6 +9,15 @@ const SCRUB_KEYS = new Set([
   'refresh_token',
   'jti',
   'challenge_token',
+  'csrf',
+  'last_tick_at',
+  'cron_stale',
+  // support visitor session hash (random per runtime)
+  'visitor_key',
+  'public_id',
+  // demo session id (random per start, same class as visitor_key)
+  'session_id',
+  'expires_at',
   // translate batch: provider id may differ between PHP (google) and Node (stub)
   'provider',
   'default_provider',
@@ -17,6 +26,10 @@ const SCRUB_KEYS = new Set([
   'caps_version',
   // migration warning text may differ slightly
   'warning',
+  // SQLite page layout differs between PHP PDO and better-sqlite3 after identical DDL
+  'database_size_bytes',
+  'database_size_human',
+  'generated_at',
 ]);
 
 /** Normalize envelope shape before deep compare (PHP sometimes omits success on {data}). */
@@ -33,15 +46,21 @@ export function normalizeEnvelope(json) {
   if (out.data && typeof out.data === 'object' && !Array.isArray(out.data) && Object.keys(out.data).length === 0) {
     out.data = null;
   }
-  // Node list wrappers {items,total} → array (PHP AdminController returns rows[]).
-  if (
-    out.data &&
-    typeof out.data === 'object' &&
-    !Array.isArray(out.data) &&
-    Array.isArray(out.data.items) &&
-    ('total' in out.data || 'page' in out.data)
-  ) {
-    out.data = out.data.items;
+  // Empty errors array vs null — PHP always uses [].
+  if (out.errors === null || out.errors === undefined) {
+    out.errors = [];
+  }
+  // Node list wrappers {items} or {items,total,page…} → array (PHP AdminController returns rows[]).
+  // Do NOT unwrap cart payloads that also carry cart_id / totals / currency.
+  if (out.data && typeof out.data === 'object' && !Array.isArray(out.data)) {
+    const keys = Object.keys(out.data);
+    if (Array.isArray(out.data.items)) {
+      const listMeta = new Set(['items', 'total', 'page', 'limit', 'offset', 'per_page']);
+      const listOnly = keys.every((k) => listMeta.has(k));
+      if (listOnly && (keys.includes('total') || keys.includes('page') || keys.length === 1)) {
+        out.data = out.data.items;
+      }
+    }
   }
   return out;
 }
@@ -62,7 +81,12 @@ export function scrub(value) {
     for (const k of Object.keys(value).sort()) {
       const v = coerce(k, value[k]);
       if (SCRUB_KEYS.has(k)) {
-        out[k] = typeof v === 'string' || typeof v === 'number' ? '<scrubbed>' : scrub(v);
+        out[k] = '<scrubbed>';
+        continue;
+      }
+      // Dual-runtime listen ports appear in robots/sitemap absolute URLs.
+      if (k === '_raw' && typeof v === 'string') {
+        out[k] = v.replace(/http:\/\/127\.0\.0\.1:\d+/g, 'http://127.0.0.1:<port>');
         continue;
       }
       out[k] = scrub(v);

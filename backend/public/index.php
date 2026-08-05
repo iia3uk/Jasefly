@@ -5,7 +5,9 @@ declare(strict_types=1);
  * Jasefly API front controller.
  * Deployed as public_html/api/public/index.php
  *
- * Tip: open /api/v1/health?debug=1 to see the real error message.
+ * Production: error details are never returned in HTTP responses.
+ * Ops: create api/storage/.show_errors temporarily, or set APP_ENV=local.
+ * Admins: System → Last error (authenticated).
  */
 
 function portfolio_wants_debug(): bool
@@ -16,14 +18,11 @@ function portfolio_wants_debug(): bool
         require_once dirname(__DIR__) . '/src/Services/ErrorReportService.php';
         return \App\Services\ErrorReportService::shouldExposeDetails();
     }
-    if (isset($_GET['debug']) && (string) $_GET['debug'] === '1') {
+    if (is_file(dirname(__DIR__) . '/storage/.show_errors')) {
         return true;
     }
-    $qs = $_SERVER['QUERY_STRING'] ?? '';
-    if (preg_match('/(?:^|&)debug=1(?:&|$)/', $qs)) {
-        return true;
-    }
-    return is_file(dirname(__DIR__) . '/storage/.show_errors');
+    $env = strtolower((string) (getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? '')));
+    return in_array($env, ['local', 'development', 'dev', 'test'], true);
 }
 
 function portfolio_json_error(Throwable $e): never
@@ -88,7 +87,7 @@ function portfolio_json_error(Throwable $e): never
             'php' => PHP_VERSION,
             'hint' => 'Скопируйте этот блок в отладчик админки или откройте System → Last error.',
         ] : [
-            'hint' => 'Войдите в админку — для авторизованных запросов детали ошибки возвращаются автоматически. Также: /api/v1/health?debug=1 или api/storage/.show_errors и api/storage/logs/error.log',
+            'hint' => 'Войдите в админку → System → Last error. Временно: api/storage/.show_errors (затем удалите). Лог: api/storage/logs/error.log',
         ],
         'data' => null,
     ];

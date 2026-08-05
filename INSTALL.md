@@ -68,7 +68,7 @@ cd jasefly
 4. Откройте **http://localhost:5173**
 
 Админка: `/admin` (после установки).  
-Дефолтный локальный пароль инсталлера часто `Admin123!` — **смените сразу**.
+Локальный `dev.js` задаёт пароль `Admin123!` явно через `--password=` — **смените на проде**; веб/CLI инсталлер пароль по умолчанию больше не ставит.
 
 Остановка: `stop.bat` или клавиша `Q` в окне `start.bat`.
 
@@ -109,14 +109,14 @@ SQLite (без сервера БД):
 
 ```bash
 cd backend
-php install.php --driver=sqlite --sqlite_path=storage/sqlite/cms.sqlite --url=http://localhost:5173 --email=admin@example.com --demo=0 --keep=1
+php install.php --driver=sqlite --sqlite_path=storage/sqlite/cms.sqlite --url=http://localhost:5173 --email=admin@example.com --password=YOUR_STRONG_PASSWORD --demo=0 --keep=1
 ```
 
 MySQL:
 
 ```bash
 cd backend
-php install.php --driver=mysql --host=127.0.0.1 --port=3306 --name=jasefly_cms --user=root --pass=YOUR_PASSWORD --url=http://localhost:5173 --email=admin@example.com --demo=0 --keep=1
+php install.php --driver=mysql --host=127.0.0.1 --port=3306 --name=jasefly_cms --user=root --pass=YOUR_PASSWORD --url=http://localhost:5173 --email=admin@example.com --password=YOUR_STRONG_PASSWORD --demo=0 --keep=1
 ```
 
 Либо откройте веб-инсталлер (`install.php`), если так удобнее.

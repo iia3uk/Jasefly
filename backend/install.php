@@ -331,8 +331,9 @@ function install(array $c): string
     }
 
     $adminEmail = strtolower(trim($c['admin_email'] ?? 'admin@example.com'));
+    $adminPassword = resolveAdminPassword($c);
     $algo = defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT;
-    $hash = password_hash('Admin123!', $algo);
+    $hash = password_hash($adminPassword, $algo);
     $existing = $pdo->prepare('SELECT id FROM users WHERE email=?');
     $existing->execute([$adminEmail]);
     if ($existing->fetch()) {
@@ -371,13 +372,33 @@ function install(array $c): string
     file_put_contents("$root/config/config.local.php", "<?php\nreturn " . var_export($local, true) . ";\n", LOCK_EX);
     file_put_contents($lock, gmdate(DATE_ATOM));
 
-    return "Installed successfully.\nDriver: {$driver}\nAdmin: {$adminEmail}\nPassword: Admin123!\nChange the password immediately after first login.";
+    return "Installed successfully.\nDriver: {$driver}\nAdmin: {$adminEmail}\nPassword: (as provided — not echoed; store it securely).";
+}
+
+/** Require an explicit admin password — never ship a hardcoded default. */
+function resolveAdminPassword(array $c): string
+{
+    $password = (string) ($c['admin_password'] ?? $c['password'] ?? '');
+    if ($password === '') {
+        throw new RuntimeException(
+            'admin_password is required (min 12 characters). '
+            . 'Pass --password=... (CLI) or fill the password field (web installer).'
+        );
+    }
+    if (strlen($password) < 12) {
+        throw new RuntimeException('admin_password must be at least 12 characters.');
+    }
+    $confirm = (string) ($c['admin_password_confirm'] ?? '');
+    if ($confirm !== '' && !hash_equals($password, $confirm)) {
+        throw new RuntimeException('admin_password confirmation does not match.');
+    }
+    return $password;
 }
 
 function normalizeInstallInput(array $c): array
 {
     $out = $c;
-    foreach (['host', 'name', 'user', 'pass', 'app_url', 'cors_origins', 'admin_email', 'port', 'charset', 'driver', 'sqlite_path'] as $k) {
+    foreach (['host', 'name', 'user', 'pass', 'app_url', 'cors_origins', 'admin_email', 'admin_password', 'password', 'port', 'charset', 'driver', 'sqlite_path'] as $k) {
         if (array_key_exists($k, $out) && is_string($out[$k])) {
             $out[$k] = trim($out[$k]);
         }
@@ -519,8 +540,10 @@ ul{margin:0 0 12px;padding-left:0;list-style:none;font-size:13px}
   <div class="row"><label>URL сайта</label><input name="app_url" placeholder="https://example.com" required></div>
   <div class="row"><label>CORS origin (обычно = URL сайта)</label><input name="cors_origins" placeholder="https://example.com"></div>
   <div class="row"><label>Email администратора</label><input name="admin_email" type="email" placeholder="admin@example.com" required></div>
+  <div class="row"><label>Пароль администратора</label><input name="admin_password" type="password" minlength="12" required autocomplete="new-password" placeholder="минимум 12 символов"></div>
+  <div class="row"><label>Пароль ещё раз</label><input name="admin_password_confirm" type="password" minlength="12" required autocomplete="new-password"></div>
   <label class="check"><input type="checkbox" name="with_demo" value="1"> Загрузить демо-контент (Jasefly Demo — легко удалить)</label>
-  <p class="hint">По умолчанию ставится чистый сайт: Jasefly, пустая главная, About и Privacy. Пароль администратора: <code>Admin123!</code> — смените после входа.</p>
+  <p class="hint">Чистый сайт: Jasefly, пустая главная, About и Privacy. Пароль по умолчанию не задаётся — задайте свой (минимум 12 символов).</p>
   <div class="btns"><button type="button" class="btn-ghost" onclick="go(2)">← Назад</button><button type="submit" class="btn-primary">Установить</button></div>
 </div>
 
@@ -564,6 +587,7 @@ if (PHP_SAPI === 'cli') {
             'app_url' => $args['url'] ?? 'http://localhost:5173',
             'cors_origins' => $args['cors'] ?? ($args['url'] ?? 'http://localhost:5173'),
             'admin_email' => $args['email'] ?? 'admin@example.com',
+            'admin_password' => $args['password'] ?? ($args['admin_password'] ?? ''),
             'with_demo' => isset($args['demo']) ? $args['demo'] : '0',
             'charset' => 'utf8mb4',
         ];

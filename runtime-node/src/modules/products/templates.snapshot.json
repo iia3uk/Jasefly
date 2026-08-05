@@ -1,0 +1,650 @@
+{
+  "active": "storefront",
+  "page_slug": "product-detail-storefront",
+  "templates": [
+    {
+      "id": "simple",
+      "title": "Простой",
+      "description": "Классика: фото слева, название, описание, цена и кнопка «Купить».",
+      "preview": [
+        "#0c0e12",
+        "#6b8cff"
+      ],
+      "page_slug": "product-detail-simple",
+      "fields": [
+        {
+          "key": "short_description",
+          "label": "Краткое описание",
+          "widget": "textarea",
+          "help": null,
+          "column": "short_description",
+          "attr_key": null
+        },
+        {
+          "key": "description",
+          "label": "Полное описание",
+          "widget": "richtext",
+          "help": null,
+          "column": "description",
+          "attr_key": null
+        },
+        {
+          "key": "stock",
+          "label": "Остаток",
+          "widget": "number",
+          "help": "Пусто = безлимит",
+          "column": "stock",
+          "attr_key": null
+        }
+      ],
+      "field_keys": [
+        "short_description",
+        "description",
+        "stock"
+      ]
+    },
+    {
+      "id": "storefront",
+      "title": "Витрина с тарифами",
+      "description": "Галерея, бейдж, статистика, тарифы, вкладки — как у цифровых товаров.",
+      "preview": [
+        "#0a0a0c",
+        "#3b82f6"
+      ],
+      "page_slug": "product-detail-storefront",
+      "fields": [
+        {
+          "key": "badge",
+          "label": "Бейдж статуса",
+          "widget": "text",
+          "help": "Напр. Хит продаж, Новинка",
+          "column": "badge",
+          "attr_key": null
+        },
+        {
+          "key": "attrs.category",
+          "label": "Категория",
+          "widget": "text",
+          "help": "Показывается над названием",
+          "column": "attrs",
+          "attr_key": "category"
+        },
+        {
+          "key": "attrs.detection",
+          "label": "Гарантия / статус",
+          "widget": "text",
+          "help": "Напр. 12 месяцев",
+          "column": "attrs",
+          "attr_key": "detection"
+        },
+        {
+          "key": "short_description",
+          "label": "Краткое описание",
+          "widget": "textarea",
+          "help": null,
+          "column": "short_description",
+          "attr_key": null
+        },
+        {
+          "key": "video_url",
+          "label": "URL видео",
+          "widget": "url",
+          "help": null,
+          "column": "video_url",
+          "attr_key": null
+        },
+        {
+          "key": "sold_count",
+          "label": "Продано",
+          "widget": "number",
+          "help": null,
+          "column": "sold_count",
+          "attr_key": null
+        },
+        {
+          "key": "stock",
+          "label": "Остаток",
+          "widget": "number",
+          "help": null,
+          "column": "stock",
+          "attr_key": null
+        },
+        {
+          "key": "tags",
+          "label": "Теги",
+          "widget": "json",
+          "help": "[\"Шаблоны\",\"Дизайн\"]",
+          "column": "tags",
+          "attr_key": null
+        },
+        {
+          "key": "gallery",
+          "label": "Галерея media_id",
+          "widget": "json",
+          "help": "[12, 15]",
+          "column": "gallery",
+          "attr_key": null
+        },
+        {
+          "key": "variants",
+          "label": "Тарифы",
+          "widget": "json",
+          "help": "[{\"label\":\"12 месяцев\",\"price\":1890,\"old_price\":2490,\"highlight\":\"ВЫГОДНО\"}]",
+          "column": "variants",
+          "attr_key": null
+        },
+        {
+          "key": "tabs",
+          "label": "Вкладки",
+          "widget": "json",
+          "help": "[{\"label\":\"Что внутри\",\"html\":\"<p>…</p>\"}]",
+          "column": "tabs",
+          "attr_key": null
+        }
+      ],
+      "field_keys": [
+        "badge",
+        "attrs.category",
+        "attrs.detection",
+        "short_description",
+        "video_url",
+        "sold_count",
+        "stock",
+        "tags",
+        "gallery",
+        "variants",
+        "tabs"
+      ]
+    },
+    {
+      "id": "marketplace",
+      "title": "Витрина",
+      "description": "Галерея, параметры, карточка покупки и отзывы — нейтральный layout под стиль сайта.",
+      "preview": [
+        "#0e1219",
+        "#8eb6ff"
+      ],
+      "page_slug": "product-detail-marketplace",
+      "fields": [
+        {
+          "key": "badge",
+          "label": "Бейдж",
+          "widget": "text",
+          "help": "Напр. Хит продаж",
+          "column": "badge",
+          "attr_key": null
+        },
+        {
+          "key": "attrs.brand",
+          "label": "Бренд",
+          "widget": "text",
+          "help": null,
+          "column": "attrs",
+          "attr_key": "brand"
+        },
+        {
+          "key": "attrs.original",
+          "label": "Оригинал (1/0)",
+          "widget": "text",
+          "help": "1 = бейдж «Оригинал»",
+          "column": "attrs",
+          "attr_key": "original"
+        },
+        {
+          "key": "attrs.rating",
+          "label": "Рейтинг",
+          "widget": "text",
+          "help": "Напр. 4.9",
+          "column": "attrs",
+          "attr_key": "rating"
+        },
+        {
+          "key": "attrs.reviews_count",
+          "label": "Число оценок",
+          "widget": "number",
+          "help": null,
+          "column": "attrs",
+          "attr_key": "reviews_count"
+        },
+        {
+          "key": "attrs.questions_count",
+          "label": "Число вопросов",
+          "widget": "number",
+          "help": null,
+          "column": "attrs",
+          "attr_key": "questions_count"
+        },
+        {
+          "key": "attrs.old_price",
+          "label": "Старая цена",
+          "widget": "number",
+          "help": null,
+          "column": "attrs",
+          "attr_key": "old_price"
+        },
+        {
+          "key": "attrs.discount_label",
+          "label": "Скидка",
+          "widget": "text",
+          "help": "Напр. −24%",
+          "column": "attrs",
+          "attr_key": "discount_label"
+        },
+        {
+          "key": "attrs.price_tag",
+          "label": "Плашка цены",
+          "widget": "text",
+          "help": "Хорошая цена",
+          "column": "attrs",
+          "attr_key": "price_tag"
+        },
+        {
+          "key": "attrs.promo_ends",
+          "label": "Текст акции",
+          "widget": "text",
+          "help": null,
+          "column": "attrs",
+          "attr_key": "promo_ends"
+        },
+        {
+          "key": "attrs.delivery",
+          "label": "Доставка",
+          "widget": "text",
+          "help": "Завтра / Мгновенно",
+          "column": "attrs",
+          "attr_key": "delivery"
+        },
+        {
+          "key": "attrs.seller",
+          "label": "Продавец",
+          "widget": "text",
+          "help": null,
+          "column": "attrs",
+          "attr_key": "seller"
+        },
+        {
+          "key": "attrs.seller_rating",
+          "label": "Рейтинг продавца",
+          "widget": "text",
+          "help": null,
+          "column": "attrs",
+          "attr_key": "seller_rating"
+        },
+        {
+          "key": "attrs.specs",
+          "label": "Характеристики",
+          "widget": "json",
+          "help": "[{\"label\":\"Артикул\",\"value\":\"…\",\"group\":\"Основное\"}]",
+          "column": "attrs",
+          "attr_key": "specs"
+        },
+        {
+          "key": "attrs.reviews",
+          "label": "Отзывы",
+          "widget": "json",
+          "help": "[{\"name\":\"Анна\",\"rating\":5,\"text\":\"…\",\"pros\":[\"Качество\"]}]",
+          "column": "attrs",
+          "attr_key": "reviews"
+        },
+        {
+          "key": "short_description",
+          "label": "Краткое описание",
+          "widget": "textarea",
+          "help": null,
+          "column": "short_description",
+          "attr_key": null
+        },
+        {
+          "key": "description",
+          "label": "Полное описание",
+          "widget": "richtext",
+          "help": null,
+          "column": "description",
+          "attr_key": null
+        },
+        {
+          "key": "gallery",
+          "label": "Галерея media_id",
+          "widget": "json",
+          "help": null,
+          "column": "gallery",
+          "attr_key": null
+        },
+        {
+          "key": "stock",
+          "label": "Остаток",
+          "widget": "number",
+          "help": null,
+          "column": "stock",
+          "attr_key": null
+        },
+        {
+          "key": "sold_count",
+          "label": "Продано",
+          "widget": "number",
+          "help": null,
+          "column": "sold_count",
+          "attr_key": null
+        }
+      ],
+      "field_keys": [
+        "badge",
+        "attrs.brand",
+        "attrs.original",
+        "attrs.rating",
+        "attrs.reviews_count",
+        "attrs.questions_count",
+        "attrs.old_price",
+        "attrs.discount_label",
+        "attrs.price_tag",
+        "attrs.promo_ends",
+        "attrs.delivery",
+        "attrs.seller",
+        "attrs.seller_rating",
+        "attrs.specs",
+        "attrs.reviews",
+        "short_description",
+        "description",
+        "gallery",
+        "stock",
+        "sold_count"
+      ]
+    },
+    {
+      "id": "digital",
+      "title": "Цифровой товар",
+      "description": "Центрированная карточка: бейдж, фичи, одна цена, быстрая покупка.",
+      "preview": [
+        "#0e0a14",
+        "#a78bfa"
+      ],
+      "page_slug": "product-detail-digital",
+      "fields": [
+        {
+          "key": "badge",
+          "label": "Бейдж",
+          "widget": "text",
+          "help": null,
+          "column": "badge",
+          "attr_key": null
+        },
+        {
+          "key": "short_description",
+          "label": "Краткое описание",
+          "widget": "textarea",
+          "help": null,
+          "column": "short_description",
+          "attr_key": null
+        },
+        {
+          "key": "description",
+          "label": "Описание / фичи",
+          "widget": "richtext",
+          "help": null,
+          "column": "description",
+          "attr_key": null
+        },
+        {
+          "key": "attrs.platform",
+          "label": "Платформа",
+          "widget": "text",
+          "help": "Windows / Steam / …",
+          "column": "attrs",
+          "attr_key": "platform"
+        },
+        {
+          "key": "attrs.delivery",
+          "label": "Доставка",
+          "widget": "text",
+          "help": "Мгновенно / 24ч",
+          "column": "attrs",
+          "attr_key": "delivery"
+        },
+        {
+          "key": "tags",
+          "label": "Теги",
+          "widget": "json",
+          "help": null,
+          "column": "tags",
+          "attr_key": null
+        },
+        {
+          "key": "stock",
+          "label": "Остаток",
+          "widget": "number",
+          "help": null,
+          "column": "stock",
+          "attr_key": null
+        }
+      ],
+      "field_keys": [
+        "badge",
+        "short_description",
+        "description",
+        "attrs.platform",
+        "attrs.delivery",
+        "tags",
+        "stock"
+      ]
+    },
+    {
+      "id": "landing",
+      "title": "Лендинг",
+      "description": "Широкий баннер, описание, CTA и вкладки с деталями внизу.",
+      "preview": [
+        "#081018",
+        "#22d3ee"
+      ],
+      "page_slug": "product-detail-landing",
+      "fields": [
+        {
+          "key": "badge",
+          "label": "Бейдж",
+          "widget": "text",
+          "help": null,
+          "column": "badge",
+          "attr_key": null
+        },
+        {
+          "key": "short_description",
+          "label": "Подзаголовок",
+          "widget": "textarea",
+          "help": null,
+          "column": "short_description",
+          "attr_key": null
+        },
+        {
+          "key": "description",
+          "label": "Основной текст",
+          "widget": "richtext",
+          "help": null,
+          "column": "description",
+          "attr_key": null
+        },
+        {
+          "key": "video_url",
+          "label": "URL видео",
+          "widget": "url",
+          "help": null,
+          "column": "video_url",
+          "attr_key": null
+        },
+        {
+          "key": "gallery",
+          "label": "Галерея media_id",
+          "widget": "json",
+          "help": null,
+          "column": "gallery",
+          "attr_key": null
+        },
+        {
+          "key": "tabs",
+          "label": "Вкладки",
+          "widget": "json",
+          "help": null,
+          "column": "tabs",
+          "attr_key": null
+        },
+        {
+          "key": "tags",
+          "label": "Теги",
+          "widget": "json",
+          "help": null,
+          "column": "tags",
+          "attr_key": null
+        }
+      ],
+      "field_keys": [
+        "badge",
+        "short_description",
+        "description",
+        "video_url",
+        "gallery",
+        "tabs",
+        "tags"
+      ]
+    }
+  ],
+  "form_fields": [
+    {
+      "key": "badge",
+      "label": "Бейдж статуса",
+      "widget": "text",
+      "help": "Напр. Хит продаж, Новинка",
+      "column": "badge",
+      "attr_key": null
+    },
+    {
+      "key": "attrs.category",
+      "label": "Категория",
+      "widget": "text",
+      "help": "Показывается над названием",
+      "column": "attrs",
+      "attr_key": "category"
+    },
+    {
+      "key": "attrs.detection",
+      "label": "Гарантия / статус",
+      "widget": "text",
+      "help": "Напр. 12 месяцев",
+      "column": "attrs",
+      "attr_key": "detection"
+    },
+    {
+      "key": "short_description",
+      "label": "Краткое описание",
+      "widget": "textarea",
+      "help": null,
+      "column": "short_description",
+      "attr_key": null
+    },
+    {
+      "key": "video_url",
+      "label": "URL видео",
+      "widget": "url",
+      "help": null,
+      "column": "video_url",
+      "attr_key": null
+    },
+    {
+      "key": "sold_count",
+      "label": "Продано",
+      "widget": "number",
+      "help": null,
+      "column": "sold_count",
+      "attr_key": null
+    },
+    {
+      "key": "stock",
+      "label": "Остаток",
+      "widget": "number",
+      "help": null,
+      "column": "stock",
+      "attr_key": null
+    },
+    {
+      "key": "tags",
+      "label": "Теги",
+      "widget": "json",
+      "help": "[\"Шаблоны\",\"Дизайн\"]",
+      "column": "tags",
+      "attr_key": null
+    },
+    {
+      "key": "gallery",
+      "label": "Галерея media_id",
+      "widget": "json",
+      "help": "[12, 15]",
+      "column": "gallery",
+      "attr_key": null
+    },
+    {
+      "key": "variants",
+      "label": "Тарифы",
+      "widget": "json",
+      "help": "[{\"label\":\"12 месяцев\",\"price\":1890,\"old_price\":2490,\"highlight\":\"ВЫГОДНО\"}]",
+      "column": "variants",
+      "attr_key": null
+    },
+    {
+      "key": "tabs",
+      "label": "Вкладки",
+      "widget": "json",
+      "help": "[{\"label\":\"Что внутри\",\"html\":\"<p>…</p>\"}]",
+      "column": "tabs",
+      "attr_key": null
+    }
+  ],
+  "base_fields": [
+    {
+      "key": "title",
+      "label": "Название",
+      "widget": "text",
+      "column": "title",
+      "required": true
+    },
+    {
+      "key": "sku",
+      "label": "Артикул",
+      "widget": "text",
+      "column": "sku"
+    },
+    {
+      "key": "price",
+      "label": "Цена",
+      "widget": "number",
+      "column": "price",
+      "required": true
+    },
+    {
+      "key": "currency",
+      "label": "Валюта",
+      "widget": "text",
+      "column": "currency"
+    },
+    {
+      "key": "media_id",
+      "label": "Обложка",
+      "widget": "media",
+      "column": "media_id"
+    },
+    {
+      "key": "is_purchasable",
+      "label": "Можно купить",
+      "widget": "toggle",
+      "column": "is_purchasable"
+    },
+    {
+      "key": "is_visible",
+      "label": "Видим",
+      "widget": "toggle",
+      "column": "is_visible"
+    },
+    {
+      "key": "sort_order",
+      "label": "Порядок",
+      "widget": "number",
+      "column": "sort_order"
+    }
+  ]
+}

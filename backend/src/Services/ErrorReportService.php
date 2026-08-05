@@ -20,6 +20,13 @@ final class ErrorReportService
     /** @param array<string, mixed> $report */
     public static function store(array $report): void
     {
+        $redactor = dirname(__DIR__) . '/Support/SecretRedactor.php';
+        if (is_file($redactor)) {
+            require_once $redactor;
+            if (class_exists(\App\Support\SecretRedactor::class)) {
+                $report = \App\Support\SecretRedactor::redact($report, \App\Support\SecretRedactor::DEMO_KEYS);
+            }
+        }
         @file_put_contents(
             self::storageFile(),
             json_encode($report, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR),
@@ -91,35 +98,17 @@ final class ErrorReportService
     }
 
     /**
-     * Show full debug payload to admins / local / explicit debug flag.
-     * Public anonymous traffic still gets a generic message.
+     * Expose stack/details only in non-production or via explicit ops flag.
+     * Public anonymous traffic always gets a generic message in production.
+     * Admins use authenticated GET /admin/system/last-error (stored separately).
      */
     public static function shouldExposeDetails(): bool
     {
-        if (isset($_GET['debug']) && (string) $_GET['debug'] === '1') {
-            return true;
-        }
-        $qs = (string) ($_SERVER['QUERY_STRING'] ?? '');
-        if (preg_match('/(?:^|&)debug=1(?:&|$)/', $qs)) {
-            return true;
-        }
         if (is_file(dirname(__DIR__, 2) . '/storage/.show_errors')) {
             return true;
         }
-        $env = strtolower((string) (getenv('APP_ENV') ?: ''));
-        if (in_array($env, ['local', 'development', 'dev'], true)) {
-            return true;
-        }
-        // Admin API calls always get details (Bearer present or /admin path).
-        $auth = (string) ($_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
-        if ($auth !== '' && preg_match('/^Bearer\s+\S+/i', $auth)) {
-            return true;
-        }
-        $uri = (string) ($_SERVER['REQUEST_URI'] ?? '');
-        if (str_contains($uri, '/admin/')) {
-            return true;
-        }
-        return false;
+        $env = strtolower((string) (getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? '')));
+        return in_array($env, ['local', 'development', 'dev', 'test'], true);
     }
 
     /** @return array<string, mixed> */

@@ -21,6 +21,23 @@ function slugify(input: string): string {
     .slice(0, 180);
 }
 
+/** Match PHP AdminController::normalizePageRow */
+function normalizePageRow(row: Row): Row {
+  const out: Row = { ...row };
+  const raw = out.layout_json;
+  if (typeof raw === 'string' && raw !== '') {
+    try {
+      out.layout = JSON.parse(raw);
+    } catch {
+      out.layout = null;
+    }
+  } else {
+    out.layout = Array.isArray(raw) || (raw && typeof raw === 'object') ? raw : null;
+  }
+  out.is_home = Number(out.is_home ?? 0) === 1;
+  return out;
+}
+
 export class AdminCrud {
   private resources: ResourcesDoc;
 
@@ -86,7 +103,10 @@ export class AdminCrud {
     const del = await this.notDeletedClause(table);
     const cols = await this.db.columns(table);
     const order = cols.includes('sort_order') ? 'sort_order, id DESC' : 'id DESC';
-    const items = await this.db.all(`SELECT * FROM ${table} WHERE 1=1${del} ORDER BY ${order}`);
+    let items = await this.db.all(`SELECT * FROM ${table} WHERE 1=1${del} ORDER BY ${order}`);
+    if (resource === 'pages') {
+      items = items.map((row) => normalizePageRow(row));
+    }
     return ok(c, items);
   }
 
@@ -94,8 +114,9 @@ export class AdminCrud {
     const table = this.tableFor(resource);
     if (!table) return fail(c, 'Unknown resource', 404);
     const del = await this.notDeletedClause(table);
-    const row = await this.db.one(`SELECT * FROM ${table} WHERE id=?${del}`, [id]);
+    let row = await this.db.one(`SELECT * FROM ${table} WHERE id=?${del}`, [id]);
     if (!row) return fail(c, 'Not found', 404);
+    if (resource === 'pages') row = normalizePageRow(row);
     return ok(c, row);
   }
 

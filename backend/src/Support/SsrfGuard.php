@@ -55,6 +55,44 @@ final class SsrfGuard
         return false;
     }
 
+    /**
+     * Resolve host to a single public IP for curl CURLOPT_RESOLVE pinning (anti DNS-rebinding).
+     * @return non-empty-string|null
+     */
+    public static function resolvePublicIp(string $host): ?string
+    {
+        $host = strtolower(trim($host));
+        if ($host === '' || self::isBlockedHost($host)) {
+            return null;
+        }
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
+                ? $host
+                : null;
+        }
+        $ips = [];
+        if (function_exists('dns_get_record')) {
+            $records = @dns_get_record($host, DNS_A | DNS_AAAA);
+            if (is_array($records)) {
+                foreach ($records as $record) {
+                    $ip = (string) ($record['ip'] ?? $record['ipv6'] ?? '');
+                    if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                        $ips[] = $ip;
+                    }
+                }
+            }
+        }
+        if ($ips === []) {
+            $resolved = gethostbyname($host);
+            if ($resolved !== $host
+                && filter_var($resolved, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
+            ) {
+                $ips[] = $resolved;
+            }
+        }
+        return $ips[0] ?? null;
+    }
+
     public static function isSafeHttpUrl(string $url): bool
     {
         if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('#^https?://#i', $url)) {

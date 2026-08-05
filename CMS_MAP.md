@@ -255,7 +255,8 @@ portfolio/
 | Реестр модулей | `backend/src/Core/ModuleRegistry.php` + каждый `*Module.php` · docs: `docs/bootstrap-and-request.md` |
 | Публичный bootstrap | `Controllers/PublicController.php` |
 | Конфиг | `backend/config/app.php`, `config.local.php`, `.env` |
-| Установка/миграции CLI | `backend/migrate.php`, `install.php` |
+| Установка/миграции CLI | `backend/migrate.php`, `install.php` (`--password=` / `admin_password`, min 12; без дефолта) |
+| Production hardening (debug/headers/secrets) | `ErrorReportService::shouldExposeDetails` (только `.show_errors` / APP_ENV local\|dev\|test); `SecurityHeadersMiddleware` (CSP/HSTS/COOP/CORP); `Bootstrap` empty JWT in production; uploads `MediaService` + `build-hosting` `.htaccess` |
 
 ---
 
@@ -268,6 +269,9 @@ portfolio/
 | **`cms_sites`** | Список хостов MCP (без токенов); при ≥2 сайтах спроси пользователя и передай `site` |
 | **`cms_release`** | Любая заливка кода (build→test→changelog→deploy→verify); при multi — `site` обязателен |
 | Dual-runtime PHP Shared ↔ Node VPS | Baseline `contracts/baseline/` · **behavior** `contracts/behavior/` + `scripts/behavior/{extract,generate,run-all,module-status}.mjs` · parity `tests/parity/{behavior-runner,generated}/` · прогресс AUTO `docs/dual-runtime-parity-progress.md` · gate `docs/dual-runtime-verification-report-final.md` · VPS `scripts/vps/package-and-smoke.mjs` · validate `scripts/contracts/validate-contracts.js` |
+| Runtime × target CLI (`JASEFLY_RUNTIME` / `JASEFLY_TARGET`) | `scripts/jasefly/{cli,config,matrix,doctor}.mjs` + `adapters/{php,node,dual}.mjs` · матрица `docs/runtime-target-matrix.md` · docker `deploy/docker/` · bin `jasefly` (root `package.json`) · MCP gate в `mcp-cms/src/local.js` |
+| Release package identity | root `VERSION` / `LICENSE.md` / `NOTICE` → PHP ZIP (`build-hosting.js`, no `api/tests`) · Node VPS tgz (`mcp-cms/src/deploy/vps.js` + `release-meta.json`) |
+| Core freeze 1.0 (что нельзя ломать) | `docs/core-freeze-1.0.md` |
 | Не те модули / старая админка после «успешного» деплоя | Проверь `release/jasefly-cms-update-*.zip` (не legacy `portfolio-hosting-update-*`); `mcp-cms/src/local.js` → `findLatestUpdateZip`; явный `cms_deploy_update(zip_path=…)` |
 | `cms_site_map` | Карта живого сайта перед правками контента |
 | `cms_pages_digest` / `cms_page_digest` | Короткие выжимки страниц |

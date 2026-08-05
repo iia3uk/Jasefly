@@ -51,14 +51,22 @@ export class JobRunner {
       return { by_status: [], by_queue: [], last_tick_at: null, cron_stale: true, handlers: [] };
     }
     const byStatus = await this.db.all('SELECT status, COUNT(*) AS c FROM scheduled_jobs GROUP BY status');
-    const byQueue = await this.db.all('SELECT queue, status, COUNT(*) AS c FROM scheduled_jobs GROUP BY queue, status');
+    const byQueue = await this.db.all(
+      'SELECT queue, status, COUNT(*) AS c FROM scheduled_jobs GROUP BY queue, status',
+    );
     const last = await this.getMeta('last_tick_at');
+    const warnMins = 30;
+    let stale = true;
+    if (last) {
+      const ts = Date.parse(last.replace(' ', 'T') + 'Z') || Date.parse(last);
+      stale = !ts || Date.now() - ts > warnMins * 60_000;
+    }
     const { jobHandlerTypes } = await import('./JobHandlerRegistry.js');
     return {
       by_status: byStatus,
       by_queue: byQueue,
       last_tick_at: last,
-      cron_stale: !last,
+      cron_stale: stale,
       handlers: jobHandlerTypes(),
     };
   }

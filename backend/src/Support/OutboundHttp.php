@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Support;
 
 /**
- * Shared outbound JSON POST with SSRF guard and http(s)-only curl protocols.
+ * Shared outbound JSON POST with SSRF guard, http(s)-only protocols, and DNS pin.
  */
 final class OutboundHttp
 {
@@ -20,6 +20,13 @@ final class OutboundHttp
         if (!function_exists('curl_init')) {
             return false;
         }
+        $host = (string) (parse_url($url, PHP_URL_HOST) ?? '');
+        $scheme = strtolower((string) (parse_url($url, PHP_URL_SCHEME) ?? 'http'));
+        $port = (int) (parse_url($url, PHP_URL_PORT) ?? ($scheme === 'https' ? 443 : 80));
+        $pinIp = SsrfGuard::resolvePublicIp($host);
+        if ($pinIp === null) {
+            return false;
+        }
         $payload = is_string($body) ? $body : json_encode($body, JSON_UNESCAPED_UNICODE);
         if ($payload === false || $payload === '') {
             return false;
@@ -29,14 +36,17 @@ final class OutboundHttp
         if ($ch === false) {
             return false;
         }
-        curl_setopt_array($ch, [
+        $opts = [
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $payload,
             CURLOPT_HTTPHEADER => $hdrs,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => max(1, $timeout),
             CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
-        ]);
+            // Pin DNS at connect time — closes rebinding TOCTOU after SsrfGuard check.
+            CURLOPT_RESOLVE => [$host . ':' . $port . ':' . $pinIp],
+        ];
+        curl_setopt_array($ch, $opts);
         curl_exec($ch);
         $ok = curl_errno($ch) === 0;
         curl_close($ch);

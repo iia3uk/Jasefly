@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createDatabase } from '../src/db/Database.js';
+import { ensureMigrationsMeta, markMigrationApplied } from '../src/db/migrate.js';
 import { transpileSql } from '../src/db/sqlTranspile.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -16,12 +17,17 @@ if (!dbPath) {
 }
 
 const modulesRoot = path.join(root, 'backend/src/Modules');
-const files: { key: string; abs: string }[] = [];
+/** PHP MigrationService id: plugin:{Module}:{file} */
+const files: { key: string; phpId: string; abs: string }[] = [];
 for (const mod of fs.readdirSync(modulesRoot)) {
   const migDir = path.join(modulesRoot, mod, 'migrations');
   if (!fs.existsSync(migDir)) continue;
   for (const f of fs.readdirSync(migDir).filter((x) => x.endsWith('.sql')).sort()) {
-    files.push({ key: `${mod}/${f}`, abs: path.join(migDir, f) });
+    files.push({
+      key: `${mod}/${f}`,
+      phpId: `plugin:${mod}:${f}`,
+      abs: path.join(migDir, f),
+    });
   }
 }
 
@@ -67,6 +73,7 @@ const db = await createDatabase({
   },
 });
 
+await ensureMigrationsMeta(db);
 await db.run(`CREATE TABLE IF NOT EXISTS _module_migrations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   migration VARCHAR(255) NOT NULL UNIQUE,
@@ -82,7 +89,10 @@ const errors: string[] = [];
 const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
 for (const f of files) {
-  if (done.has(f.key)) continue;
+  if (done.has(f.key)) {
+    await markMigrationApplied(db, f.phpId);
+    continue;
+  }
   const raw = fs.readFileSync(f.abs, 'utf8');
   let okFile = true;
   for (const stmt of splitStatements(raw)) {
@@ -102,6 +112,7 @@ for (const f of files) {
   }
   if (okFile) {
     await db.run('INSERT INTO _module_migrations (migration, applied_at) VALUES (?, ?)', [f.key, now]);
+    await markMigrationApplied(db, f.phpId);
     applied++;
   } else {
     skipped++;

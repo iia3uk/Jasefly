@@ -16,8 +16,45 @@ async function singleton(db: Database, table: string) {
  */
 const DEFAULT_OFF = new Set(['template']);
 
+/**
+ * PHP ModuleRegistry discovery order (enabled modules). Keep aligned with
+ * backend Modules + package load order used by PublicController::site.
+ */
+const PHP_ENABLED_PLUGIN_ORDER = [
+  'module-manager',
+  'system',
+  'demo',
+  'scheduler',
+  'overload',
+  'access',
+  'ddos',
+  'users',
+  'automation',
+  'notifications',
+  'content',
+  'media',
+  'portfolio',
+  'projects',
+  'forms',
+  'newsletter',
+  'blog',
+  'registration',
+  'comments',
+  'mail',
+  'support',
+  'translate',
+  'analytics',
+  'webhooks',
+  'orders',
+  'payments',
+  'products',
+  'lab',
+  'seo',
+] as const;
+
 function registeredPluginNames(): string[] {
-  return NODE_MODULE_NAMES.filter((n) => !DEFAULT_OFF.has(n));
+  const available = new Set<string>(NODE_MODULE_NAMES.filter((n) => !DEFAULT_OFF.has(n)));
+  return PHP_ENABLED_PLUGIN_ORDER.filter((n) => available.has(n));
 }
 
 function pluginOn(plugins: string[], name: string): boolean {
@@ -36,6 +73,8 @@ async function normalizePage(row: Record<string, unknown> | null) {
   } else if (!('layout' in out)) {
     out.layout = null;
   }
+  // PHP PublicController::normalizePage — boolean is_home
+  out.is_home = Number(out.is_home ?? 0) === 1;
   if (!('og_image' in out)) out.og_image = null;
   return out;
 }

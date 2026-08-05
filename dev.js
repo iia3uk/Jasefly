@@ -355,6 +355,7 @@ function installDatabase(db, phpExe, vitePort) {
     `--url=http://localhost:${vitePort}`,
     `--cors=http://localhost:${vitePort},http://127.0.0.1:${vitePort}`,
     '--email=admin@example.com',
+    '--password=Admin123!',
     '--demo=0',
   ];
   const r = run(phpExe, args, { cwd: BACKEND });

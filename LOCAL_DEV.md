@@ -26,7 +26,7 @@ Equivalent commands: `node dev.js [start|stop|restart|install]`
 1. Double-click **`install.bat`**.
 2. Double-click **`start.bat`**.
 
-Admin (after install): the email you chose in the installer / `Admin123!` (change immediately).
+Admin (after local `dev.js` install): `admin@example.com` / `Admin123!` (explicit local-only password via `--password=` — change for anything beyond local).
 Default local installer email in `dev.js` is `admin@example.com`.
 
 ## What `dev.js` does automatically

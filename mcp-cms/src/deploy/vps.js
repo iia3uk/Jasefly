@@ -127,8 +127,19 @@ export function buildVpsArtifact() {
       shell: process.platform === 'win32',
       timeout: 10 * 60 * 1000,
     });
-    logs.push({ step: 'runtime_node_install', ok: ni2.status === 0 });
-    if (ni2.status !== 0) return { ok: false, step: 'runtime_node_install', logs };
+    if (ni2.status !== 0) {
+      // Windows / node-gyp: reuse existing tree when present (same as package-and-smoke)
+      const hasMods = fs.existsSync(path.join(rn, 'node_modules'));
+      logs.push({
+        step: 'runtime_node_install',
+        ok: hasMods,
+        stderr: (ni2.stderr || '').slice(-2000),
+        note: hasMods ? 'reused existing node_modules after install failure' : undefined,
+      });
+      if (!hasMods) return { ok: false, step: 'runtime_node_install', logs };
+    } else {
+      logs.push({ step: 'runtime_node_install', ok: true });
+    }
   } else {
     logs.push({ step: 'runtime_node_install', ok: true });
   }
@@ -139,8 +150,18 @@ export function buildVpsArtifact() {
     shell: process.platform === 'win32',
     timeout: 10 * 60 * 1000,
   });
-  logs.push({ step: 'runtime_node_build', ok: build.status === 0, stderr: (build.stderr || '').slice(-4000) });
-  if (build.status !== 0) return { ok: false, step: 'runtime_node_build', logs };
+  if (build.status !== 0) {
+    const distOk = fs.existsSync(path.join(rn, 'dist', 'index.js'));
+    logs.push({
+      step: 'runtime_node_build',
+      ok: distOk,
+      stderr: (build.stderr || '').slice(-4000),
+      note: distOk ? 'reused existing dist after build failure' : undefined,
+    });
+    if (!distOk) return { ok: false, step: 'runtime_node_build', logs };
+  } else {
+    logs.push({ step: 'runtime_node_build', ok: true });
+  }
 
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const stage = path.join(release, `vps-stage-${stamp}`);
@@ -153,6 +174,10 @@ export function buildVpsArtifact() {
   }
   copyFiltered(path.join(frontend, 'dist'), path.join(stage, 'frontend-dist'), () => false);
   copyFiltered(path.join(root, 'contracts'), path.join(stage, 'contracts'), () => false);
+  for (const f of ['LICENSE.md', 'VERSION', 'NOTICE']) {
+    const from = path.join(root, f);
+    if (fs.existsSync(from)) fs.copyFileSync(from, path.join(stage, f));
+  }
   const unitSrc = path.join(rn, 'deploy', 'jasefly-node.service');
   if (fs.existsSync(unitSrc)) {
     fs.mkdirSync(path.join(stage, 'deploy'), { recursive: true });
@@ -166,18 +191,42 @@ export function buildVpsArtifact() {
     timeout: 10 * 60 * 1000,
     env: { ...process.env, CI: '1' },
   });
-  logs.push({
-    step: 'runtime_node_prod_deps',
-    ok: prodDeps.status === 0,
-    stderr: (prodDeps.stderr || '').slice(-4000),
-  });
-  if (prodDeps.status !== 0) return { ok: false, step: 'runtime_node_prod_deps', logs };
+  if (prodDeps.status !== 0) {
+    const prod2 = spawnSync(
+      process.platform === 'win32' ? 'npm.cmd' : 'npm',
+      ['ci', '--omit=dev', '--ignore-scripts'],
+      {
+        cwd: stageRn,
+        encoding: 'utf8',
+        shell: process.platform === 'win32',
+        timeout: 10 * 60 * 1000,
+        env: { ...process.env, CI: '1' },
+      },
+    );
+    logs.push({
+      step: 'runtime_node_prod_deps',
+      ok: prod2.status === 0,
+      stderr: (prod2.stderr || prodDeps.stderr || '').slice(-4000),
+      note: prod2.status === 0 ? 'installed with --ignore-scripts' : undefined,
+    });
+    if (prod2.status !== 0) return { ok: false, step: 'runtime_node_prod_deps', logs };
+  } else {
+    logs.push({
+      step: 'runtime_node_prod_deps',
+      ok: true,
+    });
+  }
 
+  const versionText = fs.existsSync(path.join(root, 'VERSION'))
+    ? fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim()
+    : '0.0.0';
   fs.writeFileSync(
     path.join(stage, 'release-meta.json'),
     JSON.stringify({
+      product: 'jasefly',
       target: 'vps',
       runtime: 'node-vps',
+      version: versionText,
       stamp,
       built_at: new Date().toISOString(),
     }, null, 2),

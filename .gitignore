@@ -67,6 +67,9 @@ runtime-node/.env
 release/
 transfer/
 *.zip
+*.tgz
+*.bundle
+prebuild.tgz
 !content/*.json
 
 # Portable Node/PHP (setup.bat)

@@ -90,11 +90,11 @@
         "http_status": true,
         "json_envelope": true,
         "error_code": true,
-        "deep_json": "shape",
+        "deep_json": true,
         "db": false,
         "events": false
       }
     }
   ],
-  "content_hash": "f13cb27ba04621d1"
+  "content_hash": "d02fcf9437c41aac"
 }

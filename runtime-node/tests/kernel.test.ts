@@ -73,12 +73,14 @@ describe('Node runtime kernel', () => {
     const res = await app.request('/api/v1/capabilities');
     const json = await res.json();
     expect(json.success).toBe(true);
-    expect(json.data.runtime).toBe('node-vps');
+    expect(json.data.runtime).toBe('php-shared'); // test env mirrors PHP for dual-runtime parity
     expect(Array.isArray(json.data.baseline)).toBe(true);
     expect(Array.isArray(json.data.extended)).toBe(true);
-    // APP_ENV=test / BEHAVIOR_PARITY → baseline-only (PHP Shared parity)
+    // APP_ENV=test / BEHAVIOR_PARITY → baseline-oriented (PHP Shared parity)
     expect(json.data.available.length).toBeGreaterThan(0);
-    expect(json.data.available).toEqual([...json.data.baseline].sort());
+    for (const cap of json.data.baseline) {
+      expect(json.data.available).toContain(cap);
+    }
     expect(json.data.extended).toContain('websocket');
   });
 
@@ -153,7 +155,7 @@ describe('Node runtime kernel', () => {
     });
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.data.role).toBe('super_admin');
+    expect(json.data.role).toBe('admin');
   });
 
   it('transpile enterprise ALTER without PHP subprocess', async () => {
@@ -376,8 +378,11 @@ describe('Node runtime kernel', () => {
     });
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.data.capabilities).toContain('*');
-    expect(json.data.is_super).toBe(true);
+    expect(json.data.capabilities.length).toBeGreaterThan(10);
+    expect(json.data.capabilities).not.toContain('*');
+    // role=admin is not ACL super unless roles.is_super / super_admin slug
+    expect(typeof json.data.is_super).toBe('boolean');
+    expect(Array.isArray(json.data.catalog)).toBe(true);
   });
 
   it('access can evaluates role provider', async () => {

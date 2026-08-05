@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { repoRoot, markBuild, markTest, readGate, sha256File } from './gate.js';
 import { buildVpsArtifact } from './deploy/vps.js';
+import { assertMcpBuild } from '../../scripts/jasefly/matrix.mjs';
 
 /**
  * @param {string} cmd
@@ -133,6 +134,17 @@ export function findLatestUpdateZip() {
  */
 export function localBuild(opts = {}) {
   const target = opts.target === 'vps' ? 'vps' : 'shared';
+  const matrix = assertMcpBuild(target, process.env.JASEFLY_RUNTIME);
+  if (!matrix.ok) {
+    return {
+      ok: false,
+      step: 'runtime_matrix',
+      error: matrix.error,
+      gate: readGate(),
+      target,
+    };
+  }
+
   const root = repoRoot();
   const frontend = path.join(root, 'frontend');
   const logs = [];

@@ -29,6 +29,62 @@ function normalizeRoles(raw: unknown): string[] {
   return [...new Set(out)];
 }
 
+/** PHP AclCapabilityCatalog::registerCoreDefaults() */
+const ACL_CORE_CAPABILITIES: Array<{
+  slug: string;
+  label: string;
+  group: string;
+  risk: string;
+  scope_default?: string;
+}> = [
+  { slug: 'dashboard.view', label: 'View dashboard', group: 'dashboard', risk: 'low' },
+  { slug: 'content.view', label: 'View content', group: 'content', risk: 'low' },
+  { slug: 'content.create', label: 'Create content', group: 'content', risk: 'low' },
+  { slug: 'content.update', label: 'Update content (legacy)', group: 'content', risk: 'medium' },
+  { slug: 'content.edit_own', label: 'Edit own content', group: 'content', risk: 'low', scope_default: 'own' },
+  { slug: 'content.edit_any', label: 'Edit any content', group: 'content', risk: 'medium', scope_default: 'any' },
+  { slug: 'content.delete', label: 'Delete content (legacy)', group: 'content', risk: 'high' },
+  { slug: 'content.delete_own', label: 'Delete own content', group: 'content', risk: 'medium', scope_default: 'own' },
+  { slug: 'content.delete_any', label: 'Delete any content', group: 'content', risk: 'high', scope_default: 'any' },
+  { slug: 'content.publish', label: 'Publish content', group: 'content', risk: 'medium' },
+  { slug: 'content.publish_own', label: 'Publish own content', group: 'content', risk: 'medium', scope_default: 'own' },
+  { slug: 'content.restore', label: 'Restore content', group: 'content', risk: 'medium' },
+  { slug: 'content.force_delete', label: 'Force delete', group: 'content', risk: 'critical' },
+  { slug: 'media.manage', label: 'Manage media', group: 'media', risk: 'medium' },
+  { slug: 'builder.use', label: 'Use builder', group: 'builder', risk: 'medium' },
+  { slug: 'builder.publish', label: 'Publish from builder', group: 'builder', risk: 'high' },
+  { slug: 'pages.manage', label: 'Manage pages', group: 'pages', risk: 'medium' },
+  { slug: 'navigation.manage', label: 'Manage navigation', group: 'navigation', risk: 'medium' },
+  { slug: 'users.manage', label: 'Manage users (legacy)', group: 'users', risk: 'critical' },
+  { slug: 'users.view', label: 'View users', group: 'users', risk: 'medium' },
+  { slug: 'users.create', label: 'Create users', group: 'users', risk: 'high' },
+  { slug: 'users.edit', label: 'Edit users', group: 'users', risk: 'high' },
+  { slug: 'users.delete', label: 'Delete users', group: 'users', risk: 'critical' },
+  { slug: 'roles.manage', label: 'Manage roles', group: 'roles', risk: 'critical', scope_default: 'platform' },
+  { slug: 'access.manage', label: 'Manage access', group: 'access', risk: 'critical', scope_default: 'platform' },
+  { slug: 'settings.manage', label: 'Manage settings', group: 'settings', risk: 'high' },
+  { slug: 'settings.view', label: 'View settings', group: 'settings', risk: 'low' },
+  { slug: 'seo.manage', label: 'Manage SEO', group: 'seo', risk: 'medium' },
+  { slug: 'system.manage', label: 'System manage (legacy)', group: 'system', risk: 'critical', scope_default: 'platform' },
+  { slug: 'system.diagnostics', label: 'Diagnostics', group: 'system', risk: 'high', scope_default: 'platform' },
+  { slug: 'system.logs', label: 'System logs', group: 'system', risk: 'medium', scope_default: 'platform' },
+  { slug: 'system.updates', label: 'System updates', group: 'system', risk: 'critical', scope_default: 'platform' },
+  { slug: 'system.security', label: 'System security', group: 'system', risk: 'critical', scope_default: 'platform' },
+  { slug: 'modules.view', label: 'View modules', group: 'modules', risk: 'medium', scope_default: 'platform' },
+  { slug: 'modules.install', label: 'Install modules', group: 'modules', risk: 'critical', scope_default: 'platform' },
+  { slug: 'modules.enable', label: 'Enable modules', group: 'modules', risk: 'high', scope_default: 'platform' },
+  { slug: 'modules.update', label: 'Update modules', group: 'modules', risk: 'critical', scope_default: 'platform' },
+  { slug: 'modules.delete', label: 'Delete modules', group: 'modules', risk: 'critical', scope_default: 'platform' },
+  { slug: 'plugins.manage', label: 'Manage plugins', group: 'plugins', risk: 'high', scope_default: 'platform' },
+  { slug: 'mcp.manage', label: 'Manage MCP', group: 'mcp', risk: 'critical', scope_default: 'platform' },
+  { slug: 'deploy.execute', label: 'Execute deploy', group: 'deploy', risk: 'critical', scope_default: 'platform' },
+  { slug: 'activity.view', label: 'View activity', group: 'system', risk: 'low' },
+  { slug: 'commerce.manage', label: 'Manage commerce', group: 'commerce', risk: 'high' },
+  { slug: 'orders.view', label: 'View orders', group: 'orders', risk: 'medium' },
+  { slug: 'orders.manage', label: 'Manage orders', group: 'orders', risk: 'high' },
+  { slug: 'integrations.manage', label: 'Manage integrations', group: 'integrations', risk: 'high' },
+];
+
 function normalizeRule(rule: unknown): Record<string, unknown> | null {
   if (!rule || typeof rule !== 'object' || Array.isArray(rule)) return null;
   const r = rule as Record<string, unknown>;
@@ -54,7 +110,7 @@ export class AccessService {
   ) {}
 
   providers(): ProviderMeta[] {
-    return [
+    const list: ProviderMeta[] = [
       {
         id: 'auth',
         label: 'Авторизация',
@@ -72,12 +128,27 @@ export class AccessService {
           {
             id: 'in',
             label: 'Одна из ролей',
-            params: [{ key: 'roles', label: 'Роли', type: 'string_list' }],
+            params: [{ key: 'roles', label: 'Роли', type: 'string_list', placeholder: 'member, admin' }],
           },
           {
             id: 'not_in',
             label: 'Не эти роли',
             params: [{ key: 'roles', label: 'Роли', type: 'string_list' }],
+          },
+        ],
+      },
+      {
+        id: 'purchase',
+        label: 'Покупка',
+        available: true,
+        asserts: [
+          {
+            id: 'owns',
+            label: 'Купленный товар',
+            params: [
+              { key: 'product_id', label: 'ID товара', type: 'number' },
+              { key: 'service_id', label: 'ID услуги (опц.)', type: 'number' },
+            ],
           },
         ],
       },
@@ -89,7 +160,11 @@ export class AccessService {
           {
             id: 'has',
             label: 'Имеет capability',
-            params: [{ key: 'capability', label: 'Capability', type: 'text' }],
+            params: [
+              { key: 'capability', label: 'Capability', type: 'text', placeholder: 'content.publish' },
+              { key: 'scope', label: 'Scope', type: 'text', placeholder: 'site|own|any|platform' },
+              { key: 'resource_owner_id', label: 'Owner user id', type: 'number' },
+            ],
           },
           {
             id: 'missing',
@@ -99,6 +174,7 @@ export class AccessService {
         ],
       },
     ];
+    return list.sort((a, b) => a.id.localeCompare(b.id));
   }
 
   async can(userId: number | null, rule: unknown): Promise<AccessDecision & { rule: Record<string, unknown> | null; user_id: number | null }> {
@@ -124,33 +200,222 @@ export class AccessService {
     return out;
   }
 
+  async allCapabilitySlugs(): Promise<string[]> {
+    // Prefer live permissions table (PHP AclCapabilityCatalog sync) — exact set for version hash.
+    if (await this.db.tableExists('permissions')) {
+      const rows = await this.db.all('SELECT slug FROM permissions ORDER BY slug');
+      const fromDb = rows.map((r) => String(r.slug ?? '').trim()).filter(Boolean);
+      if (fromDb.length > 0) return [...new Set(fromDb)].sort();
+    }
+    return [
+      'access.manage', 'activity.view', 'analytics.manage', 'analytics.view',
+      'automations.manage', 'automations.run', 'automations.view',
+      'builder.publish', 'builder.use', 'comments.manage', 'comments.moderate', 'comments.view',
+      'commerce.manage', 'content.create', 'content.delete', 'content.delete_any', 'content.delete_own',
+      'content.edit_any', 'content.edit_own', 'content.force_delete', 'content.publish', 'content.publish_own',
+      'content.restore', 'content.update', 'content.view', 'dashboard.view', 'deploy.execute',
+      'forms.export', 'forms.manage', 'forms.submissions.manage', 'forms.submissions.view', 'forms.view',
+      'integrations.manage', 'lab.create', 'lab.delete', 'lab.manage', 'lab.preview', 'lab.publish',
+      'lab.update', 'lab.view', 'mail.manage', 'mcp.manage', 'media.delete', 'media.manage', 'media.view',
+      'modules.install', 'modules.manage', 'modules.view', 'newsletter.manage', 'newsletter.view',
+      'notifications.manage', 'notifications.view', 'orders.manage', 'orders.view',
+      'payments.manage', 'payments.view', 'products.manage', 'products.view',
+      'projects.manage', 'projects.view', 'roles.manage', 'scheduler.manage', 'scheduler.run',
+      'seo.manage', 'settings.manage', 'support.manage', 'support.reply', 'system.manage',
+      'system.updates', 'translate.manage', 'users.create', 'users.delete', 'users.edit', 'users.view',
+      'webhooks.manage',
+    ].sort();
+  }
+
+  private capsVersion(caps: string[], isSuper: boolean): string {
+    return createHash('sha256')
+      .update(`${caps.join(',')}|${isSuper ? '1' : '0'}`)
+      .digest('hex')
+      .slice(0, 16);
+  }
+
   async bootstrapPayload(user: Row | 'mcp') {
-    const me = await this.auth.mePayload(user);
-    const caps = me.capabilities as string[];
+    if (user === 'mcp') {
+      const caps = await this.allCapabilitySlugs();
+      return {
+        capabilities: caps,
+        roles: ['super_admin'],
+        is_super: true,
+        version: this.capsVersion(caps, true),
+        nav: [],
+        catalog: await this.capabilityCatalog(),
+      };
+    }
+    const bundle = await this.resolveEffective(Number(user.id));
     return {
-      capabilities: caps,
-      roles: me.roles,
-      is_super: me.is_super,
-      version: String(me.caps_version ?? 1),
+      capabilities: bundle.caps,
+      roles: bundle.roles,
+      is_super: bundle.is_super,
+      version: bundle.version,
       nav: [],
-      catalog: [],
-      providers: this.providers(),
+      catalog: await this.capabilityCatalog(),
     };
   }
 
-  async effectiveBundle(userId: number, user?: Row | null) {
+  /** PHP AclEffectiveResolver::resolve — no AuthService.mePayload recursion. */
+  async resolveEffective(userId: number): Promise<{
+    caps: string[];
+    is_super: boolean;
+    roles: string[];
+    version: string;
+  }> {
     if (!userId || userId <= 0) {
-      return { caps: [] as string[], is_super: false, roles: [] as string[], version: '0' };
+      return { caps: [], is_super: false, roles: [], version: '0' };
     }
-    const row = user ?? (await this.db.one('SELECT * FROM users WHERE id=?', [userId]));
-    if (!row) return { caps: [] as string[], is_super: false, roles: [] as string[], version: '0' };
-    const me = await this.auth.mePayload(row);
+    const roles = await this.userRoleSlugs(userId);
+    const isSuper = await this.userIsSuper(userId, roles);
+    let fromRoles = isSuper ? await this.allCapabilitySlugs() : await this.capabilitiesForRoles(roles);
+    const set = new Set(fromRoles);
+    // Legacy bundles (PHP AclEffectiveResolver)
+    if (set.has('users.manage')) {
+      for (const u of ['users.view', 'users.create', 'users.edit', 'users.delete', 'roles.manage', 'access.manage']) {
+        set.add(u);
+      }
+    }
+    if (set.has('system.manage')) {
+      for (const s of [
+        'system.diagnostics', 'system.logs', 'system.updates', 'system.security', 'plugins.manage',
+        'mcp.manage', 'modules.view', 'modules.install', 'modules.enable', 'modules.update', 'modules.delete',
+        'deploy.execute',
+      ]) {
+        set.add(s);
+      }
+    }
+    if (set.has('content.update')) set.add('content.edit_any');
+    if (set.has('content.edit_any')) set.add('content.update');
+    if (set.has('content.delete')) set.add('content.delete_any');
+    if (set.has('content.delete_any')) set.add('content.delete');
+
+    const caps = [...set].sort();
     return {
-      caps: me.capabilities as string[],
-      is_super: Boolean(me.is_super),
-      roles: me.roles as string[],
-      version: String(me.caps_version ?? 1),
+      caps,
+      is_super: isSuper,
+      roles,
+      version: this.capsVersion(caps, isSuper),
     };
+  }
+
+  async effectiveBundle(userId: number, _user?: Row | null) {
+    return this.resolveEffective(userId);
+  }
+
+  private async userRoleSlugs(userId: number): Promise<string[]> {
+    try {
+      if ((await this.db.tableExists('user_roles')) && (await this.db.tableExists('roles'))) {
+        const rows = await this.db.all(
+          `SELECT r.slug FROM user_roles ur
+           INNER JOIN roles r ON r.id = ur.role_id
+           WHERE ur.user_id = ?
+           ORDER BY r.role_rank ASC, r.id ASC`,
+          [userId],
+        );
+        const slugs = [...new Set(rows.map((r) => String(r.slug ?? '').trim()).filter(Boolean))];
+        if (slugs.length) return slugs;
+      }
+    } catch {
+      /* legacy */
+    }
+    const row = await this.db.one('SELECT role FROM users WHERE id=? LIMIT 1', [userId]);
+    const role = String(row?.role ?? '').trim();
+    return role ? [role] : [];
+  }
+
+  private async userIsSuper(userId: number, roles: string[]): Promise<boolean> {
+    if (roles.includes('super_admin')) return true;
+    try {
+      if ((await this.db.tableExists('user_roles')) && (await this.db.tableExists('roles'))) {
+        const row = await this.db.one(
+          `SELECT 1 AS ok FROM user_roles ur
+           INNER JOIN roles r ON r.id = ur.role_id
+           WHERE ur.user_id = ? AND r.is_super = 1 LIMIT 1`,
+          [userId],
+        );
+        if (row) return true;
+      }
+    } catch {
+      /* ignore */
+    }
+    return roles.includes('super_admin');
+  }
+
+  private async capabilitiesForRoles(roles: string[]): Promise<string[]> {
+    if (!roles.length) return [];
+    if (!(await this.db.tableExists('permissions')) || !(await this.db.tableExists('role_permissions'))) {
+      return [];
+    }
+    const placeholders = roles.map(() => '?').join(',');
+    try {
+      const rows = await this.db.all(
+        `SELECT DISTINCT p.slug FROM permissions p
+         INNER JOIN role_permissions rp ON rp.permission_id = p.id
+         INNER JOIN roles r ON r.id = rp.role_id
+         WHERE r.slug IN (${placeholders})`,
+        roles,
+      );
+      return rows.map((r) => String(r.slug)).filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * PHP AclCapabilityCatalog::list() —
+   * core defaults (empty description, source=core) win; DB only fills unknown slugs.
+   */
+  async capabilityCatalog(): Promise<Array<Record<string, unknown>>> {
+    const bySlug = new Map<string, Record<string, unknown>>();
+    for (const d of ACL_CORE_CAPABILITIES) {
+      bySlug.set(d.slug, {
+        slug: d.slug,
+        label: d.label,
+        description: '',
+        group: d.group,
+        risk: d.risk,
+        scope_default: d.scope_default ?? 'site',
+        default_roles: [] as string[],
+        source: 'core',
+      });
+    }
+    if (await this.db.tableExists('permissions')) {
+      try {
+        let rows: Array<Record<string, unknown>> = [];
+        try {
+          rows = await this.db.all(
+            'SELECT slug, name, group_name, description, risk_level, scope_default FROM permissions WHERE is_active = 1',
+          );
+        } catch {
+          rows = await this.db.all(
+            'SELECT slug, name, group_name, description, risk_level, scope_default FROM permissions',
+          );
+        }
+        for (const r of rows) {
+          const slug = String(r.slug ?? '');
+          if (!slug || bySlug.has(slug)) continue;
+          bySlug.set(slug, {
+            slug,
+            label: String(r.name ?? slug),
+            description: String(r.description ?? ''),
+            group: String(r.group_name ?? 'other'),
+            risk: String(r.risk_level ?? 'low'),
+            scope_default: String(r.scope_default ?? 'site'),
+            default_roles: [] as string[],
+            source: 'db',
+          });
+        }
+      } catch {
+        /* runtime only */
+      }
+    }
+    return [...bySlug.values()].sort((a, b) => {
+      const as = String(a.slug);
+      const bs = String(b.slug);
+      return as < bs ? -1 : as > bs ? 1 : 0;
+    });
   }
 
   private async evaluateNode(userId: number | null, node: Record<string, unknown>): Promise<AccessDecision> {
@@ -195,7 +460,43 @@ export class AccessService {
     if (providerId === 'auth') return this.evalAuth(userId, assert);
     if (providerId === 'role') return this.evalRole(userId, assert, params);
     if (providerId === 'capability') return this.evalCapability(userId, assert, params);
+    if (providerId === 'purchase') return this.evalPurchase(userId, assert, params);
     return { allowed: false, reason: `Unknown provider: ${providerId}`, provider: providerId };
+  }
+
+  private async evalPurchase(
+    userId: number | null,
+    assert: string,
+    params: Record<string, unknown>,
+  ): Promise<AccessDecision> {
+    if (assert !== 'owns') {
+      return { allowed: false, reason: `Unknown purchase assert: ${assert}`, provider: 'purchase' };
+    }
+    if (userId === null || userId <= 0) {
+      return { allowed: false, reason: 'Authentication required', provider: 'purchase' };
+    }
+    const productId = Number(params.product_id ?? 0);
+    const serviceId = Number(params.service_id ?? 0);
+    if (productId <= 0 && serviceId <= 0) {
+      return { allowed: false, reason: 'product_id or service_id required', provider: 'purchase' };
+    }
+    if (!(await this.db.tableExists('orders')) || !(await this.db.tableExists('order_items'))) {
+      return { allowed: false, reason: 'Purchase check failed', provider: 'purchase' };
+    }
+    const user = await this.db.one('SELECT email FROM users WHERE id=? LIMIT 1', [userId]);
+    const email = String(user?.email ?? '').trim();
+    if (productId > 0) {
+      const row = await this.db.one(
+        `SELECT oi.id FROM order_items oi
+         INNER JOIN orders o ON o.id = oi.order_id
+         WHERE oi.product_id=? AND o.payment_status='paid'
+           AND (o.user_id=?${email ? ' OR o.email=? OR o.customer_email=?' : ''})
+         LIMIT 1`,
+        email ? [productId, userId, email, email] : [productId, userId],
+      );
+      if (row) return { allowed: true, reason: null, provider: 'purchase', meta: { product_id: productId } };
+    }
+    return { allowed: false, reason: 'Purchase not found', provider: 'purchase' };
   }
 
   private evalAuth(userId: number | null, assert: string): AccessDecision {
@@ -258,29 +559,12 @@ export class AccessService {
 
   private async userHasCapability(userId: number | null, capability: string): Promise<boolean> {
     if (userId === null || userId <= 0) return false;
-    const user = await this.db.one('SELECT * FROM users WHERE id=?', [userId]);
-    if (!user) return false;
-    const me = await this.auth.mePayload(user);
-    const caps = me.capabilities as string[];
-    return Boolean(me.is_super) || caps.includes('*') || caps.includes(capability);
+    const bundle = await this.resolveEffective(userId);
+    return bundle.is_super || bundle.caps.includes(capability);
   }
 
   private async userRoles(userId: number): Promise<string[]> {
-    try {
-      if (await this.db.tableExists('user_roles') && await this.db.tableExists('roles')) {
-        const rows = await this.db.all(
-          `SELECT r.slug FROM user_roles ur INNER JOIN roles r ON r.id = ur.role_id WHERE ur.user_id = ?`,
-          [userId],
-        );
-        const slugs = rows.map((r) => String(r.slug).toLowerCase().trim()).filter(Boolean);
-        if (slugs.length) return [...new Set(slugs)];
-      }
-    } catch {
-      // legacy fallback
-    }
-    const row = await this.db.one('SELECT role FROM users WHERE id=? LIMIT 1', [userId]);
-    const role = String(row?.role ?? '').toLowerCase().trim();
-    return role ? [role] : [];
+    return this.userRoleSlugs(userId);
   }
 }
 

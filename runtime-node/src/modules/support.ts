@@ -11,6 +11,24 @@ import { getUserFromContext } from '../system/helpers.js';
 
 export const name = 'support';
 
+function supportCodeFail(
+  c: Context,
+  error: string,
+  status: 409 | 422 = 422,
+  code: string | null = null,
+) {
+  // PHP SupportModule custom error envelope (no data/errors keys).
+  return c.json(
+    {
+      success: false,
+      error,
+      code,
+      meta: { api_version: 'v1' },
+    },
+    status,
+  );
+}
+
 function nowSql(): string {
   return new Date().toISOString().slice(0, 19).replace('T', ' ');
 }
@@ -201,18 +219,18 @@ export async function register(ctx: ModuleContext) {
       if (body instanceof Response) return body;
 
       const visitorKey = sanitizeKey(String(body.visitor_key ?? ''));
-      if (!visitorKey) return fail(c, 'Validation failed', 422, { visitor_key: 'Required' });
-
       const faqId = Number(c.req.param('id'));
+      if (!visitorKey || faqId <= 0) return supportCodeFail(c, 'Некорректный запрос', 422, null);
+
       const faq = await ctx.db.one(
         'SELECT id, question, answer FROM support_faq WHERE id=? AND is_active=1 LIMIT 1',
         [faqId],
       );
-      if (!faq) return fail(c, 'Not found', 404);
+      if (!faq) return supportCodeFail(c, 'Вопрос не найден', 422, null);
 
       const question = String(faq.question ?? '').trim();
       const answer = String(faq.answer ?? '').trim();
-      if (!question || !answer) return fail(c, 'Validation failed', 422);
+      if (!question || !answer) return supportCodeFail(c, 'Пустой FAQ', 422, null);
 
       let ticket = await ctx.db.one(
         "SELECT * FROM support_tickets WHERE visitor_key=? AND status <> 'closed' ORDER BY id DESC LIMIT 1",
@@ -220,7 +238,7 @@ export async function register(ctx: ModuleContext) {
       );
 
       if (ticket && ticket.status === 'awaiting_contact' && !(await hasContact(ticket))) {
-        return fail(c, 'Нужен контакт (email или соцсеть)', 409, null, { code: 'contact_required' });
+        return supportCodeFail(c, 'Нужен контакт (email или соцсеть)', 409, 'contact_required');
       }
 
       if (ticket) {
@@ -245,14 +263,15 @@ export async function register(ctx: ModuleContext) {
 
     ctx.app.get(`${p}/support/active`, async (c) => {
       const key = sanitizeKey(c.req.query('visitor_key') || '');
-      if (!(await ctx.db.tableExists('support_tickets'))) return ok(c, { ticket: null, messages: [] });
-      if (!key) return ok(c, { ticket: null, messages: [] });
+      if (!(await ctx.db.tableExists('support_tickets')) || !key) {
+        return ok(c, null);
+      }
 
       const ticket = await ctx.db.one(
-        "SELECT * FROM support_tickets WHERE visitor_key=? AND status <> 'closed' ORDER BY id DESC LIMIT 1",
+        "SELECT * FROM support_tickets WHERE visitor_key=? AND status <> 'closed' ORDER BY updated_at DESC, id DESC LIMIT 1",
         [key],
       );
-      if (!ticket) return ok(c, { ticket: null, messages: [] });
+      if (!ticket) return ok(c, null);
 
       const messages = await listMessages(ctx.db, Number(ticket.id), 0);
       return ok(c, { ticket, messages, agents_online: await hasOnlineAgents(ctx.db) });
@@ -263,14 +282,14 @@ export async function register(ctx: ModuleContext) {
       if (body instanceof Response) return body;
 
       const visitorKey = sanitizeKey(String(body.visitor_key ?? ''));
-      const message = sanitizeBody(String(body.body ?? body.message ?? body.subject ?? ''));
-      if (!visitorKey) return fail(c, 'Validation failed', 422, { visitor_key: 'Required' });
-      if (!message) return fail(c, 'Validation failed', 422, { body: 'Пустое сообщение' });
+      const message = sanitizeBody(String(body.body ?? body.message ?? ''));
+      // PHP createTicket: empty key OR empty body → «Пустое сообщение»
+      if (!visitorKey || !message) return fail(c, 'Пустое сообщение', 422);
 
       if (!(await ctx.db.tableExists('support_tickets'))) return fail(c, 'capability_unavailable', 409);
 
       const existing = await ctx.db.one(
-        "SELECT * FROM support_tickets WHERE visitor_key=? AND status <> 'closed' ORDER BY id DESC LIMIT 1",
+        "SELECT * FROM support_tickets WHERE visitor_key=? AND status <> 'closed' ORDER BY updated_at DESC, id DESC LIMIT 1",
         [visitorKey],
       );
       if (existing) {
@@ -335,16 +354,16 @@ export async function register(ctx: ModuleContext) {
       const publicIdParam = c.req.param('publicId');
       const key = sanitizeKey(String(body.visitor_key ?? ''));
       const text = sanitizeBody(String(body.body ?? body.message ?? ''));
-      if (!text) return fail(c, 'Validation failed', 422, { body: 'Пустое сообщение' });
 
       const ticket = await getTicketByPublicId(ctx.db, publicIdParam, key);
-      if (!ticket) return fail(c, 'Not found', 404);
+      if (!ticket) return supportCodeFail(c, 'Тикет не найден', 422, null);
       if (ticket.status === 'closed') {
-        return fail(c, 'Тикет закрыт', 422, null, { code: 'ticket_closed' });
+        return supportCodeFail(c, 'Тикет закрыт', 422, 'ticket_closed');
       }
       if (ticket.status === 'awaiting_contact' && !(await hasContact(ticket))) {
-        return fail(c, 'Нужен контакт (email или соцсеть)', 409, null, { code: 'contact_required' });
+        return supportCodeFail(c, 'Нужен контакт (email или соцсеть)', 409, 'contact_required');
       }
+      if (!text) return supportCodeFail(c, 'Пустое сообщение', 422, null);
 
       const ticketId = Number(ticket.id);
       const message = await insertMessage(ctx.db, ticketId, 'visitor', text);
@@ -379,10 +398,10 @@ export async function register(ctx: ModuleContext) {
       const social = String(body.social ?? body.contact_social ?? '').trim();
       const socialType = String(body.social_type ?? body.contact_social_type ?? '').trim();
 
-      if (!email && !social) return fail(c, 'Укажите email или соцсеть', 422);
-
       const ticket = await getTicketByPublicId(ctx.db, publicIdParam, key);
-      if (!ticket) return fail(c, 'Not found', 404);
+      if (!ticket) return fail(c, 'Тикет не найден', 422);
+
+      if (!email && !social) return fail(c, 'Укажите email или соцсеть', 422);
 
       const newStatus =
         ticket.status === 'closed' ? 'closed' : (await hasOnlineAgents(ctx.db)) ? 'waiting_agent' : 'bot';

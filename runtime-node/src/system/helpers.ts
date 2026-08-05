@@ -35,7 +35,8 @@ async function hasDeletedAt(db: Database, table: string): Promise<boolean> {
   return (await db.columns(table)).includes('deleted_at');
 }
 
-export async function trashIndex(db: Database): Promise<Record<string, unknown[]>> {
+/** PHP SoftDeleteService::allTrash — empty PHP array encodes as []. */
+export async function trashIndex(db: Database): Promise<Record<string, unknown[]> | unknown[]> {
   const out: Record<string, unknown[]> = {};
   for (const [resource, table] of Object.entries(TRASHABLE)) {
     if (!(await hasDeletedAt(db, table))) continue;
@@ -46,7 +47,7 @@ export async function trashIndex(db: Database): Promise<Record<string, unknown[]
       out[resource] = items.map((row) => ({ ...row, resource }));
     }
   }
-  return out;
+  return Object.keys(out).length === 0 ? [] : out;
 }
 
 export async function trashRestore(db: Database, resource: string, id: string): Promise<boolean> {
@@ -208,70 +209,14 @@ export function rekeyLayoutIds(layout: Record<string, unknown>): Record<string, 
   return out;
 }
 
-export function loadModuleCatalog(): unknown[] {
-  const dir = path.join(CONTRACTS_ROOT, 'modules');
-  if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith('.manifest.json'))
-    .map((f) => {
-      try {
-        const doc = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')) as Record<string, unknown>;
-        return { id: doc.id, name: doc.name, runtime: doc.runtime };
-      } catch {
-        return { id: f.replace('.manifest.json', ''), name: f };
-      }
-    })
-    .sort((a, b) => String((a as { id?: string }).id).localeCompare(String((b as { id?: string }).id)));
-}
-
-export function loadBlueprints(): unknown[] {
-  const dir = path.join(CONTRACTS_ROOT, 'blueprints');
-  if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith('.json'))
-    .map((f) => {
-      const key = f.replace(/\.v\d+\.json$/, '').replace(/\.json$/, '');
-      return { key, file: `contracts/blueprints/${f}` };
-    });
-}
-
-export function loadBlueprint(key: string): unknown | null {
-  const dir = path.join(CONTRACTS_ROOT, 'blueprints');
-  if (!fs.existsSync(dir)) return null;
-  const match = fs.readdirSync(dir).find((f) => f.startsWith(key));
-  if (!match) return null;
-  try {
-    return JSON.parse(fs.readFileSync(path.join(dir, match), 'utf8'));
-  } catch {
-    return null;
-  }
-}
-
-export function loadBlocks(): unknown[] {
-  try {
-    const doc = readContractJson<{ widgets: string[] }>('builder/widget-types.v1.json');
-    return doc.widgets.map((type) => ({ type }));
-  } catch {
-    return [];
-  }
-}
-
-export function loadEvents(): string[] {
-  try {
-    return readContractJson<{ events: string[] }>('events/events-core.v1.json').events;
-  } catch {
-    return [];
-  }
-}
-
-export function loadPublicRoutes(): unknown[] {
-  return loadModuleCatalog().map((m) => {
-    const mod = m as { id?: string; name?: string };
-    return { module: mod.id, name: mod.name, public: true };
-  });
-}
+export {
+  loadBlocks,
+  loadBlueprint,
+  loadBlueprints,
+  loadEvents,
+  loadModuleCatalog,
+  loadPublicRoutes,
+} from './systemParity.js';
 
 export async function logActivity(
   db: Database,
@@ -359,7 +304,7 @@ export function requireMcpAgent(auth: AuthService): MiddlewareHandler {
     const user = await auth.meFromBearer(c.req.header('authorization'));
     // Match PHP AuthMiddleware: missing/invalid bearer → 401 (not 403).
     if (!user) return fail(c, 'Unauthorized', 401);
-    if (user !== 'mcp') return fail(c, 'Forbidden: MCP agent token required', 403);
+    if (user !== 'mcp') return fail(c, 'Доступно только MCP-агенту (Authorization: Bearer mcp_api_token)', 403);
     c.set('user', user);
     await next();
   };
@@ -413,9 +358,9 @@ export async function migrationRetry(db: Database): Promise<unknown> {
   return runMigrations(db);
 }
 
-export async function migrationBlueprints(): Promise<{ items: unknown[]; ok: boolean }> {
-  const blueprints = loadBlueprints();
-  return { items: blueprints, ok: true };
+export async function migrationBlueprints(db: Database): Promise<unknown> {
+  const { migrateBlueprintsAll } = await import('./systemParity.js');
+  return migrateBlueprintsAll(db);
 }
 
 export function getUserFromContext(c: Context): Record<string, unknown> | 'mcp' | null {

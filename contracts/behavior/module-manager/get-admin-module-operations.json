@@ -87,9 +87,9 @@
         "error_code": true,
         "db": false,
         "events": false,
-        "deep_json": "shape"
+        "deep_json": true
       }
     }
   ],
-  "content_hash": "81e22e3abfd8d618"
+  "content_hash": "5d3cfde0ad4331d1"
 }

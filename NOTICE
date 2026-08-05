@@ -1,0 +1,17 @@
+Jasefly — Notices
+=================
+
+This product is licensed under the MIT License. See LICENSE.md.
+
+Third-party notices
+-------------------
+- PHP shared-hosting package: no Composer dependencies; PHP standard library only.
+- Node VPS package: third-party JavaScript licenses ship under
+  `runtime-node/node_modules/*/LICENSE*` (and equivalent NOTICE files) as installed
+  by `npm ci --omit=dev`.
+- Frontend production assets are bundled; upstream license texts for npm packages
+  used at build time remain in the source repository `frontend/node_modules`
+  (not redistributed inside the PHP ZIP web root).
+
+Contact the distributor if you need a consolidated attribution file for a specific
+artifact build.

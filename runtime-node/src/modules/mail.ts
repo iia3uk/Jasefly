@@ -11,7 +11,7 @@ const csrfTokens = new Map<string, number>();
 const ipRate = new Map<string, { count: number; resetAt: number }>();
 
 function issueCsrf(): string {
-  const token = crypto.randomBytes(16).toString('hex');
+  const token = crypto.randomBytes(32).toString('hex');
   csrfTokens.set(token, Date.now() + 3600_000);
   return token;
 }
@@ -80,16 +80,24 @@ async function handleContact(ctx: ModuleContext, c: Context) {
   }
 
   const ip = c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ?? '0.0.0.0';
-  if (!allowIp(ip)) return fail(c, 'Слишком часто. Подождите минуту.', 429);
+  if (!allowIp(ip)) return fail(c, 'Слишком часто. Подождите минуту и отправьте снова.', 429);
 
   const name = String(body.name ?? '').trim().slice(0, 120);
   const email = String(body.email ?? '').toLowerCase().trim();
-  const message = String(body.message ?? '').trim().slice(0, 4000);
+  const message = String(body.message ?? '').trim();
   const errors: Record<string, string> = {};
-  if (!name) errors.name = 'required';
-  if (!email || !email.includes('@')) errors.email = 'invalid';
-  if (!message) errors.message = 'required';
-  if (Object.keys(errors).length) return fail(c, 'Validation failed', 422, errors);
+  if (!name || name.length > 120) errors.name = 'Укажите имя (до 120 символов)';
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 255) {
+    errors.email = 'Укажите корректный email';
+  }
+  if (/[\r\n]/.test(email) || /[\r\n]/.test(name)) {
+    errors.email = 'Некорректные символы в данных';
+  }
+  const msgLen = [...message].length; // approximate mb_strlen for BMP
+  if (msgLen < 3 || msgLen > 5000) {
+    errors.message = 'Сообщение должно быть от 3 до 5000 символов';
+  }
+  if (Object.keys(errors).length) return fail(c, 'Проверьте поля формы', 422, errors);
 
   try {
     await insertContactMessage(
@@ -117,7 +125,7 @@ export async function register(ctx: ModuleContext) {
         captcha_provider: 'none',
         turnstile_site_key: '',
         smartcaptcha_site_key: '',
-        success_message: 'Спасибо! Сообщение отправлено.',
+        success_message: 'Спасибо! Сообщение отправлено. Мы ответим вам в ближайшее время.',
       }),
     );
 

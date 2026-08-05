@@ -14,7 +14,7 @@ export async function register(ctx: ModuleContext) {
       if (!(await ctx.db.tableExists('comments'))) return fail(c, 'Not found', 404);
       const targetType = String(c.req.query('target_type') ?? '').trim();
       const targetId = Number(c.req.query('target_id') ?? 0);
-      if (!targetType || !targetId) return fail(c, 'Validation failed', 422);
+      if (!targetType || !targetId) return fail(c, 'Invalid target', 422);
       const del = await notDeletedClause(ctx.db, 'comments');
       const type = String(c.req.query('type') ?? '').trim();
       let sql = `SELECT * FROM comments WHERE target_type=? AND target_id=? AND status='approved'${del}`;
@@ -49,7 +49,7 @@ export async function register(ctx: ModuleContext) {
       const text = String(body.body ?? '').trim();
       const authorName = String(body.author_name ?? body.name ?? '').trim();
       if (!targetType || !targetId || !text || !authorName) {
-        return fail(c, 'Validation failed', 422);
+        return fail(c, 'Invalid comment target', 422);
       }
 
       const cols = await ctx.db.columns('comments');

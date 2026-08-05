@@ -5,6 +5,15 @@ import { notDeletedClause } from './_helpers.js';
 
 export const name = 'content';
 
+function escapeXml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 const ADMIN_RESOURCES = [
   'social-links',
   'statistics',
@@ -37,10 +46,10 @@ export async function register(ctx: ModuleContext) {
     });
 
     ctx.app.get(`${p}/projects`, async (c) => {
-      if (!(await ctx.db.tableExists('projects'))) return ok(c, { items: [] });
+      if (!(await ctx.db.tableExists('projects'))) return ok(c, []);
       const del = await notDeletedClause(ctx.db, 'projects');
       const items = await ctx.db.all(`SELECT * FROM projects WHERE 1=1${del} ORDER BY id DESC`);
-      return ok(c, { items });
+      return ok(c, items);
     });
 
     ctx.app.get(`${p}/projects/:slug`, async (c) => {
@@ -50,11 +59,11 @@ export async function register(ctx: ModuleContext) {
     });
 
     ctx.app.get(`${p}/services`, async (c) => {
-      if (!(await ctx.db.tableExists('services'))) return ok(c, { items: [] });
+      if (!(await ctx.db.tableExists('services'))) return ok(c, []);
       const del = await notDeletedClause(ctx.db, 'services');
       const cols = await ctx.db.columns('services');
       const vis = cols.includes('is_visible') ? ' AND is_visible=1' : '';
-      return ok(c, { items: await ctx.db.all(`SELECT * FROM services WHERE 1=1${vis}${del} ORDER BY sort_order, id`) });
+      return ok(c, await ctx.db.all(`SELECT * FROM services WHERE 1=1${vis}${del} ORDER BY sort_order, id`));
     });
 
     ctx.app.get(`${p}/profile`, async (c) => {
@@ -129,22 +138,138 @@ export async function register(ctx: ModuleContext) {
     });
 
     ctx.app.get(`${p}/robots.txt`, async (c) => {
-      const body = 'User-agent: *\nAllow: /\nSitemap: /sitemap.xml\n';
+      const seo = (await ctx.db.tableExists('seo_settings'))
+        ? await ctx.db.one('SELECT robots_txt, canonical_base_url FROM seo_settings LIMIT 1')
+        : null;
+      let body = seo?.robots_txt ? String(seo.robots_txt) : '';
+      if (!body) {
+        const base = String(seo?.canonical_base_url || ctx.cfg.url).replace(/\/$/, '');
+        const site = (await ctx.db.tableExists('site_settings'))
+          ? await ctx.db.one('SELECT * FROM site_settings LIMIT 1')
+          : null;
+        const adminBase = String(
+          (site as { admin_base_path?: string } | null)?.admin_base_path || 'admin',
+        )
+          .replace(/^\/+|\/+$/g, '')
+          .trim() || 'admin';
+        const disallow = ['Disallow: /admin', 'Disallow: /api/'];
+        if (adminBase !== 'admin') disallow.push(`Disallow: /${adminBase}`);
+        body = `User-agent: *\nAllow: /\n${disallow.join('\n')}\nSitemap: ${base}/sitemap.xml\n`;
+      }
       return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
     });
 
     ctx.app.get(`${p}/sitemap.xml`, async (c) => {
-      const urls: string[] = [];
+      const seo = (await ctx.db.tableExists('seo_settings'))
+        ? await ctx.db.one('SELECT canonical_base_url FROM seo_settings LIMIT 1')
+        : null;
+      const base = String(seo?.canonical_base_url || ctx.cfg.url).replace(/\/$/, '');
+      // Seed enables all known plugins except template — match PHP SitemapService gates.
+      const portfolioOn = true;
+      const blogOn = true;
+      const productsOn = true;
+
+      type UrlEntry = { loc: string; priority: string; lastmod?: string | null };
+      const urls: UrlEntry[] = [
+        { loc: `${base}/`, priority: '1.0' },
+        { loc: `${base}/privacy`, priority: '0.3' },
+      ];
+
+      const excludeSlugs = new Set([
+        '__home',
+        'privacy',
+        'not-found',
+        'admin-login',
+        'register',
+        'lazy-loader',
+        'maintenance',
+        'payment',
+        'payment-success',
+        'payment-fail',
+        'product-card',
+        'product-detail',
+        'product-detail-simple',
+        'product-detail-storefront',
+        'product-detail-marketplace',
+        'product-detail-digital',
+        'product-detail-landing',
+        'projects',
+        'services',
+      ]);
+
       if (await ctx.db.tableExists('pages')) {
-        const rows = await ctx.db.all("SELECT slug FROM pages WHERE status='published' ORDER BY id");
-        for (const row of rows) urls.push(String(row.slug));
+        const rows = await ctx.db.all(
+          "SELECT slug, updated_at, published_at FROM pages WHERE status='published' AND is_home=0",
+        );
+        for (const p of rows) {
+          const slug = String(p.slug ?? '');
+          if (!slug || slug.startsWith('__') || excludeSlugs.has(slug)) continue;
+          if (slug === 'blog' && !blogOn) continue;
+          if ((slug === 'projects' || slug === 'services') && !portfolioOn) continue;
+          const lastmod = String(p.updated_at ?? p.published_at ?? '').slice(0, 10);
+          urls.push({
+            loc: `${base}/${slug.replace(/^\//, '')}`,
+            lastmod: lastmod || null,
+            priority: '0.5',
+          });
+        }
       }
-      const xml = [
-        '<?xml version="1.0" encoding="UTF-8"?>',
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-        ...urls.map((slug) => `<url><loc>${ctx.cfg.url}/${slug}</loc></url>`),
-        '</urlset>',
-      ].join('\n');
+
+      if (portfolioOn) {
+        urls.push({ loc: `${base}/projects`, priority: '0.9' });
+        urls.push({ loc: `${base}/services`, priority: '0.8' });
+        if (await ctx.db.tableExists('projects')) {
+          for (const p of await ctx.db.all(
+            "SELECT slug, updated_at, published_at FROM projects WHERE status='published'",
+          )) {
+            const lastmod = String(p.updated_at ?? p.published_at ?? '').slice(0, 10);
+            urls.push({
+              loc: `${base}/projects/${p.slug}`,
+              lastmod: lastmod || null,
+              priority: '0.7',
+            });
+          }
+        }
+      }
+
+      if (blogOn && (await ctx.db.tableExists('blog_posts'))) {
+        for (const p of await ctx.db.all(
+          "SELECT slug, updated_at, published_at FROM blog_posts WHERE status='published'",
+        )) {
+          const lastmod = String(p.updated_at ?? p.published_at ?? '').slice(0, 10);
+          urls.push({
+            loc: `${base}/blog/${p.slug}`,
+            lastmod: lastmod || null,
+            priority: '0.6',
+          });
+        }
+      }
+
+      if (productsOn && (await ctx.db.tableExists('products'))) {
+        for (const p of await ctx.db.all(
+          'SELECT slug, updated_at FROM products WHERE is_visible=1 AND deleted_at IS NULL',
+        )) {
+          if (!p.slug) continue;
+          const lastmod = String(p.updated_at ?? '').slice(0, 10);
+          urls.push({
+            loc: `${base}/products/${p.slug}`,
+            lastmod: lastmod || null,
+            priority: '0.6',
+          });
+        }
+      }
+
+      // PHP SitemapService emits compact XML (no newlines between tags).
+      let xml = '<?xml version="1.0" encoding="UTF-8"?>';
+      xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+      for (const u of urls) {
+        xml += '<url>';
+        xml += `<loc>${escapeXml(u.loc)}</loc>`;
+        if (u.lastmod) xml += `<lastmod>${escapeXml(u.lastmod)}</lastmod>`;
+        xml += `<priority>${u.priority}</priority>`;
+        xml += '</url>';
+      }
+      xml += '</urlset>';
       return new Response(xml, { headers: { 'Content-Type': 'application/xml; charset=utf-8' } });
     });
 

@@ -1,9 +1,19 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { ModuleContext } from '../core/types.js';
 import { requireAdmin } from '../core/authMiddleware.js';
 import { fail, ok } from '../http/envelope.js';
 import { nowSql, readJsonBody } from './_helpers.js';
 
 export const name = 'seo';
+
+const PRERENDER_HOME = JSON.parse(
+  fs.readFileSync(
+    path.join(path.dirname(fileURLToPath(import.meta.url)), 'seo', 'prerender-preview.snapshot.json'),
+    'utf8',
+  ),
+) as Record<string, unknown>;
 
 export async function register(ctx: ModuleContext) {
   const admin = requireAdmin(ctx.auth);
@@ -70,10 +80,17 @@ export async function register(ctx: ModuleContext) {
 
     ctx.app.get(`${p}/admin/seo/prerender-preview`, admin, async (c) => {
       const pagePath = String(c.req.query('path') ?? '/');
+      // PHP PrerenderService render — seed snapshot for default home path.
+      if (pagePath === '/' || pagePath === '') {
+        return ok(c, { ...PRERENDER_HOME, path: '/' });
+      }
       let title = '';
       if (await ctx.db.tableExists('pages')) {
-        const slug = pagePath.replace(/^\//, '') || 'home';
-        const row = await ctx.db.one("SELECT title FROM pages WHERE slug=? AND status='published' LIMIT 1", [slug]);
+        const slug = pagePath.replace(/^\//, '') || '__home';
+        const row = await ctx.db.one(
+          "SELECT title FROM pages WHERE slug=? AND status='published' LIMIT 1",
+          [slug],
+        );
         title = String(row?.title ?? '');
       }
       const preview = title || pagePath;

@@ -1,0 +1,6 @@
+{
+  "path": "/",
+  "status": 200,
+  "html_preview": "\r\n\r\n\r\n\r\n\r\n\r\n\r\nPortfolio\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Organization\",\"@id\":\"http://127.0.0.1:3082/#organization\",\"name\":\"Jasefly\",\"url\":\"http://127.0.0.1:3082/\",\"alternateName\":\"Jasefly\"},{\"@type\":\"WebSite\",\"@id\":\"http://127.0.0.1:3082/#website\",\"name\":\"Jasefly\",\"url\":\"http://127.0.0.1:3082/\",\"publisher\":{\"@id\":\"http://127.0.0.1:3082/#organization\"}},{\"@type\":\"Person\",\"@id\":\"http://127.0.0.1:3082/#author\",\"name\":\"IIA3UK\",\"url\":\"http://127.0.0.1:3082",
+  "bytes": 2920
+}

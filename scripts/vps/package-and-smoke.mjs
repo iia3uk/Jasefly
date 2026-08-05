@@ -146,7 +146,18 @@ async function main() {
   log('php_scan', 'no .php in stage');
 
   const stageRn = path.join(stage, 'runtime-node');
-  run('stage_prod_deps', npmCmd, ['ci', '--omit=dev'], { cwd: stageRn });
+  try {
+    run('stage_prod_deps', npmCmd, ['ci', '--omit=dev'], { cwd: stageRn });
+  } catch {
+    run('stage_prod_deps_ignore_scripts', npmCmd, ['ci', '--omit=dev', '--ignore-scripts'], { cwd: stageRn });
+  }
+  // Ensure native binding present when install skipped scripts (Windows/Node 24)
+  const srcBinding = path.join(rn, 'node_modules', 'better-sqlite3', 'build');
+  const dstBinding = path.join(stageRn, 'node_modules', 'better-sqlite3', 'build');
+  if (fs.existsSync(srcBinding) && fs.existsSync(path.join(stageRn, 'node_modules', 'better-sqlite3'))) {
+    copyFiltered(srcBinding, dstBinding, () => false);
+    log('sqlite_binding', 'copied better-sqlite3 build/ into stage');
+  }
 
   const storage = path.join(stageRn, 'storage');
   fs.mkdirSync(path.join(storage, 'sqlite'), { recursive: true });

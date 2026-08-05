@@ -10,14 +10,14 @@ export async function register(ctx: ModuleContext) {
 
   for (const p of ctx.apiPrefixes) {
     ctx.app.get(`${p}/blog`, async (c) => {
-      if (!(await ctx.db.tableExists('blog_posts'))) return ok(c, { items: [] });
+      if (!(await ctx.db.tableExists('blog_posts'))) return ok(c, []);
       const del = await notDeletedClause(ctx.db, 'blog_posts');
       const cols = await ctx.db.columns('blog_posts');
       const statusFilter = cols.includes('status') ? " AND status='published'" : '';
       const items = await ctx.db.all(
         `SELECT * FROM blog_posts WHERE 1=1${statusFilter}${del} ORDER BY id DESC LIMIT 100`,
       );
-      return ok(c, { items });
+      return ok(c, items);
     });
 
     ctx.app.get(`${p}/blog/:slug`, async (c) => {

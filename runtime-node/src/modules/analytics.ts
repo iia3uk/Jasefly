@@ -70,23 +70,84 @@ export async function register(ctx: ModuleContext) {
     });
 
     ctx.app.get(`${p}/admin/analytics/overview`, admin, async (c) => {
-      if (!(await ctx.db.tableExists('analytics_events'))) {
-        return ok(c, { events_total: 0, events_today: 0, top_events: [] });
-      }
-      const totalRow = await ctx.db.one('SELECT COUNT(*) AS c FROM analytics_events');
-      const today = nowSql().slice(0, 10);
-      const todayRow = await ctx.db.one('SELECT COUNT(*) AS c FROM analytics_events WHERE created_at >= ?', [
-        `${today} 00:00:00`,
-      ]);
-      const cols = await ctx.db.columns('analytics_events');
-      const nameCol = cols.includes('event_name') ? 'event_name' : 'name';
-      const top = await ctx.db.all(
-        `SELECT ${nameCol} AS event_name, COUNT(*) AS c FROM analytics_events GROUP BY ${nameCol} ORDER BY c DESC LIMIT 10`,
+      // PHP AnalyticsService::overview shape
+      const to = String(c.req.query('to') ?? new Date().toISOString().slice(0, 10));
+      const fromDefault = new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10);
+      let from = String(c.req.query('from') ?? fromDefault);
+      let toDate = to;
+      let fromDate = from;
+      if (fromDate > toDate) [fromDate, toDate] = [toDate, fromDate];
+      const empty = {
+        range: { from: fromDate, to: toDate },
+        summary: { events: 0, visitors: 0, sessions: 0, page_views: null, value_total: 0 },
+        daily: [] as unknown[],
+        events: [] as unknown[],
+        pages: [] as unknown[],
+        goals: [] as unknown[],
+      };
+      if (!(await ctx.db.tableExists('analytics_events'))) return ok(c, empty);
+
+      const toExclusive = `${toDate} 23:59:59`;
+      const fromStart = `${fromDate} 00:00:00`;
+      const summary =
+        (await ctx.db.one(
+          `SELECT COUNT(*) AS events,
+                  COUNT(DISTINCT visitor_hash) AS visitors,
+                  COUNT(DISTINCT session_id) AS sessions,
+                  SUM(CASE WHEN event_name='page_view' THEN 1 ELSE 0 END) AS page_views,
+                  COALESCE(SUM(value),0) AS value_total
+           FROM analytics_events WHERE created_at>=? AND created_at<=?`,
+          [fromStart, toExclusive],
+        )) ?? {};
+      const daily = await ctx.db.all(
+        `SELECT substr(created_at,1,10) AS date, COUNT(*) AS events,
+                COUNT(DISTINCT visitor_hash) AS visitors,
+                SUM(CASE WHEN event_name='page_view' THEN 1 ELSE 0 END) AS page_views
+         FROM analytics_events WHERE created_at>=? AND created_at<=?
+         GROUP BY substr(created_at,1,10) ORDER BY date`,
+        [fromStart, toExclusive],
       );
+      const events = await ctx.db.all(
+        `SELECT event_name, COUNT(*) AS count, COUNT(DISTINCT visitor_hash) AS visitors,
+                COALESCE(SUM(value),0) AS value
+         FROM analytics_events WHERE created_at>=? AND created_at<=?
+         GROUP BY event_name ORDER BY count DESC`,
+        [fromStart, toExclusive],
+      );
+      const pages = await ctx.db.all(
+        `SELECT path, COUNT(*) AS views, COUNT(DISTINCT visitor_hash) AS visitors
+         FROM analytics_events WHERE event_name='page_view' AND created_at>=? AND created_at<=?
+         GROUP BY path ORDER BY views DESC LIMIT 50`,
+        [fromStart, toExclusive],
+      );
+      let goals: unknown[] = [];
+      if (await ctx.db.tableExists('analytics_goals')) {
+        try {
+          goals = await ctx.db.all(
+            `SELECT g.id, g.name, COUNT(c.id) AS conversions, COALESCE(SUM(c.value),0) AS value
+             FROM analytics_goals g
+             LEFT JOIN analytics_goal_conversions c ON c.goal_id=g.id
+               AND c.created_at>=? AND c.created_at<=?
+             WHERE g.is_active=1 GROUP BY g.id, g.name ORDER BY conversions DESC`,
+            [fromStart, toExclusive],
+          );
+        } catch {
+          goals = [];
+        }
+      }
       return ok(c, {
-        events_total: Number(totalRow?.c ?? 0),
-        events_today: Number(todayRow?.c ?? 0),
-        top_events: top,
+        range: { from: fromDate, to: toDate },
+        summary: {
+          events: Number(summary.events ?? 0),
+          visitors: Number(summary.visitors ?? 0),
+          sessions: Number(summary.sessions ?? 0),
+          page_views: summary.page_views == null ? null : Number(summary.page_views),
+          value_total: Number(summary.value_total ?? 0),
+        },
+        daily,
+        events,
+        pages,
+        goals,
       });
     });
 

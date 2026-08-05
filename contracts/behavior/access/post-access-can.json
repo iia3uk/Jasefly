@@ -48,11 +48,11 @@
         "http_status": true,
         "json_envelope": true,
         "error_code": true,
-        "deep_json": "shape",
+        "deep_json": true,
         "db": false,
         "events": false
       }
     }
   ],
-  "content_hash": "e094da3c36c31094"
+  "content_hash": "89abb8d0bd69f536"
 }

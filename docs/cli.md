@@ -20,6 +20,9 @@ Most CLIs require `backend/config/config.local.php` and call `Bootstrap::init()`
 | `backend/seed-demo.php` | Yes | Demo content |
 | `backend/tests/run.php` | Mostly SQLite in-process | Test suite |
 | `backend/router.php` | Dev | PHP built-in server front → `public/index.php` |
+| `scripts/jasefly/cli.mjs` (`jasefly`) | No | Runtime × target: `doctor` / `dev` / `build` / `test` (`--runtime=php\|node\|dual`, `--target=…`) |
+
+See also [runtime-target-matrix.md](runtime-target-matrix.md).
 
 ### `modules.php` commands
 

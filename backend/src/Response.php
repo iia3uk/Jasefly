@@ -22,8 +22,12 @@ final class Response
             ];
         }
 
-        if (!isset($payload['meta'])) {
-            $payload['meta'] = array_merge(['api_version' => 'v1'], $meta);
+        // Always expose api_version (even when caller passed a custom meta bag).
+        $baseMeta = ['api_version' => 'v1'];
+        if (!isset($payload['meta']) || !is_array($payload['meta'])) {
+            $payload['meta'] = array_merge($baseMeta, $meta);
+        } else {
+            $payload['meta'] = array_merge($baseMeta, $payload['meta'], $meta);
         }
 
         echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

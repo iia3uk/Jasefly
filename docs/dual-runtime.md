@@ -20,6 +20,9 @@ Jasefly has **one architecture** and **two runtimes**:
 ## Parity
 
 ```bash
+# Preferred: jasefly CLI (runtime=dual → behavioral gate)
+node scripts/jasefly/cli.mjs test --runtime=dual
+
 # Node unit
 cd runtime-node && npm test
 
@@ -29,6 +32,8 @@ PHP_BASE=http://127.0.0.1:8080/api/v1 NODE_BASE=http://127.0.0.1:3080/api/v1 nod
 # Contracts
 node scripts/contracts/validate-contracts.js
 ```
+
+Runtime × target matrix: [runtime-target-matrix.md](runtime-target-matrix.md).
 
 ## Capability gate
 

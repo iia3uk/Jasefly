@@ -134,8 +134,9 @@ describe('deepened Node modules', () => {
     });
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.data.items.length).toBeGreaterThanOrEqual(1);
-    for (const user of json.data.items) {
+    const users = Array.isArray(json.data) ? json.data : json.data?.items ?? [];
+    expect(users.length).toBeGreaterThanOrEqual(1);
+    for (const user of users) {
       expect(user).not.toHaveProperty('password_hash');
     }
   });
@@ -177,6 +178,13 @@ describe('deepened Node modules', () => {
   });
 
   it('registration creates user without exposing password hash', async () => {
+    if (await db.tableExists('modules')) {
+      await db.run(
+        `INSERT INTO modules (name, is_enabled, settings) VALUES ('registration', 1, ?)
+         ON CONFLICT(name) DO UPDATE SET settings=excluded.settings, is_enabled=1`,
+        [JSON.stringify({ registration_enabled: true, min_password_length: 8 })],
+      );
+    }
     const res = await app.request('/api/v1/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

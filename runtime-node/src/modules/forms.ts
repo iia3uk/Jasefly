@@ -200,26 +200,30 @@ export async function register(ctx: ModuleContext) {
     });
 
     ctx.app.post(`${p}/forms/:slug/submit`, async (c) => {
-      if (!(await ctx.db.tableExists('forms'))) return fail(c, 'Not found', 404);
+      const formsBareFail = (error: string, status: 404 | 422 | 429, errors: Record<string, string> | unknown[] = []) =>
+        // PHP FormsModule submit errors omit data (bare success/error/errors/meta).
+        c.json({ success: false, error, errors, meta: { api_version: 'v1' } }, status);
+
+      if (!(await ctx.db.tableExists('forms'))) return formsBareFail('Form not found', 404);
       const formCols = await ctx.db.columns('forms');
       const deletedClause = formCols.includes('deleted_at') ? ' AND deleted_at IS NULL' : '';
       const form = await ctx.db.one(
         `SELECT * FROM forms WHERE slug=?${deletedClause} AND status='active' LIMIT 1`,
         [c.req.param('slug')],
       );
-      if (!form) return fail(c, 'Not found', 404);
+      if (!form) return formsBareFail('Form not found', 404);
 
       const ip =
         c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ||
         c.req.header('x-real-ip') ||
         'unknown';
-      if (!checkRate(ip)) return fail(c, 'Too many requests', 429);
+      if (!checkRate(ip)) return formsBareFail('Too many requests', 429);
 
       let payload: Record<string, unknown> = {};
       try {
         payload = (await c.req.json()) as Record<string, unknown>;
       } catch {
-        return fail(c, 'Validation failed', 422);
+        return formsBareFail('Validation failed', 422);
       }
 
       const values =
@@ -231,10 +235,10 @@ export async function register(ctx: ModuleContext) {
       if (fields.length > 0) {
         const validation = validateValues(fields, values);
         if (!validation.ok) {
-          return fail(c, 'Validation failed', 422, validation.errors);
+          return formsBareFail('Validation failed', 422, validation.errors);
         }
       } else if (Object.keys(values).length === 0) {
-        return fail(c, 'Validation failed', 422, { _form: 'Пустая заявка' });
+        return formsBareFail('Validation failed', 422, { _form: 'Пустая заявка' });
       }
 
       if (!(await ctx.db.tableExists('form_submissions'))) {
@@ -295,8 +299,17 @@ export async function register(ctx: ModuleContext) {
     ctx.app.get(`${p}/admin/forms`, admin, async (c) => {
       return okListOrEmpty(c, ctx.db, 'forms', async () => {
         const formCols = await ctx.db.columns('forms');
-        const deleted = formCols.includes('deleted_at') ? ' WHERE deleted_at IS NULL' : '';
-        return ctx.db.all(`SELECT * FROM forms${deleted} ORDER BY id DESC`);
+        const deleted = formCols.includes('deleted_at') ? ' WHERE f.deleted_at IS NULL' : '';
+        if (await ctx.db.tableExists('form_submissions')) {
+          const subCols = await ctx.db.columns('form_submissions');
+          const subDel = subCols.includes('deleted_at') ? ' AND s.deleted_at IS NULL' : '';
+          return ctx.db.all(
+            `SELECT f.*, (SELECT COUNT(*) FROM form_submissions s WHERE s.form_id=f.id${subDel}) AS submissions_count
+             FROM forms f${deleted} ORDER BY f.id DESC`,
+          );
+        }
+        const plainDeleted = formCols.includes('deleted_at') ? ' WHERE deleted_at IS NULL' : '';
+        return ctx.db.all(`SELECT * FROM forms${plainDeleted} ORDER BY id DESC`);
       });
     });
 

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { CONTRACTS_ROOT } from '../config.js';
+import { CONTRACTS_ROOT, REPO_ROOT } from '../config.js';
 import type { Database } from './Database.js';
 import { transpileSql } from './sqlTranspile.js';
 
@@ -9,21 +9,46 @@ interface MigIndex {
   incremental: string[];
 }
 
-async function ensureMeta(db: Database): Promise<void> {
-  const driver = db.driver();
-  if (driver === 'sqlite') {
-    await db.run(
-      `CREATE TABLE IF NOT EXISTS _migrations (id INTEGER PRIMARY KEY AUTOINCREMENT, migration VARCHAR(255) NOT NULL UNIQUE, applied_at TEXT NOT NULL)`,
-    );
-  } else if (driver === 'pgsql') {
-    await db.run(
-      `CREATE TABLE IF NOT EXISTS _migrations (id SERIAL PRIMARY KEY, migration VARCHAR(255) NOT NULL UNIQUE, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`,
-    );
-  } else {
-    await db.run(
-      `CREATE TABLE IF NOT EXISTS _migrations (id INT AUTO_INCREMENT PRIMARY KEY, migration VARCHAR(255) NOT NULL UNIQUE, applied_at DATETIME NOT NULL)`,
-    );
-  }
+/** PHP MigrationService::FILES — incremental only (001 is install). */
+export const PHP_MIGRATION_FILES = [
+  '002_enterprise.sql',
+  '003_site_templates.sql',
+  '004_project_media.sql',
+  '005_page_layouts.sql',
+  '006_page_revisions.sql',
+  '007_plugins.sql',
+  '008_security_2fa.sql',
+  '009_commerce_catalog.sql',
+  '010_maintenance_settings.sql',
+  '011_project_status_cancelled.sql',
+  '012_activity_source.sql',
+  '013_blog_project_link.sql',
+  '014_project_media_url.sql',
+  '015_path_redirects.sql',
+  '016_cookie_consent.sql',
+  '017_admin_base_path.sql',
+  '018_harden_role_permissions.sql',
+  '019_seo_target_regions.sql',
+  '020_installed_modules.sql',
+  '021_platform_sdk.sql',
+  '022_platform_capabilities_ext.sql',
+  '023_theme_header_style.sql',
+  '024_admin_access_layer.sql',
+  '025_demo_sandbox.sql',
+  '026_project_featured_priority.sql',
+  '027_project_cover_orientations.sql',
+] as const;
+
+/**
+ * Match PHP MigrationService meta table: id = migration filename (VARCHAR PK).
+ */
+export async function ensureMigrationsMeta(db: Database): Promise<void> {
+  await db.run(
+    `CREATE TABLE IF NOT EXISTS _migrations (
+      id VARCHAR(120) NOT NULL PRIMARY KEY,
+      applied_at TEXT NOT NULL
+    )`,
+  );
 }
 
 function splitStatements(sql: string): string[] {
@@ -43,23 +68,23 @@ function splitStatements(sql: string): string[] {
   return out.filter(Boolean);
 }
 
-export async function runMigrations(db: Database, opts: { install?: boolean } = {}): Promise<{
+export async function runMigrations(
+  db: Database,
+  opts: { install?: boolean } = {},
+): Promise<{
   applied: string[];
   pending: string[];
   just_applied: string[];
 }> {
-  await ensureMeta(db);
+  await ensureMigrationsMeta(db);
   const index = JSON.parse(
     fs.readFileSync(path.join(CONTRACTS_ROOT, 'migrations/index.v1.json'), 'utf8'),
   ) as MigIndex;
 
-  const files = [
-    ...(opts.install ? index.install_only : []),
-    ...index.incremental,
-  ];
+  const files = [...(opts.install ? index.install_only : []), ...index.incremental];
 
-  const doneRows = await db.all('SELECT migration FROM _migrations');
-  const done = new Set(doneRows.map((r) => String(r.migration)));
+  const doneRows = await db.all('SELECT id FROM _migrations');
+  const done = new Set(doneRows.map((r) => String(r.id)));
   const pending = files.filter((f) => !done.has(f));
   const just: string[] = [];
 
@@ -73,21 +98,48 @@ export async function runMigrations(db: Database, opts: { install?: boolean } = 
           await db.run(p);
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
-          // tolerate duplicate column/key on re-run edge cases
           if (/duplicate|already exists|exists/i.test(msg)) continue;
           throw new Error(`Migration ${file} failed: ${msg}\nSQL: ${p.slice(0, 200)}`);
         }
       }
     }
     const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-    await db.run('INSERT INTO _migrations (migration, applied_at) VALUES (?, ?)', [file, now]);
+    await db.run('INSERT INTO _migrations (id, applied_at) VALUES (?, ?)', [file, now]);
     just.push(file);
   }
 
-  const appliedRows = await db.all('SELECT migration FROM _migrations ORDER BY id');
+  const appliedRows = await db.all('SELECT id FROM _migrations ORDER BY applied_at, id');
   return {
-    applied: appliedRows.map((r) => String(r.migration)),
+    applied: appliedRows.map((r) => String(r.id)),
     pending: [],
     just_applied: just,
   };
+}
+
+/** Discover plugin SQL paths like PHP MigrationService::pluginMigrationFiles. */
+export function pluginMigrationFiles(): Record<string, string> {
+  const modulesDir = path.join(REPO_ROOT, 'backend/src/Modules');
+  const out: Record<string, string> = {};
+  if (!fs.existsSync(modulesDir)) return out;
+  for (const mod of fs.readdirSync(modulesDir)) {
+    const migDir = path.join(modulesDir, mod, 'migrations');
+    if (!fs.existsSync(migDir)) continue;
+    for (const f of fs.readdirSync(migDir).filter((x) => x.endsWith('.sql')).sort()) {
+      out[`plugin:${mod}:${f}`] = path.join(migDir, f);
+    }
+  }
+  return out;
+}
+
+export function migrationsDir(): string {
+  // PHP: dirname(...) . '/migrations' → Windows drive path + forward-slash suffix
+  return path.join(REPO_ROOT, 'backend') + '/migrations';
+}
+
+export async function markMigrationApplied(db: Database, id: string): Promise<void> {
+  await ensureMigrationsMeta(db);
+  const row = await db.one('SELECT id FROM _migrations WHERE id=?', [id]);
+  if (row) return;
+  const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  await db.run('INSERT INTO _migrations (id, applied_at) VALUES (?, ?)', [id, now]);
 }

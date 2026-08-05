@@ -19,6 +19,10 @@ const nodeStorage = path.join(base, 'node-storage');
 const phpStorage = path.join(base, 'php-storage');
 fs.mkdirSync(nodeStorage, { recursive: true });
 fs.mkdirSync(phpStorage, { recursive: true });
+// Prevent PHP ModuleRegistry one-shot page seed from diverging page counts
+// (Node does not run that boot path). Marker makes seedAll a no-op.
+fs.writeFileSync(path.join(phpStorage, '.pages_seeded'), 'parity\n');
+fs.writeFileSync(path.join(nodeStorage, '.pages_seeded'), 'parity\n');
 
 const env = {
   ...process.env,

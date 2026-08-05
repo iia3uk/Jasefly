@@ -16,7 +16,7 @@ Package safe-mode file: `storage/module-safe-mode.json` (via `ModulePackagePaths
 
 1. Bootstrap records failures during discover/boot/package load.
 2. Admin opens System → status includes failures + safe-mode.
-3. Debug: `?debug=1` on health, or `storage/.show_errors`, or authenticated error detail policy in `ErrorReportService`.
+3. Debug details in HTTP responses: only with `storage/.show_errors` or `APP_ENV` ∈ local/development/dev/test. Production clients get a generic message; admins use System → Last error.
 
 ## Key components
 

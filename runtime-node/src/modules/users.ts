@@ -7,7 +7,7 @@ import { readJsonBody } from './_helpers.js';
 export const name = 'users';
 
 const SAFE_SELECT =
-  'SELECT id, email, name, role, totp_enabled, last_login_at, created_at, updated_at FROM users';
+  'SELECT id, email, name, role, avatar_media_id, last_login_at, created_at FROM users';
 
 export async function register(ctx: ModuleContext) {
   const admin = requireAdmin(ctx.auth);
@@ -19,7 +19,7 @@ export async function register(ctx: ModuleContext) {
 
     ctx.app.get(`${p}/admin/users/:id`, admin, async (c) => {
       const row = await ctx.db.one(`${SAFE_SELECT} WHERE id=?`, [c.req.param('id')]);
-      if (!row) return fail(c, 'Not found', 404);
+      if (!row) return fail(c, 'User not found', 404);
       return ok(c, row);
     });
 
@@ -90,7 +90,20 @@ export async function register(ctx: ModuleContext) {
 
     ctx.app.get(`${p}/admin/roles`, admin, async (c) => {
       if (await ctx.db.tableExists('roles')) {
-        return ok(c, await ctx.db.all('SELECT * FROM roles ORDER BY id'));
+        // Match PHP PermissionService::roles — include perm_count, order by role_rank.
+        const hasRank = (await ctx.db.columns('roles')).includes('role_rank');
+        const order = hasRank ? 'r.role_rank ASC, r.id ASC' : 'r.id';
+        if (await ctx.db.tableExists('role_permissions')) {
+          return ok(
+            c,
+            await ctx.db.all(
+              `SELECT r.*, COUNT(rp.permission_id) AS perm_count FROM roles r
+               LEFT JOIN role_permissions rp ON rp.role_id=r.id
+               GROUP BY r.id ORDER BY ${order}`,
+            ),
+          );
+        }
+        return ok(c, await ctx.db.all(`SELECT * FROM roles ORDER BY ${hasRank ? 'role_rank ASC, id ASC' : 'id'}`));
       }
       return ok(c, [
         { slug: 'admin', name: 'Admin' },
@@ -101,7 +114,7 @@ export async function register(ctx: ModuleContext) {
 
     ctx.app.get(`${p}/admin/permissions`, admin, async (c) => {
       if (!(await ctx.db.tableExists('permissions'))) return ok(c, []);
-      return ok(c, await ctx.db.all('SELECT * FROM permissions ORDER BY slug'));
+      return ok(c, await ctx.db.all('SELECT * FROM permissions ORDER BY group_name, slug'));
     });
 
     ctx.app.get(`${p}/admin/roles/:id/permissions`, admin, async (c) => {

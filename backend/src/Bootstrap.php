@@ -79,6 +79,15 @@ final class Bootstrap
         error_reporting(E_ALL);
         ini_set('display_errors', '0');
 
+        // Production must not boot with an empty JWT secret (forgeable HS256 tokens).
+        $envName = (string) ($app['env'] ?? 'production');
+        $jwtSecret = (string) ($app['jwt_secret'] ?? '');
+        if ($envName === 'production' && $jwtSecret === '') {
+            throw new \RuntimeException(
+                'JWT_SECRET is empty in production. Set jwt_secret in config.local.php or JWT_SECRET env.'
+            );
+        }
+
         $db = Database::get($dbConfig);
         self::applyDatabaseTimezone($db, (string) ($app['timezone'] ?? 'Europe/Moscow'));
 

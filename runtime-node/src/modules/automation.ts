@@ -112,13 +112,14 @@ export async function register(ctx: ModuleContext) {
     });
 
     ctx.app.get(`${p}/admin/automations/:id/runs`, admin, async (c) => {
-      if (!(await ctx.db.tableExists('automation_runs'))) return ok(c, { items: [] });
-      return ok(c, {
-        items: await ctx.db.all(
+      if (!(await ctx.db.tableExists('automation_runs'))) return ok(c, []);
+      return ok(
+        c,
+        await ctx.db.all(
           'SELECT * FROM automation_runs WHERE automation_id=? ORDER BY id DESC LIMIT 100',
           [c.req.param('id')],
         ),
-      });
+      );
     });
 
     ctx.app.post(`${p}/admin/automations/:id/run`, admin, async (c) => {

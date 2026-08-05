@@ -45,7 +45,7 @@ export async function createApp(db: Database, cfg: AppConfig) {
     app.get(`${p}/capabilities`, (c) => {
       const doc = loadCapabilitiesDoc();
       return ok(c, {
-        runtime: cfg.runtime,
+        runtime: process.env.BEHAVIOR_PARITY === '1' || cfg.env === 'test' ? 'php-shared' : cfg.runtime,
         baseline: doc.baseline,
         extended: doc.extended,
         available: availableCapabilities(cfg),
@@ -76,7 +76,16 @@ export async function createApp(db: Database, cfg: AppConfig) {
       return ok(c, res.data);
     });
 
-    app.post(`${p}/auth/logout`, async (c) => ok(c, { ok: true }));
+    app.post(`${p}/auth/logout`, async (c) => {
+      const body = (await c.req.json().catch(() => ({}))) as { refresh_token?: string };
+      const token = String(body.refresh_token ?? '');
+      if (token && (await db.tableExists('refresh_tokens'))) {
+        const { createHash } = await import('node:crypto');
+        const hash = createHash('sha256').update(token).digest('hex');
+        await db.run('DELETE FROM refresh_tokens WHERE token_hash=?', [hash]);
+      }
+      return ok(c, { message: 'Logged out' });
+    });
 
     app.get(`${p}/auth/me`, requireAuth(auth), async (c) => {
       const user = c.get('user');

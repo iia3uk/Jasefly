@@ -54,11 +54,11 @@ async function loginAdmin() {
   if (adminToken) return adminToken;
   const email = meta?.adminEmail || 'admin@parity.local';
   const password = meta?.adminPassword || 'Admin123!';
-  const res = await fetch(`${NODE_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
+  // Login both runtimes so activity/last_login side effects stay mirrored.
+  const body = JSON.stringify({ email, password });
+  const headers = { 'Content-Type': 'application/json' };
+  await fetch(`${PHP_BASE}/auth/login`, { method: 'POST', headers, body }).catch(() => null);
+  const res = await fetch(`${NODE_BASE}/auth/login`, { method: 'POST', headers, body });
   const json = await res.json().catch(() => ({}));
   adminToken = json?.data?.access_token || '';
   if (!adminToken) {
@@ -99,10 +99,12 @@ function applyPath(template, params) {
   return p;
 }
 
-function truncateJson(json, max = 600) {
+function truncateJson(json, max = 12000) {
   try {
     const s = JSON.stringify(json);
-    return s.length > max ? s.slice(0, max) + '…' : json;
+    if (s.length <= max) return json;
+    // Keep parseable object for offline analysis (not used by compare).
+    return { _truncated: true, _bytes: s.length, data: json?.data ?? null, error: json?.error ?? null, success: json?.success };
   } catch {
     return null;
   }
@@ -212,22 +214,11 @@ function compareCase(c, php, node, phpDbBefore, phpDbAfter, nodeDbBefore, nodeDb
   }
 
   if (cmp.error_code !== false && pj?.success === false && nj?.success === false) {
-    // Same failure class is enough for auth/MCP probes (localized PHP strings vs English Node).
     const pe = String(pj?.error ?? '');
     const ne = String(nj?.error ?? '');
-    const notFound = (s) => /Not found|не найден|не найдена|missing|does not exist/i.test(s);
-    const sameClass =
-      pe === ne ||
-      (!pe && !ne) ||
-      (/MCP|mcp/.test(pe) && /MCP|mcp/.test(ne)) ||
-      (/Unauthorized|не авториз/i.test(pe) && /Unauthorized|Invalid refresh/i.test(ne)) ||
-      (/Unauthorized|Invalid refresh/i.test(pe) && /Unauthorized|Invalid refresh/i.test(ne)) ||
-      (notFound(pe) && notFound(ne)) ||
-      // PHP sometimes omits error string on 404 while Node sends "Not found"
-      ((!pe || notFound(pe)) && (!ne || notFound(ne)) && (php.status === 404 || node.status === 404)) ||
-      // Localized client errors (RU PHP copy vs EN Node) — same status + both failed is enough.
-      (php.status === node.status && php.status >= 400 && php.status < 500 && pj?.success === false && nj?.success === false);
-    if (!sameClass) problems.push(`error php=${JSON.stringify(pj?.error)} node=${JSON.stringify(nj?.error)}`);
+    if (pe !== ne) {
+      problems.push(`error php=${JSON.stringify(pj?.error)} node=${JSON.stringify(nj?.error)}`);
+    }
   }
 
   if (cmp.deep_json === 'shape' || cmp.deep_json === 'soft') {

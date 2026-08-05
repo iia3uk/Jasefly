@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-04T19:51:24.640Z",
-  "version": "installer_v2-12-gb84d580",
-  "commit": "b84d580",
+  "generated_at": "2026-08-05T18:22:21.315Z",
+  "version": "installer_v2-17-g6acaf4d",
+  "commit": "6acaf4d",
   "metrics": {
-    "files": 1239,
+    "files": 3370,
     "php_classes": 310,
     "builder_widgets": 68,
     "rest_routes_core": 66,
     "sdk_interfaces": 23,
-    "git_commits": 87,
+    "git_commits": 92,
     "repo_size_mb": 26.4,
     "core_modules": 30,
     "package_scaffolds": 10
@@ -17,32 +17,32 @@
     "repo": "iia3uk/jasefly",
     "url": "https://github.com/iia3uk/jasefly",
     "latest_tag": "installer_v2",
-    "latest_commit_date": "2026-08-04",
+    "latest_commit_date": "2026-08-05",
     "commits": [
       {
-        "hash": "b84d580",
+        "hash": "6acaf4d",
+        "date": "2026-08-05",
+        "subject": "Ship Node VPS runtime and PHP?Node behavioral parity CI gate."
+      },
+      {
+        "hash": "2b47eed",
+        "date": "2026-08-04",
+        "subject": "Stop publishing local site dumps and content packs."
+      },
+      {
+        "hash": "9845409",
+        "date": "2026-08-04",
+        "subject": "Fix CI after modules-src removal with public SDK fixtures."
+      },
+      {
+        "hash": "1d147c0",
+        "date": "2026-08-04",
+        "subject": "Ship landing showcase widgets and MCP multi-site routing."
+      },
+      {
+        "hash": "d87b7d9",
         "date": "2026-08-04",
         "subject": "﻿Stop publishing modules-src to the public repo."
-      },
-      {
-        "hash": "69a3cea",
-        "date": "2026-08-03",
-        "subject": "fix(maps): hide overlay zoom controls on Yandex provider."
-      },
-      {
-        "hash": "e9b4a7d",
-        "date": "2026-08-03",
-        "subject": "fix(csp): allow Yandex Maps iframes in frame-src."
-      },
-      {
-        "hash": "96eb975",
-        "date": "2026-08-03",
-        "subject": "fix(maps): default to Yandex Maps and restore visible markers."
-      },
-      {
-        "hash": "b443c53",
-        "date": "2026-08-03",
-        "subject": "Add Maps ZIP module with OSM adapter and contact map fields."
       }
     ]
   }

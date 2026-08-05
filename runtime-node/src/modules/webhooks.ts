@@ -65,11 +65,11 @@ export async function register(ctx: ModuleContext) {
     const base = `${p}/admin/webhooks`;
 
     ctx.app.get(base, admin, async (c) => {
-      if (!(await ctx.db.tableExists('webhooks'))) return ok(c, { items: [] });
+      if (!(await ctx.db.tableExists('webhooks'))) return ok(c, []);
       const items = await ctx.db.all(
         'SELECT id, event, url, is_active, created_at FROM webhooks ORDER BY id DESC',
       );
-      return ok(c, { items });
+      return ok(c, items);
     });
 
     ctx.app.post(base, admin, async (c) => {
@@ -122,7 +122,24 @@ export async function register(ctx: ModuleContext) {
     });
 
     ctx.app.post(`${p}/webhooks/test`, async (c) => {
-      const received = await c.req.json().catch(() => ({}));
+      let received: unknown = [];
+      try {
+        const text = await c.req.text();
+        if (text.trim() !== '') {
+          received = JSON.parse(text);
+        }
+      } catch {
+        received = [];
+      }
+      // PHP Request::all() on empty JSON object becomes [].
+      if (
+        received &&
+        typeof received === 'object' &&
+        !Array.isArray(received) &&
+        Object.keys(received as object).length === 0
+      ) {
+        received = [];
+      }
       return ok(c, { ok: true, received });
     });
   }

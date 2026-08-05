@@ -7,27 +7,101 @@ import { moduleSettings, nowSql, readJsonBody } from './_helpers.js';
 
 export const name = 'registration';
 
+/** PHP RegistrationModule::settings() — schema defaults before stored JSON. */
+const REGISTRATION_DEFAULTS: Record<string, unknown> = {
+  registration_enabled: false,
+  default_role: 'member',
+  allow_role_override: false,
+  auto_login_after_register: true,
+  redirect_after_register: '/',
+  redirect_after_verify: '/admin/login',
+  auto_login_after_verify: false,
+  closed_message: 'Регистрация временно закрыта.',
+  success_message: 'Аккаунт создан. Если нужно — подтвердите email.',
+  require_name: true,
+  min_password_length: 8,
+  require_password_confirm: true,
+  show_login_link: true,
+  login_path: '/admin/login',
+  terms_required: false,
+  terms_url: '/privacy',
+  terms_label: 'Согласен с политикой конфиденциальности',
+  require_email_verification: false,
+  verification_token_ttl_hours: 48,
+  block_login_until_verified: true,
+  honeypot_enabled: true,
+  captcha_mode: 'none',
+};
+
+function asBool(v: unknown, fallback: boolean): boolean {
+  if (v === undefined || v === null) return fallback;
+  return Boolean(v);
+}
+
+/** PHP PluginStateService::getSettings — defaults merged under stored. */
+async function resolvedRegistrationSettings(db: ModuleContext['db']): Promise<Record<string, unknown>> {
+  const stored = await moduleSettings(db, 'registration');
+  return { ...REGISTRATION_DEFAULTS, ...stored };
+}
+
+/** PHP RegistrationService::publicCaptchaConfig() */
+async function publicCaptchaConfig(
+  db: ModuleContext['db'],
+  settings: Record<string, unknown>,
+): Promise<Record<string, string>> {
+  const mode = String(settings.captcha_mode ?? 'none');
+  const mail = await moduleSettings(db, 'mail');
+  if (mode === 'inherit_mail') {
+    return {
+      provider: String(mail.captcha_provider ?? 'none'),
+      turnstile_site_key: String(mail.turnstile_site_key ?? ''),
+      smartcaptcha_site_key: String(mail.smartcaptcha_site_key ?? ''),
+    };
+  }
+  if (mode === 'turnstile') {
+    return {
+      provider: 'turnstile',
+      turnstile_site_key: String(mail.turnstile_site_key ?? ''),
+      smartcaptcha_site_key: '',
+    };
+  }
+  if (mode === 'smartcaptcha') {
+    return {
+      provider: 'smartcaptcha',
+      turnstile_site_key: '',
+      smartcaptcha_site_key: String(mail.smartcaptcha_site_key ?? ''),
+    };
+  }
+  return { provider: 'none', turnstile_site_key: '', smartcaptcha_site_key: '' };
+}
+
+/** PHP RegistrationService::publicConfig() */
+async function publicConfig(db: ModuleContext['db']): Promise<Record<string, unknown>> {
+  const s = await resolvedRegistrationSettings(db);
+  return {
+    enabled: asBool(s.registration_enabled, false),
+    require_name: asBool(s.require_name, true),
+    min_password_length: Math.max(6, Number(s.min_password_length ?? 8) || 8),
+    require_password_confirm: asBool(s.require_password_confirm, true),
+    require_email_verification: asBool(s.require_email_verification, false),
+    show_login_link: asBool(s.show_login_link, true),
+    login_path: String(s.login_path ?? '/admin/login'),
+    honeypot_enabled: asBool(s.honeypot_enabled, true),
+    terms_required: asBool(s.terms_required, false),
+    terms_url: String(s.terms_url ?? '/privacy'),
+    terms_label: String(s.terms_label ?? 'Согласен с политикой конфиденциальности'),
+    closed_message: String(s.closed_message ?? 'Регистрация временно закрыта.'),
+    success_message: String(s.success_message ?? 'Аккаунт создан.'),
+    captcha: await publicCaptchaConfig(db, s),
+  };
+}
+
 export async function register(ctx: ModuleContext) {
   for (const p of ctx.apiPrefixes) {
-    ctx.app.get(`${p}/registration/config`, async (c) => {
-      const settings = await moduleSettings(ctx.db, 'registration');
-      const enabled = Boolean(settings.registration_enabled);
-      return ok(c, {
-        registration_enabled: enabled,
-        default_role: String(settings.default_role ?? 'member'),
-        require_name: settings.require_name !== false,
-        min_password_length: Number(settings.min_password_length ?? 8),
-        require_password_confirm: settings.require_password_confirm !== false,
-        show_login_link: settings.show_login_link !== false,
-        login_path: String(settings.login_path ?? '/admin/login'),
-        require_email_verification: Boolean(settings.require_email_verification),
-        closed_message: String(settings.closed_message ?? 'Регистрация временно закрыта.'),
-        success_message: String(settings.success_message ?? 'Аккаунт создан.'),
-      });
-    });
+    ctx.app.get(`${p}/registration/config`, async (c) => ok(c, await publicConfig(ctx.db)));
 
     const registerHandler = async (c: Context) => {
-      const settings = await moduleSettings(ctx.db, 'registration');
+      const settings = await resolvedRegistrationSettings(ctx.db);
       // PHP default: registration_enabled=false → 403 closed
       if (!settings.registration_enabled) {
         return fail(c, String(settings.closed_message ?? 'Регистрация временно закрыта.'), 403);

@@ -1,0 +1,17 @@
+# Local dual-runtime compose (parity / DX). Not a production deploy recipe.
+services:
+  php:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.php
+    ports:
+      - "8080:80"
+  node:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.node
+    ports:
+      - "3080:3080"
+    environment:
+      NODE_ENV: production
+      PORT: "3080"

@@ -115,8 +115,8 @@ function buildScenarios(route) {
         error_code: true,
         db: false,
         events: false,
-        // Shape (not full seed content) — seed/layout drift is not behavioral drift.
-        deep_json: 'shape',
+        // Full scrubbed body — seed-volatile keys scrubbed in tests/parity/scrub.mjs
+        deep_json: true,
       },
     });
   }
@@ -137,8 +137,7 @@ function buildScenarios(route) {
         http_status: true,
         json_envelope: true,
         error_code: true,
-        // Shape: localized error strings / seed null vs {} are not status drift.
-        deep_json: 'shape',
+        deep_json: true,
         db: false,
         events: false,
       },
@@ -159,8 +158,7 @@ function buildScenarios(route) {
         http_status: true,
         json_envelope: true,
         error_code: true,
-        // Empty-body mutate: status + envelope class; localized errors / seed DB not required.
-        deep_json: 'shape',
+        deep_json: true,
         db: false,
         events: false,
       },

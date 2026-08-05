@@ -37,7 +37,7 @@ export async function register(ctx: ModuleContext) {
       const body = await readJsonBody(c);
       if (body instanceof Response) return body;
       const email = String(body.email ?? '').toLowerCase().trim();
-      if (!email || !email.includes('@')) return fail(c, 'Validation failed', 422, { email: 'invalid' });
+      if (!email || !email.includes('@')) return fail(c, 'Invalid email', 422);
 
       const cols = await ctx.db.columns(table);
       const confirmToken = crypto.randomBytes(24).toString('hex');
@@ -67,11 +67,11 @@ export async function register(ctx: ModuleContext) {
       const table = await subscriberTable(ctx.db);
       if (!table) return fail(c, 'capability_unavailable', 409);
       const token = String(c.req.query('token') ?? '').trim();
-      if (!token) return fail(c, 'Validation failed', 422);
+      if (!token) return fail(c, 'Invalid token', 422);
       const cols = await ctx.db.columns(table);
       if (!cols.includes('confirm_token_hash')) return ok(c, { ok: true, confirmed: true });
       const row = await ctx.db.one(`SELECT * FROM ${table} WHERE confirm_token_hash=?`, [tokenHash(token)]);
-      if (!row) return fail(c, 'Not found', 404);
+      if (!row) return fail(c, 'Invalid token', 422);
       await ctx.db.run(
         `UPDATE ${table} SET status='active', confirm_token_hash=NULL, confirmed_at=? WHERE id=?`,
         [nowSql(), row.id],
@@ -91,7 +91,7 @@ export async function register(ctx: ModuleContext) {
         await ctx.db.run(`UPDATE ${table} SET status='unsubscribed' WHERE confirm_token_hash=?`, [tokenHash(tokenQ)]);
         return ok(c, { ok: true, unsubscribed: true });
       }
-      if (!email) return fail(c, 'Validation failed', 422);
+      if (!email) return fail(c, 'Invalid token', 422);
       if (cols.includes('unsubscribed_at')) {
         await ctx.db.run(`UPDATE ${table} SET status='unsubscribed', unsubscribed_at=? WHERE email=?`, [nowSql(), email]);
       } else if (cols.includes('status')) {
@@ -181,14 +181,18 @@ export async function register(ctx: ModuleContext) {
 
     ctx.app.get(`${p}/admin/newsletter/subscribers/export`, admin, async (c) => {
       const table = await subscriberTable(ctx.db);
-      if (!table) return ok(c, '');
-      const rows = await ctx.db.all(`SELECT * FROM ${table} ORDER BY id DESC`);
-      const headers = rows.length ? Object.keys(rows[0]!) : ['email'];
-      const lines = [headers.map(csvEscape).join(',')];
+      // Match PHP NewsletterService::exportCsv + CsvExport::build (+ UTF-8 BOM).
+      const header = ['email', 'name', 'status', 'source', 'confirmed_at', 'created_at'];
+      const rows = table
+        ? await ctx.db.all(
+            `SELECT email, name, status, source, confirmed_at, created_at FROM ${table} ORDER BY id DESC`,
+          )
+        : [];
+      const lines = [header.join(',')];
       for (const row of rows) {
-        lines.push(headers.map((h) => csvEscape(row[h])).join(','));
+        lines.push(header.map((h) => csvEscape(row[h])).join(','));
       }
-      const csv = '\uFEFF' + lines.join('\n');
+      const csv = '\uFEFF' + lines.join('\n') + '\n';
       return new Response(csv, {
         status: 200,
         headers: {

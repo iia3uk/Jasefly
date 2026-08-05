@@ -24,7 +24,8 @@ Implementation is authoritative. Agent path lookup lives in root [`CMS_MAP.md`](
 10. [frontend-architecture.md](frontend-architecture.md) · [page-builder.md](page-builder.md)
 11. [database-and-migrations.md](database-and-migrations.md)
 12. [diagnostics.md](diagnostics.md) · [cli.md](cli.md) · [testing.md](testing.md)
-13. [deployment.md](deployment.md) · [dual-runtime.md](dual-runtime.md) · [dual-runtime-architecture-plan.md](dual-runtime-architecture-plan.md) · [recovery.md](recovery.md) · [security.md](security.md)
+13. [deployment.md](deployment.md) · [dual-runtime.md](dual-runtime.md) · [runtime-target-matrix.md](runtime-target-matrix.md) · [dual-runtime-architecture-plan.md](dual-runtime-architecture-plan.md) · [recovery.md](recovery.md) · [security.md](security.md)
+13a. **[core-freeze-1.0.md](core-freeze-1.0.md)** — Final Freeze: what is frozen after Jasefly 1.0 (API / SDK / runtime / migrations / semver)
 14. [extension-points.md](extension-points.md) · [content-import.md](content-import.md)
 15. Feature ownership: [modules/](modules/)
 

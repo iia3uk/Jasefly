@@ -78,21 +78,34 @@ final class PermissionService
             return \App\Modules\Demo\DemoCapabilityPolicy::allows($permission);
         }
 
-        if ($role === 'super_admin' || ($user['auth'] ?? '') === 'mcp_token') {
+        // Machine token — not a JWT role claim.
+        if (($user['auth'] ?? '') === 'mcp_token') {
             return true;
         }
 
+        // Prefer live ACL / DB over JWT claims (defeats stale super_admin after demotion).
         $access = AccessHost::tryGet();
         if ($access !== null && $userId > 0) {
             try {
                 $bundle = $access->effectiveBundle($userId);
-                // Prefer ACL when the user has DB roles/caps; otherwise JWT role matrix (tests / pre-backfill).
                 if ($bundle['is_super'] || $bundle['roles'] !== [] || $bundle['caps'] !== []) {
                     return $access->canCapability(new AccessContext($userId, $permission))->allowed;
                 }
             } catch (\Throwable) {
-                // fall through to role-slug matrix
+                // fall through
             }
+        }
+
+        // Resolve role from DB when the user row exists — JWT role alone is not authoritative.
+        if ($userId > 0) {
+            $live = $this->liveRoleSlug($userId);
+            if ($live !== null) {
+                $role = $live;
+            }
+        }
+
+        if ($role === 'super_admin') {
+            return true;
         }
 
         try {
@@ -110,6 +123,20 @@ final class PermissionService
             return $alt !== null && in_array($alt, $perms, true);
         } catch (\Throwable) {
             return str_starts_with($permission, 'content.') || $permission === 'media.manage';
+        }
+    }
+
+    /** @return string|null null = no users row (tests / ephemeral JWT-only) */
+    private function liveRoleSlug(int $userId): ?string
+    {
+        try {
+            $row = $this->db->one('SELECT role FROM users WHERE id = ? LIMIT 1', [$userId]);
+            if ($row === null) {
+                return null;
+            }
+            return (string) ($row['role'] ?? 'editor');
+        } catch (\Throwable) {
+            return null;
         }
     }
 

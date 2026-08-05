@@ -41,26 +41,69 @@ async function loadPaymentSettings(db: ModuleContext['db']): Promise<Record<stri
 async function publicConfig(db: ModuleContext['db']): Promise<Record<string, unknown>> {
   const settings = await loadPaymentSettings(db);
   const currency = String(settings.currency ?? 'RUB').toUpperCase();
+  const testMode = settings.test_mode !== false;
+  const allowOpen = Boolean(settings.allow_open_amount);
+  const requireCatalog = settings.require_catalog_item !== false;
+
+  // PHP AbstractProvider: default-on only for manual; always configured.
+  const providers: Array<Record<string, unknown>> = [];
+  const manualEnabled =
+    !Object.prototype.hasOwnProperty.call(settings, 'enable_manual') || Boolean(settings.enable_manual);
+  if (manualEnabled) {
+    providers.push({ id: 'manual', label: 'Вручную', group: 'other', configured: true });
+  }
+  const anyConfigured = providers.some((p) => p.configured);
+  const defaultId = String(settings.default_provider ?? settings.provider ?? 'manual');
+  const defaultConfigured = providers.find((p) => p.id === defaultId)?.configured === true
+    || (defaultId === 'manual' && manualEnabled);
+  const catalogMode = anyConfigured && requireCatalog && !allowOpen;
+
+  const iconsRaw = String(settings.payment_icons ?? 'mir,visa,mastercard,sbp');
+  const allowed = new Set(['mir', 'visa', 'mastercard', 'unionpay', 'sbp', 'paypal', 'applepay', 'googlepay']);
+  const paymentIcons: string[] = [];
+  for (const part of iconsRaw.split(',')) {
+    const id = part.trim().toLowerCase();
+    if (id && allowed.has(id) && !paymentIcons.includes(id)) paymentIcons.push(id);
+  }
+
   return {
+    providers,
+    provider: defaultId,
+    default_provider: defaultId,
     currency,
     currency_symbol: String(settings.currency_symbol ?? '₽'),
     merchant_name: String(settings.merchant_name ?? ''),
-    test_mode: settings.test_mode !== false,
+    test_mode: testMode,
     success_url: String(settings.success_url ?? '/payment-success'),
     fail_url: String(settings.fail_url ?? '/payment-fail'),
+    configured: Boolean(defaultConfigured),
+    acquiring_ready: anyConfigured,
+    catalog_mode: catalogMode,
+    require_catalog_item: requireCatalog,
+    allow_open_amount: allowOpen,
     offer_url: String(settings.offer_url ?? '/offer'),
     offer_title: String(settings.offer_title ?? 'Публичная оферта'),
-    configured: Boolean(process.env.PAYMENTS_WEBHOOK_SECRET),
-    acquiring_ready: false,
-    catalog_mode: false,
-    require_catalog_item: settings.require_catalog_item !== false,
-    allow_open_amount: Boolean(settings.allow_open_amount),
-    providers: [],
-    provider: String(settings.default_provider ?? settings.provider ?? 'manual'),
-    default_provider: String(settings.default_provider ?? settings.provider ?? 'manual'),
-    payment_icons: ['mir', 'visa', 'mastercard'],
+    offer_html: String(settings.offer_html ?? ''),
+    seller: {
+      name: String(settings.seller_name ?? ''),
+      inn: String(settings.seller_inn ?? ''),
+      ogrn: String(settings.seller_ogrn ?? ''),
+      address: String(settings.seller_address ?? ''),
+      email: String(settings.seller_email ?? ''),
+      phone: String(settings.seller_phone ?? ''),
+    },
+    payment_icons: paymentIcons.length ? paymentIcons : ['mir', 'visa', 'mastercard'],
     catalog: [],
+    stripe_publishable_key: String(settings.stripe_publishable_key ?? ''),
+    cloudpayments_public_id: String(settings.cloudpayments_public_id ?? ''),
+    adyen_client_key: String(settings.adyen_client_key ?? ''),
+    paypal_client_id: String(settings.paypal_client_id ?? ''),
   };
+}
+
+function paymentsBareFail(c: Parameters<typeof ok>[0], error: string, status: 404 | 422) {
+  // PHP PaymentsModule / PaymentService bare {success,error} (no data/errors).
+  return c.json({ success: false, error, meta: { api_version: 'v1' } }, status);
 }
 
 function verifyHmacSignature(rawBody: string, secret: string, header: string | undefined): boolean {
@@ -197,7 +240,7 @@ async function handleWebhook(
     // PHP Shared has no global secret gate — empty payload → 422 Missing payment id.
     // Keep 503 for real VPS deploys where webhook signing is required.
     if (process.env.BEHAVIOR_PARITY === '1' || process.env.APP_ENV === 'test') {
-      return fail(c, 'Missing payment id', 422);
+      return paymentsBareFail(c, 'Missing payment id', 422);
     }
     return fail(c, 'webhook_not_configured', 503);
   }
@@ -288,18 +331,38 @@ async function handleWebhook(
 async function checkout(ctx: ModuleContext, c: Parameters<typeof ok>[0], body: Record<string, unknown>) {
   if (!(await ctx.db.tableExists('orders'))) return fail(c, 'plugin_disabled', 409);
 
-  const amount = Math.round(Number(body.amount ?? body.total ?? 0) * 100) / 100;
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return fail(c, 'Validation failed', 422, { amount: 'Укажите сумму больше нуля' });
+  const settings = await loadPaymentSettings(ctx.db);
+  const allowOpen = Boolean(settings.allow_open_amount);
+  const requireCatalog = settings.require_catalog_item !== false;
+  const manualEnabled =
+    !Object.prototype.hasOwnProperty.call(settings, 'enable_manual') || Boolean(settings.enable_manual);
+  const anyConfigured = manualEnabled;
+  const catalogMode = anyConfigured && requireCatalog && !allowOpen;
+
+  const acceptOffer = Boolean(body.accept_offer === true || body.accept_offer === 1 || body.accept_offer === '1' || body.accept_offer === 'true');
+  const itemType = String(body.item_type ?? '').toLowerCase().trim();
+  const itemId = Number(body.item_id ?? 0);
+
+  if (catalogMode || (itemType !== '' && itemId > 0)) {
+    if (!acceptOffer) {
+      return paymentsBareFail(c, 'Подтвердите согласие с договором-офертой', 422);
+    }
   }
 
-  const settings = await loadPaymentSettings(ctx.db);
+  const amount = Math.round(Number(body.amount ?? body.total ?? 0) * 100) / 100;
+  if (catalogMode && !(itemType && itemId > 0)) {
+    return paymentsBareFail(c, 'Выберите услугу или товар', 422);
+  }
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return paymentsBareFail(c, 'Укажите сумму больше нуля', 422);
+  }
+
   const currency = String(body.currency ?? settings.currency ?? 'RUB')
     .toUpperCase()
     .trim()
     .slice(0, 8);
   if (!/^[A-Z]{3}$/.test(currency)) {
-    return fail(c, 'Validation failed', 422, { currency: 'Некорректная валюта' });
+    return paymentsBareFail(c, 'Некорректная валюта', 422);
   }
 
   const number = orderNumber();
@@ -360,7 +423,7 @@ export async function register(ctx: ModuleContext) {
       try {
         body = (await c.req.json()) as Record<string, unknown>;
       } catch {
-        return fail(c, 'Validation failed', 422);
+        return paymentsBareFail(c, 'Validation failed', 422);
       }
       return checkout(ctx, c, body);
     });
@@ -460,9 +523,9 @@ export async function register(ctx: ModuleContext) {
     });
 
     ctx.app.get(`${p}/payments/status/:id`, async (c) => {
-      if (!(await ctx.db.tableExists('payments'))) return fail(c, 'Not found', 404);
+      if (!(await ctx.db.tableExists('payments'))) return paymentsBareFail(c, 'Not found', 404);
       const row = await ctx.db.one('SELECT * FROM payments WHERE id=?', [c.req.param('id')]);
-      if (!row) return fail(c, 'Not found', 404);
+      if (!row) return paymentsBareFail(c, 'Not found', 404);
       return ok(c, row);
     });
   }

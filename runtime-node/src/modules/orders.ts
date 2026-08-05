@@ -23,7 +23,7 @@ async function getOrCreateCart(db: ModuleContext['db'], cartPublicId: string | n
   }
   const pid = publicId();
   await db.run(
-    "INSERT INTO carts (public_id, currency, status, created_at, updated_at) VALUES (?, 'RUB', 'active', ?, ?)",
+    "INSERT INTO carts (public_id, user_id, status, expires_at, currency, created_at, updated_at) VALUES (?, NULL, 'active', datetime('now', '+30 days'), 'RUB', ?, ?)",
     [pid, nowSql(), nowSql()],
   );
   const id = await db.lastInsertId();
@@ -32,20 +32,41 @@ async function getOrCreateCart(db: ModuleContext['db'], cartPublicId: string | n
 
 async function cartPayload(db: ModuleContext['db'], cart: Record<string, unknown>) {
   const items = await db.all(
-    `SELECT ci.*, p.slug AS product_slug FROM cart_items ci
-     LEFT JOIN products p ON p.id=ci.product_id
+    `SELECT ci.*, p.price AS current_price, p.title AS current_title, p.sku AS current_sku
+     FROM cart_items ci LEFT JOIN products p ON p.id=ci.product_id
      WHERE ci.cart_id=? ORDER BY ci.id`,
     [cart.id],
   );
-  let total = 0;
   for (const item of items) {
-    total += Number(item.unit_price ?? 0) * Number(item.quantity ?? 1);
+    if (item.product_id != null && item.current_price != null) {
+      item.unit_price = item.current_price;
+      item.title = item.current_title;
+      item.sku = item.current_sku;
+      await db.run('UPDATE cart_items SET unit_price=?, title=?, sku=? WHERE id=?', [
+        item.unit_price,
+        item.title,
+        item.sku,
+        item.id,
+      ]);
+    }
   }
+  // Key order must match PHP OrdersService::calculateTotals
+  const totals = {
+    subtotal: 0,
+    discount_total: 0,
+    tax_total: 0,
+    shipping_total: 0,
+    grand_total: 0,
+  };
+  for (const item of items) {
+    totals.subtotal += Number(item.unit_price ?? 0) * Number(item.quantity ?? 1);
+  }
+  totals.grand_total = totals.subtotal;
+  // PHP OrdersService::getCart returns the cart row + items + totals
   return {
-    cart_id: String(cart.public_id),
-    currency: String(cart.currency ?? 'RUB'),
+    ...cart,
     items,
-    total,
+    totals,
   };
 }
 
@@ -55,11 +76,11 @@ export async function register(ctx: ModuleContext) {
   for (const p of ctx.apiPrefixes) {
     ctx.app.get(`${p}/orders/cart`, async (c) => {
       if (!(await ensureCartTables(ctx.db))) {
-        return ok(c, { cart_id: null, currency: 'RUB', items: [], total: 0 });
+        return fail(c, 'capability_unavailable', 409);
       }
       const cartId = String(c.req.query('cart_id') ?? '').trim() || null;
       const cart = await getOrCreateCart(ctx.db, cartId);
-      if (!cart) return ok(c, { cart_id: null, currency: 'RUB', items: [], total: 0 });
+      if (!cart) return fail(c, 'capability_unavailable', 409);
       return ok(c, await cartPayload(ctx.db, cart));
     });
 
@@ -67,53 +88,58 @@ export async function register(ctx: ModuleContext) {
       if (!(await ensureCartTables(ctx.db))) return fail(c, 'capability_unavailable', 409);
       const body = await readJsonBody(c);
       if (body instanceof Response) return body;
-      const productId = Number(body.product_id ?? 0);
-      const quantity = Math.max(1, Number(body.quantity ?? 1));
-      if (!productId) return fail(c, 'Validation failed', 422);
-      const product = await ctx.db.one('SELECT * FROM products WHERE id=?', [productId]);
-      if (!product) return fail(c, 'Not found', 404);
+      // PHP OrdersService::addCartItem creates the cart before product lookup (side effect on 422).
       const cart = await getOrCreateCart(ctx.db, String(body.cart_id ?? '').trim() || null);
       if (!cart) return fail(c, 'capability_unavailable', 409);
+      const productId = Number(body.product_id ?? 0);
+      const quantity = Math.max(1, Number(body.quantity ?? 1));
+      const product = await ctx.db.one(
+        'SELECT id, sku, title, price, currency FROM products WHERE id=? AND is_purchasable=1 AND is_visible=1 AND deleted_at IS NULL',
+        [productId],
+      );
+      if (!product) return fail(c, 'Product not found', 422);
       const existing = await ctx.db.one('SELECT * FROM cart_items WHERE cart_id=? AND product_id=?', [
         cart.id,
         productId,
       ]);
       if (existing) {
         await ctx.db.run('UPDATE cart_items SET quantity=? WHERE id=?', [
-          Number(existing.quantity ?? 0) + quantity,
+          Math.max(1, Number(existing.quantity ?? 0) + quantity),
           existing.id,
         ]);
       } else {
         await ctx.db.run(
-          'INSERT INTO cart_items (cart_id, product_id, sku, title, quantity, unit_price, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [
-            cart.id,
-            productId,
-            product.sku ?? null,
-            product.title ?? 'Product',
-            quantity,
-            product.price ?? 0,
-            nowSql(),
-          ],
+          'INSERT INTO cart_items (cart_id, product_id, sku, title, quantity, unit_price) VALUES (?, ?, ?, ?, ?, ?)',
+          [cart.id, productId, product.sku ?? null, product.title ?? 'Product', quantity, product.price ?? 0],
         );
       }
-      return ok(c, await cartPayload(ctx.db, cart), 201);
+      // PHP reloads cart by public_id after mutate
+      const refreshed = await getOrCreateCart(ctx.db, String(cart.public_id));
+      return ok(c, await cartPayload(ctx.db, refreshed ?? cart), 201);
     });
 
     ctx.app.put(`${p}/orders/cart/items/:id`, async (c) => {
       if (!(await ensureCartTables(ctx.db))) return fail(c, 'capability_unavailable', 409);
       const body = await readJsonBody(c);
       if (body instanceof Response) return body;
-      const cart = await getOrCreateCart(ctx.db, String(body.cart_id ?? '').trim() || null);
+      // Match PHP: updateCartItem passes the raw cart_id into getCart twice.
+      // When cart_id is empty, both calls create a new cart (second response is empty).
+      const cartPublicId = String(body.cart_id ?? '').trim() || null;
+      const cart = await getOrCreateCart(ctx.db, cartPublicId);
       if (!cart) return fail(c, 'capability_unavailable', 409);
-      const quantity = Math.max(0, Number(body.quantity ?? 1));
-      const itemId = c.req.param('id');
-      if (quantity === 0) {
+      const quantity = Number(body.quantity ?? 1);
+      const itemId = Number.parseInt(String(c.req.param('id') ?? ''), 10) || 0;
+      if (quantity <= 0) {
         await ctx.db.run('DELETE FROM cart_items WHERE id=? AND cart_id=?', [itemId, cart.id]);
       } else {
-        await ctx.db.run('UPDATE cart_items SET quantity=? WHERE id=? AND cart_id=?', [quantity, itemId, cart.id]);
+        await ctx.db.run('UPDATE cart_items SET quantity=? WHERE id=? AND cart_id=?', [
+          Math.min(999, quantity),
+          itemId,
+          cart.id,
+        ]);
       }
-      return ok(c, await cartPayload(ctx.db, cart));
+      const refreshed = await getOrCreateCart(ctx.db, cartPublicId);
+      return ok(c, await cartPayload(ctx.db, refreshed ?? cart));
     });
 
     ctx.app.post(`${p}/orders/checkout`, async (c) => {
@@ -204,7 +230,8 @@ export async function register(ctx: ModuleContext) {
       for (const row of rows) {
         lines.push(header.map((k) => escape(row[k])).join(','));
       }
-      const csv = '\uFEFF' + lines.join('\n');
+      // PHP fputcsv always ends with a newline after the last row.
+      const csv = '\uFEFF' + lines.join('\n') + '\n';
       return new Response(csv, {
         status: 200,
         headers: {

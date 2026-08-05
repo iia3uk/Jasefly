@@ -48,9 +48,10 @@ export async function register(ctx: ModuleContext) {
     ctx.app.get(`${p}/admin/lab/experiments`, admin, async (c) => {
       if (!(await ctx.db.tableExists('lab_experiments'))) return fail(c, 'capability_unavailable', 409);
       const del = await notDeletedClause(ctx.db, 'lab_experiments');
-      return ok(c, {
-        items: await ctx.db.all(`SELECT * FROM lab_experiments WHERE 1=1${del} ORDER BY id DESC LIMIT 200`),
-      });
+      return ok(
+        c,
+        await ctx.db.all(`SELECT * FROM lab_experiments WHERE 1=1${del} ORDER BY id DESC LIMIT 200`),
+      );
     });
 
     ctx.app.get(`${p}/admin/lab/experiments/:id`, admin, async (c) => {

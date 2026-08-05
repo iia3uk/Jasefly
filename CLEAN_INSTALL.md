@@ -45,11 +45,7 @@ Optional: enable **Jasefly Demo** to load `[DEMO]` sample rows (easy to delete i
 
 ## 5. First administrator
 
-The installer creates **one** admin account with the email you entered.
-
-Default password shown after install: `Admin123!` — **change it immediately**.
-
-There are no other seeded users.
+The installer creates **one** admin account with the email and password you provide (min 12 characters). There is no default password.
 
 ## 6. Sign in
 

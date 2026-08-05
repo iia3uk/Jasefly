@@ -123,6 +123,24 @@ try {
     $threw = true;
 }
 assert_true($threw, 'path jail rejects traversal outside root');
+
+// Prefix collision: sibling dir must not pass as contained under shorter root name.
+$prefixRoot = sys_get_temp_dir() . '/jasefly-pfx-' . bin2hex(random_bytes(3));
+@mkdir($prefixRoot . '/demo', 0775, true);
+@mkdir($prefixRoot . '/demo-kit', 0775, true);
+$paths2 = new ModulePackagePaths($prefixRoot, $prefixRoot);
+$prefixThrew = false;
+try {
+    // Non-existent file under sibling "demo-kit" must not be accepted for root ".../demo"
+    $paths2->assertContained($prefixRoot . '/demo', $prefixRoot . '/demo-kit/evil.php');
+} catch (Throwable) {
+    $prefixThrew = true;
+}
+assert_true($prefixThrew, 'path jail rejects sibling prefix collision (demo vs demo-kit)');
+@rmdir($prefixRoot . '/demo-kit');
+@rmdir($prefixRoot . '/demo');
+@rmdir($prefixRoot);
+
 @unlink($tmpRoot . '/outside/x.txt');
 @rmdir($tmpRoot . '/outside');
 @rmdir($tmpRoot . '/safe');
@@ -146,8 +164,58 @@ $whSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Modules/Webhooks/We
 assert_true(str_contains($whSrc, 'OutboundHttp::postJson') || str_contains($whSrc, 'SsrfGuard::isSafeHttpUrl'), 'WebhooksModule uses OutboundHttp/SsrfGuard');
 assert_true(str_contains($whSrc, 'X-Jasefly-Signature'), 'WebhooksModule signs with HMAC header');
 assert_true(str_contains((string) file_get_contents(dirname(__DIR__) . '/src/Support/OutboundHttp.php'), 'SsrfGuard::isSafeHttpUrl'), 'OutboundHttp applies SsrfGuard');
+assert_true(str_contains((string) file_get_contents(dirname(__DIR__) . '/src/Support/OutboundHttp.php'), 'CURLOPT_RESOLVE'), 'OutboundHttp pins DNS via CURLOPT_RESOLVE');
+assert_true(method_exists(SsrfGuard::class, 'resolvePublicIp'), 'SsrfGuard::resolvePublicIp exists');
+assert_true(SsrfGuard::resolvePublicIp('127.0.0.1') === null, 'resolvePublicIp rejects loopback');
+assert_true(SsrfGuard::resolvePublicIp('169.254.169.254') === null, 'resolvePublicIp rejects link-local');
 
 $authSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Controllers/AuthController.php');
 assert_true(str_contains($authSrc, "public function refresh"), 'AuthController has refresh()');
 assert_true(str_contains($authSrc, "'refresh_token' => \$refresh"), 'Auth refresh returns rotated refresh_token');
 assert_true(substr_count($authSrc, 'DELETE FROM refresh_tokens WHERE token_hash=?') >= 1, 'Auth deletes refresh token hashes');
+
+// —— Production hardening: no anonymous debug leak ——
+$prevEnv = getenv('APP_ENV');
+$prevAuth = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+$prevGet = $_GET;
+putenv('APP_ENV=production');
+$_ENV['APP_ENV'] = 'production';
+$_GET = ['debug' => '1'];
+$_SERVER['HTTP_AUTHORIZATION'] = 'Bearer totally-fake-token';
+$showFile = dirname(__DIR__) . '/storage/.show_errors';
+$hadShow = is_file($showFile);
+if ($hadShow) {
+    @unlink($showFile);
+}
+assert_true(
+    !\App\Services\ErrorReportService::shouldExposeDetails(),
+    'production ignores ?debug=1 and unverified Bearer'
+);
+putenv('APP_ENV=local');
+$_ENV['APP_ENV'] = 'local';
+assert_true(
+    \App\Services\ErrorReportService::shouldExposeDetails(),
+    'local APP_ENV may expose error details'
+);
+if ($prevEnv === false) {
+    putenv('APP_ENV');
+    unset($_ENV['APP_ENV']);
+} else {
+    putenv('APP_ENV=' . $prevEnv);
+    $_ENV['APP_ENV'] = $prevEnv;
+}
+$_GET = $prevGet;
+if ($prevAuth === null) {
+    unset($_SERVER['HTTP_AUTHORIZATION']);
+} else {
+    $_SERVER['HTTP_AUTHORIZATION'] = $prevAuth;
+}
+
+$hdrSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Middleware/SecurityHeadersMiddleware.php');
+assert_true(str_contains($hdrSrc, 'Strict-Transport-Security'), 'API SecurityHeaders sets HSTS on HTTPS');
+assert_true(str_contains($hdrSrc, 'Cross-Origin-Opener-Policy'), 'API SecurityHeaders sets COOP');
+assert_true(str_contains($hdrSrc, 'Cross-Origin-Resource-Policy'), 'API SecurityHeaders sets CORP');
+
+$installSrc = (string) file_get_contents(dirname(__DIR__) . '/install.php');
+assert_true(str_contains($installSrc, 'function resolveAdminPassword'), 'installer requires explicit admin password');
+assert_true(!preg_match("/password_hash\\(\\s*'Admin123!'/", $installSrc), 'installer does not hardcode Admin123!');

@@ -124,9 +124,11 @@ final class ModulePackagePaths
         }
         $pathReal = realpath($path);
         if ($pathReal === false) {
-            // For not-yet-existing paths, normalize parent
+            // For not-yet-existing paths, normalize parent (require boundary slash).
             $parent = realpath(dirname($path));
-            if ($parent === false || !str_starts_with($parent, $rootReal)) {
+            $rootN = str_replace('\\', '/', $rootReal);
+            $parentN = $parent === false ? '' : str_replace('\\', '/', $parent);
+            if ($parent === false || ($parentN !== $rootN && !str_starts_with($parentN, $rootN . '/'))) {
                 throw new \RuntimeException('Path escapes module root');
             }
             return $path;

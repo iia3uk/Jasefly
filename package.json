@@ -1,0 +1,18 @@
+{
+  "name": "jasefly",
+  "private": true,
+  "description": "Jasefly CMS monorepo — runtime × deployment target CLI",
+  "bin": {
+    "jasefly": "./scripts/jasefly/cli.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "jasefly": "node scripts/jasefly/cli.mjs",
+    "doctor": "node scripts/jasefly/cli.mjs doctor",
+    "test:dual": "node scripts/jasefly/cli.mjs test --runtime=dual",
+    "test:node": "node scripts/jasefly/cli.mjs test --runtime=node",
+    "test:php": "node scripts/jasefly/cli.mjs test --runtime=php"
+  }
+}

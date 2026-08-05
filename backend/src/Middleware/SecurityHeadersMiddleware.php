@@ -13,6 +13,9 @@ use App\Request;
  * rich text editor, and trusted CDN assets). 'unsafe-inline' for styles
  * is required by the editor's runtime styling; scripts are restricted to
  * 'self' and the configured CDN allowlist.
+ *
+ * COEP is intentionally omitted — it breaks third-party media/CDN on
+ * typical shared hosting. HSTS is set only when the request is HTTPS.
  */
 final class SecurityHeadersMiddleware
 {
@@ -45,7 +48,25 @@ final class SecurityHeadersMiddleware
         header('Referrer-Policy: strict-origin-when-cross-origin');
         header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
         header('X-XSS-Protection: 1; mode=block');
+        header('Cross-Origin-Opener-Policy: same-origin');
+        header('Cross-Origin-Resource-Policy: same-origin');
+
+        if (self::isHttps()) {
+            header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+        }
 
         return $next();
+    }
+
+    private static function isHttps(): bool
+    {
+        if (!empty($_SERVER['HTTPS']) && (string) $_SERVER['HTTPS'] !== 'off') {
+            return true;
+        }
+        $fwd = strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+        if ($fwd === 'https') {
+            return true;
+        }
+        return (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443;
     }
 }

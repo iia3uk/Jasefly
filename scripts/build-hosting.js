@@ -608,7 +608,7 @@ function deploymentRuMd(opts) {
     '',
     `\`${domain.replace(/\/$/, '')}/admin/login\``,
     '',
-    'После демо-установки пароль по умолчанию: **Admin123!** — смените сразу.',
+    'Задайте пароль администратора в установщике (минимум 12 символов). Пароль по умолчанию не задаётся.',
     '',
     '## 8. Установщик удаляется автоматически',
     '',
@@ -729,6 +729,8 @@ function shouldSkipBackend(absPath, entry) {
   if (name === 'README.md') return true;
   if (name === '.DS_Store' || name === 'Thumbs.db') return true;
   if (name.endsWith('.log') || name.endsWith('.bak')) return true;
+  // Never ship PHPUnit/smoke fixtures to production hosts (info leak + bloat).
+  if (name === 'tests' || rel === 'tests' || rel.startsWith('tests/')) return true;
 
   // Skip empty leftover folder and local dumps
   if (rel === 'api' || rel.startsWith('api/')) return true;
@@ -1088,7 +1090,16 @@ function validatePackage(mode, opts) {
     /(^|\/)\.gitignore$/,
     /(^|\/)router\.php$/,
     /frontend\/src\//,
+    /(^|\/)api\/tests(\/|$)/,
+    /(^|\/)tests\/fixtures(\/|$)/,
   ];
+
+  // Release identity + MIT notice must ship with the package.
+  for (const rel of ['LICENSE.md', 'VERSION']) {
+    if (!fs.existsSync(path.join(PUBLIC_HTML, rel))) {
+      errors.push(`Missing required release file: ${rel}`);
+    }
+  }
 
   for (const rel of files) {
     // Allow documented production templates
@@ -1296,6 +1307,33 @@ async function main() {
   // 7–8 prepare backend + frontend into public_html
   copyBackend(opts.mode);
   copyFrontendDist();
+
+  // Release identity (VERSION) + MIT license text required in distributed copies.
+  const versionSrc = path.join(ROOT, 'VERSION');
+  if (!fs.existsSync(versionSrc)) fail('Root VERSION file missing — required for RC/release packages.');
+  copyFile(versionSrc, path.join(PUBLIC_HTML, 'VERSION'));
+  const licenseSrc = path.join(ROOT, 'LICENSE.md');
+  if (!fs.existsSync(licenseSrc)) fail('Root LICENSE.md missing — required for distributed packages.');
+  copyFile(licenseSrc, path.join(PUBLIC_HTML, 'LICENSE.md'));
+  const noticeSrc = path.join(ROOT, 'NOTICE');
+  if (fs.existsSync(noticeSrc)) {
+    copyFile(noticeSrc, path.join(PUBLIC_HTML, 'NOTICE'));
+  }
+  writeFile(
+    path.join(PUBLIC_HTML, 'release-meta.json'),
+    JSON.stringify(
+      {
+        product: 'jasefly',
+        runtime: 'php',
+        target: 'shared',
+        mode: opts.mode,
+        version: fs.readFileSync(versionSrc, 'utf8').trim(),
+        built_at: new Date().toISOString(),
+      },
+      null,
+      2,
+    ),
+  );
 
   // Production templates + demo seeder + content importer
   const apiDest = path.join(PUBLIC_HTML, 'api');

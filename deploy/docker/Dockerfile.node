@@ -1,0 +1,20 @@
+# Node VPS runtime image.
+# Build context: repository root.
+# Prefer building the VPS artifact first (`jasefly build --runtime=node --target=vps`).
+FROM node:20-bookworm-slim
+
+WORKDIR /app
+
+COPY runtime-node/package.json runtime-node/package-lock.json ./runtime-node/
+RUN cd runtime-node && npm ci --omit=dev
+
+COPY runtime-node/dist ./runtime-node/dist
+COPY frontend/dist ./frontend-dist
+COPY contracts ./contracts
+
+ENV NODE_ENV=production
+ENV PORT=3080
+EXPOSE 3080
+
+WORKDIR /app/runtime-node
+CMD ["node", "dist/index.js"]
