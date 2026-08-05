@@ -121,10 +121,21 @@ function pidAlive(pid) {
   }
 }
 
+function procIsZombie(pid) {
+  if (process.platform === 'win32' || !pid) return false;
+  try {
+    const stat = fs.readFileSync(`/proc/${pid}/status`, 'utf8');
+    const m = stat.match(/^State:\s*(\S)/m);
+    return m ? m[1] === 'Z' : false;
+  } catch {
+    return false;
+  }
+}
+
 function killProc(proc, label = 'child') {
   if (!proc || !proc.pid) return;
   const pid = proc.pid;
-  if (proc.killed && !pidAlive(pid)) return;
+  if (proc.exitCode != null || proc.signalCode != null) return;
   try {
     proc.kill('SIGTERM');
   } catch {
@@ -138,15 +149,15 @@ function killProc(proc, label = 'child') {
     }
     return;
   }
-  // Linux/mac: escalate to SIGKILL if still alive (stuck on full pipe / hung syscall).
+  // Linux/mac: escalate to SIGKILL; reap so kill(pid,0) does not false-alarm on zombies.
   const deadline = Date.now() + 1500;
-  while (Date.now() < deadline && pidAlive(pid)) {
+  while (Date.now() < deadline && pidAlive(pid) && !procIsZombie(pid) && proc.exitCode == null) {
     spawnSync(process.execPath, ['-e', 'Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,50)'], {
       stdio: 'ignore',
       timeout: 200,
     });
   }
-  if (pidAlive(pid)) {
+  if (pidAlive(pid) && !procIsZombie(pid) && proc.exitCode == null) {
     try {
       process.kill(pid, 'SIGKILL');
     } catch {
@@ -158,7 +169,14 @@ function killProc(proc, label = 'child') {
       /* ignore */
     }
   }
-  if (pidAlive(pid)) {
+  const reapUntil = Date.now() + 1000;
+  while (Date.now() < reapUntil && proc.exitCode == null && proc.signalCode == null) {
+    spawnSync(process.execPath, ['-e', 'Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,40)'], {
+      stdio: 'ignore',
+      timeout: 200,
+    });
+  }
+  if (pidAlive(pid) && !procIsZombie(pid) && proc.exitCode == null) {
     console.error(`[cleanup] WARN ${label} pid=${pid} still alive after SIGKILL`);
   }
 }
@@ -396,15 +414,19 @@ async function main() {
     fs.mkdirSync(path.dirname(mergeFile), { recursive: true });
     if (fs.existsSync(mergeFile)) fs.unlinkSync(mergeFile);
 
+    const maxPhpStallRetries = Number(process.env.BEHAVIOR_PHP_STALL_RETRIES || 3);
     console.log(`== behavior runner (${totalCases} cases, chunk=${chunkSize}) ==`);
     console.log(
-      `infra: fetch_ms=${process.env.BEHAVIOR_FETCH_MS || 20000} health_every=${process.env.BEHAVIOR_HEALTH_EVERY || 25} stdout/stderr drained=yes`,
+      `infra: fetch_ms=${process.env.BEHAVIOR_FETCH_MS || 20000} health_every=${process.env.BEHAVIOR_HEALTH_EVERY || 25} php_stall_retries=${maxPhpStallRetries} stdout/stderr drained=yes`,
     );
     let runnerOk = true;
     let infraFailed = false;
+    let offset = 0;
+    let phpStallRetries = 0;
+    let needPhpRestart = false;
 
-    for (let offset = 0; offset < totalCases; offset += chunkSize) {
-      if (offset > 0) {
+    while (offset < totalCases) {
+      if (needPhpRestart || offset > 0) {
         await bootPhp();
         await waitPort(phpPort);
         const h = await healthBoth(nodePort, phpPort);
@@ -419,8 +441,11 @@ async function main() {
           infraFailed = true;
           break;
         }
+        needPhpRestart = false;
       }
-      console.log(`-- chunk offset=${offset} limit=${chunkSize} --`);
+
+      const limit = Math.min(chunkSize, totalCases - offset);
+      console.log(`-- chunk offset=${offset} limit=${limit} --`);
       const chunkStarted = Date.now();
       const runner = run(nodeBin, ['tests/parity/behavior-runner.mjs'], {
         env: {
@@ -430,7 +455,7 @@ async function main() {
           BEHAVIOR_MODULE: process.env.BEHAVIOR_MODULE || '',
           BEHAVIOR_MAX: process.env.BEHAVIOR_MAX || '',
           BEHAVIOR_OFFSET: String(offset),
-          BEHAVIOR_LIMIT: String(chunkSize),
+          BEHAVIOR_LIMIT: String(limit),
           BEHAVIOR_MERGE_INTO: mergeFile,
           BEHAVIOR_SCENARIOS: process.env.BEHAVIOR_SCENARIOS || '',
           BEHAVIOR_REQUIRE: 'all', // chunk exits on its own fails; final gate below
@@ -449,23 +474,69 @@ async function main() {
       process.stderr.write(runner.stderr || '');
       console.log(`chunk offset=${offset} elapsed_ms=${Date.now() - chunkStarted} exit=${runner.status}`);
 
-      if (runner.status === 2 || /INFRA[:\s]/i.test(`${runner.stdout || ''}\n${runner.stderr || ''}`)) {
+      // Exit 3 = PHP_STALL: php -S wedged mid-chunk. Restart PHP and resume from merged total.
+      if (runner.status === 3) {
+        phpStallRetries++;
+        logRing.dump('php-stall');
+        let resumeAt = offset;
+        if (fs.existsSync(mergeFile)) {
+          try {
+            const summary = JSON.parse(fs.readFileSync(mergeFile, 'utf8'));
+            resumeAt = Number(summary.total) || offset;
+          } catch {
+            /* keep offset */
+          }
+        }
+        console.error(
+          `INFRA PHP_STALL: restarting php -S and resuming at offset=${resumeAt} (stall_retry=${phpStallRetries}/${maxPhpStallRetries})`,
+        );
+        if (phpStallRetries > maxPhpStallRetries) {
+          console.error('INFRA: too many PHP stalls — giving up');
+          infraFailed = true;
+          break;
+        }
+        // Drop stall marker from summary so final gate does not treat recovered run as infra fail.
+        if (fs.existsSync(mergeFile)) {
+          try {
+            const summary = JSON.parse(fs.readFileSync(mergeFile, 'utf8'));
+            summary.infra = 0;
+            summary.infra_halt = null;
+            fs.writeFileSync(mergeFile, JSON.stringify(summary, null, 2));
+          } catch {
+            /* ignore */
+          }
+        }
+        offset = resumeAt;
+        needPhpRestart = true;
+        continue;
+      }
+
+      if (runner.status === 2) {
         infraFailed = true;
         logRing.dump('infra-fail');
         console.error(
-          `INFRA: behavior-runner aborted chunk offset=${offset} (exit=${runner.status}). Stopping remaining chunks.`,
+          `INFRA: behavior-runner hard-fail chunk offset=${offset} (exit=2). Stopping remaining chunks.`,
         );
         break;
       }
       if (runner.status !== 0) runnerOk = false;
 
+      offset += limit;
+      phpStallRetries = 0;
+
       // Between chunks: confirm no orphan listeners + both runtimes alive.
       const midHealth = await healthBoth(nodePort, phpPort);
       if (!midHealth.ok) {
-        infraFailed = true;
-        logRing.dump('between-chunk-health-fail');
-        console.error(`INFRA: health failed after chunk offset=${offset}: ${JSON.stringify(midHealth)}`);
-        break;
+        // PHP may have wedged after the last case — try one restart+continue before hard fail.
+        console.error(`INFRA: health failed after chunk; attempting PHP restart before hard-fail: ${JSON.stringify(midHealth)}`);
+        needPhpRestart = true;
+        phpStallRetries++;
+        if (phpStallRetries > maxPhpStallRetries) {
+          infraFailed = true;
+          logRing.dump('between-chunk-health-fail');
+          break;
+        }
+        continue;
       }
     }
 

@@ -405,28 +405,42 @@ async function main() {
     let php;
     let node;
     try {
-      // Sequential — PHP built-in server is single-threaded; one retry on infra transport/timeout.
+      // Sequential — PHP built-in server is single-threaded.
+      // On PHP timeout: do NOT health-probe the same process (worker still busy after
+      // client abort) — signal PHP_STALL (exit 3) so run-all can kill/restart and resume.
       const once = async (base, label) => {
         try {
           return await hit(base, c, adminToken, label);
         } catch (e) {
-          if (e?.infra) {
-            await new Promise((r) => setTimeout(r, 400));
-            const health = await probeHealth(base, label);
-            if (!health.ok) {
-              throw infraError(
-                'RUNTIME_DOWN',
-                `INFRA RUNTIME_DOWN runtime=${label} after ${e.code || 'error'}; health=${JSON.stringify(health)} pids node=${nodePid} php=${phpPid}`,
-                { cause: e.details || e.message, health, runtime: label },
-              );
-            }
-            // Server answered health — retry the case once.
-            console.error(
-              `[infra-retry] runtime=${label} case=${c.id} code=${e.code} elapsed_ms=${e.details?.elapsed_ms ?? '?'} health_ok=${health.ok}`,
+          if (!e?.infra) throw e;
+          if (label === 'php') {
+            throw infraError(
+              'PHP_STALL',
+              `INFRA PHP_STALL ${c.method || 'GET'} ${applyPath(c.path, c.path_params)} after ${e.code || 'error'} elapsed_ms=${e.details?.elapsed_ms ?? '?'} — php -S worker likely wedged; run-all should restart PHP and resume`,
+              {
+                runtime: 'php',
+                cause: e.code,
+                path: applyPath(c.path, c.path_params),
+                method: c.method || 'GET',
+                elapsed_ms: e.details?.elapsed_ms,
+                resume_hint: true,
+              },
             );
-            return hit(base, c, adminToken, label);
           }
-          throw e;
+          // Node can usually accept a second connection — probe + one retry.
+          await new Promise((r) => setTimeout(r, 400));
+          const health = await probeHealth(base, label);
+          if (!health.ok) {
+            throw infraError(
+              'RUNTIME_DOWN',
+              `INFRA RUNTIME_DOWN runtime=${label} after ${e.code || 'error'}; health=${JSON.stringify(health)} pids node=${nodePid} php=${phpPid}`,
+              { cause: e.details || e.message, health, runtime: label },
+            );
+          }
+          console.error(
+            `[infra-retry] runtime=${label} case=${c.id} code=${e.code} elapsed_ms=${e.details?.elapsed_ms ?? '?'} health_ok=${health.ok}`,
+          );
+          return hit(base, c, adminToken, label);
         }
       };
       php = await once(PHP_BASE, 'php');
@@ -535,13 +549,19 @@ async function main() {
     fs.copyFileSync(outFile, path.join(outDir, 'last.json'));
   }
   console.log(
-    `behavior-runner done: passed=${passed} failed=${failed} infra=${infra} total=${cases.length}`,
+    `behavior-runner done: passed=${passed} failed=${failed} infra=${infra} total=${completed} planned=${cases.length}`,
   );
   console.log(`summary → ${outFile}`);
 
   if (infraHalt) {
+    // Exit 3 = recoverable PHP stall (run-all restarts php -S and resumes offset).
+    // Exit 2 = hard infrastructure failure.
+    const stall =
+      infraHalt.code === 'PHP_STALL' ||
+      (infraHalt.details?.runtime === 'php' &&
+        ['FETCH_TIMEOUT', 'RUNTIME_TRANSPORT', 'RUNTIME_DOWN'].includes(String(infraHalt.code)));
     console.error(`INFRA: ${infraHalt.message}`);
-    process.exit(2);
+    process.exit(stall ? 3 : 2);
   }
 
   const authFailed = summary.results.filter(
@@ -556,8 +576,9 @@ async function main() {
 
 main().catch((e) => {
   if (e?.infra) {
+    const stall = e.code === 'PHP_STALL' || e.details?.runtime === 'php';
     console.error(`INFRA: ${e.message}`);
-    process.exit(2);
+    process.exit(stall ? 3 : 2);
   }
   console.error(e);
   process.exit(1);
