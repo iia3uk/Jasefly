@@ -351,6 +351,9 @@ async function main() {
       BEHAVIOR_JWT_SECRET: meta.jwtSecret,
       BEHAVIOR_MCP_TOKEN: meta.mcpToken,
       BEHAVIOR_PHP_URL: `http://127.0.0.1:${phpPort}`,
+      // Same as Node: skip live MT so CI network does not skew translate warmup parity.
+      BEHAVIOR_PARITY: '1',
+      APP_ENV: 'test',
     };
     const phpArgs = buildPhpArgs(phpBin, phpPort);
     console.log(`== boot PHP :${phpPort} ==`);

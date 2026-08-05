@@ -271,6 +271,7 @@ portfolio/
 | **`cms_release`** | Любая заливка кода (build→test→changelog→deploy→verify); при multi — `site` обязателен |
 | Dual-runtime PHP Shared ↔ Node VPS | Baseline `contracts/baseline/` · **behavior** `contracts/behavior/` + `scripts/behavior/{extract,generate,run-all,module-status}.mjs` · parity `tests/parity/{behavior-runner,generated}/` · прогресс AUTO `docs/dual-runtime-parity-progress.md` · gate `docs/dual-runtime-verification-report-final.md` · VPS `scripts/vps/package-and-smoke.mjs` · validate `scripts/contracts/validate-contracts.js` |
 | CI parity php -S wedge ~132 req / abort | `behavior-runner`: `Connection: close` (undici keep-alive); chunk≤100; PHP_STALL exit 3 → restart+resume; drain stdout |
+| CI parity deep JSON (overload/status, updates, prerender, translate warmup) | `scrub.mjs` env-volatile keys; Node `overload.ts` PHP_OS_FAMILY shape; PHP `BEHAVIOR_PARITY=1` skips live MT |
 | Runtime × target CLI (`JASEFLY_RUNTIME` / `JASEFLY_TARGET`) | `scripts/jasefly/{cli,config,matrix,doctor}.mjs` + `adapters/{php,node,dual}.mjs` · матрица `docs/runtime-target-matrix.md` · docker `deploy/docker/` · bin `jasefly` (root `package.json`) · MCP gate в `mcp-cms/src/local.js` |
 | Release package identity | root `VERSION` / `LICENSE.md` / `NOTICE` → PHP ZIP (`build-hosting.js`, no `api/tests`) · Node VPS tgz (`mcp-cms/src/deploy/vps.js` + `release-meta.json`) |
 | Core freeze 1.0 (что нельзя ломать) | `docs/core-freeze-1.0.md` |

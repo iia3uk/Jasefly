@@ -30,6 +30,29 @@ const SCRUB_KEYS = new Set([
   'database_size_bytes',
   'database_size_human',
   'generated_at',
+  // Host/runtime env (CI Linux vs local Windows; php.ini; live loadavg)
+  'storage_usage_bytes',
+  'storage_usage_human',
+  'cache_status',
+  'gd_enabled',
+  'web_root',
+  'api_root',
+  'php_upload_max',
+  'php_post_max',
+  'max_zip_mb',
+  'zip_available',
+  'hosting_layout',
+  'load',
+  'load_per_core',
+  'overloaded',
+  'quiet_until',
+  'tripped',
+  // Container CPU count (nproc vs os.cpus) shifts absolute thresholds.
+  'cpus',
+  'threshold_1m_absolute',
+  'threshold_5m_absolute',
+  // Prerender HTML is host/port/EOL dependent; keep path+status compared.
+  'html_preview',
 ]);
 
 /** Normalize envelope shape before deep compare (PHP sometimes omits success on {data}). */
@@ -74,8 +97,8 @@ function coerce(k, v) {
   return v;
 }
 
-export function scrub(value) {
-  if (Array.isArray(value)) return value.map(scrub);
+export function scrub(value, parent = null) {
+  if (Array.isArray(value)) return value.map((item) => scrub(item, null));
   if (value && typeof value === 'object') {
     const out = {};
     for (const k of Object.keys(value).sort()) {
@@ -84,12 +107,19 @@ export function scrub(value) {
         out[k] = '<scrubbed>';
         continue;
       }
-      // Dual-runtime listen ports appear in robots/sitemap absolute URLs.
-      if (k === '_raw' && typeof v === 'string') {
-        out[k] = v.replace(/http:\/\/127\.0\.0\.1:\d+/g, 'http://127.0.0.1:<port>');
+      // prerender-preview `bytes` tracks html_preview length (host-dependent).
+      if (k === 'bytes' && parent && Object.prototype.hasOwnProperty.call(parent, 'html_preview')) {
+        out[k] = '<scrubbed>';
         continue;
       }
-      out[k] = scrub(v);
+      // Dual-runtime listen ports appear in robots/sitemap absolute URLs.
+      if (typeof v === 'string' && (k === '_raw' || v.includes('127.0.0.1:'))) {
+        out[k] = v
+          .replace(/\r\n/g, '\n')
+          .replace(/http:\/\/127\.0\.0\.1:\d+/g, 'http://127.0.0.1:<port>');
+        continue;
+      }
+      out[k] = scrub(v, value);
     }
     return out;
   }

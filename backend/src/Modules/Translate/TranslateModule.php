@@ -612,7 +612,12 @@ final class TranslateModule extends AbstractModule
                 continue;
             }
             $targetDone = $target;
-            $result = $svc->translateBatch($miss, $source, $target, false);
+            // Mirror Node BEHAVIOR_PARITY=1: no live MT — both sides report failed=miss.
+            if (getenv('BEHAVIOR_PARITY') === '1') {
+                $result = ['fetched' => 0, 'failed' => count($miss), 'quota_hit' => false];
+            } else {
+                $result = $svc->translateBatch($miss, $source, $target, false);
+            }
             $translated = (int) ($result['fetched'] ?? 0);
             $failed = (int) ($result['failed'] ?? 0);
             $quotaHit = !empty($result['quota_hit']);
