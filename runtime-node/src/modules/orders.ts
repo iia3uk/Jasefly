@@ -30,7 +30,19 @@ async function getOrCreateCart(db: ModuleContext['db'], cartPublicId: string | n
   return db.one('SELECT * FROM carts WHERE id=?', [id]);
 }
 
-async function cartPayload(db: ModuleContext['db'], cart: Record<string, unknown>) {
+async function cartPayload(
+  db: ModuleContext['db'],
+  cart: Record<string, unknown>,
+): Promise<Record<string, unknown> & {
+  items: Awaited<ReturnType<ModuleContext['db']['all']>>;
+  totals: {
+    subtotal: number;
+    discount_total: number;
+    tax_total: number;
+    shipping_total: number;
+    grand_total: number;
+  };
+}> {
   const items = await db.all(
     `SELECT ci.*, p.price AS current_price, p.title AS current_title, p.sku AS current_sku
      FROM cart_items ci LEFT JOIN products p ON p.id=ci.product_id
@@ -155,12 +167,12 @@ export async function register(ctx: ModuleContext) {
       if (!cartData?.items?.length) return fail(c, 'Cart is empty', 422);
 
       const number = `ORD-${Date.now()}`;
-      const amount = Number(cartData.total ?? 0);
+      const amount = Number(cartData.totals.grand_total ?? 0);
       const cols = await ctx.db.columns('orders');
       const data: Record<string, unknown> = {
         number,
         amount,
-        currency: cartData.currency ?? 'RUB',
+        currency: String(cartData.currency ?? 'RUB'),
         status: 'new',
         created_at: nowSql(),
       };

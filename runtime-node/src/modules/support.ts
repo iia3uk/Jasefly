@@ -156,8 +156,8 @@ async function publicConfig(db: ModuleContext['db']) {
 async function canSupport(auth: AuthService, user: Row | 'mcp', cap: string): Promise<boolean> {
   if (user === 'mcp') return true;
   const payload = await auth.mePayload(user);
-  const caps = (payload.capabilities as string[]) || [];
-  return caps.includes('*') || caps.includes(cap);
+  const caps = payload.capabilities || [];
+  return caps.includes('*') || caps.includes(cap) || payload.is_super;
 }
 
 function agentGate(auth: AuthService) {

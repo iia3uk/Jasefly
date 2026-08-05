@@ -14,6 +14,22 @@ function userBrief(user: Row) {
   };
 }
 
+/** Unified /auth/me shape — MCP and session users both expose capabilities. */
+export type MePayload = {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
+  totp_enabled: boolean;
+  capabilities: string[];
+  is_super: boolean;
+  roles?: string[];
+  caps_version?: string;
+  last_login_at?: unknown;
+  created_at?: unknown;
+  auth?: string;
+};
+
 export class AuthService {
   constructor(
     private db: Database,
@@ -155,7 +171,7 @@ export class AuthService {
     }
   }
 
-  async mePayload(user: Row | 'mcp') {
+  async mePayload(user: Row | 'mcp'): Promise<MePayload> {
     if (user === 'mcp') {
       return {
         id: 0,
@@ -164,6 +180,9 @@ export class AuthService {
         role: 'admin',
         totp_enabled: false,
         auth: 'mcp_token',
+        capabilities: ['*'],
+        is_super: true,
+        roles: ['admin'],
       };
     }
     // Lazy import avoids circular AuthService ↔ AccessService at module load.

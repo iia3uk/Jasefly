@@ -189,7 +189,7 @@ export class AccessService {
 
   async batchCan(user: Row | 'mcp', capabilities: string[]): Promise<Record<string, boolean>> {
     const payload = await this.auth.mePayload(user);
-    const caps = payload.capabilities as string[];
+    const caps = payload.capabilities;
     const isSuper = Boolean(payload.is_super);
     const out: Record<string, boolean> = {};
     for (const cap of capabilities) {

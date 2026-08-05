@@ -18,7 +18,8 @@ export function loadCapabilitiesDoc(): CapabilitiesDoc {
  */
 export function availableCapabilities(cfg: AppConfig): string[] {
   const doc = loadCapabilitiesDoc();
-  const parity = process.env.BEHAVIOR_PARITY === '1' || cfg.env === 'test' || cfg.runtime === 'php-shared';
+  // Node process runtime is always node-vps; shared-hosting parity is via env flags.
+  const parity = process.env.BEHAVIOR_PARITY === '1' || cfg.env === 'test';
   if (parity) {
     // PHP: array_values(array_unique($baseline)) — preserve JSON order, no sort
     return [...new Set(doc.baseline)];

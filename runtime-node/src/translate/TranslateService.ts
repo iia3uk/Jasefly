@@ -17,6 +17,7 @@ export type TranslateSettings = {
   source_lang: string;
   languages?: string;
   widget_enabled?: boolean;
+  auto_warmup?: boolean;
 };
 
 type TranslateProvider = {
@@ -298,5 +299,6 @@ export function resolvedTranslateSettings(dbSettings: Record<string, unknown> | 
     source_lang: String(dbSettings?.source_lang ?? 'ru'),
     languages: String(dbSettings?.languages ?? 'en,de,fr,es'),
     widget_enabled: dbSettings?.widget_enabled !== false && dbSettings?.widget_enabled !== 0,
+    auto_warmup: dbSettings?.auto_warmup !== false && dbSettings?.auto_warmup !== 0,
   };
 }

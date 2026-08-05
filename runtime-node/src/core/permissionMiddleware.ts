@@ -39,7 +39,7 @@ export function requirePermission(auth: AuthService, capability?: string): Middl
       return;
     }
     const payload = await auth.mePayload(user);
-    const caps = (payload.capabilities as string[]) || [];
+    const caps = payload.capabilities || [];
     if (caps.includes('*') || caps.includes(needed)) {
       await next();
       return;
