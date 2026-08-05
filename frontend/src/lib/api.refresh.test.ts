@@ -156,6 +156,69 @@ describe('api silent refresh', () => {
     expect(expiredEvents).toHaveLength(1)
   })
 
+  it('auth/me 401: refresh then clear session without admin redirect on public path', async () => {
+    Object.defineProperty(window, 'location', {
+      value: { pathname: '/', search: '', replace: locationReplace },
+      writable: true,
+      configurable: true,
+    })
+    let refreshCalls = 0
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      const u = String(url)
+      if (u.includes('/auth/refresh')) {
+        refreshCalls++
+        return new Response(JSON.stringify({ error: 'invalid' }), { status: 401 })
+      }
+      if (u.includes('/auth/logout')) {
+        return new Response(null, { status: 204 })
+      }
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+    }))
+
+    const { api } = await import('./api')
+    const { AUTH_SESSION_EXPIRED_EVENT } = await import('./authStorage')
+    await expect(api.get('/auth/me', { silent: true })).rejects.toBeTruthy()
+    expect(refreshCalls).toBe(1)
+    expect(store.access_token).toBeUndefined()
+    expect(store.refresh_token).toBeUndefined()
+    const expiredEvents = dispatchEvent.mock.calls.filter(
+      (c) => c[0] instanceof Event && c[0].type === AUTH_SESSION_EXPIRED_EVENT,
+    )
+    expect(expiredEvents).toHaveLength(1)
+    expect(locationReplace).not.toHaveBeenCalled()
+  })
+
+  it('auth/me recovers via silent refresh', async () => {
+    Object.defineProperty(window, 'location', {
+      value: { pathname: '/', search: '', replace: locationReplace },
+      writable: true,
+      configurable: true,
+    })
+    let meCalls = 0
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      const u = String(url)
+      if (u.includes('/auth/refresh')) {
+        return new Response(JSON.stringify({
+          data: { access_token: 'new-access', refresh_token: 'refresh-2', expires_in: 3600 },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+      }
+      meCalls++
+      if (meCalls === 1) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+      }
+      return new Response(JSON.stringify({ data: { name: 'Admin', role: 'admin', capabilities: ['dashboard.view'] } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }))
+
+    const { api } = await import('./api')
+    const result = await api.get<{ data: { name: string } }>('/auth/me', { silent: true })
+    expect(result.data.name).toBe('Admin')
+    expect(store.access_token).toBe('new-access')
+    expect(locationReplace).not.toHaveBeenCalled()
+  })
+
   it('does not silent-refresh /auth/refresh itself', async () => {
     const fetchMock = vi.fn(async () =>
       new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }),

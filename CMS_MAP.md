@@ -126,6 +126,7 @@
 | Медиа / неиспользуемые / битые | `UtilityPages` `MediaLibraryPage` + справка; BE `MediaUsageService` (`/admin/media/unused`) + `MediaController` purge-missing |
 | Перегрузки / load average / 503 | FE `modules/overload` + `OverloadPage` + dashboard `OverloadWidget`; BE `Modules/Overload/` (`OverloadGuardMiddleware`, `OverloadService`: per-CPU + sustained + quiet after `SiteUpdater`); HTML early shed в `scripts/build-hosting.js` `rootIndexPhp` |
 | Auth / users / 2FA | `context/AuthContext.tsx`, `Modules/Users/`, `Controllers/AuthController.php` |
+| AdminBar после оффлайна / `/auth/me` 401 | `lib/api.ts` session recovery для `/auth/me` + `AuthContext.refreshCapabilities` clear (не stale role); `AdminBar` по `token` |
 | Миграции SQL | `backend/migrations/*.sql` (+ plugin migrations в `Modules/*/migrations/`) |
 | Module Package Manager (install/update ZIP) | `Modules/ModuleManager/ModuleManagerModule.php`, `Services/Modules/ModulePackageService.php`, `ModulePluginMirror.php`, `bin/modules.php` (`reconcile-mirror`), `Core/Modules/*`, `migrations/020_installed_modules.sql` |
 | ZIP module quarantine (broken ≠ kill API) | `ModuleQuarantine` + `ModuleQuarantinePolicy` + `ModuleQuarantineReason`; критерии: exception / bootstrap_timeout / memory_limit / route_conflict / missing_dependency / sdk_incompatible / migration_failed; `Router` duplicate → `RouteConflictException`; admin `quarantine.reason`; tests `ModuleQuarantineIsolationTest` + `ModuleQuarantinePolicyTest`; emergency `public/emergency-module-quarantine.php` |
