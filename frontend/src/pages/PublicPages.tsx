@@ -33,6 +33,7 @@ import {
 import { ProductEntityProvider } from '@/builder/context/ProductEntityContext'
 import { parseLayout } from '@/builder/public/parseLayout'
 import { isSeedLayout } from '@/builder/public/CmsPages'
+import { buildDefaultHomeLayout } from '@/builder/migrateHome'
 import { ProductDetailFallback } from '@/modules/products'
 import { ProjectCard, ProjectGrid } from '@/modules/projects/components/ProjectCard'
 import type { HomepageSection } from '@/types'
@@ -195,20 +196,17 @@ export function HomePage() {
     )
   }
 
+  // Core OOB: platform landing — never a blank “portfolio hidden” stub.
   if (!portfolioOn) {
+    const platformHome = buildDefaultHomeLayout()
     return (
       <>
-        <SeoHead path="/" />
-        <Section className="pt-16">
-          <Container>
-            <EmptyState className="py-24 text-center">
-              <p className="font-heading text-xl font-semibold">Контент портфолио скрыт</p>
-              <p className="mt-2 max-w-md text-sm text-[var(--muted)]">
-                Плагин Portfolio выключен. Включите его в админке или соберите главную в конструкторе.
-              </p>
-            </EmptyState>
-          </Container>
-        </Section>
+        <SeoHead
+          path="/"
+          title="Jasefly"
+          description="AI-first dual-runtime platform: Page Builder, modules, MCP."
+        />
+        <LayoutRenderer layout={platformHome} />
       </>
     )
   }

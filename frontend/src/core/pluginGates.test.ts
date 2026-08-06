@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  permissionVisibleForPlugins,
   pluginForPath,
   pluginsForAdminResource,
   siteHasPlugin,
@@ -33,14 +34,22 @@ describe('pluginsForAdminResource', () => {
 })
 
 describe('siteHasPlugin', () => {
-  it('treats missing list as all-enabled (legacy)', () => {
-    expect(siteHasPlugin(undefined, 'portfolio')).toBe(true)
-    expect(siteHasPlugin(null, 'blog')).toBe(true)
+  it('treats missing list as fail-closed (no spam to disabled plugin APIs)', () => {
+    expect(siteHasPlugin(undefined, 'portfolio')).toBe(false)
+    expect(siteHasPlugin(null, 'blog')).toBe(false)
   })
 
   it('aliases content ↔ site', () => {
     expect(siteHasPlugin(['content'], 'site')).toBe(true)
     expect(siteHasPlugin(['site'], 'content')).toBe(true)
     expect(siteHasPlugin(['blog'], 'portfolio')).toBe(false)
+  })
+})
+
+describe('permissionVisibleForPlugins', () => {
+  it('hides plugin-owned permissions when plugin is off', () => {
+    expect(permissionVisibleForPlugins('commerce.manage', ['content'])).toBe(false)
+    expect(permissionVisibleForPlugins('commerce.manage', ['products'])).toBe(true)
+    expect(permissionVisibleForPlugins('content.view', ['content'])).toBe(true)
   })
 })

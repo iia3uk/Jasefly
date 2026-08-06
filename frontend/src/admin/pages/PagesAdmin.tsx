@@ -8,16 +8,15 @@ import type { ID, Page } from '@/types'
 import { AdminPageHero } from '@/admin/components/AdminPageHero'
 import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { emptyLayout } from '@/builder/types'
-import { SLUG_PLUGIN_GATES } from '@/core/pluginGates'
+import { SLUG_PLUGIN_GATES, siteHasPlugin } from '@/core/pluginGates'
 import { t } from '@/admin/i18n'
 import { useAuth } from '@/context/AuthContext'
+import { useSite } from '@/hooks/useApi'
 import { adminUrl } from '@/admin/adminBasePath'
 
-/** Always treat these as system templates (even if plugin-gated out of the API list). */
-const ALWAYS_SYSTEM_SLUGS = new Set([
-  ...Object.keys(SLUG_PLUGIN_GATES),
-  'privacy', 'terms', 'not-found', 'admin-login', 'register', 'lazy-loader', 'maintenance',
-  'payment', 'payment-success', 'payment-fail', 'offer', 'products', 'product-card', 'product-detail',
+/** Core system slugs (not owned by an optional plugin). */
+const CORE_SYSTEM_SLUGS = new Set([
+  'privacy', 'terms', 'not-found', 'admin-login', 'lazy-loader', 'maintenance',
 ])
 
 type TemplateRow = {
@@ -37,6 +36,8 @@ type TemplateRow = {
 
 export function PagesListPage() {
   const { isDemo } = useAuth()
+  const { data: site } = useSite()
+  const enabledPlugins = site?.enabled_plugins
   const { data = [], isLoading } = useAdminList<Page>('pages')
   const { remove, save } = useCrud('pages')
   const nav = useNavigate()
@@ -48,25 +49,34 @@ export function PagesListPage() {
   const [msg, setMsg] = useState('')
 
   const templatesQuery = useQuery({
-    queryKey: ['admin', 'page-templates'],
+    queryKey: ['admin', 'page-templates', enabledPlugins],
     queryFn: async () => {
       const res = await api.get<{ data: TemplateRow[] }>('/admin/page-templates', { silent: true })
       return (res as { data?: TemplateRow[] })?.data ?? []
     },
   })
 
+  /** Hide plugin-owned system pages when their plugin is off (even if row exists in DB). */
+  const pageVisible = (slug: string) => {
+    if (slug.startsWith('product-detail')) return siteHasPlugin(enabledPlugins, 'products')
+    const gate = SLUG_PLUGIN_GATES[slug]
+    if (!gate) return true
+    return siteHasPlugin(enabledPlugins, gate)
+  }
+
   const filtered = useMemo(() => {
     const q = filter.trim().toLowerCase()
     const systemSlugs = new Set([
-      ...ALWAYS_SYSTEM_SLUGS,
+      ...CORE_SYSTEM_SLUGS,
+      ...Object.keys(SLUG_PLUGIN_GATES),
       ...(templatesQuery.data ?? []).map((t) => t.slug),
     ])
-    const custom = data.filter((p) => !systemSlugs.has(p.slug) && !p.is_home)
+    const custom = data.filter((p) => !systemSlugs.has(p.slug) && !p.is_home && pageVisible(p.slug))
     const home = data.filter((p) => p.is_home)
     const list = [...home, ...custom]
     if (!q) return list
     return list.filter((p) => `${p.title} ${p.slug}`.toLowerCase().includes(q))
-  }, [data, filter, templatesQuery.data])
+  }, [data, filter, templatesQuery.data, enabledPlugins])
 
   const createPage = async () => {
     try {
@@ -207,7 +217,7 @@ export function PagesListPage() {
           <b className="font-medium text-zinc-300">{t.pagesSeed}</b> — заготовка в билдере с виджетами (превью).
           Пока seed, на сайте остаётся классическая страница с живыми данными.
           После первого «Сохранить» в билдере шаблон становится основной страницей на сайте.
-          Шаблоны портфолио скрываются, если плагин Portfolio выключен.
+          Шаблоны плагинов видны только когда плагин включён — каждый плагин управляет своими страницами.
         </p>
       </AdminPageHero>
 

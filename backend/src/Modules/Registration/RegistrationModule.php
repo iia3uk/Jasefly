@@ -128,6 +128,9 @@ final class RegistrationModule extends AbstractModule
 
     public function demoPages(): array
     {
+        if (class_exists(\App\Modules\System\SystemTemplates::class)) {
+            return \App\Modules\System\SystemTemplates::demoPagesForPlugin('registration');
+        }
         return [
             [
                 'slug' => 'register',

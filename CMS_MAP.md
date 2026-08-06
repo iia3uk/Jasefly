@@ -53,19 +53,22 @@
 | История чата после reload | `GET /support/active` + cookie/localStorage `visitor_key` |
 | Звук чата (виджет / inbox) | `lib/supportNotifySound.ts` + `SupportWidget` / `SupportInboxPage` |
 | Стили/цвет/шрифт/градиент текста | `builder/edit/StyleFields.tsx`, `ColorControl.tsx`, `colorUtils.ts`, `lib/googleFonts.ts` |
-| Seed-лейауты страниц (home/about/…) | `frontend/src/builder/migrateHome.ts` (`buildDefaultContactLayout` — карта+контакты 2 кол.) |
+| Seed-лейауты страниц (home/about/…) | `frontend/src/builder/migrateHome.ts` (`buildDefaultHomeLayout` = platform OOB; `buildDefaultContactLayout` — карта+контакты 2 кол.); fallback без Portfolio → `PublicPages.HomePage` + `LayoutRenderer` |
+| Root dumps / фото не в git | `.gitignore`: `/dumps/` `/_scratch/` `/*.jpg` `/*.png` (кроме `logo.png`/`og.png`/svg) |
 | Билдер: 2 колонки съезжают в столбец | `LayoutRenderer` секция = CSS grid `Nfr` (не flex %+gap) |
 | Публичный рендер страницы из layout | `builder/public/CmsPages.tsx`, `builder/public/parseLayout.ts`, `builder/render/LayoutRenderer.tsx` |
 | «Сайт не из pages / не из БД» | `isSeedLayout` (`CmsPages.tsx`): seed/пусто → classic `HomePage` из `hero_settings`+секций; `useOnSite:true` → `pages.layout_json`. Локальный apply-пак `content/jasefly-official/` (gitignored) — только apply в БД, не runtime |
 | Админ «Главная» / Оформление | Редирект в билдер `pages` is_home (`SitePages.HomepagePage`). Не путать с пустой `homepage_sections` — контент в `pages.layout_json` |
 | Черновик на живом URL (только админ) | `backend/.../PublicController.php` → `page()` + `CmsPages.tsx` баннер |
 | SEO страницы (title/desc/OG/расписание) | `builder/editor/PageBuilderPage.tsx` → `PageSettings`; `SeoHead` в `SiteLayout.tsx` |
+| SEO из коробки (Jasefly) | PHP `migrations/clean_base_seed.php`; Node `runtime-node/src/install/seedPlatformDefaults.ts` (из `ensureAdmin`); singleton `seo` / главная `seo_title` |
 | SEO целевые рынки (CIS/EU/USA/ASIA, areaServed) | `/admin/seo` → `seo_settings.target_regions` + `PrerenderService` JSON-LD |
 | SEO боты / пустой `#root` / Яндекс | корневой `index.php` + `spa.html` + `PrerenderService` / `.htaccess` (`?prerender=1`) |
 | Beget analyzer / H1 в shell | `PrerenderService::enrichSpaHtml` (seo-fallback) + расширенные BOT_MARKERS / UA в `.htaccess` |
 | Last-Modified / HTML cache | `scripts/build-hosting.js` → `rootIndexPhp()` + Cache-Control 60s; missing `/assets/*` → 404 (не SPA HTML) |
 | После деплоя белый экран / MIME assets | Inline recovery в `frontend/index.html` + `main.tsx` `vite:preloadError`: один hard-reload с `?_=` |
 | Breadcrumbs / контент под прозрачным header (не home) | `SiteLayout` + `.cms-nav-overlay-offset` (не padding на `#cms-snap-scroller` — у него `display:contents`); home: spacer скрыт при `.cms-hero-bleed` |
+| Пустая шапка/футер OOB | `SiteLayout.tsx`: Header → null если `navigation=[]`; Footer → null если нет copyright/tagline/колонок/footer_nav/контактов/соцсетей |
 | Breadcrumbs | `SiteBreadcrumbs.tsx` + JSON-LD / prerender `BreadcrumbList` |
 | Privacy / Terms | `/privacy`, `/terms` + footer columns |
 | Canonical host / HTTPS / www 301 | `scripts/build-hosting.js` → `rootHtaccess()` + `frontend/public/.htaccess` |
@@ -89,6 +92,7 @@
 | FE runtime пакетных модулей | `packageModuleLoader.ts` + `GET /modules/runtime-assets` + `/modules/{slug}/` assets |
 | Отложенная публикация страниц | `PageScheduleService` (lazy publish) + `scheduled_at` в билдере |
 | Плагины вкл/выкл, гейты UI | `frontend/src/core/pluginGates.ts`, `components/RequirePlugin.tsx`, `admin/pages/PluginsPage.tsx` (about/settings: не `h-full`+`overflow-hidden` — клиппает панели); EN: `admin/i18n` + BE `PluginCatalogMeta`/`PluginCatalogMetaEn` + `Accept-Language` |
+| Шаблоны/роли до активации плагина | `SystemTemplates::demoPagesForPlugin` (владелец) + `demoPagesForEnabled` / Node `buildPageTemplates` (fail-closed); FE `SLUG_PLUGIN_GATES` / `PERMISSION_PLUGIN_GATES`; `isPluginEnabled` fail-closed до гидрации |
 | Плагины: «О плагине»/настройки не видны | `PluginsPage` PluginCard: не ставить `h-full`+`overflow-hidden` — grid обрезает панели |
 | Админ RU/EN (плагины/модули) | `admin/i18n/{ru,en}.ts` + `translateNavGroup`; каталог плагинов EN в `PluginCatalogMetaEn.php`; `api.ts` шлёт `Accept-Language` |
 | Тесты / CI / cms_local_test | `backend/tests/run.php` (+ Permission/API/CleanInstall/…/PackageEnableSync/ProjectsSoftApi/MigrationSqliteCompat/ContractGovernance/…), `backend/bin/certify-lifecycle.php`, `mcp-cms/src/local.js`, `.github/workflows/platform-sdk.yml`, `frontend` vitest (`npm test`) |
@@ -141,6 +145,7 @@
 | CSP блокирует iframe Яндекс Карт | `frame-src` в `frontend/public/.htaccess` + `scripts/build-hosting.js` `rootHtaccess()` (yandex.ru / *.yandex.ru) |
 | Контакты: lat/lng + embed | singleton `contact-info` (`map_lat`/`map_lng`/`map_embed`) в `SitePages.tsx`; интерактивная карта — виджет `maps.map` |
 | Журнал MCP / activity время не МСК | `admin/lib/formatDateTime.ts` (naive DATETIME = Moscow); Dashboard/Enterprise; BE `APP_TIMEZONE` + MySQL `SET time_zone` |
+| MCP / агент UI (multi-site, где токен) | Админка `/admin/system?tab=mcp` → `EnterprisePages.tsx`; статус `SystemHealthService::mcpStatus` / Node `systemParity.ts`; SoT хостов `mcp-cms/.env` (`CMS_SITES`+`CMS_SITE_*`); гайд `docs/mcp-multi-site.md`; локальный Docker → `site=local` + `deploy/docker/.env`→`MCP_API_TOKEN` |
 | Контент на проде (текст/страницы) | MCP `cms_site_map` → `cms_get` / `cms_bulk` / `cms_put_singleton` |
 | Публичная API-документация (люди + агенты) | страница CMS `/api-docs` + `GET /api/v1/docs` ([backend/docs/openapi.php](backend/docs/openapi.php)); локальный apply `content/jasefly-official/apply-api-docs.mjs` (gitignored) |
 | Публичная страница модулей (не `/modules` — конфликт с asset dir) | CMS slug `/cms-modules`; Apache `RewriteRule ^modules/?$ /cms-modules` в `frontend/public/.htaccess` + `scripts/build-hosting.js` |
@@ -274,7 +279,9 @@ portfolio/
 | Dual-runtime PHP Shared ↔ Node VPS | Baseline `contracts/baseline/` · **behavior** `contracts/behavior/` + `scripts/behavior/{extract,generate,run-all,module-status}.mjs` · parity `tests/parity/{behavior-runner,generated}/` · прогресс AUTO `docs/dual-runtime-parity-progress.md` · gate `docs/dual-runtime-verification-report-final.md` · VPS `scripts/vps/package-and-smoke.mjs` · validate `scripts/contracts/validate-contracts.js` |
 | CI parity php -S wedge ~132 req / abort | `behavior-runner`: `Connection: close` (undici keep-alive); chunk≤100; PHP_STALL exit 3 → restart+resume; drain stdout |
 | CI parity deep JSON (overload/status, updates, prerender, translate warmup) | `scrub.mjs` env-volatile keys; Node `overload.ts` PHP_OS_FAMILY shape; PHP `BEHAVIOR_PARITY=1` skips live MT |
-| Runtime × target CLI (`JASEFLY_RUNTIME` / `JASEFLY_TARGET`) | `scripts/jasefly/{cli,config,matrix,doctor}.mjs` + `adapters/{php,node,dual}.mjs` · матрица `docs/runtime-target-matrix.md` · docker `deploy/docker/` · bin `jasefly` (root `package.json`) · MCP gate в `mcp-cms/src/local.js` |
+| Runtime × target CLI (`JASEFLY_RUNTIME` / `JASEFLY_TARGET`) | `scripts/jasefly/{cli,config,matrix,doctor}.mjs` + `adapters/{php,node,dual}.mjs` · матрица `docs/runtime-target-matrix.md` · dual docker `deploy/docker/{compose.dual.yml,Dockerfile.php,Dockerfile.node}` · bin `jasefly` (root `package.json`) · MCP gate в `mcp-cms/src/local.js` |
+| Первый админ Node (нет install.php) | `runtime-node/src/install/ensureAdmin.ts` + boot в `index.ts` · env `ADMIN_EMAIL`/`ADMIN_PASSWORD` · CLI `npm run ensure-admin` · PHP-аналог: `backend/install.php` |
+| Плагины default-off (нет 409 spam) | `PluginStateService` null→off · seed `028_plugin_default_off_seed.sql` · Node `plugins/pluginState.ts` + `publicSite` читает DB · FE `siteHasPlugin` fail-closed · Support soft empty |
 | Release package identity | root `VERSION` / `LICENSE.md` / `NOTICE` → PHP ZIP (`build-hosting.js`, no `api/tests`) · Node VPS tgz (`mcp-cms/src/deploy/vps.js` + `release-meta.json`) |
 | Core freeze 1.0 (что нельзя ломать) | `docs/core-freeze-1.0.md` |
 | Не те модули / старая админка после «успешного» деплоя | Проверь `release/jasefly-cms-update-*.zip` (не legacy `portfolio-hosting-update-*`); `mcp-cms/src/local.js` → `findLatestUpdateZip`; явный `cms_deploy_update(zip_path=…)` |

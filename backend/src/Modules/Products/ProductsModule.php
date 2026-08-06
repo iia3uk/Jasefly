@@ -304,14 +304,9 @@ final class ProductsModule extends AbstractModule
 
     public function demoPages(): array
     {
-        $out = ProductTemplates::demoPages();
         if (class_exists(\App\Modules\System\SystemTemplates::class)) {
-            foreach (\App\Modules\System\SystemTemplates::demoPages() as $page) {
-                if (in_array((string) ($page['slug'] ?? ''), ['products', 'product-card'], true)) {
-                    $out[] = $page;
-                }
-            }
+            return \App\Modules\System\SystemTemplates::demoPagesForPlugin('products');
         }
-        return $out;
+        return ProductTemplates::demoPages();
     }
 }

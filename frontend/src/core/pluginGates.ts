@@ -49,9 +49,61 @@ export const PATH_PLUGIN_GATES: Array<{ prefix: string; plugin: string }> = [
 
 /** CMS page slugs seeded / owned by a plugin (не билдер-маркетинг). */
 export const SLUG_PLUGIN_GATES: Record<string, string> = {
+  about: 'portfolio',
+  contact: 'portfolio',
   projects: 'portfolio',
-  blog: 'blog',
   services: 'portfolio',
+  blog: 'blog',
+  register: 'registration',
+  payment: 'payments',
+  'payment-success': 'payments',
+  'payment-fail': 'payments',
+  offer: 'payments',
+  products: 'products',
+  'product-card': 'products',
+  'product-detail': 'products',
+}
+
+/**
+ * Admin permission slug → owning plugin (hide in Roles UI when plugin off).
+ * Core permissions (content.*, users.*, media.*, system.*, roles.*, plugins.*) have no gate.
+ */
+export const PERMISSION_PLUGIN_GATES: Record<string, string | string[]> = {
+  'commerce.manage': ['products', 'payments'],
+  'orders.view': 'orders',
+  'orders.manage': 'orders',
+  'integrations.manage': 'webhooks',
+  'forms.view': 'forms',
+  'forms.manage': 'forms',
+  'support.view': 'support',
+  'support.manage': 'support',
+  'comments.view': 'comments',
+  'comments.manage': 'comments',
+  'newsletter.manage': 'newsletter',
+  'notifications.view': 'notifications',
+  'notifications.manage': 'notifications',
+  'automations.view': 'automation',
+  'automations.manage': 'automation',
+  'scheduler.view': 'scheduler',
+  'scheduler.manage': 'scheduler',
+  'translate.manage': 'translate',
+  'lab.manage': 'lab',
+  'analytics.view': 'analytics',
+  'analytics.manage': 'analytics',
+  'access.manage': 'access',
+  'ddos.manage': 'ddos',
+  'overload.manage': 'overload',
+}
+
+/** Whether a Roles-matrix permission should be shown for current enabled plugins. */
+export function permissionVisibleForPlugins(
+  slug: string,
+  enabled: string[] | null | undefined,
+): boolean {
+  const gate = PERMISSION_PLUGIN_GATES[slug]
+  if (!gate) return true
+  const plugins = Array.isArray(gate) ? gate : [gate]
+  return plugins.some((p) => siteHasPlugin(enabled, p))
 }
 
 export function pluginForPath(href: string | null | undefined): string | null {
@@ -74,9 +126,9 @@ export function pluginForPath(href: string | null | undefined): string | null {
   return null
 }
 
-/** Check `/site.enabled_plugins` (handles content ↔ site alias). */
+/** Check `/site.enabled_plugins` (handles content ↔ site alias). Fail-closed until list hydrates. */
 export function siteHasPlugin(enabled: string[] | null | undefined, plugin: string): boolean {
-  if (!Array.isArray(enabled)) return true
+  if (!Array.isArray(enabled)) return false
   if (plugin === 'site' || plugin === 'content') {
     return enabled.includes('content') || enabled.includes('site')
   }

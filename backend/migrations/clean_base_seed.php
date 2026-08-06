@@ -17,33 +17,39 @@ function seedCleanInstall(PDO $pdo): void
     $pdo->exec("UPDATE site_settings SET
         site_name='Jasefly',
         maintenance_mode=0,
-        timezone='UTC',
-        locale='en',
+        timezone='Europe/Moscow',
+        locale='ru',
         posts_per_page=9,
         projects_per_page=12
       WHERE id=1");
 
     $pdo->exec("UPDATE seo_settings SET
         site_title='Jasefly',
-        site_description='Modular PHP + React framework with built-in CMS admin',
-        site_keywords='jasefly, framework, modular, php, react',
-        og_title='Jasefly',
-        og_description='Modular PHP + React framework with built-in CMS admin',
-        twitter_card='summary_large_image'
+        site_description='AI-first dual-runtime платформа для сайтов и агентов: Page Builder, модули и MCP. PHP на shared-хостинге или Node на VPS.',
+        site_keywords='jasefly, cms, page builder, mcp, dual runtime, php, react, node, модули, агенты',
+        og_title='Jasefly — платформа для сайтов и агентов',
+        og_description='Page Builder, модули и MCP в одном ядре. Shared-хостинг или Node VPS — без лишней инфраструктуры.',
+        twitter_card='summary_large_image',
+        twitter_title='Jasefly — платформа для сайтов и агентов',
+        twitter_description='AI-first dual-runtime платформа: билдер страниц, модули и MCP для агентов.',
+        robots_txt='User-agent: *\nAllow: /\n',
+        target_regions='[\"CIS\",\"EU\",\"USA\",\"ASIA\"]',
+        structured_data_json='{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"WebSite\",\"name\":\"Jasefly\",\"description\":\"AI-first dual-runtime платформа для сайтов и агентов: Page Builder, модули и MCP.\",\"publisher\":{\"@type\":\"Organization\",\"name\":\"Jasefly\"}},{\"@type\":\"SoftwareApplication\",\"name\":\"Jasefly\",\"applicationCategory\":\"DeveloperApplication\",\"operatingSystem\":\"Web\",\"description\":\"Dual-runtime CMS/platform (PHP shared + Node VPS) with Page Builder and MCP for agents.\"}]}'
       WHERE id=1");
 
+    // Empty footer OOB — SiteLayout hides it until real content is added.
     $pdo->exec("UPDATE footer_settings SET
-        copyright_text='© {year} Jasefly',
-        tagline='Modular PHP + React framework',
+        copyright_text='',
+        tagline='',
         show_social=0
       WHERE id=1");
 
     $pdo->exec("UPDATE hero_settings SET
         headline='Jasefly',
-        subheadline='Modular PHP + React framework',
-        badge_text='',
-        primary_cta_label='Get started',
-        primary_cta_href='/about',
+        subheadline='Платформа для сайтов и агентов',
+        badge_text='Jasefly',
+        primary_cta_label='Открыть админку',
+        primary_cta_href='/admin',
         secondary_cta_label='',
         secondary_cta_href='',
         show_scroll_indicator=0,
@@ -52,9 +58,9 @@ function seedCleanInstall(PDO $pdo): void
 
     $pdo->exec("UPDATE profile SET
         name='Jasefly',
-        job_title='Framework',
-        short_bio='Modular PHP + React framework',
-        bio='<p>Welcome to Jasefly. Edit this site from the admin panel.</p>',
+        job_title='Platform',
+        short_bio='AI-first dual-runtime платформа для сайтов и агентов',
+        bio='<p>Jasefly — Page Builder, модули и MCP. Настройте сайт в админке.</p>',
         location='',
         availability_status='',
         years_experience=0
@@ -87,45 +93,34 @@ function seedCleanInstall(PDO $pdo): void
         glass_opacity=0.08
       WHERE id=1");
 
-    // Ensure home page exists (005 may already insert).
+    // Ensure home page exists (005 may already insert). No default nav — empty header/footer OOB.
     try {
-        $pdo->exec("INSERT INTO pages (title, slug, status, template, is_home)
-            SELECT 'Home', '__home', 'published', 'builder', 1
+        $pdo->exec("INSERT INTO pages (title, slug, status, template, is_home, seo_title, seo_description)
+            SELECT 'Главная', '__home', 'published', 'builder', 1,
+                   'Jasefly — платформа для сайтов и агентов',
+                   'AI-first dual-runtime платформа для сайтов и агентов: Page Builder, модули и MCP. PHP на shared-хостинге или Node на VPS.'
             WHERE NOT EXISTS (SELECT 1 FROM pages WHERE is_home=1 OR slug='__home')");
     } catch (Throwable) {
     }
     try {
-        $pdo->exec("UPDATE pages SET title='Home', status='published', template='builder', is_home=1 WHERE slug='__home'");
+        $pdo->exec("UPDATE pages SET
+            title='Главная',
+            status='published',
+            template='builder',
+            is_home=1,
+            seo_title=COALESCE(NULLIF(TRIM(seo_title), ''), 'Jasefly — платформа для сайтов и агентов'),
+            seo_description=COALESCE(NULLIF(TRIM(seo_description), ''), 'AI-first dual-runtime платформа для сайтов и агентов: Page Builder, модули и MCP. PHP на shared-хостинге или Node на VPS.')
+          WHERE slug='__home'");
     } catch (Throwable) {
     }
 
-    // About
+    // Privacy Policy template (no nav link until site owner adds it)
     try {
         $pdo->exec("INSERT INTO pages (title, slug, status, template, is_home, seo_title, seo_description)
-            SELECT 'About', 'about', 'published', 'builder', 0,
-                   'About — Jasefly', 'About this site'
-            WHERE NOT EXISTS (SELECT 1 FROM pages WHERE slug='about')");
-    } catch (Throwable) {
-    }
-
-    // Privacy Policy template
-    try {
-        $pdo->exec("INSERT INTO pages (title, slug, status, template, is_home, seo_title, seo_description)
-            SELECT 'Privacy Policy', 'privacy', 'published', 'builder', 0,
-                   'Privacy Policy', 'Privacy Policy template — replace with your legal text'
+            SELECT 'Политика конфиденциальности', 'privacy', 'published', 'builder', 0,
+                   'Политика конфиденциальности — Jasefly',
+                   'Шаблон политики конфиденциальности. Замените на свой юридический текст.'
             WHERE NOT EXISTS (SELECT 1 FROM pages WHERE slug='privacy')");
-    } catch (Throwable) {
-    }
-
-    // Basic navigation (idempotent-ish: clear default empty then insert if none)
-    try {
-        $cnt = (int) $pdo->query('SELECT COUNT(*) FROM navigation_items')->fetchColumn();
-        if ($cnt === 0) {
-            $pdo->exec("INSERT INTO navigation_items (label, href, target, parent_id, location, sort_order, is_visible) VALUES
-                ('Home', '/', '_self', NULL, 'header', 1, 1),
-                ('About', '/about', '_self', NULL, 'header', 2, 1),
-                ('Privacy', '/privacy', '_self', NULL, 'footer', 1, 1)");
-        }
     } catch (Throwable) {
     }
 }

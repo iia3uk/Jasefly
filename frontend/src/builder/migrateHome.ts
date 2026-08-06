@@ -51,107 +51,40 @@ export function isSparseSeedLayout(layout: PageLayout | null | undefined): boole
   return types.every((t) => t === 'heading' || t === 'text')
 }
 
-/** Default home: product landing entry — not a digest of About/Skills/Experience. */
+/**
+ * Default home out-of-the-box: one platform hero only.
+ * No below-the-fold sections — site owner builds the rest in the builder.
+ */
 export function buildDefaultHomeLayout(): PageLayout {
   return {
     version: 1,
-    meta: { seed: true },
+    meta: { seed: true, seed_kind: 'platform' },
     elements: [
-      sectionWithWidget('hero', {
-        show_stats: true,
-        subheadline: 'Системы, которые работают в проде — от платформ до промышленной автоматизации.',
-      }),
-      sectionWithWidget('features-grid', {
-        title: 'Что я создаю',
-        subtitle: 'Пять направлений, которые сходятся в рабочих системах.',
-        columns: 3,
-        accented: true,
-        last_row_alignment: 'center',
-        items: [
-          {
-            icon: 'layers',
-            title: 'Software Products',
-            body: 'Собственные платформы и продукты: архитектура, backend, интерфейсы и эксплуатация.',
-            markers: 'PHP · React · Go',
-          },
-          {
-            icon: 'zap',
-            title: 'Industrial Automation',
-            body: 'Локальные системы управления: PLC, SCADA, OPC, архивирование и полевая автоматизация.',
-            markers: 'CODESYS · ST · CFC',
-          },
-          {
-            icon: 'sparkles',
-            title: 'Game Technology',
-            body: 'Игровые механики, серверные контуры и инструменты production-пайплайна.',
-            markers: 'Unity · Godot · .NET',
-          },
-          {
-            icon: 'cpu',
-            title: 'Internal Tools',
-            body: 'Редакторы, панели и утилиты, которые убирают ручную работу на объекте и в офисе.',
-            markers: 'Web · Desktop · Automation',
-          },
-          {
-            icon: 'bot',
-            title: 'AI-first Development',
-            body: 'AI и MCP как часть инженерного процесса: от анализа задачи до сопровождения продукта.',
-            markers: 'Agents · MCP · Tooling',
-          },
+      sectionWithWidget('hero-block', {
+        badge: 'Jasefly',
+        title_1: 'Платформа для сайтов',
+        title_2: 'и агентов.',
+        body: 'Page Builder, модули и MCP в одном ядре — на shared-хостинге или Node VPS.',
+        cta1_label: 'Открыть админку',
+        cta1_href: '/admin',
+        cta2_label: '',
+        cta2_href: '',
+        cta3_label: '',
+        cta3_href: '',
+        cta4_label: '',
+        cta4_href: '',
+        layout: 'stack',
+        align: 'left',
+        media_mode: 'background',
+        height_preset: 'viewport',
+        living: true,
+        media_overlay: '0.45',
+        chips: [
+          { label: 'Page Builder' },
+          { label: 'MCP / AI' },
+          { label: 'Dual runtime' },
+          { label: 'Modules' },
         ],
-      }),
-      sectionWithWidget('projects-grid', {
-        title: 'Избранные проекты',
-        subtitle: '',
-        featured_only: true,
-        layout: 'lead-with-stack',
-        compact: false,
-        limit: 3,
-      }),
-      sectionWithWidget('process-diagram', {
-        title: 'Как я работаю',
-        subtitle: 'Система проходит путь до рабочего продукта — и продолжает развиваться.',
-        center_title: 'Рабочая система',
-        center_description: 'Архитектура и автоматизация сходятся в устойчивое ядро.',
-        nodes: [
-          { id: 'idea', title: 'Идея', description: 'Задача и ограничения.', role: 'input' },
-          { id: 'prototype', title: 'Прототип', description: 'Быстрая проверка гипотезы.', role: 'input' },
-          { id: 'architecture', title: 'Архитектура', description: 'Устойчивая структура.', role: 'core' },
-          { id: 'automation', title: 'Автоматизация', description: 'Снятие рутины.', role: 'core' },
-          { id: 'ops', title: 'Эксплуатация', description: 'Рабочий контур.', role: 'output' },
-          { id: 'growth', title: 'Развитие', description: 'Итерации по факту использования.', role: 'feedback' },
-        ],
-        connections: [
-          { from: 'idea', to: 'prototype', type: 'direct' },
-          { from: 'prototype', to: 'architecture', type: 'direct' },
-          { from: 'architecture', to: 'automation', type: 'direct' },
-          { from: 'automation', to: 'ops', type: 'direct' },
-          { from: 'ops', to: 'growth', type: 'direct' },
-          { from: 'growth', to: 'idea', type: 'feedback' },
-        ],
-      }),
-      sectionWithWidget('stats-strip', {
-        title: 'Результаты',
-        subtitle: '',
-        size: 'lg',
-        autofill_from_projects: true,
-        items: [
-          { value: '6+', label: 'Лет автоматизации' },
-          { value: '15', label: 'PLC в контуре' },
-        ],
-      }),
-      sectionWithWidget('services', {
-        title: 'Что могу разработать',
-        subtitle: 'Спектр задач — детали в проектах и на странице услуг.',
-        preset: 'spectrum',
-      }),
-      sectionWithWidget('testimonials', { title: 'Отзывы' }),
-      sectionWithWidget('blog-list', { title: 'Последние статьи', limit: 3, cta_href: '/blog', cta_label: 'Блог' }),
-      sectionWithWidget('cta-banner', {
-        title: 'Есть задача — давайте разберём',
-        subtitle: 'Опишите продукт, сроки и ограничения. Отвечу в рабочие дни.',
-        cta_label: 'Связаться',
-        cta_href: '/contact',
       }),
     ],
   }

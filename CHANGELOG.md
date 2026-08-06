@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-08-06 — Platform OOB home + plugins default-off
+
+- Default home is Jasefly platform landing without Portfolio stub
+- Optional plugins seed/runtime default off (no 409 spam); FE/Node/PHP gate parity
+- Node ensure-admin + platform seed defaults; Support soft-empty when disabled
+
+
+## 2026-08-05 — Security ACL/XSS/SSRF/Host/MCP + auth AdminBar session fix
+
+- Content/webhook/revision capability gates
+- deny_template_html sanitizeHtml
+- Node webhook SSRF + PublicOrigin URLs
+- cms_rollback stamp validation
+- Clear AdminBar on dead /auth/me session (silent refresh then logout)
+
 ## 2026-08-05 — Fix stale AdminBar after expired /auth/me session
 
 - On /auth/me 401 try silent refresh then clear tokens

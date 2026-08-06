@@ -274,18 +274,10 @@ final class PaymentsModule extends AbstractModule
 
     public function demoPages(): array
     {
-        // При включении Payments — сразу создать commerce-страницы из SystemTemplates.
         if (!class_exists(\App\Modules\System\SystemTemplates::class)) {
             return [];
         }
-        $slugs = ['payment', 'payment-success', 'payment-fail', 'offer'];
-        $out = [];
-        foreach (\App\Modules\System\SystemTemplates::demoPages() as $page) {
-            if (in_array((string) ($page['slug'] ?? ''), $slugs, true)) {
-                $out[] = $page;
-            }
-        }
-        return $out;
+        return \App\Modules\System\SystemTemplates::demoPagesForPlugin('payments');
     }
 
     /**

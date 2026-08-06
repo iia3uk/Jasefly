@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-05T22:16:36.732Z",
-  "version": "backup-before-author-rewrite-13-g45c1d6a",
-  "commit": "45c1d6a",
+  "generated_at": "2026-08-06T19:58:03.318Z",
+  "version": "backup-before-author-rewrite-14-g287d086",
+  "commit": "287d086",
   "metrics": {
-    "files": 3445,
+    "files": 3427,
     "php_classes": 311,
     "builder_widgets": 68,
     "rest_routes_core": 66,
     "sdk_interfaces": 23,
-    "git_commits": 105,
+    "git_commits": 106,
     "repo_size_mb": 27.9,
     "core_modules": 30,
     "package_scaffolds": 10
@@ -19,6 +19,11 @@
     "latest_tag": "backup-before-author-rewrite",
     "latest_commit_date": "2026-08-06",
     "commits": [
+      {
+        "hash": "287d086",
+        "date": "2026-08-06",
+        "subject": "chore: sync changelog and sitePulse after auth/security releases"
+      },
       {
         "hash": "45c1d6a",
         "date": "2026-08-06",
@@ -38,11 +43,6 @@
         "hash": "6a30079",
         "date": "2026-08-06",
         "subject": "docs: add MCP multi-site guide (one agent, many hosts)"
-      },
-      {
-        "hash": "d5f7df1",
-        "date": "2026-08-05",
-        "subject": "docs: align entry docs with dual-runtime platform"
       }
     ]
   }

@@ -15,7 +15,7 @@ use App\Modules\System\SystemTemplates;
 
 [, $db] = Bootstrap::init();
 
-$stats = (new PageSeedService($db))->ensureEntries(SystemTemplates::demoPages());
+$stats = (new PageSeedService($db))->ensureEntries(SystemTemplates::demoPagesForEnabled());
 
 $commerce = [
     'payment', 'payment-success', 'payment-fail', 'offer', 'products', 'product-card', 'product-detail',

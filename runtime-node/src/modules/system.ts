@@ -82,7 +82,25 @@ export async function register(ctx: ModuleContext) {
       const items = await adminGlobalSearch(ctx.db, q, limit);
       return ok(c, items, 200, { query: q });
     });
-    ctx.app.get(`${p}/admin/plugins`, ...gate, async (c) => ok(c, loadModuleCatalog()));
+    ctx.app.get(`${p}/admin/plugins`, ...gate, async (c) => {
+      const catalog = loadModuleCatalog() as Array<Record<string, unknown>>;
+      const { isModuleEnabled, CORE_PLUGINS } = await import('../plugins/pluginState.js');
+      const out = [];
+      for (const item of catalog) {
+        const name = String(item.name ?? '');
+        if (!name) {
+          out.push(item);
+          continue;
+        }
+        const enabled = await isModuleEnabled(ctx.db, name);
+        out.push({
+          ...item,
+          is_enabled: enabled,
+          can_disable: enabled && !CORE_PLUGINS.has(name),
+        });
+      }
+      return ok(c, out);
+    });
     ctx.app.post(`${p}/admin/plugins/:name/toggle`, ...gate, async (c) => {
       const plug = c.req.param('name');
       const body = await readJsonBody(c);
@@ -92,8 +110,13 @@ export async function register(ctx: ModuleContext) {
       }
       if (!(await ctx.db.tableExists('modules'))) return fail(c, 'Plugin not found', 404);
       const row = await ctx.db.one('SELECT * FROM modules WHERE name=?', [plug]);
-      if (!row) return fail(c, 'Plugin not found', 404);
-      await ctx.db.run('UPDATE modules SET is_enabled=? WHERE name=?', [body.enabled ? 1 : 0, plug]);
+      const want = body.enabled ? 1 : 0;
+      if (!row) {
+        // Default-off: first toggle creates the modules row.
+        await ctx.db.run('INSERT INTO modules (name, is_enabled, settings) VALUES (?, ?, NULL)', [plug, want]);
+      } else {
+        await ctx.db.run('UPDATE modules SET is_enabled=? WHERE name=?', [want, plug]);
+      }
       await ctx.events.publish(body.enabled ? 'plugin.enabled' : 'plugin.disabled', { name: plug });
       return ok(c, { name: plug, enabled: Boolean(body.enabled) });
     });
@@ -103,7 +126,9 @@ export async function register(ctx: ModuleContext) {
       if (body instanceof Response) return body;
       if (!(await ctx.db.tableExists('modules'))) return fail(c, 'Plugin not found', 404);
       const row = await ctx.db.one('SELECT * FROM modules WHERE name=?', [plug]);
-      if (!row) return fail(c, 'Plugin not found', 404);
+      if (!row) {
+        await ctx.db.run('INSERT INTO modules (name, is_enabled, settings) VALUES (?, 1, NULL)', [plug]);
+      }
       const settings = await saveModuleSettings(ctx.db, plug, body);
       return ok(c, { name: plug, settings });
     });

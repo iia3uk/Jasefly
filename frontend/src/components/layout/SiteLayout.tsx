@@ -158,8 +158,21 @@ export function Header() {
   const primaryCta = ctas[ctas.length - 1]
   // Default = overlay (transparent until first scroll) — основной шаблон.
   const overlay = String(site?.theme?.header_style || 'overlay') !== 'solid'
+  // OOB: no menu items → no header chrome (brand stays in the page hero).
+  const navEmpty = !loading && !!site && nav.length === 0
 
   useEffect(() => {
+    if (!navEmpty) return
+    const root = document.documentElement
+    root.style.setProperty('--cms-header-h', '0px')
+    const heroVh = 'calc(100dvh - var(--admin-bar-h, 0px))'
+    root.style.setProperty('--cms-hero-vh', heroVh)
+    root.style.setProperty('--cms-snap-vh', heroVh)
+    root.dataset.headerStyle = 'none'
+  }, [navEmpty])
+
+  useEffect(() => {
+    if (navEmpty) return
     document.body.style.overflow = open ? 'hidden' : ''
     const snap = document.getElementById('cms-snap-scroller')
     const prevOverflow = snap?.style.overflow ?? ''
@@ -168,10 +181,10 @@ export function Header() {
       document.body.style.overflow = ''
       if (snap) snap.style.overflow = prevOverflow
     }
-  }, [open])
+  }, [open, navEmpty])
 
   useEffect(() => {
-    if (!overlay) {
+    if (navEmpty || !overlay) {
       setScrolled(false)
       return
     }
@@ -189,10 +202,11 @@ export function Header() {
       snap?.removeEventListener('scroll', onScroll)
       window.removeEventListener('scroll', onScroll)
     }
-  }, [overlay])
+  }, [overlay, navEmpty])
 
   // Hero/snap viewport: overlay → full screen under admin bar; solid → minus header.
   useEffect(() => {
+    if (navEmpty) return
     const el = headerRef.current
     if (!el) return
     const root = document.documentElement
@@ -214,7 +228,9 @@ export function Header() {
       ro?.disconnect()
       window.removeEventListener('resize', measure)
     }
-  }, [open, token, overlay])
+  }, [open, token, overlay, navEmpty])
+
+  if (navEmpty) return null
 
   const solidBar = !overlay || scrolled || open
 
@@ -332,6 +348,19 @@ export function Footer() {
     return { href: h, external }
   }
 
+  const columnsWithLinks = columns.filter((col) =>
+    (col.links ?? []).some((l) => String(l?.href || '').trim()),
+  )
+  const footerNavItems = footerNav.filter((n) => String(n?.href || '').trim())
+  const hasSocial = !!site?.footer?.show_social && social.some((s) => String(s?.url || '').trim())
+  const hasContact = !!(email || phone || address)
+  const hasTagline = !!taglineHtml
+  const hasCopyright = !!copyrightHtml
+  // OOB: hide footer when there is nothing meaningful (name/version alone ≠ content).
+  const footerEmpty =
+    !columnsWithLinks.length && !footerNavItems.length && !hasSocial && !hasContact && !hasTagline && !hasCopyright
+  if (footerEmpty) return null
+
   return (
     <footer className="cms-snap-footer border-t border-white/[0.06] pt-12 pb-8 sm:pt-16 sm:pb-10">
       <Container>
@@ -351,7 +380,7 @@ export function Footer() {
                 {address ? <div>{address}</div> : null}
               </address>
             ) : null}
-            {!!site?.footer?.show_social && (
+            {hasSocial ? (
               <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3">
                 {social.map((s) => (
                   <a key={String(s.id)} href={s.url} className="link-text inline-flex items-center gap-1.5 text-sm text-[var(--muted)]" target="_blank" rel="noreferrer">
@@ -360,9 +389,9 @@ export function Footer() {
                   </a>
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
-          {columns.map((col) => (
+          {columnsWithLinks.map((col) => (
             <div key={col.title}>
               <p className="text-sm font-medium">{col.title}</p>
               <div className="mt-4 space-y-2">
@@ -385,11 +414,11 @@ export function Footer() {
               </div>
             </div>
           ))}
-          {!columns.length && (
+          {!columnsWithLinks.length && footerNavItems.length > 0 ? (
             <div>
               <p className="text-sm font-medium">Навигация</p>
               <div className="mt-4 space-y-2">
-                {footerNav.map((n) => {
+                {footerNavItems.map((n) => {
                   const { href, external } = footerHref(n.href)
                   if (!href) return null
                   if (external) {
@@ -407,21 +436,23 @@ export function Footer() {
                 })}
               </div>
             </div>
-          )}
-        </div>
-        <div className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--muted)] sm:mt-12">
-          {copyrightHtml ? (
-            <p
-              className="[&_a]:text-[var(--accent)] [&_a]:underline-offset-2 hover:[&_a]:underline"
-              dangerouslySetInnerHTML={{ __html: copyrightHtml }}
-            />
-          ) : null}
-          {frameworkVersion ? (
-            <span className="rounded border border-white/10 px-2 py-0.5 font-mono text-[11px] tracking-wide text-[color:var(--muted)]">
-              {frameworkVersion}
-            </span>
           ) : null}
         </div>
+        {(hasCopyright || frameworkVersion) ? (
+          <div className="mt-10 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--muted)] sm:mt-12">
+            {copyrightHtml ? (
+              <p
+                className="[&_a]:text-[var(--accent)] [&_a]:underline-offset-2 hover:[&_a]:underline"
+                dangerouslySetInnerHTML={{ __html: copyrightHtml }}
+              />
+            ) : null}
+            {frameworkVersion ? (
+              <span className="rounded border border-white/10 px-2 py-0.5 font-mono text-[11px] tracking-wide text-[color:var(--muted)]">
+                {frameworkVersion}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
       </Container>
     </footer>
   )
@@ -432,6 +463,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
   const { token } = useAuth()
   const customHtml = site?.theme?.custom_html?.trim()
   const overlayNav = String(site?.theme?.header_style || 'overlay') !== 'solid'
+  const navEmpty = Array.isArray(site?.navigation) && site.navigation.length === 0
 
   return (
     <>
@@ -443,10 +475,10 @@ export function SiteLayout({ children }: { children: ReactNode }) {
         {/* Only this node scrolls when page snap is on (html/body overflow hidden). */}
         <div
           id="cms-snap-scroller"
-          className={clsx('min-w-0', overlayNav && 'cms-nav-overlay-scroll')}
+          className={clsx('min-w-0', overlayNav && !navEmpty && 'cms-nav-overlay-scroll')}
         >
           {/* Real box: #cms-snap-scroller is display:contents, so padding on it is ignored. */}
-          {overlayNav ? <div className="cms-nav-overlay-offset" aria-hidden="true" /> : null}
+          {overlayNav && !navEmpty ? <div className="cms-nav-overlay-offset" aria-hidden="true" /> : null}
           <SiteBreadcrumbs />
           {customHtml ? (
             <div

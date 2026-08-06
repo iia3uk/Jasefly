@@ -2,14 +2,27 @@ import crypto from 'node:crypto';
 import type { Context } from 'hono';
 import type { ModuleContext } from '../core/types.js';
 import type { AuthService } from '../auth/AuthService.js';
-import type { Row } from '../db/Database.js';
+import type { Database, Row } from '../db/Database.js';
 import { requireAdmin } from '../core/authMiddleware.js';
 import { requirePermission } from '../core/permissionMiddleware.js';
 import { fail, ok } from '../http/envelope.js';
+import { isModuleEnabled } from '../plugins/pluginState.js';
+import { softDecide, softRespond } from '../plugins/softPluginGate.js';
 import { moduleSettings, readJsonBody } from './_helpers.js';
 import { getUserFromContext } from '../system/helpers.js';
 
 export const name = 'support';
+const PLUGIN = 'support';
+
+async function supportSoftGate(
+  c: Context,
+  db: Database,
+  method: string,
+  isItem: boolean,
+): Promise<Response | null> {
+  const on = await isModuleEnabled(db, PLUGIN);
+  return softRespond(c, softDecide(on, method, isItem), PLUGIN);
+}
 
 function supportCodeFail(
   c: Context,
@@ -474,7 +487,10 @@ export async function register(ctx: ModuleContext) {
     });
 
     ctx.app.get(`${p}/admin/support/tickets`, ...agent, async (c) => {
-      if (!(await ctx.db.tableExists('support_tickets'))) return fail(c, 'capability_unavailable', 409);
+      const blocked = await supportSoftGate(c, ctx.db, 'GET', false);
+      if (blocked) return blocked;
+      // Design B: missing tables → empty list (not 409 spam)
+      if (!(await ctx.db.tableExists('support_tickets'))) return ok(c, { items: [], total: 0 });
       const status = c.req.query('status');
       let items;
       if (status && status !== 'all') {
@@ -489,6 +505,8 @@ export async function register(ctx: ModuleContext) {
     });
 
     ctx.app.get(`${p}/admin/support/tickets/:id`, ...agent, async (c) => {
+      const blocked = await supportSoftGate(c, ctx.db, 'GET', true);
+      if (blocked) return blocked;
       if (!(await ctx.db.tableExists('support_tickets'))) return fail(c, 'Not found', 404);
       const ticket = await ctx.db.one('SELECT * FROM support_tickets WHERE id=? LIMIT 1', [c.req.param('id')]);
       if (!ticket) return fail(c, 'Not found', 404);
@@ -497,6 +515,8 @@ export async function register(ctx: ModuleContext) {
     });
 
     ctx.app.post(`${p}/admin/support/tickets/:id/messages`, ...agent, async (c) => {
+      const blocked = await supportSoftGate(c, ctx.db, 'POST', true);
+      if (blocked) return blocked;
       const body = await readJsonBody(c);
       if (body instanceof Response) return body;
 

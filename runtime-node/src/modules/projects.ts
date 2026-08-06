@@ -3,17 +3,13 @@ import type { ModuleContext } from '../core/types.js';
 import { requireAdmin } from '../core/authMiddleware.js';
 import { fail, ok } from '../http/envelope.js';
 import type { Database } from '../db/Database.js';
+import { isModuleEnabled } from '../plugins/pluginState.js';
+import { softDecide, softRespond } from '../plugins/softPluginGate.js';
 
 export const name = 'projects';
 
 const RESOURCES = ['projects', 'project-categories'] as const;
 const PLUGIN = 'projects';
-
-async function isPluginEnabled(db: Database): Promise<boolean> {
-  if (!(await db.tableExists('modules'))) return true;
-  const row = await db.one('SELECT is_enabled FROM modules WHERE name=?', [PLUGIN]);
-  return row == null ? true : Boolean(row.is_enabled);
-}
 
 async function softGate(
   c: Context,
@@ -21,11 +17,8 @@ async function softGate(
   method: string,
   isItem: boolean,
 ): Promise<Response | null> {
-  if (await isPluginEnabled(db)) return null;
-  const m = method.toUpperCase();
-  if (m === 'GET' && !isItem) return ok(c, []);
-  if (m === 'GET') return fail(c, 'Not found', 404);
-  return fail(c, 'Plugin disabled', 409, null, { code: 'plugin_disabled', plugin: PLUGIN });
+  const on = await isModuleEnabled(db, PLUGIN);
+  return softRespond(c, softDecide(on, method, isItem), PLUGIN);
 }
 
 export async function register(ctx: ModuleContext) {
