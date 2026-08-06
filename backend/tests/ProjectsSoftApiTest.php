@@ -123,7 +123,8 @@ assert_true($pass === null, 'enabled projects: soft gate passes to normal handle
 $passMut = SoftPluginGate::outcome($registryEnabled, 'projects', 'POST', false);
 assert_true($passMut === null, 'enabled projects: mutations pass to normal handlers');
 
-// ContentModule alone must not own admin Projects CRUD
+// ContentModule alone must not own admin Projects CRUD (platform shell must be seeded ON)
+$pdo->exec("INSERT INTO modules (name, is_enabled) VALUES ('content', 1) ON CONFLICT(name) DO UPDATE SET is_enabled=1");
 $contentOnly = new ModuleRegistry($db, $app, $modulesPath);
 $contentOnly->register(new ContentModule());
 $contentRouter = new Router();
