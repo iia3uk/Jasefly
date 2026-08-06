@@ -71,6 +71,20 @@ export function loadDocsPayload(): Record<string, unknown> {
   return loadRegistrySnapshot().docs;
 }
 
+function expandEnabledPluginSet(names: Iterable<string>): Set<string> {
+  const enabled = new Set<string>();
+  for (const name of names) {
+    enabled.add(name);
+    if (name === 'content') enabled.add('site');
+    if (name === 'site') enabled.add('content');
+    if (name === 'portfolio') enabled.add('projects');
+    if (name === 'projects') enabled.add('portfolio');
+  }
+  enabled.add('system');
+  enabled.add('users');
+  return enabled;
+}
+
 export async function buildPageTemplates(db: Database): Promise<unknown[]> {
   const meta = loadRegistrySnapshot().pageTemplatesMeta;
   const bySlug: Record<string, Record<string, unknown>> = {};
@@ -79,20 +93,18 @@ export async function buildPageTemplates(db: Database): Promise<unknown[]> {
       bySlug[String(row.slug)] = row;
     }
   }
-  const disabled = new Set<string>();
-  const known = new Set<string>();
+  // Fail-closed (parity with PluginStateService default-off): no modules row → off.
+  const enabledNames: string[] = [];
   if (await db.tableExists('modules')) {
     for (const row of await db.all('SELECT name, is_enabled FROM modules')) {
-      const name = String(row.name);
-      known.add(name);
-      if (!Number(row.is_enabled)) disabled.add(name);
+      if (Number(row.is_enabled) === 1) enabledNames.push(String(row.name));
     }
   }
+  const enabled = expandEnabledPluginSet(enabledNames);
   const items: unknown[] = [];
   for (const t of meta) {
-    // PHP: skip only when plugin is known-enabled-map and missing/false.
-    // Unknown plugin names fail-open (bundled modules may lack modules row).
-    if (t.plugin && known.has(t.plugin) && disabled.has(t.plugin)) continue;
+    const plugin = t.plugin ? String(t.plugin) : '';
+    if (plugin && !enabled.has(plugin)) continue;
     const row = bySlug[t.slug];
     const raw = row ? String(row.layout_json ?? '').trim() : '';
     const hasLayout = raw !== '' && raw !== 'null' && raw !== '{"version":1,"elements":[]}';
@@ -462,6 +474,31 @@ export async function buildSystemStatus(db: Database, cfg: AppConfig): Promise<R
       token.length >= 12 ? `${token.slice(0, 4)}…${token.slice(-4)}` : '••••';
   }
 
+  const appUrl = (cfg.url || 'http://localhost:3080').replace(/\/$/, '');
+  const runtime = cfg.runtime || 'node-vps';
+  const siteTokenPath = 'deploy/docker/.env (local) или shared/config/runtime.env (VPS) → MCP_API_TOKEN';
+  // Cursor runs on the developer machine — not inside Docker. Prefer explicit override.
+  const repoRaw =
+    process.env.CMS_CURSOR_REPO_ROOT ||
+    process.env.CMS_REPO_ROOT ||
+    REPO_ROOT;
+  const repoHint = /^[A-Za-z]:[\\/]/.test(repoRaw)
+    ? repoRaw.replace(/\\/g, '/')
+    : 'F:/JASEFLY_CMS';
+  const cursorSnippet = JSON.stringify(
+    {
+      mcpServers: {
+        'jasefly-cms': {
+          command: 'node',
+          args: [`${repoHint}/mcp-cms/src/index.js`],
+          env: { CMS_REPO_ROOT: repoHint },
+        },
+      },
+    },
+    null,
+    2,
+  );
+
   return {
     php_version: detectPhpVersion(),
     db_driver: db.driver(),
@@ -482,7 +519,30 @@ export async function buildSystemStatus(db: Database, cfg: AppConfig): Promise<R
       token_hint: hint,
       auth_header: 'Authorization: Bearer <MCP_API_TOKEN>',
       docs_hint:
-        'Токен на сайте: api/config/.env → MCP_API_TOKEN (тот же секрет в mcp-cms/.env как CMS_MCP_TOKEN).',
+        'Один MCP-процесс → много сайтов. Токен этого сайта: ' +
+        siteTokenPath +
+        '. В mcp-cms/.env тот же секрет как CMS_SITE_{ID}_TOKEN (или legacy CMS_MCP_TOKEN).',
+      app_url: appUrl,
+      runtime,
+      site_token_path: siteTokenPath,
+      agent_env_keys: {
+        multi: 'CMS_SITES + CMS_SITE_{ID}_URL + CMS_SITE_{ID}_TOKEN',
+        legacy: 'CMS_URL + CMS_MCP_TOKEN',
+        list_tool: 'cms_sites',
+        site_param: 'site',
+      },
+      multi_site_hint:
+        'SoT хостов — только mcp-cms/.env (не sites.js). При ≥2 сайтах в tools передавайте site=id|alias|domain.',
+      cursor_snippet: cursorSnippet,
+      docs_url: 'docs/mcp-multi-site.md',
+      local_example_env: [
+        'CMS_SITES=jasefly,iia3uk',
+        'CMS_SITE_JASEFLY_URL=https://jasefly.com',
+        'CMS_SITE_JASEFLY_TOKEN=<MCP_API_TOKEN сайта>',
+        'CMS_SITE_JASEFLY_ALIASES=jasefly.com,www.jasefly.com',
+        'CMS_SITE_IIA3UK_URL=https://iia3uk.ru',
+        'CMS_SITE_IIA3UK_TOKEN=<MCP_API_TOKEN сайта>',
+      ].join('\n'),
     },
     module_load_failures: [],
     module_safe_mode: [],

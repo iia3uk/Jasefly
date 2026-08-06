@@ -150,6 +150,78 @@ final class PermissionService
         }
     }
 
+    /**
+     * Require any one of the listed capabilities (first is used in the 403 payload).
+     *
+     * @param list<string> $permissions
+     */
+    public function requireAny(array $user, array $permissions): void
+    {
+        foreach ($permissions as $permission) {
+            if ($this->can($user, $permission)) {
+                return;
+            }
+        }
+        $this->require($user, $permissions[0] ?? 'content.update');
+    }
+
+    /**
+     * Admin CRUD resources gated by content.* capabilities (Content / Blog / Projects modules).
+     *
+     * @return list<string>
+     */
+    public static function contentResources(): array
+    {
+        return [
+            'social-links', 'statistics', 'experience', 'education', 'skill-categories', 'skills',
+            'blog-categories', 'blog-tags', 'testimonials', 'navigation', 'homepage-sections', 'pages',
+            'services', 'projects', 'project-categories', 'blog',
+        ];
+    }
+
+    public function isContentResource(string $resource): bool
+    {
+        return in_array($resource, self::contentResources(), true);
+    }
+
+    /**
+     * Content create / update / delete / publish / restore capability check.
+     * Accepts legacy aliases (content.update ↔ content.edit_any) and edit_own / pages.manage
+     * so author/editor roles keep working without hardcoded role names.
+     */
+    public function canMutateContent(array $user, string $op): bool
+    {
+        return match ($op) {
+            'create' => $this->can($user, 'content.create') || $this->can($user, 'pages.manage'),
+            'delete' => $this->can($user, 'content.delete')
+                || $this->can($user, 'content.delete_any')
+                || $this->can($user, 'content.delete_own')
+                || $this->can($user, 'pages.manage'),
+            'publish' => $this->can($user, 'content.publish')
+                || $this->can($user, 'content.publish_own')
+                || $this->can($user, 'pages.manage')
+                || $this->canMutateContent($user, 'update'),
+            default => $this->can($user, 'content.update')
+                || $this->can($user, 'content.edit_any')
+                || $this->can($user, 'content.edit_own')
+                || $this->can($user, 'pages.manage'),
+        };
+    }
+
+    public function requireContentMutation(array $user, string $op): void
+    {
+        if ($this->canMutateContent($user, $op)) {
+            return;
+        }
+        $primary = match ($op) {
+            'create' => 'content.create',
+            'delete' => 'content.delete',
+            'publish' => 'content.publish',
+            default => 'content.update',
+        };
+        $this->require($user, $primary);
+    }
+
     public function isSettingsRoute(string $path): bool
     {
         return (bool) preg_match(

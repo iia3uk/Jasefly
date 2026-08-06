@@ -46,6 +46,7 @@ final class MigrationService
         '025_demo_sandbox.sql',
         '026_project_featured_priority.sql',
         '027_project_cover_orientations.sql',
+        '028_plugin_default_off_seed.sql',
     ];
 
     private SqlTranspiler $transpiler;

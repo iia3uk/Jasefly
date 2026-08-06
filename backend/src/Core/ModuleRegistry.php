@@ -50,8 +50,8 @@ final class ModuleRegistry
 
     /**
      * A module is "on" when the DB-backed plugins projection says so
-     * (modules.is_enabled via PluginStateService; default-on when no row),
-     * falling back to the module's own config gate.
+     * (modules.is_enabled via PluginStateService; default-off when no row;
+     * core system/users always on).
      *
      * For package-backed modules, installed_modules.status is the canonical
      * lifecycle persistence; modules.is_enabled is the runtime projection that

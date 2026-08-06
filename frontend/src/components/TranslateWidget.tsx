@@ -274,7 +274,10 @@ export function TranslateWidget() {
   const { site } = useSiteContext()
   const { pathname } = useLocation()
   const cfg = (site?.translate ?? null) as TranslateConfig | null
-  const enabledPlugin = siteHasPlugin(site?.enabled_plugins, 'translate')
+  // Fail-closed until /site.enabled_plugins hydrates — siteHasPlugin() is fail-open when undefined.
+  const enabledPlugin =
+    Array.isArray(site?.enabled_plugins) && siteHasPlugin(site.enabled_plugins, 'translate') && !!cfg
+  const widgetOn = Boolean(cfg) && (cfg!.widget_enabled ?? true)
 
   const source = (cfg?.source_lang || 'ru').toLowerCase()
   const targets = useMemo(() => {
@@ -612,7 +615,7 @@ export function TranslateWidget() {
 
   // Auto language from visitor country (BE suggested_lang). Manual localStorage choice wins.
   useEffect(() => {
-    if (!enabledPlugin || !(cfg?.widget_enabled ?? true)) return
+    if (!enabledPlugin || !widgetOn) return
     if (!(cfg?.geo_auto_lang ?? true)) return
     if (hasStoredLang() || geoAppliedRef.current) return
     const suggested = String(cfg?.suggested_lang || 'en').toLowerCase().replace(/[^a-z\-]/g, '')
@@ -621,11 +624,14 @@ export function TranslateWidget() {
     if (suggested === langRef.current) return
     langRef.current = suggested
     setLang(suggested)
-  }, [enabledPlugin, cfg?.widget_enabled, cfg?.geo_auto_lang, cfg?.suggested_lang])
+  }, [enabledPlugin, widgetOn, cfg?.geo_auto_lang, cfg?.suggested_lang])
 
   // Lang change: one full apply + one quiet patch for late paint (no overlapping restores).
   useEffect(() => {
-    if (!enabledPlugin || !(cfg?.widget_enabled ?? true)) return
+    if (!enabledPlugin || !widgetOn) {
+      abortAll()
+      return
+    }
     if (lang === source) {
       abortAll()
       restoreToSource()
@@ -648,14 +654,14 @@ export function TranslateWidget() {
       window.clearTimeout(id1)
       if (id2) window.clearTimeout(id2)
     }
-  }, [lang, source, enabledPlugin, cfg?.widget_enabled, applyFromCache, abortAll, restoreToSource, cacheReady, getLocalMap])
+  }, [lang, source, enabledPlugin, widgetOn, applyFromCache, abortAll, restoreToSource, cacheReady, getLocalMap])
 
   // SPA navigation: clear identity map and re-apply once.
   useEffect(() => {
     sourceByKey.current.clear()
     settledNorm.current.clear()
     partialRetriesRef.current = 0
-    if (!enabledPlugin || !(cfg?.widget_enabled ?? true)) return
+    if (!enabledPlugin || !widgetOn) return
     if (langRef.current === source) {
       restoreToSource()
       return
@@ -664,11 +670,11 @@ export function TranslateWidget() {
       if (langRef.current !== source) void applyFromCache(langRef.current, 'full')
     }, 120)
     return () => window.clearTimeout(id)
-  }, [pathname, enabledPlugin, cfg?.widget_enabled, applyFromCache, restoreToSource, source])
+  }, [pathname, enabledPlugin, widgetOn, applyFromCache, restoreToSource, source])
 
   // MutationObserver: patch only new/unsettled nodes; ignore our own writes + cooldown.
   useEffect(() => {
-    if (!enabledPlugin || !(cfg?.widget_enabled ?? true)) return
+    if (!enabledPlugin || !widgetOn) return
     if (typeof MutationObserver === 'undefined') return
 
     const schedule = () => {
@@ -699,9 +705,9 @@ export function TranslateWidget() {
       mo.disconnect()
       window.clearTimeout(moTimerRef.current)
     }
-  }, [enabledPlugin, cfg?.widget_enabled, applyFromCache, source])
+  }, [enabledPlugin, widgetOn, applyFromCache, source])
 
-  if (!enabledPlugin || !cfg || !(cfg.widget_enabled ?? true) || targets.length === 0) {
+  if (!enabledPlugin || !widgetOn || targets.length === 0) {
     return null
   }
 

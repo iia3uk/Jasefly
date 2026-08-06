@@ -1,5 +1,57 @@
 # Changelog
 
+## 2026-08-06 — Platform OOB home + plugins default-off
+
+- Default home is Jasefly platform landing without Portfolio stub
+- Optional plugins seed/runtime default off (no 409 spam); FE/Node/PHP gate parity
+- Node ensure-admin + platform seed defaults; Support soft-empty when disabled
+
+
+## 2026-08-05 — Security ACL/XSS/SSRF/Host/MCP + auth AdminBar session fix
+
+- Content/webhook/revision capability gates
+- deny_template_html sanitizeHtml
+- Node webhook SSRF + PublicOrigin URLs
+- cms_rollback stamp validation
+- Clear AdminBar on dead /auth/me session (silent refresh then logout)
+
+## 2026-08-05 — Fix stale AdminBar after expired /auth/me session
+
+- On /auth/me 401 try silent refresh then clear tokens
+- Do not keep AdminBar via stale localStorage role
+- On public site clear chrome without forced login redirect; admin routes still redirect to login
+
+## 2026-08-05 — Security fixes: ACL, XSS, SSRF, Host URLs, MCP rollback
+
+- Content CRUD and revision restore require content capabilities
+- Webhook mutations require integrations.manage
+- Sanitize deny_template_html via sanitizeHtml
+- Node webhook SSRF guard with DNS pin and redirect revalidation
+- Payment/verification URLs prefer configured app_url (PublicOrigin)
+- cms_rollback release stamp strict validation
+- Parity scrub db_version for dual 879/879
+
+## 2026-08-05 — Не дергать /translate/* когда плагин выключен
+
+- TranslateWidget fail-closed до гидрации enabled_plugins и без site.translate
+- TranslateAutoWarmup не стартует auto-warmup без включённого translate
+- Убраны ложные POST /translate/batch → 404 при disabled plugin
+
+## 2026-08-05 — Jasefly 1.0 core freeze + runtime-node typecheck fix
+
+- Freeze core 1.0 package on official site
+- runtime-node type contracts aligned for CI
+- TranslateSettings.auto_warmup + capabilities parity gate
+- Production hardening from 1.0 freeze
+
+## 2026-08-05 — Jasefly 1.0 core freeze + runtime-node typecheck fix
+
+- Freeze core 1.0 (release commit on main)
+- runtime-node: MePayload capabilities/is_super, cart totals/currency typing
+- TranslateSettings.auto_warmup + capabilities parity gate for CI
+- Production hardening from 1.0 freeze package
+
+
 ## 2026-08-04 — process-diagram: убраны лишняя петля и шарик
 
 - Удалена пунктирная feedback-полоска под схемой «Как я работаю»

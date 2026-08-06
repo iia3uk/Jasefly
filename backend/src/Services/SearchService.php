@@ -81,17 +81,20 @@ final class SearchService
         return $results;
     }
 
-    /** Default-on when no modules row (same rule as PluginStateService). */
+    /** Default-off when no modules row (same rule as PluginStateService). */
     private function pluginOn(string $name): bool
     {
+        if (in_array($name, \App\Services\PluginStateService::CORE, true)) {
+            return true;
+        }
         try {
             $row = $this->db->one('SELECT is_enabled FROM modules WHERE name = ? LIMIT 1', [$name]);
             if ($row === null) {
-                return true;
+                return false;
             }
             return (int) ($row['is_enabled'] ?? 0) === 1;
         } catch (\Throwable) {
-            return true;
+            return false;
         }
     }
 

@@ -14,9 +14,11 @@ There are two complementary mechanisms:
    - GET item → `404`
    - Mutations → `409` `code=plugin_disabled`
 
-Proven soft use: `ProjectsModule`. Most modules use hard off.
+**Default-off:** missing `modules` row ⇒ OFF (except core `system`/`users`, always ON). Platform shell seed (`content`, `media`, `seo`) is inserted ON by migration `028_plugin_default_off_seed.sql` / Node `seedPlatformPlugins`. Optional plugins stay off until toggled in Plugins UI.
 
-Frontend does **not** import `SoftPluginGate`. It uses `pluginGates.ts` + `RequirePlugin` against `/site` → `enabled_plugins` from the public site payload.
+Proven soft use: `ProjectsModule`; Node also soft-gates Support admin ticket lists. Most modules use hard off.
+
+Frontend does **not** import `SoftPluginGate`. It uses `pluginGates.ts` + `RequirePlugin` against `/site` → `enabled_plugins` from the public site payload (`siteHasPlugin` is **fail-closed** until the list hydrates).
 
 ## Execution flow
 

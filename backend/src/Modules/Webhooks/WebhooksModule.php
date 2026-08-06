@@ -82,10 +82,12 @@ final class WebhooksModule extends AbstractModule
         $webhookRate = new \App\Middleware\RateLimitMiddleware($db, 60, 60);
 
         $base = $p('/admin/webhooks');
+        $perms = new PermissionService($db);
         $router->get($base, function () use ($db) {
             Response::json(['data' => $db->all('SELECT id, event, url, is_active, created_at FROM webhooks ORDER BY id DESC')]);
         }, $protected);
-        $router->post($base, function (Request $r) use ($db, $activity) {
+        $router->post($base, function (Request $r) use ($db, $activity, $perms) {
+            $perms->require($r->user ?? [], 'integrations.manage');
             $event = (string) ($r->input('event') ?? '*');
             $url = (string) ($r->input('url') ?? '');
             $secret = (string) ($r->input('secret') ?? '');
@@ -97,7 +99,8 @@ final class WebhooksModule extends AbstractModule
             $activity->log($r, 'create', 'webhooks', $id, $url);
             Response::json(['data' => ['id' => $id]], 201);
         }, $protected);
-        $router->put("$base/{id}", function (Request $r, string $id) use ($db) {
+        $router->put("$base/{id}", function (Request $r, string $id) use ($db, $perms) {
+            $perms->require($r->user ?? [], 'integrations.manage');
             $sets = [];
             $params = [];
             foreach (['event', 'url', 'secret'] as $f) {
@@ -117,7 +120,8 @@ final class WebhooksModule extends AbstractModule
             $db->run('UPDATE webhooks SET ' . implode(', ', $sets) . ' WHERE id = ?', $params);
             Response::json(['message' => 'Webhook updated']);
         }, $protected);
-        $router->delete("$base/{id}", function (Request $r, string $id) use ($db, $activity) {
+        $router->delete("$base/{id}", function (Request $r, string $id) use ($db, $activity, $perms) {
+            $perms->require($r->user ?? [], 'integrations.manage');
             $db->run('DELETE FROM webhooks WHERE id = ?', [$id]);
             $activity->log($r, 'delete', 'webhooks', (int) $id, null);
             Response::json(['message' => 'Webhook deleted']);

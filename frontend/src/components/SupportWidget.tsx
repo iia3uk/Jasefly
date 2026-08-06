@@ -107,7 +107,9 @@ const SOCIAL_LABELS: Record<string, string> = {
  */
 export function SupportWidget() {
   const { site } = useSiteContext()
-  const enabledPlugin = siteHasPlugin(site?.enabled_plugins, 'support')
+  // Fail-closed until /site.enabled_plugins hydrates (siteHasPlugin is fail-closed on undefined).
+  const enabledPlugin =
+    Array.isArray(site?.enabled_plugins) && siteHasPlugin(site.enabled_plugins, 'support')
 
   const [cfg, setCfg] = useState<SupportConfig | null>(null)
   const [open, setOpen] = useState(false)

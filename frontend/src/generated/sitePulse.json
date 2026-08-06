@@ -1,48 +1,48 @@
 {
-  "generated_at": "2026-08-05T18:22:21.315Z",
-  "version": "installer_v2-17-g6acaf4d",
-  "commit": "6acaf4d",
+  "generated_at": "2026-08-06T19:58:03.318Z",
+  "version": "backup-before-author-rewrite-14-g287d086",
+  "commit": "287d086",
   "metrics": {
-    "files": 3370,
-    "php_classes": 310,
+    "files": 3427,
+    "php_classes": 311,
     "builder_widgets": 68,
     "rest_routes_core": 66,
     "sdk_interfaces": 23,
-    "git_commits": 92,
-    "repo_size_mb": 26.4,
+    "git_commits": 106,
+    "repo_size_mb": 27.9,
     "core_modules": 30,
     "package_scaffolds": 10
   },
   "github": {
     "repo": "iia3uk/jasefly",
     "url": "https://github.com/iia3uk/jasefly",
-    "latest_tag": "installer_v2",
-    "latest_commit_date": "2026-08-05",
+    "latest_tag": "backup-before-author-rewrite",
+    "latest_commit_date": "2026-08-06",
     "commits": [
       {
-        "hash": "6acaf4d",
-        "date": "2026-08-05",
-        "subject": "Ship Node VPS runtime and PHP?Node behavioral parity CI gate."
+        "hash": "287d086",
+        "date": "2026-08-06",
+        "subject": "chore: sync changelog and sitePulse after auth/security releases"
       },
       {
-        "hash": "2b47eed",
-        "date": "2026-08-04",
-        "subject": "Stop publishing local site dumps and content packs."
+        "hash": "45c1d6a",
+        "date": "2026-08-06",
+        "subject": "fix(auth): clear AdminBar when /auth/me session is dead"
       },
       {
-        "hash": "9845409",
-        "date": "2026-08-04",
-        "subject": "Fix CI after modules-src removal with public SDK fixtures."
+        "hash": "8f43451",
+        "date": "2026-08-06",
+        "subject": "fix(security): close ACL, XSS, SSRF, Host, and MCP rollback gaps"
       },
       {
-        "hash": "1d147c0",
-        "date": "2026-08-04",
-        "subject": "Ship landing showcase widgets and MCP multi-site routing."
+        "hash": "8b79dd1",
+        "date": "2026-08-06",
+        "subject": "docs: clarify multi-site SoT is .env, not sites.js"
       },
       {
-        "hash": "d87b7d9",
-        "date": "2026-08-04",
-        "subject": "﻿Stop publishing modules-src to the public repo."
+        "hash": "6a30079",
+        "date": "2026-08-06",
+        "subject": "docs: add MCP multi-site guide (one agent, many hosts)"
       }
     ]
   }

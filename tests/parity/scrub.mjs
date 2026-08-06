@@ -26,9 +26,10 @@ const SCRUB_KEYS = new Set([
   'caps_version',
   // migration warning text may differ slightly
   'warning',
-  // SQLite page layout differs between PHP PDO and better-sqlite3 after identical DDL
+  // SQLite page layout / library build differs between PHP PDO and better-sqlite3 after identical DDL
   'database_size_bytes',
   'database_size_human',
+  'db_version',
   'generated_at',
   // Host/runtime env (CI Linux vs local Windows; php.ini; live loadavg)
   'storage_usage_bytes',

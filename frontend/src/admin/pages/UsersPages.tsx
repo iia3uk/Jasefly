@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2, X } from 'lucide-react'
 import { api } from '@/lib/api'
@@ -7,6 +7,8 @@ import { Button, GlassPanel, Skeleton } from '@/components/ui'
 import { useAuth } from '@/context/AuthContext'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { t } from '@/admin/i18n'
+import { useSite } from '@/hooks/useApi'
+import { permissionVisibleForPlugins } from '@/core/pluginGates'
 
 type User = {
   id: number
@@ -198,14 +200,20 @@ export function RolesPage() {
 
 function RolesPageInner() {
   const qc = useQueryClient()
+  const { data: site } = useSite()
+  const enabledPlugins = site?.enabled_plugins
   const { data: roles = [], isLoading: rolesLoading } = useQuery({
     queryKey: ['admin', 'roles'],
     queryFn: async () => asData<{ id: number; slug: string; name: string; perm_count: number }[]>(await api.get('/admin/roles')),
   })
-  const { data: permissions = [], isLoading: permsLoading } = useQuery({
+  const { data: permissionsRaw = [], isLoading: permsLoading } = useQuery({
     queryKey: ['admin', 'permissions'],
     queryFn: async () => asData<{ id: number; slug: string; name: string; group_name: string | null; risk_level?: string }[]>(await api.get('/admin/permissions')),
   })
+  const permissions = useMemo(
+    () => permissionsRaw.filter((p) => permissionVisibleForPlugins(p.slug, enabledPlugins)),
+    [permissionsRaw, enabledPlugins],
+  )
 
   const [selectedRole, setSelectedRole] = useState<number | null>(null)
   const { data: rolePerms = [] } = useQuery({

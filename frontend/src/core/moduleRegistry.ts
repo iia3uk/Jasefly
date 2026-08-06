@@ -179,10 +179,15 @@ export function setPluginEnabled(name: string, enabled: boolean): void {
   notifyPluginStateListeners()
 }
 
-/** True when the plugin is on (or state not hydrated yet — fail-open for admin boot UI). */
+/**
+ * True when the plugin is on.
+ * Before hydration: only core shell plugins (fail-closed for optional — no Portfolio/Commerce UI flash).
+ */
 export function isPluginEnabled(name: string): boolean {
-  if (!pluginsHydrated) return true
   const aliases = PLUGIN_ALIASES[name] ?? [name]
+  if (!pluginsHydrated) {
+    return aliases.some((a) => CORE_BOOT_PLUGINS.has(a))
+  }
   return aliases.every((a) => !runtimeDisabled.has(a))
 }
 

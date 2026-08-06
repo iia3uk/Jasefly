@@ -37,6 +37,7 @@ export const PHP_MIGRATION_FILES = [
   '025_demo_sandbox.sql',
   '026_project_featured_priority.sql',
   '027_project_cover_orientations.sql',
+  '028_plugin_default_off_seed.sql',
 ] as const;
 
 /**
@@ -82,14 +83,17 @@ export async function runMigrations(
   ) as MigIndex;
 
   const files = [...(opts.install ? index.install_only : []), ...index.incremental];
+  // Plugin SQL (Support/Forms/…) — same discovery as PHP MigrationService when modulesDir set.
+  const pluginFiles = pluginMigrationFiles();
 
   const doneRows = await db.all('SELECT id FROM _migrations');
   const done = new Set(doneRows.map((r) => String(r.id)));
-  const pending = files.filter((f) => !done.has(f));
+  const pendingCore = files.filter((f) => !done.has(f));
+  const pendingPlugin = Object.keys(pluginFiles).filter((id) => !done.has(id));
   const just: string[] = [];
 
-  for (const file of pending) {
-    const raw = fs.readFileSync(path.join(CONTRACTS_ROOT, 'migrations', file), 'utf8');
+  const applyFile = async (id: string, absPath: string) => {
+    const raw = fs.readFileSync(absPath, 'utf8');
     const statements = splitStatements(raw);
     for (const stmt of statements) {
       const parts = transpileSql(stmt, db.driver());
@@ -99,13 +103,20 @@ export async function runMigrations(
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
           if (/duplicate|already exists|exists/i.test(msg)) continue;
-          throw new Error(`Migration ${file} failed: ${msg}\nSQL: ${p.slice(0, 200)}`);
+          throw new Error(`Migration ${id} failed: ${msg}\nSQL: ${p.slice(0, 200)}`);
         }
       }
     }
     const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-    await db.run('INSERT INTO _migrations (id, applied_at) VALUES (?, ?)', [file, now]);
-    just.push(file);
+    await db.run('INSERT INTO _migrations (id, applied_at) VALUES (?, ?)', [id, now]);
+    just.push(id);
+  };
+
+  for (const file of pendingCore) {
+    await applyFile(file, path.join(CONTRACTS_ROOT, 'migrations', file));
+  }
+  for (const id of pendingPlugin.sort()) {
+    await applyFile(id, pluginFiles[id]!);
   }
 
   const appliedRows = await db.all('SELECT id FROM _migrations ORDER BY applied_at, id');

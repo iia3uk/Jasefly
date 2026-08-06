@@ -82,9 +82,13 @@ export function TranslateAutoWarmup() {
   const { site } = useSiteContext()
   const running = useRef(false)
 
-  const pluginOn = siteHasPlugin(site?.enabled_plugins, 'translate')
-  const widgetOn = site?.translate?.widget_enabled ?? true
-  const autoOn = site?.translate?.auto_warmup ?? true
+  // Fail-closed: no /site yet, or translate plugin off → never hit /translate/* APIs.
+  const pluginOn =
+    Array.isArray(site?.enabled_plugins) &&
+    siteHasPlugin(site.enabled_plugins, 'translate') &&
+    site?.translate != null
+  const widgetOn = Boolean(site?.translate) && (site!.translate!.widget_enabled ?? true)
+  const autoOn = Boolean(site?.translate) && (site!.translate!.auto_warmup ?? true)
   const serverReady = site?.translate?.cache_ready ?? false
   const serverHash = site?.translate?.content_hash ?? ''
 

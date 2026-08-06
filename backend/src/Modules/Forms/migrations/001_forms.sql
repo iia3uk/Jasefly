@@ -114,7 +114,7 @@ INNER JOIN `permissions` p ON p.slug IN ('forms.view', 'forms.submissions.view')
 WHERE r.slug = 'editor';
 
 INSERT IGNORE INTO `modules` (`name`, `is_enabled`, `settings`) VALUES
-('forms', 1, NULL);
+('forms', 0, NULL);
 
 -- Default contact form (adapter for legacy contact-form widget)
 INSERT INTO `forms` (`name`, `slug`, `description`, `status`, `success_message`, `submit_button_text`, `settings`)

@@ -8,6 +8,7 @@ use App\Request;
 use App\Response;
 use App\Services\ActivityLogService;
 use App\Services\PageScheduleService;
+use App\Services\PermissionService;
 use App\Services\SlugService;
 use App\Services\SoftDeleteService;
 use App\Core\Container;
@@ -66,6 +67,7 @@ final class AdminController
     private SoftDeleteService $softDelete;
     private SlugService $slugs;
     private ActivityLogService $activity;
+    private PermissionService $permissions;
     private ?EventDispatcher $events = null;
 
     public function __construct(private Database $db, private array $app)
@@ -73,9 +75,26 @@ final class AdminController
         $this->softDelete = new SoftDeleteService($db);
         $this->slugs = new SlugService($db);
         $this->activity = new ActivityLogService($db);
+        $this->permissions = new PermissionService($db);
         $container = Container::getInstance();
         if ($container->has(EventDispatcher::class)) {
             $this->events = $container->get(EventDispatcher::class);
+        }
+    }
+
+    /** Explicit capability gate for AdminController mutations (not Auth-only). */
+    private function assertResourceMutation(Request $r, string $resource, string $op): void
+    {
+        $user = $r->user ?? null;
+        if (!is_array($user)) {
+            Response::error('Unauthorized', 401);
+        }
+        if ($resource === 'webhooks') {
+            $this->permissions->require($user, 'integrations.manage');
+            return;
+        }
+        if ($this->permissions->isContentResource($resource)) {
+            $this->permissions->requireContentMutation($user, $op);
         }
     }
 
@@ -196,6 +215,7 @@ final class AdminController
 
     public function create(Request $r, string $resource): never
     {
+        $this->assertResourceMutation($r, $resource, 'create');
         $table = $this->table($resource);
         $payload = $r->all();
         $relations = $this->extractRelations($resource, $payload);
@@ -233,6 +253,7 @@ final class AdminController
 
     public function update(Request $r, string $resource, string $id): never
     {
+        $this->assertResourceMutation($r, $resource, 'update');
         $table = $this->table($resource);
         $existing = $this->db->one("SELECT * FROM `$table` WHERE id=? AND {$this->deletedFilter($table)}", [$id]);
         if (!$existing) {
@@ -288,6 +309,7 @@ final class AdminController
 
     public function delete(Request $r, string $resource, string $id): never
     {
+        $this->assertResourceMutation($r, $resource, 'delete');
         $table = $this->table($resource);
         $row = $this->db->one("SELECT * FROM `$table` WHERE id=? AND {$this->deletedFilter($table)}", [$id]);
         if (!$row) {
@@ -522,6 +544,7 @@ final class AdminController
 
     public function publish(Request $r, string $resource, string $id): never
     {
+        $this->assertResourceMutation($r, $resource, 'publish');
         $table = $this->table($resource);
         $status = (string) ($r->input('status') ?? 'published');
         if (!in_array($status, ['draft', 'published', 'archived'], true)) {
@@ -552,6 +575,7 @@ final class AdminController
 
     public function reorder(Request $r, string $resource): never
     {
+        $this->assertResourceMutation($r, $resource, 'update');
         $table = $this->table($resource);
         foreach ((array) $r->input('items', []) as $i => $itemId) {
             $this->db->run("UPDATE `$table` SET sort_order=? WHERE id=?", [$i, $itemId]);

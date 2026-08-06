@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { api, endpoints } from '@/lib/api'
+import { api, ApiRequestError, endpoints } from '@/lib/api'
 // api used for demo end session
 import { AUTH_SESSION_EXPIRED_EVENT, clearAuthStorage } from '@/lib/authStorage'
 import type { AuthResponse } from '@/types'
@@ -118,8 +118,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('user_name', String(data.name))
       }
       setCapsReady(true)
-    } catch {
-      // Fallback to static role matrix until me works
+    } catch (err) {
+      // Dead/expired JWT: never keep AdminBar via stale localStorage role.
+      // api.ts already clears tokens on /auth/me 401 after failed refresh.
+      if (!localStorage.getItem('access_token') || (err instanceof ApiRequestError && err.details.status === 401)) {
+        clearSessionState()
+        return
+      }
+      // Transient network / 5xx: soft fallback until next hydrate
       setCapabilities([])
       setRoles(role ? [role] : [])
       const demo = localStorage.getItem('is_demo') === '1' || role === 'demo_explorer'

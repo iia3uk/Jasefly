@@ -206,8 +206,10 @@ final class PortfolioModule extends AbstractModule
 
     public function demoPages(): array
     {
-        // Layouts live in SystemTemplates (shared catalog). Avoid HTML-only
-        // stubs that race with ensure and leave the builder empty.
-        return [];
+        // Layouts live in SystemTemplates (shared catalog); this plugin owns them.
+        if (!class_exists(\App\Modules\System\SystemTemplates::class)) {
+            return [];
+        }
+        return \App\Modules\System\SystemTemplates::demoPagesForPlugin('portfolio');
     }
 }

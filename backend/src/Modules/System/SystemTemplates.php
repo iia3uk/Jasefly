@@ -57,11 +57,11 @@ final class SystemTemplates
             [
                 'slug' => 'blog',
                 'title' => 'Блог (обложка)',
-                'group' => 'Портфолио',
+                'group' => 'Блог',
                 'route' => '/blog',
-                'description' => 'Шаблон раздела блога (плагин Portfolio). Пока seed — на сайте классический список постов.',
+                'description' => 'Шаблон раздела блога (плагин Blog). Пока seed — на сайте классический список постов.',
                 'template' => 'system',
-                'plugin' => 'portfolio',
+                'plugin' => 'blog',
                 'layout' => self::blogLayout(),
             ],
             [
@@ -226,11 +226,97 @@ final class SystemTemplates
         return \App\Modules\Products\ProductTemplates::systemCatalogEntries();
     }
 
+    /**
+     * Enabled plugin name map (+ aliases). Fail-closed: missing registry → empty (no optional templates).
+     *
+     * @return array<string, true>
+     */
+    public static function enabledPluginMap(): array
+    {
+        $enabled = [];
+        try {
+            /** @var \App\Core\ModuleRegistry $reg */
+            $reg = \App\Core\Container::getInstance()->get(\App\Core\ModuleRegistry::class);
+            foreach ($reg->all() as $module) {
+                $enabled[$module->name()] = true;
+            }
+        } catch (\Throwable) {
+            return [];
+        }
+        // Aliases used by FE / catalog
+        if (!empty($enabled['content'])) {
+            $enabled['site'] = true;
+        }
+        if (!empty($enabled['site'])) {
+            $enabled['content'] = true;
+        }
+        if (!empty($enabled['portfolio'])) {
+            $enabled['projects'] = true;
+        }
+        if (!empty($enabled['projects'])) {
+            $enabled['portfolio'] = true;
+        }
+        return $enabled;
+    }
+
+    /** @param array<string, true>|null $enabled */
+    public static function pluginActive(?string $plugin, ?array $enabled = null): bool
+    {
+        if ($plugin === null || $plugin === '') {
+            return true;
+        }
+        $map = $enabled ?? self::enabledPluginMap();
+        return !empty($map[$plugin]);
+    }
+
     /** @return list<array<string, mixed>> для PageSeedService / demoPages */
     public static function demoPages(): array
     {
+        return self::demoPagesFromCatalog(self::catalog());
+    }
+
+    /**
+     * Pages owned by one plugin (null = core System-only templates).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function demoPagesForPlugin(?string $plugin): array
+    {
+        $want = $plugin === null || $plugin === '' ? null : $plugin;
+        $catalog = array_values(array_filter(
+            self::catalog(),
+            static function (array $t) use ($want): bool {
+                $p = isset($t['plugin']) && is_string($t['plugin']) && $t['plugin'] !== ''
+                    ? $t['plugin']
+                    : null;
+                return $want === null ? $p === null : $p === $want;
+            }
+        ));
+        return self::demoPagesFromCatalog($catalog);
+    }
+
+    /** Only core + templates for currently enabled plugins. */
+    public static function demoPagesForEnabled(): array
+    {
+        $enabled = self::enabledPluginMap();
+        $catalog = array_values(array_filter(
+            self::catalog(),
+            static fn(array $t): bool => self::pluginActive(
+                isset($t['plugin']) && is_string($t['plugin']) ? $t['plugin'] : null,
+                $enabled
+            )
+        ));
+        return self::demoPagesFromCatalog($catalog);
+    }
+
+    /**
+     * @param list<array<string, mixed>> $catalog
+     * @return list<array<string, mixed>>
+     */
+    private static function demoPagesFromCatalog(array $catalog): array
+    {
         $out = [];
-        foreach (self::catalog() as $t) {
+        foreach ($catalog as $t) {
             $out[] = [
                 'slug' => $t['slug'],
                 'title' => $t['title'],

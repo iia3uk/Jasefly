@@ -537,9 +537,9 @@ final class OverloadService
         try {
             $row = $db->one('SELECT is_enabled FROM modules WHERE name=?', ['overload']);
             if (!$row) {
-                return true; // no row → default on (toggle in Plugins)
+                return false; // no row → default off (enable in Plugins)
             }
-            return (int) ($row['is_enabled'] ?? 1) === 1;
+            return (int) ($row['is_enabled'] ?? 0) === 1;
         } catch (\Throwable) {
             return false;
         }

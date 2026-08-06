@@ -72,4 +72,4 @@ INNER JOIN `permissions` p ON p.slug IN ('scheduler.view', 'scheduler.manage')
 WHERE r.slug IN ('admin', 'super_admin');
 
 INSERT IGNORE INTO `modules` (`name`, `is_enabled`, `settings`) VALUES
-('scheduler', 1, NULL);
+('scheduler', 0, NULL);

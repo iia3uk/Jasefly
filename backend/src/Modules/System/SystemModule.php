@@ -506,6 +506,7 @@ final class SystemModule extends AbstractModule
             Response::json(['data' => $svc->list((int) $id)]);
         }, $protected);
         $router->post($p('/admin/pages/{id}/revisions'), function (Request $r, string $id) use ($db) {
+            (new PermissionService($db))->requireContentMutation($r->user ?? [], 'update');
             $svc = new \App\Services\PageRevisionService($db);
             $note = $r->input('note');
             $revId = $svc->snapshot((int) $id, $r->user['id'] ?? null, is_string($note) ? $note : null);
@@ -520,6 +521,7 @@ final class SystemModule extends AbstractModule
             Response::json(['data' => $rev]);
         }, $protected);
         $router->post($p('/admin/pages/revisions/{revisionId}/restore'), function (Request $r, string $revisionId) use ($db) {
+            (new PermissionService($db))->requireContentMutation($r->user ?? [], 'update');
             $svc = new \App\Services\PageRevisionService($db);
             $restored = $svc->restore((int) $revisionId);
             if (!$restored) {
@@ -600,20 +602,11 @@ final class SystemModule extends AbstractModule
             foreach ($rows as $row) {
                 $bySlug[(string) $row['slug']] = $row;
             }
-            $enabledPlugins = [];
-            try {
-                /** @var \App\Core\ModuleRegistry $reg */
-                $reg = \App\Core\Container::getInstance()->get(\App\Core\ModuleRegistry::class);
-                foreach ($reg->all() as $module) {
-                    $enabledPlugins[$module->name()] = true;
-                }
-            } catch (\Throwable) {
-                $enabledPlugins = null; // fail-open: show all
-            }
+            $enabledPlugins = SystemTemplates::enabledPluginMap();
             $items = [];
             foreach (SystemTemplates::catalog() as $t) {
                 $plugin = $t['plugin'] ?? null;
-                if (is_string($plugin) && $plugin !== '' && is_array($enabledPlugins) && empty($enabledPlugins[$plugin])) {
+                if (is_string($plugin) && $plugin !== '' && !SystemTemplates::pluginActive($plugin, $enabledPlugins)) {
                     continue;
                 }
                 $row = $bySlug[$t['slug']] ?? null;
@@ -648,12 +641,14 @@ final class SystemModule extends AbstractModule
         }, $protected);
 
         $router->post($p('/admin/page-templates/ensure'), function () use ($db) {
-            $stats = (new PageSeedService($db))->ensureEntries(SystemTemplates::demoPages());
+            // Only seed templates owned by currently enabled plugins (core templates always).
+            $stats = (new PageSeedService($db))->ensureEntries(SystemTemplates::demoPagesForEnabled());
             Response::json(['success' => true, 'data' => $stats]);
         }, $protected);
 
         // Копировать layout (стиль/структуру) с одной страницы на другую
         $router->post($p('/admin/pages/{id}/copy-layout'), function (Request $r, string $id) use ($db) {
+            (new PermissionService($db))->requireContentMutation($r->user ?? [], 'update');
             $targetId = (int) $id;
             $sourceId = (int) ($r->input('source_id') ?? 0);
             if ($targetId < 1 || $sourceId < 1) {
@@ -725,7 +720,8 @@ final class SystemModule extends AbstractModule
 
     public function demoPages(): array
     {
-        return SystemTemplates::demoPages();
+        // Core System templates only — portfolio/blog/commerce/auth live on owning plugins.
+        return SystemTemplates::demoPagesForPlugin(null);
     }
 
     private function packageLifecycleService(Database $db, array $app): \App\Services\Modules\ModulePackageService

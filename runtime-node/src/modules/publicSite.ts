@@ -2,6 +2,7 @@ import type { Context } from 'hono';
 import type { Database } from '../db/Database.js';
 import { fail, ok } from '../http/envelope.js';
 import { runMigrations } from '../db/migrate.js';
+import { listEnabledPlugins } from '../plugins/pluginState.js';
 import { NODE_MODULE_NAMES } from './moduleNames.js';
 
 async function singleton(db: Database, table: string) {
@@ -10,17 +11,10 @@ async function singleton(db: Database, table: string) {
 }
 
 /**
- * Match PHP ModuleRegistry::all() — enabled modules only.
- * Template ships enabled()=false; automation/newsletter/notifications are
- * force-enabled in behavior seed (and typically on in production installs).
+ * PHP ModuleRegistry discovery order. Only names present in modules.is_enabled=1
+ * (plus core system/users) are returned — default-off when no row.
  */
-const DEFAULT_OFF = new Set(['template']);
-
-/**
- * PHP ModuleRegistry discovery order (enabled modules). Keep aligned with
- * backend Modules + package load order used by PublicController::site.
- */
-const PHP_ENABLED_PLUGIN_ORDER = [
+const PHP_PLUGIN_ORDER = [
   'module-manager',
   'system',
   'demo',
@@ -52,11 +46,6 @@ const PHP_ENABLED_PLUGIN_ORDER = [
   'seo',
 ] as const;
 
-function registeredPluginNames(): string[] {
-  const available = new Set<string>(NODE_MODULE_NAMES.filter((n) => !DEFAULT_OFF.has(n)));
-  return PHP_ENABLED_PLUGIN_ORDER.filter((n) => available.has(n));
-}
-
 function pluginOn(plugins: string[], name: string): boolean {
   return plugins.includes(name);
 }
@@ -86,7 +75,8 @@ export async function siteHandler(c: Context, db: Database) {
     /* ignore */
   }
 
-  const plugins = registeredPluginNames();
+  const catalog = PHP_PLUGIN_ORDER.filter((n) => (NODE_MODULE_NAMES as readonly string[]).includes(n));
+  const plugins = await listEnabledPlugins(db, catalog);
   const portfolioOn = pluginOn(plugins, 'portfolio');
   const translateOn = pluginOn(plugins, 'translate');
 

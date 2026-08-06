@@ -65,6 +65,9 @@ final class BlogModule extends AbstractModule
 
     public function demoPages(): array
     {
+        if (class_exists(\App\Modules\System\SystemTemplates::class)) {
+            return \App\Modules\System\SystemTemplates::demoPagesForPlugin('blog');
+        }
         return [
             [
                 'slug' => 'blog',

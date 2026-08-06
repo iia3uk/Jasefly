@@ -306,7 +306,11 @@ server.tool(
   'Откат VPS Node release (symlink на previous/to). Только node-vps. Требует site + confirm=true.',
   siteSchema({
     confirm: z.boolean().describe('Явное подтверждение destructive rollback'),
-    to: z.string().optional().describe('Имя release stamp; иначе предыдущий'),
+    to: z
+      .string()
+      .regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/, 'release stamp: alphanumeric . _ - only')
+      .optional()
+      .describe('Имя release stamp; иначе предыдущий'),
   }),
   async ({ site, confirm, to }) => {
     try {

@@ -9,12 +9,12 @@ import { PageContext } from '@/admin/components/PageContext'
 import { t, resources, fieldLabel } from '@/admin/i18n'
 import { formatMoscowDateTime } from '@/admin/lib/formatDateTime'
 
-const MCP_CURSOR_SNIPPET = `{
+const MCP_CURSOR_SNIPPET_FALLBACK = `{
   "mcpServers": {
     "jasefly-cms": {
       "command": "node",
-      "args": ["C:/JASEFLY_CMS/mcp-cms/src/index.js"],
-      "env": { "CMS_REPO_ROOT": "C:/JASEFLY_CMS" }
+      "args": ["F:/JASEFLY_CMS/mcp-cms/src/index.js"],
+      "env": { "CMS_REPO_ROOT": "F:/JASEFLY_CMS" }
     }
   }
 }`
@@ -287,6 +287,19 @@ type McpStatus = {
   token_hint?: string
   auth_header?: string
   docs_hint?: string
+  app_url?: string
+  runtime?: string
+  site_token_path?: string
+  multi_site_hint?: string
+  cursor_snippet?: string
+  local_example_env?: string
+  docs_url?: string
+  agent_env_keys?: {
+    multi?: string
+    legacy?: string
+    list_tool?: string
+    site_param?: string
+  }
 }
 
 export function SystemStatusPage() {
@@ -300,6 +313,10 @@ export function SystemStatusPage() {
   })
 
   const mcp = (data?.mcp && typeof data.mcp === 'object' ? data.mcp : null) as McpStatus | null
+  const cursorSnippet =
+    typeof mcp?.cursor_snippet === 'string' && mcp.cursor_snippet.trim()
+      ? mcp.cursor_snippet.trim()
+      : MCP_CURSOR_SNIPPET_FALLBACK
   const loadFailures = Array.isArray(data?.module_load_failures)
     ? (data.module_load_failures as Array<{ module?: string; stage?: string; error?: string }>)
     : []
@@ -443,6 +460,24 @@ export function SystemStatusPage() {
                   ) : null}
                 </div>
                 {mcp?.docs_hint ? <p className="text-sm text-zinc-400">{mcp.docs_hint}</p> : null}
+                {mcp?.multi_site_hint || t.mcpMultiSiteHint ? (
+                  <p className="text-sm text-zinc-500">{mcp?.multi_site_hint || t.mcpMultiSiteHint}</p>
+                ) : null}
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {mcp?.site_token_path ? (
+                    <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-wider text-zinc-500">{t.mcpSiteTokenPath}</p>
+                      <p className="mt-1 font-mono text-xs text-zinc-300">{mcp.site_token_path}</p>
+                    </div>
+                  ) : null}
+                  {mcp?.app_url ? (
+                    <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-wider text-zinc-500">{t.mcpAppUrl}</p>
+                      <p className="mt-1 font-mono text-xs text-zinc-300">{mcp.app_url}</p>
+                      {mcp.runtime ? <p className="mt-1 text-[11px] text-zinc-600">{mcp.runtime}</p> : null}
+                    </div>
+                  ) : null}
+                </div>
                 {mcp?.auth_header ? (
                   <div className="flex flex-wrap items-center gap-2">
                     <code className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-xs text-zinc-300">
@@ -465,15 +500,33 @@ export function SystemStatusPage() {
               <li>{t.mcpSetupStep2}</li>
               <li>{t.mcpSetupStep3}</li>
             </ol>
+            {mcp?.local_example_env ? (
+              <div className="mt-4">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs uppercase tracking-wider text-zinc-500">{t.mcpLocalExample}</p>
+                  <Button
+                    type="button"
+                    className="px-2 text-xs"
+                    onClick={() => void copyText('local-env', mcp.local_example_env!)}
+                  >
+                    {copied === 'local-env' ? <Check size={14} /> : <Copy size={14} />}
+                    <span className="ml-1">{copied === 'local-env' ? t.mcpCopied : t.mcpCopy}</span>
+                  </Button>
+                </div>
+                <pre className="mt-2 overflow-x-auto rounded-xl border border-white/10 bg-black/30 p-3 text-xs text-zinc-300">
+                  {mcp.local_example_env}
+                </pre>
+              </div>
+            ) : null}
             <div className="mt-4 flex items-center justify-between gap-2">
               <p className="text-xs uppercase tracking-wider text-zinc-500">{t.mcpCursorSnippet}</p>
-              <Button type="button" className="px-2 text-xs" onClick={() => void copyText('snippet', MCP_CURSOR_SNIPPET)}>
+              <Button type="button" className="px-2 text-xs" onClick={() => void copyText('snippet', cursorSnippet)}>
                 {copied === 'snippet' ? <Check size={14} /> : <Copy size={14} />}
                 <span className="ml-1">{copied === 'snippet' ? t.mcpCopied : t.mcpCopy}</span>
               </Button>
             </div>
             <pre className="mt-2 overflow-x-auto rounded-xl border border-white/10 bg-black/30 p-3 text-xs text-zinc-300">
-              {MCP_CURSOR_SNIPPET}
+              {cursorSnippet}
             </pre>
           </GlassPanel>
 

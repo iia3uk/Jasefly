@@ -13,12 +13,18 @@ use Throwable;
  * (without editing config files).
  *
  * Resolution rules:
- *  - isEnabled(): a module is ON when its row has is_enabled=1, OR when no row
- *    exists yet (default-on). A row with is_enabled=0 turns it OFF.
+ *  - Core (`system`, `users`) is always ON.
+ *  - isEnabled(): ON only when a row exists with is_enabled=1 (default-off).
+ *  - Missing row → OFF (unless core), even if ModuleInterface::enabled() is true.
+ *  - ModuleInterface::enabled() still applies as an extra OFF gate when a row is on
+ *    (e.g. Template/Automation ship enabled()=false).
  *  - getSettings(): stored JSON merged over the module's declared defaults.
  */
 final class PluginStateService
 {
+    /** @var list<string> */
+    public const CORE = ['system', 'users'];
+
     /** @var array<string, mixed> */
     private array $appConfig;
     /** @var array<string, array{name:string,is_enabled:bool,settings:?string}>|null */
@@ -34,15 +40,22 @@ final class PluginStateService
 
     private Database $db;
 
-    /** True if the module is enabled (default-on when no DB row). */
+    /** True if the module is enabled (default-off when no DB row; core always on). */
     public function isEnabled(ModuleInterface $module): bool
     {
-        $row = $this->row($module->name());
-        if ($row === null) {
-            // No explicit state → respect the module's own config gate.
-            return $module->enabled($this->appConfig);
+        $name = $module->name();
+        if (in_array($name, self::CORE, true)) {
+            return true;
         }
-        return (bool) $row['is_enabled'];
+        $row = $this->row($name);
+        if ($row === null) {
+            return false;
+        }
+        if (!(bool) $row['is_enabled']) {
+            return false;
+        }
+        // Row says on — still honour module config gate (template/automation/…).
+        return $module->enabled($this->appConfig);
     }
 
     /** Enable/disable a module by name. Creates a row if missing. */
@@ -126,7 +139,7 @@ final class PluginStateService
                 ];
             }
         } catch (Throwable) {
-            // Table not created yet (migration pending) — everything default-on.
+            // Table not created yet (migration pending) — everything default-off.
         }
         return $this->cache = $out;
     }

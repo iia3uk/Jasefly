@@ -42,8 +42,11 @@ final class PermissionMiddleware
                 || str_contains($r->path, '/admin/automations')
                 || str_contains($r->path, '/admin/newsletter')
                 || str_contains($r->path, '/admin/notifications')
-                || str_contains($r->path, '/admin/scheduler');
-            if (!$moduleDeleteExempt) {
+                || str_contains($r->path, '/admin/scheduler')
+                || str_contains($r->path, '/admin/webhooks');
+            if (str_contains($r->path, '/admin/webhooks')) {
+                $this->permissions->require($user, 'integrations.manage');
+            } elseif (!$moduleDeleteExempt) {
                 $this->permissions->require($user, 'content.delete');
             } elseif (str_contains($r->path, '/admin/media')
                 && !$this->permissions->can($user, 'media.manage')
@@ -52,9 +55,39 @@ final class PermissionMiddleware
             }
         }
 
-        // CRUD create/update for content resources is enforced in AdminController /
-        // module handlers (resource-specific permissions). Do not blanket-require
-        // content.create/update on every admin POST/PUT — that breaks module routes.
+        // Content create/update/publish and revision restore: explicit capability checks
+        // (Auth alone is insufficient). Handlers also call PermissionService for defense-in-depth.
+        $method = strtoupper($r->method);
+        if (in_array($method, ['POST', 'PUT', 'PATCH'], true)) {
+            if (preg_match('#/admin/pages/revisions/\d+/restore$#', $r->path)) {
+                $this->permissions->requireContentMutation($user, 'update');
+            } elseif (preg_match('#/admin/pages/\d+/revisions$#', $r->path) && $method === 'POST') {
+                $this->permissions->requireContentMutation($user, 'update');
+            } elseif (preg_match('#/admin/pages/\d+/copy-layout$#', $r->path) && $method === 'POST') {
+                $this->permissions->requireContentMutation($user, 'update');
+            } elseif (str_contains($r->path, '/admin/webhooks')) {
+                $this->permissions->require($user, 'integrations.manage');
+            } else {
+                $resources = implode('|', array_map(
+                    static fn(string $name): string => preg_quote($name, '#'),
+                    PermissionService::contentResources()
+                ));
+                if ($resources !== '') {
+                    if (preg_match('#/admin/(' . $resources . ')$#', $r->path) && $method === 'POST') {
+                        $this->permissions->requireContentMutation($user, 'create');
+                    } elseif (preg_match('#/admin/(' . $resources . ')/reorder$#', $r->path)) {
+                        $this->permissions->requireContentMutation($user, 'update');
+                    } elseif (preg_match('#/admin/(' . $resources . ')/\d+/publish$#', $r->path)) {
+                        $this->permissions->requireContentMutation($user, 'publish');
+                    } elseif (
+                        preg_match('#/admin/(' . $resources . ')/\d+$#', $r->path)
+                        && in_array($method, ['PUT', 'PATCH'], true)
+                    ) {
+                        $this->permissions->requireContentMutation($user, 'update');
+                    }
+                }
+            }
+        }
 
         return $next();
     }

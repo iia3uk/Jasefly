@@ -99,12 +99,25 @@ function isSilentRefreshExcluded(path: string): boolean {
     || path === '/auth/logout'
     || path.startsWith('/auth/refresh')
     || path.startsWith('/auth/login')
+    || path.startsWith('/auth/logout')
 }
 
-async function settleAuthFailure(): Promise<void> {
+/** Paths that prove the session is dead when they 401 (not public anonymous APIs). */
+function shouldRecoverSession(path: string): boolean {
+  if (isSilentRefreshExcluded(path)) return false
+  if (path.startsWith('/admin')) return true
+  // Public site hydrates staff chrome via /auth/me — must refresh or clear, not keep stale AdminBar.
+  if (path === '/auth/me' || path.startsWith('/auth/me?') || path.startsWith('/auth/2fa')) return true
+  return false
+}
+
+async function settleAuthFailure(options: { redirectToLogin?: boolean } = {}): Promise<void> {
   if (authFailureInFlight) return authFailureInFlight
+  const redirectToLogin = options.redirectToLogin
+    ?? isAdminPathname(window.location.pathname)
   authFailureInFlight = (async () => {
     emitSessionExpired()
+    if (!redirectToLogin) return
     const onLogin = isAdminPathname(window.location.pathname) && window.location.pathname.endsWith('/login')
     if (!onLogin) {
       const next = `${window.location.pathname}${window.location.search}`
@@ -198,20 +211,20 @@ async function request<T>(
   }
 
   if (!response.ok) {
-    // Expired access token → single-flight refresh once, then retry original request.
-    if (
-      response.status === 401
-      && path.startsWith('/admin')
-      && !_retried
-      && !isSilentRefreshExcluded(path)
-    ) {
+    // Expired access token → single-flight refresh once, then retry; else clear session.
+    if (response.status === 401 && shouldRecoverSession(path) && !_retried) {
       const refreshed = await trySilentRefresh()
       if (refreshed) {
         return request<T>(path, method, body, { ...options, _retried: true })
       }
-      await settleAuthFailure()
-    } else if (response.status === 401 && path.startsWith('/admin') && !isSilentRefreshExcluded(path)) {
-      await settleAuthFailure()
+      // On public site: drop AdminBar / tokens. On admin routes: force login.
+      await settleAuthFailure({
+        redirectToLogin: path.startsWith('/admin') || isAdminPathname(window.location.pathname),
+      })
+    } else if (response.status === 401 && shouldRecoverSession(path)) {
+      await settleAuthFailure({
+        redirectToLogin: path.startsWith('/admin') || isAdminPathname(window.location.pathname),
+      })
     }
     const details = await parseErrorPayload(response, method, path)
     // Open debugger for server/client errors in admin (not every 401 redirect).
