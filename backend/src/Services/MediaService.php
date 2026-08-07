@@ -25,7 +25,9 @@ final class MediaService
 
         $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']) ?: '';
         $clientExt = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+        $this->rejectSvgUpload($mime, $clientExt);
         $mime = $this->normalizeUploadMime($mime, $clientExt);
+        $this->rejectSvgUpload($mime, $clientExt);
         $allowed = $this->allowedUploadTypes();
         if (!isset($allowed[$mime])) {
             throw new \RuntimeException('Unsupported file type');
@@ -78,7 +80,9 @@ final class MediaService
 
         $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']) ?: '';
         $clientExt = strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
+        $this->rejectSvgUpload($mime, $clientExt);
         $mime = $this->normalizeUploadMime($mime, $clientExt);
+        $this->rejectSvgUpload($mime, $clientExt);
         $allowed = $this->allowedUploadTypes();
         if (!isset($allowed[$mime])) {
             throw new \RuntimeException('Unsupported file type');
@@ -203,9 +207,10 @@ final class MediaService
             ? 'public, max-age=31536000, immutable'
             : 'private, no-store'));
         header('X-Content-Type-Options: nosniff');
-        // Harden SVG delivery: no scripts/network from the document itself.
+        // Legacy SVG on disk: force download + CSP sandbox (new SVG uploads are rejected).
         if (($media['mime_type'] ?? '') === 'image/svg+xml' || str_ends_with(strtolower((string) ($media['path'] ?? '')), '.svg')) {
             header("Content-Security-Policy: default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox");
+            header('Content-Disposition: attachment; filename="' . basename((string) ($media['filename'] ?? 'image.svg')) . '"');
         }
         readfile($path);
         exit;
@@ -220,7 +225,7 @@ final class MediaService
             'image/gif' => 'gif',
             'image/webp' => 'webp',
             'image/avif' => 'avif',
-            'image/svg+xml' => 'svg',
+            // SVG banned: stored XSS via <script>/on* (serve legacy with CSP only).
             'image/x-icon' => 'ico',
             'image/vnd.microsoft.icon' => 'ico',
             'image/bmp' => 'bmp',
@@ -229,6 +234,20 @@ final class MediaService
             'video/mp4' => 'mp4',
             'video/webm' => 'webm',
         ];
+    }
+
+    /** SVG uploads are rejected (422 via MediaController). */
+    private function rejectSvgUpload(string $mime, string $clientExt): void
+    {
+        $mime = strtolower(trim($mime));
+        $clientExt = strtolower(trim($clientExt));
+        if (
+            $clientExt === 'svg'
+            || $mime === 'image/svg+xml'
+            || str_contains($mime, 'svg')
+        ) {
+            throw new \RuntimeException('Unsupported file type');
+        }
     }
 
     /** @return list<string> */
@@ -248,32 +267,63 @@ final class MediaService
         if ($mime === 'image/jpg') {
             return 'image/jpeg';
         }
-        // SVG often sniffed as xml/text; trust .svg extension only for those families.
-        if (
-            in_array($mime, ['text/xml', 'application/xml', 'text/plain', 'text/html'], true)
-            && $clientExt === 'svg'
-        ) {
-            return 'image/svg+xml';
-        }
+        // Do not normalize .svg → image/svg+xml (uploads rejected via rejectSvgUpload).
         if ($mime === 'image/ico' || ($mime === 'application/octet-stream' && $clientExt === 'ico')) {
             return 'image/x-icon';
         }
         return $mime;
     }
 
-    /** Strip obvious script vectors from SVG before storing. */
+    /**
+     * Strip script vectors from SVG before storing.
+     * Rejects the upload if dangerous patterns remain after sanitization.
+     */
     private function sanitizeSvgFile(string $absolutePath): void
     {
         $raw = @file_get_contents($absolutePath);
         if ($raw === false || $raw === '') {
-            return;
+            throw new \RuntimeException('Invalid SVG upload');
         }
-        $clean = preg_replace('#<script\b[^>]*>.*?</script>#is', '', $raw) ?? $raw;
-        $clean = preg_replace('#<foreignObject\b[^>]*>.*?</foreignObject>#is', '', $clean) ?? $clean;
-        $clean = preg_replace('#\son[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)#i', '', $clean) ?? $clean;
+        // Block binary / polyglot disguises early.
+        if (str_contains($raw, "\0") || preg_match('/<\?php|<\?=|<\%/i', $raw)) {
+            @unlink($absolutePath);
+            throw new \RuntimeException('SVG contains disallowed content');
+        }
+
+        $clean = $raw;
+        $clean = preg_replace('#<!ENTITY\b[^>]*>#i', '', $clean) ?? $clean;
+        $clean = preg_replace('#<!DOCTYPE\b[^>]*>#i', '', $clean) ?? $clean;
+        $clean = preg_replace('#<\?xml-stylesheet\b[^>]*\?>#i', '', $clean) ?? $clean;
+        $clean = preg_replace('#<script\b[^>]*>.*?</script\s*>#is', '', $clean) ?? $clean;
+        $clean = preg_replace('#<script\b[^>]*/?\s*>#is', '', $clean) ?? $clean;
+        $clean = preg_replace('#<(foreignObject|iframe|embed|object|use)\b[^>]*>.*?</\1\s*>#is', '', $clean) ?? $clean;
+        $clean = preg_replace('#<(foreignObject|iframe|embed|object|use)\b[^>]*/?\s*>#is', '', $clean) ?? $clean;
+        $clean = preg_replace('#\son[a-z_][a-z0-9_]*\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)#i', '', $clean) ?? $clean;
+        $clean = preg_replace('#\s(xlink:)?href\s*=\s*([\'"])\s*javascript:[^\'"]*\2#i', '', $clean) ?? $clean;
         $clean = preg_replace('#javascript\s*:#i', '', $clean) ?? $clean;
         $clean = preg_replace('#data:\s*text/html#i', 'data:text/plain', $clean) ?? $clean;
-        @file_put_contents($absolutePath, $clean);
+        $clean = preg_replace('#data:\s*image/svg\+xml#i', 'data:text/plain', $clean) ?? $clean;
+
+        if ($this->svgStillDangerous($clean)) {
+            @unlink($absolutePath);
+            throw new \RuntimeException('SVG failed security checks');
+        }
+
+        if (@file_put_contents($absolutePath, $clean) === false) {
+            @unlink($absolutePath);
+            throw new \RuntimeException('Could not sanitize SVG');
+        }
+    }
+
+    private function svgStillDangerous(string $svg): bool
+    {
+        $lower = strtolower($svg);
+        foreach (['<script', 'javascript:', 'onerror=', 'onload=', 'onclick=', '<foreignobject', '<iframe', '<?php', '<embed', '<object'] as $needle) {
+            if (str_contains($lower, $needle)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function folderSlug(?int $folderId): ?string

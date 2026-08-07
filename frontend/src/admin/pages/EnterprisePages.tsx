@@ -284,7 +284,9 @@ type SystemTab = 'health' | 'mcp'
 
 type McpStatus = {
   configured?: boolean
-  token_hint?: string
+  signing_configured?: boolean
+  auth_mode?: string
+  ip_allowlist_enabled?: boolean
   auth_header?: string
   docs_hint?: string
   app_url?: string
@@ -453,11 +455,23 @@ export function SystemStatusPage() {
                   >
                     {mcp?.configured ? t.mcpTokenConfigured : t.mcpTokenMissing}
                   </span>
-                  {mcp?.configured && mcp.token_hint ? (
-                    <span className="font-mono text-sm text-zinc-400">
-                      {t.mcpTokenHint}: {mcp.token_hint}
+                  <span
+                    className={`rounded-lg border px-2.5 py-1 text-xs font-medium ${
+                      mcp?.signing_configured
+                        ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
+                        : 'border-amber-400/30 bg-amber-500/10 text-amber-100'
+                    }`}
+                  >
+                    {mcp?.signing_configured ? t.mcpSigningConfigured : t.mcpSigningMissing}
+                  </span>
+                  {mcp?.auth_mode ? (
+                    <span className="rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-300">
+                      {t.mcpAuthMode}: {mcp.auth_mode}
                     </span>
                   ) : null}
+                  <span className="rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-400">
+                    {mcp?.ip_allowlist_enabled ? t.mcpIpAllowlistOn : t.mcpIpAllowlistOff}
+                  </span>
                 </div>
                 {mcp?.docs_hint ? <p className="text-sm text-zinc-400">{mcp.docs_hint}</p> : null}
                 {mcp?.multi_site_hint || t.mcpMultiSiteHint ? (

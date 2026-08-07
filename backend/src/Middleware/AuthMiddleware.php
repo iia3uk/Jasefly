@@ -3,11 +3,13 @@ declare(strict_types=1);
 namespace App\Middleware;
 
 use App\Core\Container;
+use App\Database;
 use App\Jwt;
 use App\Modules\Demo\DemoCookie;
 use App\Request;
 use App\Response;
 use App\Support\AuthCookie;
+use App\Support\McpRequestAuth;
 
 final class AuthMiddleware
 {
@@ -24,22 +26,18 @@ final class AuthMiddleware
             $bearer = AuthCookie::token() ?? DemoCookie::token() ?? '';
         }
 
-        $mcpToken = $this->mcpApiToken;
-        if ($mcpToken === null) {
-            $mcpToken = $this->resolveMcpToken();
+        $app = $this->resolveApp();
+        if ($this->mcpApiToken !== null && $this->mcpApiToken !== '') {
+            $app['mcp_api_token'] = $this->mcpApiToken;
         }
 
-        // Long-lived machine token for MCP / automation (config.local.php → mcp_api_token)
-        if ($mcpToken !== '' && $bearer !== '' && hash_equals($mcpToken, $bearer)) {
-            $r->user = [
-                'sub' => null,
-                'email' => 'mcp@cms.local',
-                'name' => 'MCP Agent',
-                'role' => 'super_admin',
-                'type' => 'access',
-                'auth' => 'mcp_token',
-            ];
+        $mcp = McpRequestAuth::authenticate($r, $app, $this->resolveDb());
+        if ($mcp['status'] === 'authenticated') {
+            $r->user = $mcp['user'] ?? McpRequestAuth::mcpUser();
             return $next();
+        }
+        if ($mcp['status'] === 'rejected') {
+            Response::error('Unauthorized', 401);
         }
 
         try {
@@ -63,19 +61,30 @@ final class AuthMiddleware
         return $next();
     }
 
-    private function resolveMcpToken(): string
+    /** @return array<string, mixed> */
+    private function resolveApp(): array
     {
         try {
             if (!Container::getInstance()->has('app')) {
-                return '';
+                return ['mcp_api_token' => $this->mcpApiToken ?? ''];
             }
             $app = Container::getInstance()->get('app');
-            if (!is_array($app)) {
-                return '';
-            }
-            return (string) ($app['mcp_api_token'] ?? '');
+            return is_array($app) ? $app : ['mcp_api_token' => $this->mcpApiToken ?? ''];
         } catch (\Throwable) {
-            return '';
+            return ['mcp_api_token' => $this->mcpApiToken ?? ''];
+        }
+    }
+
+    private function resolveDb(): ?Database
+    {
+        try {
+            if (!Container::getInstance()->has('db')) {
+                return null;
+            }
+            $db = Container::getInstance()->get('db');
+            return $db instanceof Database ? $db : null;
+        } catch (\Throwable) {
+            return null;
         }
     }
 }

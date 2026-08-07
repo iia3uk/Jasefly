@@ -13,7 +13,7 @@ use Throwable;
  * (without editing config files).
  *
  * Resolution rules:
- *  - Core (`system`, `users`) is always ON.
+ *  - Core (`system`, `users`, `module-manager`) is always ON.
  *  - isEnabled(): ON only when a row exists with is_enabled=1 (default-off).
  *  - Missing row → OFF (unless core), even if ModuleInterface::enabled() is true.
  *  - ModuleInterface::enabled() still applies as an extra OFF gate when a row is on
@@ -23,7 +23,7 @@ use Throwable;
 final class PluginStateService
 {
     /** @var list<string> */
-    public const CORE = ['system', 'users'];
+    public const CORE = ['system', 'users', 'module-manager'];
 
     /** @var array<string, mixed> */
     private array $appConfig;

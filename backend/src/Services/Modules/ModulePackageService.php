@@ -714,12 +714,22 @@ final class ModulePackageService
             if (!is_dir($publicRoot)) {
                 @mkdir($publicRoot, 0775, true);
             }
+            $frontendManifest = null;
+            $manifestPath = $frontendSrc . '/manifest.json';
+            if (is_file($manifestPath)) {
+                $decoded = json_decode((string) file_get_contents($manifestPath), true);
+                if (is_array($decoded)) {
+                    $frontendManifest = $decoded;
+                }
+            }
             foreach ($this->listFilesRecursive($frontendSrc) as $rel) {
                 $src = $frontendSrc . '/' . $rel;
                 $dest = $publicRoot . '/' . $rel;
                 $this->copyFileInto($src, $dest, $publicRoot);
                 $inventory[] = $this->fileRecord($dest, 'public:' . $rel);
             }
+            \App\Support\ModuleAssetGate::writeAccessFile($publicRoot, $slug, $frontendManifest);
+            \App\Support\ModuleAssetGate::ensureModulesHtaccess($this->paths->publicModulesRoot());
         }
 
         return $inventory;

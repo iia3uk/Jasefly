@@ -1,5 +1,55 @@
 # Changelog
 
+## 2026-08-07 — Smoke: Telegram deploy approve gate
+
+- Docblock note on DeployTelegramApprove for pending→Approve smoke test
+
+## 2026-08-07 — Smoke: Telegram deploy approve gate
+
+- Docblock note on DeployTelegramApprove for pending→Approve smoke test
+
+## 2026-08-07 — Telegram deploy approve (opt-in human gate)
+
+- TELEGRAM_DEPLOY_APPROVE: pending ZIP + Telegram Approve/Reject before apply
+- Webhook secret_token + chat allowlist; secrets only in host .env
+- Admin escape hatch on Updates; mcp-cms pending_approval handling
+- SiteUpdater.applyStagedZip; tests DeployTelegramApproveTest
+
+## 2026-08-07 — MCP dual-secret defense (Bearer + HMAC)
+
+- McpRequestAuth: Bearer + HMAC proof-of-possession, skew, anti-replay nonces, optional IP allowlist
+- Auth modes legacy/prefer/require; empty signing secret stays legacy (safe deploy)
+- Migration 030_mcp_nonces + mcp-cms client signing headers
+- Admin MCP status: signing_configured/auth_mode without secret fragments
+- Tests: require/replay/skew/JWT unaffected
+
+## 2026-08-07 — Residual pentest: ban SVG uploads + global Origin CSRF for all admin modules
+
+- SVG uploads hard-rejected (422 Unsupported) for editor and admin; legacy SVG stream = attachment+CSP
+- OriginCheckMiddleware mounted globally in public/index.php so Content/Media/pages are covered
+- MCP Bearer (mcp_api_token) exempt from Origin check even before Auth sets user
+- Strip X-Powered-By in API SecurityHeaders + root .htaccess
+- Tests: PentestHardeningTest + SecurityVerificationTest updated
+
+## 2026-08-07 — Fix: module-manager always-on (runtime-assets 404 after default-off)
+
+- PluginStateService CORE includes module-manager (cannot disable)
+- Migration 029 forces module-manager is_enabled=1
+- Prevent toggle-off for module-manager in SystemModule
+- Hot-fix already re-enabled module-manager + blog on prod
+
+## 2026-08-07 — Pentest hardening: activity ACL, SVG, login throttle, CSRF Origin, MCP token_hint
+
+- Activity ACL: require activity.view; MCP feed only for mcp.manage/system.manage
+- SVG upload: stronger sanitize/reject + CSP on stream
+- Login/demo rate limit: 5/900s fail-closed with file fallback
+- Remove MCP token_hint from system status (PHP + Node + UI)
+- CSRF defense: Origin/Referer allowlist on mutating admin API
+- Gate admin-only module assets (ai-content-optimizer, indexnow) via module-asset.php
+- Staff 2FA recommend: totp_recommended + admin banner
+- Tests: PentestHardeningTest + docs/security.md residual notes
+
+
 ## 2026-08-06 — Platform OOB home + plugins default-off
 
 - Default home is Jasefly platform landing without Portfolio stub

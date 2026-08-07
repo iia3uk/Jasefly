@@ -9,8 +9,12 @@ return [
     'refresh_ttl' => 604800,
     // Optional: dedicated key for encrypted backups; falls back to jwt_secret.
     // 'backup_key' => '...',
-    // Prefer MCP_API_TOKEN in config/.env (see .env.example) — not committed.
+    // Prefer MCP_API_TOKEN / MCP_SIGNING_SECRET in config/.env (see .env.example) — not committed.
     // 'mcp_api_token' => 'YOUR_MCP_TOKEN', // legacy; .env preferred
+    // 'mcp_signing_secret' => 'YOUR_SIGNING_SECRET',
+    // 'mcp_auth_mode' => 'require',
+    // Telegram deploy approve (prefer .env TELEGRAM_DEPLOY_*):
+    // 'telegram_deploy_approve' => '0',
     'cors_origins' => 'http://localhost:5173',
     'upload_max_mb' => 10,
     'db_host' => 'localhost',

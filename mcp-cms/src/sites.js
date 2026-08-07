@@ -10,6 +10,7 @@
  *   host: string,
  *   aliases: string[],
  *   token: string,
+ *   signingSecret: string,
  *   email: string,
  *   password: string,
  *   totpCode: string,
@@ -94,6 +95,9 @@ function siteFromPrefixedEnv(id) {
     token: process.env[`CMS_SITE_${key}_TOKEN`]
       || process.env[`CMS_SITE_${key}_MCP_TOKEN`]
       || '',
+    signingSecret: process.env[`CMS_SITE_${key}_SIGNING_SECRET`]
+      || process.env.CMS_MCP_SIGNING_SECRET
+      || '',
     email: process.env[`CMS_SITE_${key}_EMAIL`] || '',
     password: process.env[`CMS_SITE_${key}_PASSWORD`] || '',
     totpCode: process.env[`CMS_SITE_${key}_TOTP_CODE`] || '',
@@ -129,6 +133,7 @@ function legacySingleSite() {
       'official',
     ].filter(Boolean))],
     token: process.env.CMS_MCP_TOKEN || process.env.MCP_API_TOKEN || '',
+    signingSecret: process.env.CMS_MCP_SIGNING_SECRET || process.env.MCP_SIGNING_SECRET || '',
     email: process.env.CMS_EMAIL || '',
     password: process.env.CMS_PASSWORD || '',
     totpCode: process.env.CMS_TOTP_CODE || '',
@@ -221,6 +226,7 @@ export function listSitesPublic() {
     process_manager: s.processManager || null,
     ssh_configured: Boolean(s.sshHost && s.sshUser),
     has_mcp_token: Boolean(s.token),
+    has_signing_secret: Boolean(s.signingSecret),
   }));
 }
 

@@ -598,6 +598,15 @@ export function BackupPage() {
   )
 }
 
+type PendingDeploy = {
+  id?: string
+  package?: string
+  created_at?: string
+  expires_at?: string
+  requested_by?: string
+  sha256?: string
+}
+
 type UpdateStatus = {
   version?: string
   zip_available?: boolean
@@ -605,6 +614,11 @@ type UpdateStatus = {
   max_zip_mb?: number
   php_upload_max?: string
   php_post_max?: string
+  telegram_deploy_approve?: {
+    enabled?: boolean
+    configured?: boolean
+    pending?: PendingDeploy[]
+  }
   last?: {
     ok?: boolean
     at?: string
@@ -618,6 +632,9 @@ type UpdateStatus = {
 
 type UpdateResult = {
   ok?: boolean
+  pending_approval?: boolean
+  deploy_id?: string
+  expires_at?: string
   files_copied?: number
   files_skipped_protected?: number
   message?: string
@@ -633,8 +650,9 @@ export function UpdatesPage() {
   const [status, setStatus] = useState('')
   const [result, setResult] = useState<UpdateResult | null>(null)
   const [info, setInfo] = useState<UpdateStatus | null>(null)
+  const [pendingBusy, setPendingBusy] = useState<string | null>(null)
 
-  useEffect(() => {
+  const refreshInfo = () => {
     if (isDemo) return
     void api.get<{ data?: UpdateStatus } | UpdateStatus>('/admin/updates')
       .then((res) => {
@@ -642,6 +660,10 @@ export function UpdatesPage() {
         setInfo(data)
       })
       .catch(() => setInfo(null))
+  }
+
+  useEffect(() => {
+    refreshInfo()
   }, [result, isDemo])
 
   return (
@@ -682,6 +704,13 @@ export function UpdatesPage() {
               </div>
             </dl>
           )}
+          {info?.telegram_deploy_approve?.enabled ? (
+            <p className="rounded-lg border border-cyan-400/25 bg-cyan-500/10 px-3 py-2 text-xs text-cyan-100">
+              {info.telegram_deploy_approve.configured
+                ? t.updatesTelegramGateOn
+                : t.updatesTelegramGateMisconfigured}
+            </p>
+          ) : null}
           {info?.zip_available === false && (
             <p className="text-sm text-amber-400/90">{t.updatesNeedZipExt}</p>
           )}
@@ -720,9 +749,14 @@ export function UpdatesPage() {
                 const res = await api.upload<{ data?: UpdateResult } | UpdateResult>('/admin/updates', form)
                 const data = (res as { data?: UpdateResult }).data ?? (res as UpdateResult)
                 setResult(data)
-                setStatus(data.message || t.updatesSuccess)
+                setStatus(
+                  data.pending_approval
+                    ? data.message || t.updatesPendingTelegram
+                    : data.message || t.updatesSuccess,
+                )
                 setFile(null)
                 if (fileRef.current) fileRef.current.value = ''
+                refreshInfo()
               } catch (e) {
                 setStatus(e instanceof Error ? e.message : t.updatesFail)
               } finally {
@@ -736,7 +770,10 @@ export function UpdatesPage() {
           {status && (
             <p className={`text-sm ${result?.ok === false ? 'text-rose-400' : 'text-zinc-300'}`}>{status}</p>
           )}
-          {result?.ok && (
+          {result?.pending_approval && (
+            <p className="text-sm text-amber-200/90">{t.updatesPendingTelegram}</p>
+          )}
+          {result?.ok && !result.pending_approval && (
             <ul className="space-y-1 text-sm text-zinc-400">
               <li>Скопировано файлов: {result.files_copied ?? 0}</li>
               {result.files_skipped_protected != null && (
@@ -757,6 +794,73 @@ export function UpdatesPage() {
             </>
           )}
         </GlassPanel>
+
+        {!isDemo && (info?.telegram_deploy_approve?.pending?.length ?? 0) > 0 ? (
+          <GlassPanel className="space-y-3 p-6">
+            <h2 className="font-heading text-lg">{t.updatesPendingTitle}</h2>
+            <p className="text-xs text-zinc-500">{t.updatesPendingHint}</p>
+            <ul className="space-y-3">
+              {(info?.telegram_deploy_approve?.pending ?? []).map((item) => (
+                <li
+                  key={item.id}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-3"
+                >
+                  <div className="min-w-0 text-sm">
+                    <p className="font-medium text-zinc-200">{item.package || item.id}</p>
+                    <p className="mt-1 font-mono text-[11px] text-zinc-500">{item.id}</p>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      {item.requested_by || '—'}
+                      {item.expires_at ? ` · до ${new Date(item.expires_at).toLocaleString('ru-RU')}` : ''}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      className="px-3 text-xs"
+                      disabled={pendingBusy === item.id}
+                      onClick={async () => {
+                        if (!item.id) return
+                        setPendingBusy(item.id)
+                        try {
+                          await api.post(`/admin/updates/pending/${item.id}/approve`)
+                          setStatus(t.updatesSuccess)
+                          setResult(null)
+                          refreshInfo()
+                        } catch (e) {
+                          setStatus(e instanceof Error ? e.message : t.updatesFail)
+                        } finally {
+                          setPendingBusy(null)
+                        }
+                      }}
+                    >
+                      {t.updatesPendingApprove}
+                    </Button>
+                    <Button
+                      type="button"
+                      className="px-3 text-xs"
+                      disabled={pendingBusy === item.id}
+                      onClick={async () => {
+                        if (!item.id) return
+                        setPendingBusy(item.id)
+                        try {
+                          await api.post(`/admin/updates/pending/${item.id}/reject`)
+                          setStatus(t.updatesPendingRejected)
+                          refreshInfo()
+                        } catch (e) {
+                          setStatus(e instanceof Error ? e.message : t.updatesFail)
+                        } finally {
+                          setPendingBusy(null)
+                        }
+                      }}
+                    >
+                      {t.updatesPendingReject}
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </GlassPanel>
+        ) : null}
 
         {info?.last && (
           <GlassPanel className="space-y-2 p-6">

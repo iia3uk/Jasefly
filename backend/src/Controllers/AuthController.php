@@ -326,7 +326,34 @@ final class AuthController
             $user['is_super'] = (($user['role'] ?? '') === 'super_admin');
             $user['caps_version'] = '0';
         }
+        $user['totp_recommended'] = !$user['totp_enabled'] && $this->staffShouldUseTotp(
+            (string) ($user['role'] ?? ''),
+            is_array($user['capabilities'] ?? null) ? $user['capabilities'] : [],
+            !empty($user['is_super']),
+        );
         Response::json(['data' => $user]);
+    }
+
+    /**
+     * Staff with broad caps should enable TOTP (recommend; hard lock is site-policy later).
+     *
+     * @param list<string> $capabilities
+     */
+    private function staffShouldUseTotp(string $role, array $capabilities, bool $isSuper): bool
+    {
+        if ($isSuper || in_array($role, ['super_admin', 'admin', 'editor'], true)) {
+            return true;
+        }
+        $elevated = [
+            'content.edit_any', 'content.delete_any', 'content.delete', 'media.manage',
+            'users.manage', 'system.manage', 'mcp.manage', 'roles.manage', 'plugins.manage',
+        ];
+        foreach ($elevated as $cap) {
+            if (in_array($cap, $capabilities, true)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Start 2FA enrollment — returns secret + otpauth URL (not yet enabled). */

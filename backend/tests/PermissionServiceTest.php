@@ -54,6 +54,8 @@ assert_true($perms->isSystemRoute('/api/v1/admin/plugins') === true, 'plugins is
 assert_true($perms->isSystemRoute('/api/v1/admin/backup') === true, 'backup is system route');
 assert_true($perms->isSettingsRoute('/api/v1/admin/seo') === true, 'seo is settings route');
 assert_true($perms->isSettingsRoute('/api/v1/admin/plugins') === false, 'plugins is not settings route');
+assert_true($perms->capabilityForAdminPath('/api/v1/admin/activity') === 'activity.view', 'activity path → activity.view');
+assert_true($perms->can($editor, 'activity.view') === false, 'editor cannot activity.view by default');
 
 assert_true($perms->isContentResource('pages') === true, 'pages is content resource');
 assert_true($perms->isContentResource('webhooks') === false, 'webhooks is not content resource');

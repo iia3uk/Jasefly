@@ -6,9 +6,9 @@ Describe login, JWT access/refresh, 2FA, cookies, and the MCP bearer token.
 
 ## How it works
 
-`SystemModule` wires `AuthController` under each API prefix. Access tokens are HS256 JWTs (`App\Jwt`) with `type=access`. Refresh tokens are stored hashed in `refresh_tokens` and rotated on refresh. Optional TOTP uses `TotpService`. Machine automation can pass `mcp_api_token` as Bearer and is treated as `super_admin` (`auth=mcp_token`).
+`SystemModule` wires `AuthController` under each API prefix. Access tokens are HS256 JWTs (`App\Jwt`) with `type=access`. Refresh tokens are stored hashed in `refresh_tokens` and rotated on refresh. Optional TOTP uses `TotpService`. Machine automation uses `mcp_api_token` as Bearer identity plus optional `MCP_SIGNING_SECRET` HMAC (`X-Jasefly-Ts` / `X-Jasefly-Nonce` / `X-Jasefly-Sign`) via `McpRequestAuth` → `super_admin` (`auth=mcp_token`). Modes: `legacy` / `prefer` / `require` (`MCP_AUTH_MODE`).
 
-`AuthMiddleware` accepts either the MCP token or a decoded access JWT; other token types (refresh, 2fa_challenge) are rejected for protected routes.
+`AuthMiddleware` accepts either verified MCP auth or a decoded access JWT; other token types (refresh, 2fa_challenge) are rejected for protected routes.
 
 ## Execution flow
 
@@ -41,7 +41,8 @@ Describe login, JWT access/refresh, 2FA, cookies, and the MCP bearer token.
 | --- | --- |
 | `AuthController` | login, refresh, logout, me, 2FA |
 | `Jwt` | encode/decode HS256, `exp` |
-| `AuthMiddleware` | MCP token or access JWT |
+| `AuthMiddleware` | MCP dual-secret or access JWT |
+| `McpRequestAuth` | Bearer + HMAC + skew + nonce + optional IP |
 | `TotpService` | TOTP secret / verify |
 | `AuthCookie` | cookie name `portfolio_at` |
 
@@ -66,7 +67,8 @@ Describe login, JWT access/refresh, 2FA, cookies, and the MCP bearer token.
 
 - Sending refresh token as Bearer to admin routes (`type` must be `access`).
 - Expecting AuthContext to refresh tokens — refresh is in `api.ts` on 401.
-- Committing `mcp_api_token` / `jwt_secret` into the repo.
+- Committing `mcp_api_token` / `mcp_signing_secret` / `jwt_secret` into the repo.
+- Setting `MCP_AUTH_MODE=require` without matching `MCP_SIGNING_SECRET` in mcp-cms (agent gets 401).
 
 ## Extension points
 

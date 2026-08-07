@@ -247,7 +247,7 @@ export function AdminShell() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  const { isDemo } = useAuth()
+  const { isDemo, totpRecommended } = useAuth()
 
   // Fetch plugin enable/disable state once so the sidebar hides disabled plugins.
   // Demo: enable every registered module so the full admin nav is visible (sandbox API still isolates writes).
@@ -360,6 +360,14 @@ export function AdminShell() {
           </div>
         </header>
         <MigrationBanner />
+        {totpRecommended ? (
+          <div className="border-b border-amber-400/25 bg-amber-500/10 px-4 py-2 text-sm text-amber-100 sm:px-5 lg:px-8">
+            Рекомендуем включить двухфакторную аутентификацию (2FA) для этой роли.{' '}
+            <Link to={adminUrl('/password')} className="underline underline-offset-2 hover:text-white">
+              Настроить 2FA
+            </Link>
+          </div>
+        ) : null}
         <main className="overflow-x-clip p-4 sm:p-5 lg:px-8 lg:py-6">
           <AdminHubTabs />
           <Outlet />

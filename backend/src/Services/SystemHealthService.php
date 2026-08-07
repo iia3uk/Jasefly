@@ -52,6 +52,10 @@ final class SystemHealthService
             'gd_enabled' => extension_loaded('gd'),
             'pdo_enabled' => extension_loaded($pdoExt),
             'mcp' => $this->mcpStatus(),
+            'telegram_deploy_approve' => [
+                'enabled' => \App\Support\DeployTelegramApprove::enabled($this->app),
+                'configured' => \App\Support\DeployTelegramApprove::configured($this->app),
+            ],
             'module_load_failures' => $this->moduleLoadFailures(),
             'module_safe_mode' => $this->moduleSafeMode(),
         ];
@@ -89,24 +93,27 @@ final class SystemHealthService
         }
     }
 
-    /** MCP token status for admin UI — never returns the full secret. */
+    /** MCP token status for admin UI — never returns any secret fragment. */
     private function mcpStatus(): array
     {
         $token = (string) ($this->app['mcp_api_token'] ?? '');
+        $signing = (string) ($this->app['mcp_signing_secret'] ?? '');
         $configured = $token !== '';
-        $hint = '••••';
-        if ($configured) {
-            $len = strlen($token);
-            $hint = $len >= 12
-                ? substr($token, 0, 4) . '…' . substr($token, -4)
-                : '••••';
+        $signingConfigured = $signing !== '';
+        $authMode = strtolower(trim((string) ($this->app['mcp_auth_mode'] ?? 'legacy')));
+        if (!in_array($authMode, ['legacy', 'prefer', 'require'], true)) {
+            $authMode = 'legacy';
         }
+        if (!$signingConfigured) {
+            $authMode = 'legacy';
+        }
+        $ipAllowlist = trim((string) ($this->app['mcp_allowed_ips'] ?? ''));
 
         $appUrl = rtrim((string) ($this->app['url'] ?? $this->app['app_url'] ?? ''), '/') ?: 'https://YOUR_DOMAIN';
         $runtime = (string) ($this->app['runtime'] ?? 'php-shared');
         $siteTokenPath = str_contains($runtime, 'node')
-            ? 'runtime env / deploy/docker/.env → MCP_API_TOKEN'
-            : 'api/config/.env → MCP_API_TOKEN';
+            ? 'runtime env / deploy/docker/.env → MCP_API_TOKEN (+ MCP_SIGNING_SECRET)'
+            : 'api/config/.env → MCP_API_TOKEN (+ MCP_SIGNING_SECRET)';
 
         $repoHint = 'F:/JASEFLY_CMS';
         $cursorSnippet = json_encode([
@@ -121,30 +128,34 @@ final class SystemHealthService
 
         return [
             'configured' => $configured,
-            'token_hint' => $hint,
-            'auth_header' => 'Authorization: Bearer <MCP_API_TOKEN>',
-            'docs_hint' => 'Один MCP-процесс → много сайтов. Токен этого сайта: '
+            'signing_configured' => $signingConfigured,
+            'auth_mode' => $authMode,
+            'ip_allowlist_enabled' => $ipAllowlist !== '',
+            'auth_header' => 'Authorization: Bearer <MCP_API_TOKEN> + X-Jasefly-Ts/Nonce/Sign',
+            'docs_hint' => 'Один MCP-процесс → много сайтов. Токен + signing secret этого сайта: '
                 . $siteTokenPath
-                . '. В mcp-cms/.env тот же секрет как CMS_SITE_{ID}_TOKEN (или legacy CMS_MCP_TOKEN).',
+                . '. В mcp-cms/.env: CMS_SITE_{ID}_TOKEN и CMS_SITE_{ID}_SIGNING_SECRET (legacy: CMS_MCP_TOKEN + CMS_MCP_SIGNING_SECRET).',
             'app_url' => $appUrl,
             'runtime' => $runtime,
             'site_token_path' => $siteTokenPath,
             'agent_env_keys' => [
-                'multi' => 'CMS_SITES + CMS_SITE_{ID}_URL + CMS_SITE_{ID}_TOKEN',
-                'legacy' => 'CMS_URL + CMS_MCP_TOKEN',
+                'multi' => 'CMS_SITES + CMS_SITE_{ID}_URL + CMS_SITE_{ID}_TOKEN + CMS_SITE_{ID}_SIGNING_SECRET',
+                'legacy' => 'CMS_URL + CMS_MCP_TOKEN + CMS_MCP_SIGNING_SECRET',
                 'list_tool' => 'cms_sites',
                 'site_param' => 'site',
             ],
-            'multi_site_hint' => 'SoT хостов — только mcp-cms/.env (не sites.js). При ≥2 сайтах в tools передавайте site=id|alias|domain.',
+            'multi_site_hint' => 'SoT хостов — только mcp-cms/.env (не sites.js). При ≥2 сайтах в tools передавайте site=id|alias|domain. Rotate оба секрета вместе.',
             'cursor_snippet' => is_string($cursorSnippet) ? $cursorSnippet : '',
             'docs_url' => 'docs/mcp-multi-site.md',
             'local_example_env' => implode("\n", [
                 'CMS_SITES=jasefly,iia3uk',
                 'CMS_SITE_JASEFLY_URL=https://jasefly.com',
                 'CMS_SITE_JASEFLY_TOKEN=<MCP_API_TOKEN сайта>',
+                'CMS_SITE_JASEFLY_SIGNING_SECRET=<MCP_SIGNING_SECRET сайта>',
                 'CMS_SITE_JASEFLY_ALIASES=jasefly.com,www.jasefly.com',
                 'CMS_SITE_IIA3UK_URL=https://iia3uk.ru',
                 'CMS_SITE_IIA3UK_TOKEN=<MCP_API_TOKEN сайта>',
+                'CMS_SITE_IIA3UK_SIGNING_SECRET=<MCP_SIGNING_SECRET сайта>',
             ]),
         ];
     }

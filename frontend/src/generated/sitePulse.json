@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-06T19:58:03.318Z",
-  "version": "backup-before-author-rewrite-14-g287d086",
-  "commit": "287d086",
+  "generated_at": "2026-08-07T21:08:34.878Z",
+  "version": "backup-before-author-rewrite-17-gc6d4a9d",
+  "commit": "c6d4a9d",
   "metrics": {
-    "files": 3427,
-    "php_classes": 311,
+    "files": 3407,
+    "php_classes": 316,
     "builder_widgets": 68,
     "rest_routes_core": 66,
     "sdk_interfaces": 23,
-    "git_commits": 106,
+    "git_commits": 109,
     "repo_size_mb": 27.9,
     "core_modules": 30,
     "package_scaffolds": 10
@@ -17,8 +17,23 @@
     "repo": "iia3uk/jasefly",
     "url": "https://github.com/iia3uk/jasefly",
     "latest_tag": "backup-before-author-rewrite",
-    "latest_commit_date": "2026-08-06",
+    "latest_commit_date": "2026-08-07",
     "commits": [
+      {
+        "hash": "c6d4a9d",
+        "date": "2026-08-07",
+        "subject": "Merge branch 'cursor/security-acl-ssrf-host-fixes'"
+      },
+      {
+        "hash": "afe3b5d",
+        "date": "2026-08-06",
+        "subject": "fix(tests): seed content plugin on for ProjectsSoftApi default-off"
+      },
+      {
+        "hash": "8b22fe9",
+        "date": "2026-08-06",
+        "subject": "feat: platform OOB home and optional plugins default-off"
+      },
       {
         "hash": "287d086",
         "date": "2026-08-06",
@@ -28,21 +43,6 @@
         "hash": "45c1d6a",
         "date": "2026-08-06",
         "subject": "fix(auth): clear AdminBar when /auth/me session is dead"
-      },
-      {
-        "hash": "8f43451",
-        "date": "2026-08-06",
-        "subject": "fix(security): close ACL, XSS, SSRF, Host, and MCP rollback gaps"
-      },
-      {
-        "hash": "8b79dd1",
-        "date": "2026-08-06",
-        "subject": "docs: clarify multi-site SoT is .env, not sites.js"
-      },
-      {
-        "hash": "6a30079",
-        "date": "2026-08-06",
-        "subject": "docs: add MCP multi-site guide (one agent, many hosts)"
       }
     ]
   }

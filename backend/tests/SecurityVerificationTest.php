@@ -97,18 +97,16 @@ assert_true(isset($allowed['application/pdf']), 'media allows pdf');
 assert_true(!isset($allowed['application/x-php']), 'media rejects php mime');
 assert_true(!isset($allowed['application/javascript']), 'media rejects javascript mime');
 assert_true(!isset($allowed['text/html']), 'media rejects html mime');
-
-$svgFn = $mediaRef->getMethod('sanitizeSvgFile');
-$svgFn->setAccessible(true);
-$tmp = tempnam(sys_get_temp_dir(), 'svg');
-assert_true($tmp !== false, 'temp svg path');
-file_put_contents((string) $tmp, '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><rect onclick="evil()" /><a href="javascript:alert(2)">x</a></svg>');
-$svgFn->invoke($media, (string) $tmp);
-$clean = (string) file_get_contents((string) $tmp);
-@unlink((string) $tmp);
-assert_true(!str_contains(strtolower($clean), '<script'), 'SVG sanitize strips script');
-assert_true(!str_contains(strtolower($clean), 'onclick='), 'SVG sanitize strips on* handlers');
-assert_true(!str_contains(strtolower($clean), 'javascript:'), 'SVG sanitize strips javascript: URLs');
+assert_true(!isset($allowed['image/svg+xml']), 'media rejects svg mime (stored XSS)');
+$rejectSvg = $mediaRef->getMethod('rejectSvgUpload');
+$rejectSvg->setAccessible(true);
+$svgBan = false;
+try {
+    $rejectSvg->invoke($media, 'image/svg+xml', 'svg');
+} catch (Throwable $e) {
+    $svgBan = str_contains($e->getMessage(), 'Unsupported');
+}
+assert_true($svgBan, 'SVG upload hard-rejected');
 
 // —— Path jail ——
 $tmpRoot = sys_get_temp_dir() . '/jasefly-sec-' . bin2hex(random_bytes(3));

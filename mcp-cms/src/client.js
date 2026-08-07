@@ -2,7 +2,9 @@
  * Jasefly CMS HTTP client — JWT or long-lived MCP token.
  * All remote calls go through HostingGuard (throttle + GET cache).
  * Multi-site: clientForSite(query) → per-site CmsClient + HostingGuard.
+ * Dual-secret: when signingSecret is set, MCP Bearer requests carry HMAC headers.
  */
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { guardFromEnv, HostingGuard } from './throttle.js';
@@ -14,11 +16,28 @@ import {
   siteCount,
 } from './sites.js';
 
+/**
+ * @param {string} signingSecret
+ * @param {string} method
+ * @param {string} signPath pathname + search as seen by the server
+ * @param {string} bodyRaw raw JSON body or '' for empty/multipart
+ * @returns {{ ts: string, nonce: string, sign: string }}
+ */
+export function buildMcpSignature(signingSecret, method, signPath, bodyRaw) {
+  const ts = String(Math.floor(Date.now() / 1000));
+  const nonce = crypto.randomBytes(16).toString('hex');
+  const bodyHash = crypto.createHash('sha256').update(bodyRaw || '').digest('hex');
+  const canonical = `v1\n${String(method).toUpperCase()}\n${signPath}\n${ts}\n${nonce}\n${bodyHash}`;
+  const hex = crypto.createHmac('sha256', signingSecret).update(canonical).digest('hex');
+  return { ts, nonce, sign: `v1=${hex}` };
+}
+
 export class CmsClient {
   /**
    * @param {{
    *   baseUrl: string,
    *   mcpToken?: string,
+   *   signingSecret?: string,
    *   email?: string,
    *   password?: string,
    *   totpCode?: string,
@@ -28,6 +47,7 @@ export class CmsClient {
   constructor(opts) {
     this.baseUrl = opts.baseUrl.replace(/\/$/, '');
     this.mcpToken = opts.mcpToken || '';
+    this.signingSecret = opts.signingSecret || '';
     this.email = opts.email || '';
     this.password = opts.password || '';
     this.totpCode = opts.totpCode || '';
@@ -104,18 +124,31 @@ export class CmsClient {
       /** @type {Record<string, string>} */
       const headers = {
         Accept: 'application/json',
-        'User-Agent': 'portfolio-mcp-cms/1.2 (hosting-safe)',
+        'User-Agent': 'portfolio-mcp-cms/1.3 (hosting-safe)',
       };
       if (auth && this.accessToken) {
         headers.Authorization = `Bearer ${this.accessToken}`;
       }
       /** @type {RequestInit} */
       const init = { method, headers };
+      /** @type {string} */
+      let bodyRaw = '';
       if (form) {
         init.body = form;
+        bodyRaw = ''; // multipart: server hashes empty body
       } else if (body !== undefined) {
         headers['Content-Type'] = 'application/json';
-        init.body = JSON.stringify(body);
+        bodyRaw = JSON.stringify(body);
+        init.body = bodyRaw;
+      }
+      // Proof-of-possession for MCP Bearer (not JWT login sessions).
+      if (auth && this.mcpToken && this.signingSecret) {
+        const u = new URL(url);
+        const signPath = `${u.pathname}${u.search || ''}`;
+        const signed = buildMcpSignature(this.signingSecret, method, signPath, bodyRaw);
+        headers['X-Jasefly-Ts'] = signed.ts;
+        headers['X-Jasefly-Nonce'] = signed.nonce;
+        headers['X-Jasefly-Sign'] = signed.sign;
       }
       const response = await fetch(url, init);
       const text = await response.text();
@@ -292,6 +325,7 @@ function buildClient(cfg) {
   return new CmsClient({
     baseUrl: apiBaseFromSiteUrl(cfg.url),
     mcpToken: cfg.token,
+    signingSecret: cfg.signingSecret || '',
     email: cfg.email,
     password: cfg.password,
     totpCode: cfg.totpCode,

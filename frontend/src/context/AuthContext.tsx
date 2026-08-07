@@ -17,6 +17,7 @@ type AuthState = {
   capabilities: string[]
   isSuper: boolean
   isDemo: boolean
+  totpRecommended: boolean
   capsReady: boolean
   can: (permission: string) => boolean
   canAny: (...permissions: string[]) => boolean
@@ -77,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [capabilities, setCapabilities] = useState<string[]>([])
   const [isSuper, setIsSuper] = useState(false)
   const [isDemo, setIsDemo] = useState(() => localStorage.getItem('is_demo') === '1')
+  const [totpRecommended, setTotpRecommended] = useState(false)
   const [capsReady, setCapsReady] = useState(false)
 
   const clearSessionState = () => {
@@ -89,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCapabilities([])
     setIsSuper(false)
     setIsDemo(false)
+    setTotpRecommended(false)
     setCapsReady(false)
   }
 
@@ -109,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (demo) localStorage.setItem('is_demo', '1')
       // Demo must never be treated as super
       setIsSuper(!demo && (Boolean(data.is_super) || String(data.role ?? '') === 'super_admin'))
+      setTotpRecommended(!demo && Boolean(data.totp_recommended))
       if (data.role) {
         setRole(String(data.role))
         localStorage.setItem('user_role', String(data.role))
@@ -172,6 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     capabilities,
     isSuper,
     isDemo,
+    totpRecommended,
     capsReady,
     can,
     canAny: (...perms: string[]) => perms.some((p) => can(p)),
@@ -229,7 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       clearSessionState()
     },
-  }), [token, userName, role, roles, capabilities, isSuper, isDemo, capsReady, can, refreshCapabilities])
+  }), [token, userName, role, roles, capabilities, isSuper, isDemo, totpRecommended, capsReady, can, refreshCapabilities])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -135,6 +135,8 @@ if (($app['jwt_secret'] ?? '') === '') {
 $router = new \App\Router();
 $router->middleware(new \App\Middleware\CorsMiddleware($app['cors_origins'] ?? []));
 $router->middleware(new \App\Middleware\SecurityHeadersMiddleware($app['csp']['script_cdn'] ?? []));
+// CSRF Origin allowlist for all modules' mutating /admin/* (MCP Bearer exempt).
+$router->middleware(new \App\Middleware\OriginCheckMiddleware($app));
 // Plugin-contributed global guards (DDoS edge verification, under-attack mode, …).
 foreach ($registry->globalMiddleware() as $mw) {
     $router->middleware($mw);

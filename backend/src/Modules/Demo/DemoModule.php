@@ -46,7 +46,7 @@ final class DemoModule extends AbstractModule
     {
         $p = fn(string $path) => rtrim($apiPrefix, '/') . $path;
         $bundle = fn() => $this->services($db, $app);
-        $rate = [new RateLimitMiddleware($db, 10, 60)];
+        $rate = [new RateLimitMiddleware($db, 5, 900, true)];
 
         $router->post($p('/auth/demo/start'), function (Request $r) use ($bundle) {
             try {

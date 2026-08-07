@@ -21,6 +21,7 @@ use App\Services\ActivityLogService;
 use App\Services\BackupService;
 use App\Services\MigrationService;
 use App\Services\SiteUpdater;
+use App\Support\DeployTelegramApprove;
 use App\Services\AgentDiagnosticsService;
 use App\Services\PageDigestService;
 use App\Services\SchemaSnapshotService;
@@ -60,16 +61,34 @@ final class SystemModule extends AbstractModule
         $admin = new AdminController($db, $app);
         $trash = new TrashController($db, new SoftDeleteService($db), new ActivityLogService($db));
         $search = new SearchController(new SearchService($db));
-        $activity = new ActivityController(new ActivityLogService($db));
-        $system = new SystemController(new SystemHealthService($db, $app), new PermissionService($db));
+        $perms = new PermissionService($db);
+        $activity = new ActivityController(new ActivityLogService($db), $perms);
+        $system = new SystemController(new SystemHealthService($db, $app), $perms);
         $rate = new RateLimitMiddleware($db);
-        $protected = [new AuthMiddleware($app['jwt_secret']), new PermissionMiddleware(new PermissionService($db))];
+        $loginRate = new RateLimitMiddleware($db, 5, 900, true);
+        // OriginCheckMiddleware is global (public/index.php) — covers Content/Media/… too.
+        $protected = [
+            new AuthMiddleware($app['jwt_secret']),
+            new PermissionMiddleware($perms),
+        ];
 
         $router->get($p('/health'), fn() => Response::json(['data' => [
             'status' => 'ok',
             'time' => gmdate(DATE_ATOM),
             'api_version' => 'v1',
         ]]));
+
+        // Telegram deploy-approve webhook (no Auth — secret_token + chat allowlist inside handler).
+        // Path is outside /admin → OriginCheckMiddleware already skips CSRF.
+        $router->post($p('/telegram/deploy-webhook'), function (Request $r) use ($db, $app) {
+            $svc = new DeployTelegramApprove($app, $db);
+            $result = $svc->handleWebhook($r);
+            $status = !empty($result['ok']) || !empty($result['ignored']) ? 200 : 403;
+            if (($result['error'] ?? '') === 'bad_secret') {
+                $status = 401;
+            }
+            Response::json(['data' => $result], $status);
+        });
 
         $router->get($p('/capabilities'), function () {
             $candidates = [
@@ -128,7 +147,7 @@ final class SystemModule extends AbstractModule
             $autoDeps = (bool) ($body['auto_enable_deps'] ?? true);
 
             // Protect core modules from being disabled.
-            if (in_array($name, ['system', 'users'], true) && !$enabled) {
+            if (in_array($name, ['system', 'users', 'module-manager'], true) && !$enabled) {
                 Response::error('Ядро нельзя отключить', 422);
             }
 
@@ -530,8 +549,8 @@ final class SystemModule extends AbstractModule
             Response::json(['data' => $restored]);
         }, $protected);
 
-        $router->post($p('/auth/login'), [$auth, 'login'], [$rate]);
-        $router->post($p('/auth/2fa/verify'), [$auth, 'verify2fa'], [$rate]);
+        $router->post($p('/auth/login'), [$auth, 'login'], [$loginRate]);
+        $router->post($p('/auth/2fa/verify'), [$auth, 'verify2fa'], [$loginRate]);
         $router->post($p('/auth/refresh'), [$auth, 'refresh']);
         $router->post($p('/auth/logout'), [$auth, 'logout']);
         $router->get($p('/auth/me'), [$auth, 'me'], $protected);
@@ -551,16 +570,44 @@ final class SystemModule extends AbstractModule
         }, $protected);
 
         // In-panel CMS update (upload hosting update ZIP → unpack → migrate)
+        // When TELEGRAM_DEPLOY_APPROVE=1 → stage + Telegram Approve (or admin escape hatch).
         $router->get($p('/admin/updates'), function () use ($db, $app) {
             $updater = new SiteUpdater($app, $db);
-            Response::json(['data' => $updater->status()]);
+            $data = $updater->status();
+            $tg = new DeployTelegramApprove($app, $db);
+            $data['telegram_deploy_approve'] = $tg->statusPublic();
+            Response::json(['data' => $data]);
         }, $protected);
         $router->post($p('/admin/updates'), function (Request $r) use ($db, $app) {
             $file = $r->file('package') ?? $r->file('file');
             if (!$file) {
                 Response::error('Прикрепите ZIP как поле package', 422);
             }
+            $via = (($r->user['auth'] ?? '') === 'mcp_token') ? 'mcp' : 'admin';
             try {
+                if (DeployTelegramApprove::enabled($app)) {
+                    $tg = new DeployTelegramApprove($app, $db);
+                    $result = $tg->stageUpload($file, $via);
+                    try {
+                        (new ActivityLogService($db))->log(
+                            $r,
+                            'system.update.pending',
+                            'cms',
+                            null,
+                            $result['package'] ?? null,
+                            [
+                                'deploy_id' => $result['deploy_id'] ?? null,
+                                'package' => $result['package'] ?? null,
+                                'via' => $via,
+                                'pending_approval' => true,
+                            ]
+                        );
+                    } catch (\Throwable) {
+                        // non-fatal
+                    }
+                    Response::json(['data' => $result, 'message' => $result['message'] ?? 'OK']);
+                }
+
                 $updater = new SiteUpdater($app, $db);
                 $result = $updater->applyUpload($file);
                 try {
@@ -573,7 +620,7 @@ final class SystemModule extends AbstractModule
                         [
                             'files_copied' => $result['files_copied'] ?? 0,
                             'package' => $result['package'] ?? null,
-                            'via' => (($r->user['auth'] ?? '') === 'mcp_token') ? 'mcp' : 'admin',
+                            'via' => $via,
                         ]
                     );
                 } catch (\Throwable) {
@@ -582,6 +629,42 @@ final class SystemModule extends AbstractModule
                 Response::json(['data' => $result, 'message' => $result['message'] ?? 'OK']);
             } catch (\Throwable $e) {
                 Response::error($e->getMessage(), 422);
+            }
+        }, $protected);
+        $router->post($p('/admin/updates/pending/{id}/approve'), function (Request $r, string $id) use ($db, $app) {
+            try {
+                $tg = new DeployTelegramApprove($app, $db);
+                $result = $tg->approve($id, 'admin');
+                try {
+                    (new ActivityLogService($db))->log(
+                        $r,
+                        'system.update',
+                        'cms',
+                        null,
+                        $result['package'] ?? null,
+                        [
+                            'files_copied' => $result['files_copied'] ?? 0,
+                            'package' => $result['package'] ?? null,
+                            'deploy_id' => $id,
+                            'via' => 'admin_escape',
+                        ]
+                    );
+                } catch (\Throwable) {
+                }
+                Response::json(['data' => $result, 'message' => $result['message'] ?? 'OK']);
+            } catch (\Throwable $e) {
+                $code = (int) $e->getCode();
+                Response::error($e->getMessage(), $code >= 400 && $code < 600 ? $code : 422);
+            }
+        }, $protected);
+        $router->post($p('/admin/updates/pending/{id}/reject'), function (Request $r, string $id) use ($db, $app) {
+            try {
+                $tg = new DeployTelegramApprove($app, $db);
+                $result = $tg->reject($id, 'admin');
+                Response::json(['data' => $result, 'message' => $result['message'] ?? 'OK']);
+            } catch (\Throwable $e) {
+                $code = (int) $e->getCode();
+                Response::error($e->getMessage(), $code >= 400 && $code < 600 ? $code : 422);
             }
         }, $protected);
 

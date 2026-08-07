@@ -209,6 +209,25 @@ export function markDeployed(result) {
     test_ok: false,
     changelog_ok: false,
     allow_deploy_until: null,
+    pending_telegram: null,
+  });
+}
+
+/**
+ * ZIP staged on host awaiting Telegram Approve — do not clear build gate.
+ * @param {{ zip?: string, deploy_id?: string, result?: unknown }} payload
+ */
+export function markPendingTelegram(payload) {
+  const prev = readGate();
+  writeGate({
+    ...prev,
+    step: 'pending_telegram',
+    pending_telegram: {
+      deploy_id: payload.deploy_id || null,
+      zip: payload.zip || prev.zip_path || null,
+      at: new Date().toISOString(),
+      result: payload.result || null,
+    },
   });
 }
 

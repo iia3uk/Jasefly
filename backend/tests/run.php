@@ -168,6 +168,15 @@ require_once "$root/tests/SecurityVerificationTest.php";
 echo "Content ACL security\n";
 require_once "$root/tests/ContentAclSecurityTest.php";
 
+echo "Pentest hardening\n";
+require_once "$root/tests/PentestHardeningTest.php";
+
+echo "MCP dual-secret auth\n";
+require_once "$root/tests/McpRequestAuthTest.php";
+
+echo "Telegram deploy approve\n";
+require_once "$root/tests/DeployTelegramApproveTest.php";
+
 echo "Demo sandbox\n";
 require_once "$root/tests/DemoSandboxTest.php";
 

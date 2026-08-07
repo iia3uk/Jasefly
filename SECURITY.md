@@ -30,6 +30,11 @@ See [`docs/security.md`](docs/security.md).
 
 - `docs/security.md`
 - `backend/tests/SecurityVerificationTest.php`
+- `backend/tests/PentestHardeningTest.php`
+
+## Pentest hardening note
+
+Confirmed guest/editor/MCP findings closed in code: activity ACL, SVG sanitize/reject, login throttle, MCP `token_hint` removed, Origin CSRF check, admin-only module asset gate, staff 2FA recommend. MCP dual-secret HMAC (`McpRequestAuth`, modes legacy/prefer/require) raises the bar above a single Bearer. Details and residual risk: [`docs/security.md`](docs/security.md) § «Pentest hardening».
 
 ## Related pages
 

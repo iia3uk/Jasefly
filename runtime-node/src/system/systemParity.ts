@@ -467,16 +467,17 @@ export async function buildSystemStatus(db: Database, cfg: AppConfig): Promise<R
   }
 
   const token = cfg.mcpApiToken || '';
+  const signing = (cfg as { mcpSigningSecret?: string }).mcpSigningSecret || process.env.MCP_SIGNING_SECRET || '';
   const configured = token !== '';
-  let hint = '••••';
-  if (configured) {
-    hint =
-      token.length >= 12 ? `${token.slice(0, 4)}…${token.slice(-4)}` : '••••';
-  }
+  const signingConfigured = signing !== '';
+  let authMode = String(process.env.MCP_AUTH_MODE || 'legacy').toLowerCase();
+  if (!['legacy', 'prefer', 'require'].includes(authMode)) authMode = 'legacy';
+  if (!signingConfigured) authMode = 'legacy';
+  const ipAllowlist = String(process.env.MCP_ALLOWED_IPS || '').trim();
 
   const appUrl = (cfg.url || 'http://localhost:3080').replace(/\/$/, '');
   const runtime = cfg.runtime || 'node-vps';
-  const siteTokenPath = 'deploy/docker/.env (local) или shared/config/runtime.env (VPS) → MCP_API_TOKEN';
+  const siteTokenPath = 'deploy/docker/.env (local) или shared/config/runtime.env (VPS) → MCP_API_TOKEN (+ MCP_SIGNING_SECRET)';
   // Cursor runs on the developer machine — not inside Docker. Prefer explicit override.
   const repoRaw =
     process.env.CMS_CURSOR_REPO_ROOT ||
@@ -516,32 +517,36 @@ export async function buildSystemStatus(db: Database, cfg: AppConfig): Promise<R
     pdo_enabled: true,
     mcp: {
       configured,
-      token_hint: hint,
-      auth_header: 'Authorization: Bearer <MCP_API_TOKEN>',
+      signing_configured: signingConfigured,
+      auth_mode: authMode,
+      ip_allowlist_enabled: ipAllowlist !== '',
+      auth_header: 'Authorization: Bearer <MCP_API_TOKEN> + X-Jasefly-Ts/Nonce/Sign',
       docs_hint:
-        'Один MCP-процесс → много сайтов. Токен этого сайта: ' +
+        'Один MCP-процесс → много сайтов. Токен + signing secret: ' +
         siteTokenPath +
-        '. В mcp-cms/.env тот же секрет как CMS_SITE_{ID}_TOKEN (или legacy CMS_MCP_TOKEN).',
+        '. В mcp-cms/.env: CMS_SITE_{ID}_TOKEN + CMS_SITE_{ID}_SIGNING_SECRET.',
       app_url: appUrl,
       runtime,
       site_token_path: siteTokenPath,
       agent_env_keys: {
-        multi: 'CMS_SITES + CMS_SITE_{ID}_URL + CMS_SITE_{ID}_TOKEN',
-        legacy: 'CMS_URL + CMS_MCP_TOKEN',
+        multi: 'CMS_SITES + CMS_SITE_{ID}_URL + CMS_SITE_{ID}_TOKEN + CMS_SITE_{ID}_SIGNING_SECRET',
+        legacy: 'CMS_URL + CMS_MCP_TOKEN + CMS_MCP_SIGNING_SECRET',
         list_tool: 'cms_sites',
         site_param: 'site',
       },
       multi_site_hint:
-        'SoT хостов — только mcp-cms/.env (не sites.js). При ≥2 сайтах в tools передавайте site=id|alias|domain.',
+        'SoT хостов — только mcp-cms/.env (не sites.js). При ≥2 сайтах в tools передавайте site=id|alias|domain. Rotate оба секрета вместе.',
       cursor_snippet: cursorSnippet,
       docs_url: 'docs/mcp-multi-site.md',
       local_example_env: [
         'CMS_SITES=jasefly,iia3uk',
         'CMS_SITE_JASEFLY_URL=https://jasefly.com',
         'CMS_SITE_JASEFLY_TOKEN=<MCP_API_TOKEN сайта>',
+        'CMS_SITE_JASEFLY_SIGNING_SECRET=<MCP_SIGNING_SECRET сайта>',
         'CMS_SITE_JASEFLY_ALIASES=jasefly.com,www.jasefly.com',
         'CMS_SITE_IIA3UK_URL=https://iia3uk.ru',
         'CMS_SITE_IIA3UK_TOKEN=<MCP_API_TOKEN сайта>',
+        'CMS_SITE_IIA3UK_SIGNING_SECRET=<MCP_SIGNING_SECRET сайта>',
       ].join('\n'),
     },
     module_load_failures: [],

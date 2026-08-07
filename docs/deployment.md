@@ -43,10 +43,24 @@ Secrets stay in `mcp-cms/.env` and `backend/config` (never in `mcp.json` or git)
 1. **build** `localBuild()` — `npm run build` in frontend → `node scripts/build-hosting.js --mode=update --yes` → find `release/jasefly-cms-update-*.zip` → `markBuild`.
 2. **test** `localTest()` — lint + vitest + ZIP markers + PHP lint + `backend/tests/run.php` → `markTest`.
 3. **changelog** write `CHANGELOG.md` entry + POST `/admin/mcp/changelog` → `markChangelog`.
-4. **deploy** `assertDeployAllowed` → upload ZIP via CMS update API → `markDeployed`.
+4. **deploy** `assertDeployAllowed` → upload ZIP via CMS update API → `markDeployed` (or `pending_telegram` if host has Telegram Approve).
 5. **verify** `postDeployVerify` — site + API + DB + diagnostics → `ready`.
 
 Gate state: `mcp-cms/.gate-state.json` (`gate.js`). Deploy without changelog/test is blocked unless force.
+
+### Telegram deploy approve (opt-in)
+
+On the **host** `api/config/.env` only (not mcp-cms, not Mail DB):
+
+```env
+TELEGRAM_DEPLOY_APPROVE=1
+TELEGRAM_DEPLOY_BOT_TOKEN=…
+TELEGRAM_DEPLOY_CHAT_ID=…
+TELEGRAM_DEPLOY_WEBHOOK_SECRET=…   # random; Telegram setWebhook secret_token
+TELEGRAM_DEPLOY_TTL_SECONDS=3600
+```
+
+When enabled, `POST /admin/updates` stages the ZIP and sends Approve/Reject to the allowlisted chat. Apply runs only after Telegram callback (or admin escape hatch). MCP returns `pending_approval: true` / `ready: false` — call `cms_verify_alive` after you Approve.
 
 ### Manual packaging
 

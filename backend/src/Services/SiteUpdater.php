@@ -99,13 +99,6 @@ final class SiteUpdater
      */
     public function applyUpload(array $file): array
     {
-        @set_time_limit(300);
-        @ini_set('max_execution_time', '300');
-        ignore_user_abort(true);
-
-        // Soften overload false-positives while unpacking hundreds of files (MCP / panel ZIP).
-        $this->markOverloadQuiet();
-
         if (!class_exists(ZipArchive::class)) {
             throw new \RuntimeException('PHP-расширение ZipArchive недоступно на хостинге. Включите zip в php.ini.');
         }
@@ -138,16 +131,48 @@ final class SiteUpdater
 
         $token = bin2hex(random_bytes(8));
         $zipPath = $this->workDir . '/incoming-' . $token . '.zip';
-        $extractDir = $this->workDir . '/extract-' . $token;
 
         if (!@move_uploaded_file($tmp, $zipPath)) {
             throw new \RuntimeException('Не удалось сохранить ZIP во временную папку.');
         }
 
+        try {
+            return $this->applyStagedZip($zipPath, $name);
+        } finally {
+            @unlink($zipPath);
+        }
+    }
+
+    /**
+     * Apply a ZIP already on disk (Telegram pending / upload temp). Caller owns zip lifetime.
+     *
+     * @return array<string, mixed>
+     */
+    public function applyStagedZip(string $zipPath, string $packageName = 'update.zip'): array
+    {
+        @set_time_limit(300);
+        @ini_set('max_execution_time', '300');
+        ignore_user_abort(true);
+
+        // Soften overload false-positives while unpacking hundreds of files (MCP / panel ZIP).
+        $this->markOverloadQuiet();
+
+        if (!class_exists(ZipArchive::class)) {
+            throw new \RuntimeException('PHP-расширение ZipArchive недоступно на хостинге. Включите zip в php.ini.');
+        }
+        if ($zipPath === '' || !is_file($zipPath)) {
+            throw new \RuntimeException('ZIP обновления не найден на диске.');
+        }
+
+        if (!is_dir($this->workDir) && !@mkdir($this->workDir, 0775, true)) {
+            throw new \RuntimeException('Не удалось создать каталог storage/updates.');
+        }
+
+        $token = bin2hex(random_bytes(8));
+        $extractDir = $this->workDir . '/extract-' . $token;
         $copied = 0;
         $skipped = [];
         $warnings = [];
-        $packageRoot = '';
 
         try {
             $this->extractZip($zipPath, $extractDir);
@@ -206,7 +231,7 @@ final class SiteUpdater
                 'assets_pruned_bytes' => $prune['bytes'],
                 'assets_pruned_sample' => $prune['sample'],
                 'migrations' => $migrations,
-                'package' => $name,
+                'package' => $packageName,
                 'hosting_layout' => $this->hostingLayout,
                 'at' => gmdate('c'),
                 'message' => 'Обновление установлено. Обновите админку (Ctrl+F5).',
@@ -226,7 +251,6 @@ final class SiteUpdater
             throw $e;
         } finally {
             $this->rmTree($extractDir);
-            @unlink($zipPath);
         }
     }
 

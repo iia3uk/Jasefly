@@ -19,17 +19,30 @@ Adding / renaming / removing a site = edit env + restart MCP.
 
 Secrets live only in [`mcp-cms/.env`](../mcp-cms/.env.example) (never in `mcp.json`, never in chat).
 
+### Dual-secret (Bearer + HMAC)
+
+| Secret | Site (`api/config/.env`) | mcp-cms |
+| --- | --- | --- |
+| Identity | `MCP_API_TOKEN` | `CMS_SITE_{ID}_TOKEN` (or legacy `CMS_MCP_TOKEN`) |
+| Signing (never on wire) | `MCP_SIGNING_SECRET` | `CMS_SITE_{ID}_SIGNING_SECRET` (or `CMS_MCP_SIGNING_SECRET`) |
+
+Each authenticated MCP call may send `X-Jasefly-Ts`, `X-Jasefly-Nonce`, `X-Jasefly-Sign` (`v1=` + HMAC-SHA256). Server modes: `MCP_AUTH_MODE=legacy|prefer|require` (empty signing secret forces legacy). Optional `MCP_ALLOWED_IPS`. Rotate **both** secrets together.
+
+Threat model: leak of Bearer alone must not grant `super_admin` when mode=`require`. Leak of both secrets from the same `.env` remains critical.
+
 ```env
 CMS_SITES=jasefly,iia3uk
 
 CMS_SITE_JASEFLY_URL=https://jasefly.com
 CMS_SITE_JASEFLY_TOKEN=…
+CMS_SITE_JASEFLY_SIGNING_SECRET=…
 CMS_SITE_JASEFLY_ALIASES=jasefly.com,www.jasefly.com,official
 CMS_SITE_JASEFLY_RUNTIME=php-shared
 CMS_SITE_JASEFLY_DEPLOYMENT=shared
 
 CMS_SITE_IIA3UK_URL=https://iia3uk.ru
 CMS_SITE_IIA3UK_TOKEN=…
+CMS_SITE_IIA3UK_SIGNING_SECRET=…
 CMS_SITE_IIA3UK_ALIASES=iia3uk.ru,www.iia3uk.ru
 ```
 
@@ -78,6 +91,10 @@ cms_sites
 
 Hosting rate limits and GET cache apply **per site** (`cms_hosting_guard`).
 
+## Telegram deploy approve
+
+Optional host-side human gate for **CMS update ZIP only** (`cms_release` / Updates UI). Secrets live in the site `api/config/.env` (`TELEGRAM_DEPLOY_*`) — never in `mcp-cms/.env`. When `TELEGRAM_DEPLOY_APPROVE=1`, upload returns `pending_approval`; Approve in Telegram (or admin escape hatch), then `cms_verify_alive`. Details: [deployment.md](deployment.md) · [security.md](security.md).
+
 ## Runtime mix
 
 The same MCP can mix:
@@ -111,3 +128,5 @@ Build target must match the site: shared ZIP vs VPS artifact. Matrix: [runtime-t
 - Putting tokens in Cursor `mcp.json`.
 - Assuming one deploy updates every host in `CMS_SITES`.
 - Using a shared-hosting ZIP against a `node-vps` site (or the reverse).
+- Enabling `MCP_AUTH_MODE=require` on the site without `CMS_SITE_*_SIGNING_SECRET` in mcp-cms.
+- Rotating only `MCP_API_TOKEN` and leaving a stale signing secret (or the reverse).

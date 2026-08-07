@@ -20,6 +20,21 @@ return [
     'backup_key' => (string) ($local['backup_key'] ?? $env('BACKUP_KEY', '')),
     // Long-lived Bearer token for MCP / CI (optional). Prefer over password+2FA for agents.
     'mcp_api_token' => (string) ($local['mcp_api_token'] ?? $env('MCP_API_TOKEN', '')),
+    // Second secret for HMAC proof-of-possession (never sent on the wire). Empty → legacy Bearer-only.
+    'mcp_signing_secret' => (string) ($local['mcp_signing_secret'] ?? $env('MCP_SIGNING_SECRET', '')),
+    // legacy | prefer | require — empty signing secret forces legacy.
+    'mcp_auth_mode' => (string) ($local['mcp_auth_mode'] ?? $env('MCP_AUTH_MODE', 'legacy')),
+    // Optional CIDR/IP allowlist for MCP Bearer (empty = off).
+    'mcp_allowed_ips' => (string) ($local['mcp_allowed_ips'] ?? $env('MCP_ALLOWED_IPS', '')),
+    'mcp_skew_seconds' => (int) ($local['mcp_skew_seconds'] ?? $env('MCP_SKEW_SECONDS', 300)),
+
+    // Opt-in human gate for CMS update ZIP (Telegram Approve). Secrets only in .env — not Mail DB.
+    'telegram_deploy_approve' => (string) ($local['telegram_deploy_approve'] ?? $env('TELEGRAM_DEPLOY_APPROVE', '0')),
+    'telegram_deploy_bot_token' => (string) ($local['telegram_deploy_bot_token'] ?? $env('TELEGRAM_DEPLOY_BOT_TOKEN', '')),
+    'telegram_deploy_chat_id' => (string) ($local['telegram_deploy_chat_id'] ?? $env('TELEGRAM_DEPLOY_CHAT_ID', '')),
+    'telegram_deploy_webhook_secret' => (string) ($local['telegram_deploy_webhook_secret'] ?? $env('TELEGRAM_DEPLOY_WEBHOOK_SECRET', '')),
+    'telegram_deploy_ttl_seconds' => (int) ($local['telegram_deploy_ttl_seconds'] ?? $env('TELEGRAM_DEPLOY_TTL_SECONDS', 3600)),
+
     'cors_origins' => array_filter(array_map('trim', explode(',', (string) (
         $local['cors_origins'] ?? $env('CORS_ORIGINS', '')
     )))),

@@ -262,6 +262,9 @@ final class PermissionService
             }
             return 'system.manage';
         }
+        if (str_contains($path, '/admin/activity')) {
+            return 'activity.view';
+        }
         if ($this->isSettingsRoute($path)) {
             return str_contains($path, '/admin/seo') ? 'seo.manage' : 'settings.manage';
         }

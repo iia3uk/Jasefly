@@ -35,11 +35,16 @@ return function (Router $router, $db, array $app, string $prefix = '/api/v1'): v
     $media = new MediaController($db, $app);
     $trash = new TrashController($db, new SoftDeleteService($db), new ActivityLogService($db));
     $search = new SearchController(new \App\Services\SearchService($db));
-    $activity = new ActivityController(new ActivityLogService($db));
-    $system = new SystemController(new \App\Services\SystemHealthService($db, $app), new PermissionService($db));
+    $perms = new PermissionService($db);
+    $activity = new ActivityController(new ActivityLogService($db), $perms);
+    $system = new SystemController(new \App\Services\SystemHealthService($db, $app), $perms);
 
-    $protected = [new AuthMiddleware($app['jwt_secret']), new PermissionMiddleware(new PermissionService($db))];
+    $protected = [
+        new AuthMiddleware($app['jwt_secret']),
+        new PermissionMiddleware($perms),
+    ];
     $rate = new RateLimitMiddleware($db);
+    $loginRate = new RateLimitMiddleware($db, 5, 900, true);
 
     $p = fn(string $path) => rtrim($prefix, '/') . $path;
 
@@ -67,7 +72,7 @@ return function (Router $router, $db, array $app, string $prefix = '/api/v1'): v
     $router->get($p('/robots.txt'), [$public, 'robots']);
 
     // ─── Auth ─────────────────────────────────────────────────────────────────
-    $router->post($p('/auth/login'), [$auth, 'login'], [$rate]);
+    $router->post($p('/auth/login'), [$auth, 'login'], [$loginRate]);
     $router->post($p('/auth/refresh'), [$auth, 'refresh']);
     $router->post($p('/auth/logout'), [$auth, 'logout']);
     $router->get($p('/auth/me'), [$auth, 'me'], $protected);

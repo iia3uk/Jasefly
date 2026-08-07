@@ -19,6 +19,7 @@ import {
   assertDeployAllowed,
   markChangelog,
   markDeployed,
+  markPendingTelegram,
   pipelineHelp,
   readGate,
   repoRoot,
@@ -251,6 +252,23 @@ server.tool(
       const cms = getClient(site);
       const res = await cms.uploadUpdateZip(zip);
       const data = res?.data ?? res;
+
+      if (data?.pending_approval === true) {
+        markPendingTelegram({ zip, deploy_id: data.deploy_id, result: data });
+        return ok({
+          ready: false,
+          pending_approval: true,
+          deploy_id: data.deploy_id || null,
+          message:
+            'Пакет на хосте, ждёт Approve в Telegram (или в админке Updates). После клика — cms_verify_alive.',
+          runtime: 'php-shared',
+          deployed: data,
+          changelog: gateCheck.gate.changelog || null,
+          next: 'cms_verify_alive после Telegram Approve',
+          gate: readGate(),
+        });
+      }
+
       markDeployed({ zip, result: data, changelog: gateCheck.gate.changelog || null, runtime: 'php-shared' });
 
       if (skip_verify) {
@@ -429,6 +447,26 @@ server.tool(
       const zip = String(gateCheck.gate.zip_path || '');
       const res = await cms.uploadUpdateZip(zip);
       const deployed = res?.data ?? res;
+
+      if (deployed?.pending_approval === true) {
+        markPendingTelegram({ zip, deploy_id: deployed.deploy_id, result: deployed });
+        steps.deploy = 'pending_telegram';
+        steps.verify = 'skipped';
+        return ok({
+          ready: false,
+          pending_approval: true,
+          deploy_id: deployed.deploy_id || null,
+          message:
+            'Пакет на хосте, ждёт Approve в Telegram (или в админке Updates). После клика — cms_verify_alive.',
+          steps,
+          changelog: nextGate.changelog,
+          changelog_remote: remoteChangelog?.data ?? remoteChangelog,
+          deployed,
+          next: 'cms_verify_alive после Telegram Approve',
+          gate: readGate(),
+        });
+      }
+
       markDeployed({ zip, result: deployed, changelog: gateCheck.gate.changelog || null });
       steps.deploy = deployed?.ok === false ? 'fail' : 'ok';
 

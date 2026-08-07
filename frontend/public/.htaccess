@@ -18,6 +18,11 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 RewriteCond %{THE_REQUEST} \s/+modules/?[\s?]
 RewriteRule ^modules/?$ /cms-modules [R=301,L]
 
+# Package FE assets: auth-aware gate (admin-only packs need staff cookie).
+RewriteRule ^modules/\.access\.json$ - [F,L]
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^modules/(.+)$ /module-asset.php?f=$1 [L,QSA]
+
 # Pass Authorization header through to PHP (required for JWT on CGI/FastCGI/Beget)
 RewriteCond %{HTTP:Authorization} .
 RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -85,6 +90,7 @@ RewriteRule ^ index.php [L,QSA]
 </IfModule>
 
 <IfModule mod_headers.c>
+  Header always unset X-Powered-By
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
   Header always set X-Frame-Options "SAMEORIGIN"
