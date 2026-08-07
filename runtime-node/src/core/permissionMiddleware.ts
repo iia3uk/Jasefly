@@ -58,6 +58,7 @@ export function capabilityForAdminPath(path: string): string | null {
   if (p.includes('/admin/modules')) return 'modules.view';
   if (p.includes('/admin/media')) return 'media.manage';
   if (p.includes('/admin/seo')) return 'seo.manage';
+  if (p.includes('/admin/activity')) return 'activity.view';
   if (p.includes('/admin/system') || p.includes('/admin/dashboard') || p.includes('/admin/scheduler')) {
     return 'system.manage';
   }
@@ -112,7 +113,7 @@ function hasAnyCapability(caps: string[], needed: readonly string[]): boolean {
 
 export function requirePermission(auth: AuthService, capability?: string): MiddlewareHandler {
   return async (c, next) => {
-    const user = await auth.meFromBearer(c.req.header('authorization'));
+    const user = await auth.meFromBearer(c.req.header('authorization'), c);
     if (!user) return fail(c, 'Unauthorized', 401);
     c.set('user', user);
     if (user === 'mcp') {

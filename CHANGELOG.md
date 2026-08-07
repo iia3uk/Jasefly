@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-08-08 — Fix behavior parity after plugins default-off
+
+- Parity seed UPSERTs full baseline plugin set ON + platform singletons before PHP DB copy
+- Automation/Newsletter/Notifications honour DB enablement (drop hard enabled=false)
+- Sync migrations 029/030 into contracts; Node activity/plugins/MCP status parity
+- Skip login rate-limit under BEHAVIOR_PARITY/test; scrub translate corpus size drift
+
+## 2026-08-08 — VPS contour: Telegram approve + MCP dual-secret (Node)
+
+- Node `DeployTelegramApprove`: request → Telegram Approve → redeem → MCP SSH (Approve ≠ apply)
+- Routes: `/telegram/deploy-webhook`, `/admin/deploy/telegram/request|redeem`, pending approve/reject
+- Node MCP dual-secret (`mcpRequestAuth`) + CORS `X-Jasefly-*`
+- mcp-cms: `telegramGate.js`; `cms_deploy_update` / `cms_release` branch for `node-vps` (vps build + gate)
+- Tests: `deployTelegramApprove.test.ts`, `mcpRequestAuth.test.ts`
+
 ## 2026-08-07 — Smoke: Telegram deploy approve gate
 
 - Docblock note on DeployTelegramApprove for pending→Approve smoke test

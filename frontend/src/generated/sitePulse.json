@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-07T21:08:34.878Z",
-  "version": "backup-before-author-rewrite-17-gc6d4a9d",
-  "commit": "c6d4a9d",
+  "generated_at": "2026-08-07T21:33:38.167Z",
+  "version": "backup-before-author-rewrite-18-gc7850c5",
+  "commit": "c7850c5",
   "metrics": {
-    "files": 3407,
+    "files": 3412,
     "php_classes": 316,
     "builder_widgets": 68,
     "rest_routes_core": 66,
     "sdk_interfaces": 23,
-    "git_commits": 109,
+    "git_commits": 110,
     "repo_size_mb": 27.9,
     "core_modules": 30,
     "package_scaffolds": 10
@@ -17,8 +17,13 @@
     "repo": "iia3uk/jasefly",
     "url": "https://github.com/iia3uk/jasefly",
     "latest_tag": "backup-before-author-rewrite",
-    "latest_commit_date": "2026-08-07",
+    "latest_commit_date": "2026-08-08",
     "commits": [
+      {
+        "hash": "c7850c5",
+        "date": "2026-08-08",
+        "subject": "Harden MCP and CMS update path against token leak and silent deploys."
+      },
       {
         "hash": "c6d4a9d",
         "date": "2026-08-07",
@@ -38,11 +43,6 @@
         "hash": "287d086",
         "date": "2026-08-06",
         "subject": "chore: sync changelog and sitePulse after auth/security releases"
-      },
-      {
-        "hash": "45c1d6a",
-        "date": "2026-08-06",
-        "subject": "fix(auth): clear AdminBar when /auth/me session is dead"
       }
     ]
   }

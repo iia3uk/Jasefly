@@ -21,6 +21,8 @@ export type MePayload = {
   name: string;
   role: string;
   totp_enabled: boolean;
+  /** Staff without TOTP should enable it (parity with PHP AuthController). */
+  totp_recommended?: boolean;
   capabilities: string[];
   is_super: boolean;
   roles?: string[];
@@ -145,10 +147,22 @@ export class AuthService {
     }
   }
 
-  async meFromBearer(authHeader: string | undefined): Promise<Row | 'mcp' | null> {
+  async meFromBearer(
+    authHeader: string | undefined,
+    ctx?: import('hono').Context,
+  ): Promise<Row | 'mcp' | null> {
     if (!authHeader?.startsWith('Bearer ')) return null;
     const token = authHeader.slice(7).trim();
-    if (this.cfg.mcpApiToken && token === this.cfg.mcpApiToken) return 'mcp';
+    if (this.cfg.mcpApiToken && token === this.cfg.mcpApiToken) {
+      if (ctx) {
+        const { authenticateMcp } = await import('../support/mcpRequestAuth.js');
+        const mcp = await authenticateMcp(ctx, this.cfg, token);
+        if (mcp.status === 'rejected') return null;
+        return 'mcp';
+      }
+      // No request context (tests): legacy Bearer-only
+      return 'mcp';
+    }
     try {
       const payload = await jwtDecode(token, this.cfg.jwtSecret);
       // PHP DemoSessionService::issueToken → type=demo_access, demo_sid
@@ -189,14 +203,36 @@ export class AuthService {
     const { AccessService } = await import('../access/AccessService.js');
     const access = new AccessService(this.db, this);
     const bundle = await access.resolveEffective(Number(user.id));
+    const brief = userBrief(user);
+    const role = brief.role;
+    const isSuper = bundle.is_super;
+    const totpEnabled = brief.totp_enabled;
+    const totpRecommended =
+      !totpEnabled
+      && (isSuper
+        || ['super_admin', 'admin', 'editor'].includes(role)
+        || bundle.caps.some((c) =>
+          [
+            'content.edit_any',
+            'content.delete_any',
+            'content.delete',
+            'media.manage',
+            'users.manage',
+            'system.manage',
+            'mcp.manage',
+            'roles.manage',
+            'plugins.manage',
+          ].includes(c),
+        ));
     return {
-      ...userBrief(user),
+      ...brief,
       last_login_at: user.last_login_at ?? null,
       created_at: user.created_at ?? null,
       capabilities: bundle.caps,
-      roles: bundle.roles.length ? bundle.roles : [String(user.role ?? '')],
-      is_super: bundle.is_super,
+      roles: bundle.roles.length ? bundle.roles : [role],
+      is_super: isSuper,
       caps_version: bundle.version,
+      totp_recommended: totpRecommended,
     };
   }
 

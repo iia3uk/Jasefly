@@ -25,7 +25,7 @@ final class AutomationModule extends AbstractModule
     public function name(): string { return 'automation'; }
     public function label(): string { return 'Автоматизация'; }
     public function priority(): int { return 16; }
-    public function enabled(array $app): bool { return false; }
+    // Enablement via PluginStateService / modules.is_enabled (default-off).
 
     public function adminNav(): array
     {

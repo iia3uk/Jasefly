@@ -134,7 +134,20 @@ export async function siteHandler(c: Context, db: Database) {
   }
 
   const seoRow = (await singleton(db, 'seo_settings')) || {};
-  const seo = Array.isArray(seoRow) ? seoRow : seoRow && Object.keys(seoRow).length ? seoRow : [];
+  let seo: unknown = Array.isArray(seoRow) ? seoRow : seoRow && Object.keys(seoRow).length ? seoRow : [];
+  if (seo && typeof seo === 'object' && !Array.isArray(seo)) {
+    const row = { ...(seo as Record<string, unknown>) };
+    // PHP json-decodes target_regions; SQLite may store the JSON string.
+    if (typeof row.target_regions === 'string') {
+      try {
+        const decoded = JSON.parse(row.target_regions);
+        if (Array.isArray(decoded)) row.target_regions = decoded;
+      } catch {
+        /* keep string */
+      }
+    }
+    seo = row;
+  }
 
   return ok(c, {
     site_settings: await singleton(db, 'site_settings'),

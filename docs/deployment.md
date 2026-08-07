@@ -50,7 +50,10 @@ Gate state: `mcp-cms/.gate-state.json` (`gate.js`). Deploy without changelog/tes
 
 ### Telegram deploy approve (opt-in)
 
-On the **host** `api/config/.env` only (not mcp-cms, not Mail DB):
+Secrets only on the **host** (not mcp-cms, not Mail DB):
+
+- PHP shared: `api/config/.env`
+- Node VPS: `runtime-node/.env` (or process env on the VPS)
 
 ```env
 TELEGRAM_DEPLOY_APPROVE=1
@@ -60,7 +63,9 @@ TELEGRAM_DEPLOY_WEBHOOK_SECRET=…   # random; Telegram setWebhook secret_token
 TELEGRAM_DEPLOY_TTL_SECONDS=3600
 ```
 
-When enabled, `POST /admin/updates` stages the ZIP and sends Approve/Reject to the allowlisted chat. Apply runs only after Telegram callback (or admin escape hatch). MCP returns `pending_approval: true` / `ready: false` — call `cms_verify_alive` after you Approve.
+**PHP shared:** `POST /admin/updates` stages the ZIP → Telegram Approve/Reject → apply on host. MCP returns `pending_approval` → after Approve call `cms_verify_alive`.
+
+**Node VPS:** SSH still runs from mcp-cms. Flow: `POST /admin/deploy/telegram/request` → Telegram Approve → `POST …/redeem` → `deployVpsAtomic`. MCP `cms_deploy_update` / `cms_release` call request/redeem automatically; while pending they return `pending_approval: true` / `ready: false` — Approve in Telegram, then `cms_deploy_update(confirm=true)` again. Admin escape hatch: `/admin/updates/pending/{id}/approve|reject`.
 
 ### Manual packaging
 

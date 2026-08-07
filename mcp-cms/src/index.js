@@ -30,6 +30,7 @@ import { localBuild, localTest } from './local.js';
 import { loadMcpEnv } from './loadEnv.js';
 import { postDeployVerify } from './verify.js';
 import { deployVpsAtomic, rollbackVps, vpsStatus } from './deploy/vps.js';
+import { ensureVpsTelegramGate } from './deploy/telegramGate.js';
 import { resolveSite } from './sites.js';
 
 // Secrets only from .env (or pre-set process env) — never hardcode in mcp.json
@@ -235,6 +236,24 @@ server.tool(
       const zip = zip_path || String(gateCheck.gate.zip_path || '');
 
       if (siteCfg.runtime === 'node-vps' || siteCfg.deployment === 'vps') {
+        const cms = getClient(site);
+        const tg = await ensureVpsTelegramGate(cms, zip);
+        if (tg.pending) {
+          markPendingTelegram({ zip, deploy_id: tg.data?.deploy_id, result: tg.data });
+          return ok({
+            ready: false,
+            pending_approval: true,
+            deploy_id: tg.data?.deploy_id || null,
+            message:
+              'VPS deploy ждёт Approve в Telegram (или admin /admin/updates/pending/{id}/approve). '
+              + 'После клика — снова cms_deploy_update(confirm=true).',
+            runtime: 'node-vps',
+            deployed: tg.data,
+            changelog: gateCheck.gate.changelog || null,
+            next: 'Approve в Telegram → cms_deploy_update(confirm=true)',
+            gate: readGate(),
+          });
+        }
         const deployed = deployVpsAtomic(siteCfg, zip, { confirm: !!confirm });
         if (!deployed.ok) return fail(new Error(deployed.error || JSON.stringify(deployed)));
         markDeployed({ zip, result: deployed, changelog: gateCheck.gate.changelog || null, runtime: 'node-vps' });
@@ -242,6 +261,7 @@ server.tool(
           ready: Boolean(deployed.ok),
           message: 'VPS atomic deploy выполнен. Проверьте healthcheck / cms_verify_alive.',
           runtime: 'node-vps',
+          telegram_gate: tg.skipped || 'redeemed',
           deployed,
           changelog: gateCheck.gate.changelog || null,
           gate: readGate(),
@@ -383,8 +403,9 @@ server.tool(
     /** @type {Record<string, string>} */
     const steps = { build: 'pending', test: 'pending', changelog: 'pending', deploy: 'pending', verify: 'pending' };
     try {
-      getClient(site); // fail-fast до долгого build: при 2+ сайтах нужен site
-      const built = localBuild();
+      const siteCfg = resolveSite(site); // fail-fast до долгого build: при 2+ сайтах нужен site
+      const isVps = siteCfg.runtime === 'node-vps' || siteCfg.deployment === 'vps';
+      const built = localBuild({ target: isVps ? 'vps' : 'shared' });
       if (!built.ok) {
         steps.build = 'fail';
         return ok({
@@ -445,6 +466,53 @@ server.tool(
         });
       }
       const zip = String(gateCheck.gate.zip_path || '');
+
+      if (isVps) {
+        const tg = await ensureVpsTelegramGate(cms, zip);
+        if (tg.pending) {
+          markPendingTelegram({ zip, deploy_id: tg.data?.deploy_id, result: tg.data });
+          steps.deploy = 'pending_telegram';
+          steps.verify = 'skipped';
+          return ok({
+            ready: false,
+            pending_approval: true,
+            deploy_id: tg.data?.deploy_id || null,
+            message:
+              'VPS deploy ждёт Approve в Telegram. После клика — cms_deploy_update(confirm=true) или снова cms_release.',
+            runtime: 'node-vps',
+            steps,
+            changelog: nextGate.changelog,
+            changelog_remote: remoteChangelog?.data ?? remoteChangelog,
+            deployed: tg.data,
+            next: 'Approve в Telegram → cms_deploy_update(confirm=true)',
+            gate: readGate(),
+          });
+        }
+        const deployed = deployVpsAtomic(siteCfg, zip, { confirm: true });
+        if (!deployed.ok) {
+          steps.deploy = 'fail';
+          return fail(new Error(deployed.error || JSON.stringify(deployed)));
+        }
+        markDeployed({ zip, result: deployed, changelog: gateCheck.gate.changelog || null, runtime: 'node-vps' });
+        steps.deploy = 'ok';
+        const check = await postDeployVerify(cms);
+        steps.verify = check.ready ? 'ok' : 'fail';
+        return ok({
+          ready: check.ready,
+          message: check.ready
+            ? 'Готово. VPS atomic deploy выполнен, сайт/API/БД живы.'
+            : check.message,
+          runtime: 'node-vps',
+          steps,
+          changelog: nextGate.changelog,
+          changelog_remote: remoteChangelog?.data ?? remoteChangelog,
+          deployed,
+          problems: check.problems,
+          verify: check.verify,
+          gate: readGate(),
+        });
+      }
+
       const res = await cms.uploadUpdateZip(zip);
       const deployed = res?.data ?? res;
 
@@ -458,6 +526,7 @@ server.tool(
           deploy_id: deployed.deploy_id || null,
           message:
             'Пакет на хосте, ждёт Approve в Telegram (или в админке Updates). После клика — cms_verify_alive.',
+          runtime: 'php-shared',
           steps,
           changelog: nextGate.changelog,
           changelog_remote: remoteChangelog?.data ?? remoteChangelog,
@@ -467,7 +536,7 @@ server.tool(
         });
       }
 
-      markDeployed({ zip, result: deployed, changelog: gateCheck.gate.changelog || null });
+      markDeployed({ zip, result: deployed, changelog: gateCheck.gate.changelog || null, runtime: 'php-shared' });
       steps.deploy = deployed?.ok === false ? 'fail' : 'ok';
 
       const check = await postDeployVerify(cms);
@@ -478,6 +547,7 @@ server.tool(
         message: check.ready
           ? 'Готово. Релиз залит, сайт/API/БД живы.'
           : check.message,
+        runtime: 'php-shared',
         steps,
         changelog: nextGate.changelog,
         changelog_remote: remoteChangelog?.data ?? remoteChangelog,

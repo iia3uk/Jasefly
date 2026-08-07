@@ -27,6 +27,15 @@ export interface AppConfig {
   jwtTtl: number;
   refreshTtl: number;
   mcpApiToken: string;
+  mcpSigningSecret: string;
+  mcpAuthMode: string;
+  mcpAllowedIps: string;
+  mcpSkewSeconds: number;
+  telegramDeployApprove: string;
+  telegramDeployBotToken: string;
+  telegramDeployChatId: string;
+  telegramDeployWebhookSecret: string;
+  telegramDeployTtlSeconds: number;
   corsOrigins: string[];
   storagePath: string;
   runtime: 'node-vps';
@@ -61,6 +70,15 @@ function loadConfig(): AppConfig {
     jwtTtl: Number(process.env.JWT_TTL || 3600),
     refreshTtl: Number(process.env.REFRESH_TTL || 604800),
     mcpApiToken: process.env.MCP_API_TOKEN || '',
+    mcpSigningSecret: process.env.MCP_SIGNING_SECRET || '',
+    mcpAuthMode: process.env.MCP_AUTH_MODE || 'legacy',
+    mcpAllowedIps: process.env.MCP_ALLOWED_IPS || '',
+    mcpSkewSeconds: Number(process.env.MCP_SKEW_SECONDS || 300),
+    telegramDeployApprove: process.env.TELEGRAM_DEPLOY_APPROVE || '0',
+    telegramDeployBotToken: process.env.TELEGRAM_DEPLOY_BOT_TOKEN || '',
+    telegramDeployChatId: process.env.TELEGRAM_DEPLOY_CHAT_ID || '',
+    telegramDeployWebhookSecret: process.env.TELEGRAM_DEPLOY_WEBHOOK_SECRET || '',
+    telegramDeployTtlSeconds: Number(process.env.TELEGRAM_DEPLOY_TTL_SECONDS || 3600),
     corsOrigins: cors,
     storagePath: storage,
     runtime: 'node-vps',

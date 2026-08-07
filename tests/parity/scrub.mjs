@@ -21,6 +21,12 @@ const SCRUB_KEYS = new Set([
   // translate batch: provider id may differ between PHP (google) and Node (stub)
   'provider',
   'default_provider',
+  // translate corpus grows with enabled plugins / SEO seed — sizes differ across runtimes
+  'corpus_size',
+  'missing',
+  'missing_total',
+  'remaining_for_target',
+  'failed',
   'runtime',
   'content_hash',
   'caps_version',

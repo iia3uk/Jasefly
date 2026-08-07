@@ -8,7 +8,7 @@ export type AuthVars = {
 
 export function requireAuth(auth: AuthService): MiddlewareHandler {
   return async (c, next) => {
-    const user = await auth.meFromBearer(c.req.header('authorization'));
+    const user = await auth.meFromBearer(c.req.header('authorization'), c);
     if (!user) return fail(c, 'Unauthorized', 401);
     c.set('user', user);
     await next();
@@ -20,7 +20,7 @@ const ADMIN_ROLES = new Set(['admin', 'super_admin', 'editor']);
 /** Auth + role gate for admin API (permission matrix parity incomplete; blocks anonymous/user). */
 export function requireAdmin(auth: AuthService): MiddlewareHandler {
   return async (c, next) => {
-    const user = await auth.meFromBearer(c.req.header('authorization'));
+    const user = await auth.meFromBearer(c.req.header('authorization'), c);
     if (!user) return fail(c, 'Unauthorized', 401);
     if (user === 'mcp') {
       c.set('user', user);

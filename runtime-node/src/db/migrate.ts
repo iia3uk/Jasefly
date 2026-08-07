@@ -38,6 +38,8 @@ export const PHP_MIGRATION_FILES = [
   '026_project_featured_priority.sql',
   '027_project_cover_orientations.sql',
   '028_plugin_default_off_seed.sql',
+  '029_core_module_manager_on.sql',
+  '030_mcp_nonces.sql',
 ] as const;
 
 /**

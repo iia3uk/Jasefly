@@ -33,7 +33,15 @@ export async function createApp(db: Database, cfg: AppConfig) {
         if (cfg.corsOrigins.includes('*')) return origin;
         return cfg.corsOrigins.includes(origin) ? origin : cfg.url;
       },
-      allowHeaders: ['Authorization', 'Content-Type', 'Accept-Language', 'X-Scheduler-Token'],
+      allowHeaders: [
+        'Authorization',
+        'Content-Type',
+        'Accept-Language',
+        'X-Scheduler-Token',
+        'X-Jasefly-Ts',
+        'X-Jasefly-Nonce',
+        'X-Jasefly-Sign',
+      ],
       allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       credentials: true,
     }),

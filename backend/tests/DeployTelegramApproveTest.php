@@ -135,6 +135,11 @@ assert_true(str_contains($updSrc, 'function applyStagedZip'), 'SiteUpdater::appl
 $mcpIdx = (string) file_get_contents(dirname(__DIR__, 2) . '/mcp-cms/src/index.js');
 assert_true(str_contains($mcpIdx, 'pending_approval'), 'mcp-cms handles pending_approval');
 assert_true(str_contains($mcpIdx, 'markPendingTelegram'), 'mcp-cms markPendingTelegram');
+assert_true(str_contains($mcpIdx, 'ensureVpsTelegramGate'), 'mcp-cms VPS telegram gate before SSH');
+$tgGate = (string) file_get_contents(dirname(__DIR__, 2) . '/mcp-cms/src/deploy/telegramGate.js');
+assert_true(str_contains($tgGate, 'admin/deploy/telegram/request'), 'telegramGate requests Node approve');
+$nodeTg = (string) file_get_contents(dirname(__DIR__, 2) . '/runtime-node/src/support/DeployTelegramApprove.ts');
+assert_true(str_contains($nodeTg, 'redeem'), 'Node DeployTelegramApprove has redeem for SSH');
 
 $envEx = (string) file_get_contents(dirname(__DIR__) . '/config/.env.example');
 assert_true(str_contains($envEx, 'TELEGRAM_DEPLOY_APPROVE'), '.env.example documents TELEGRAM_DEPLOY_APPROVE');

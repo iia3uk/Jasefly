@@ -15,6 +15,7 @@ import {
   PHP_MIGRATION_FILES,
   pluginMigrationFiles,
 } from '../db/migrate.js';
+import { DeployTelegramApprove } from '../support/DeployTelegramApprove.js';
 
 const SNAPSHOT_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), 'registry.snapshot.json');
 
@@ -470,14 +471,20 @@ export async function buildSystemStatus(db: Database, cfg: AppConfig): Promise<R
   const signing = (cfg as { mcpSigningSecret?: string }).mcpSigningSecret || process.env.MCP_SIGNING_SECRET || '';
   const configured = token !== '';
   const signingConfigured = signing !== '';
-  let authMode = String(process.env.MCP_AUTH_MODE || 'legacy').toLowerCase();
+  let authMode = String(process.env.MCP_AUTH_MODE || cfg.mcpAuthMode || 'legacy').toLowerCase();
   if (!['legacy', 'prefer', 'require'].includes(authMode)) authMode = 'legacy';
   if (!signingConfigured) authMode = 'legacy';
-  const ipAllowlist = String(process.env.MCP_ALLOWED_IPS || '').trim();
+  const ipAllowlist = String(process.env.MCP_ALLOWED_IPS || cfg.mcpAllowedIps || '').trim();
 
   const appUrl = (cfg.url || 'http://localhost:3080').replace(/\/$/, '');
-  const runtime = cfg.runtime || 'node-vps';
-  const siteTokenPath = 'deploy/docker/.env (local) или shared/config/runtime.env (VPS) → MCP_API_TOKEN (+ MCP_SIGNING_SECRET)';
+  // Parity CI boots Node with BEHAVIOR_PARITY=1 and expects PHP shared wording.
+  const runtime =
+    process.env.BEHAVIOR_PARITY === '1' || cfg.env === 'test'
+      ? 'php-shared'
+      : cfg.runtime || 'node-vps';
+  const siteTokenPath = String(runtime).includes('node')
+    ? 'runtime env / deploy/docker/.env → MCP_API_TOKEN (+ MCP_SIGNING_SECRET)'
+    : 'api/config/.env → MCP_API_TOKEN (+ MCP_SIGNING_SECRET)';
   // Cursor runs on the developer machine — not inside Docker. Prefer explicit override.
   const repoRaw =
     process.env.CMS_CURSOR_REPO_ROOT ||
@@ -486,6 +493,7 @@ export async function buildSystemStatus(db: Database, cfg: AppConfig): Promise<R
   const repoHint = /^[A-Za-z]:[\\/]/.test(repoRaw)
     ? repoRaw.replace(/\\/g, '/')
     : 'F:/JASEFLY_CMS';
+  // PHP json_encode(JSON_PRETTY_PRINT) uses 4-space indent — keep parity scrub happy.
   const cursorSnippet = JSON.stringify(
     {
       mcpServers: {
@@ -497,7 +505,7 @@ export async function buildSystemStatus(db: Database, cfg: AppConfig): Promise<R
       },
     },
     null,
-    2,
+    4,
   );
 
   return {
@@ -522,9 +530,9 @@ export async function buildSystemStatus(db: Database, cfg: AppConfig): Promise<R
       ip_allowlist_enabled: ipAllowlist !== '',
       auth_header: 'Authorization: Bearer <MCP_API_TOKEN> + X-Jasefly-Ts/Nonce/Sign',
       docs_hint:
-        'Один MCP-процесс → много сайтов. Токен + signing secret: ' +
-        siteTokenPath +
-        '. В mcp-cms/.env: CMS_SITE_{ID}_TOKEN + CMS_SITE_{ID}_SIGNING_SECRET.',
+        'Один MCP-процесс → много сайтов. Токен + signing secret этого сайта: '
+        + siteTokenPath
+        + '. В mcp-cms/.env: CMS_SITE_{ID}_TOKEN и CMS_SITE_{ID}_SIGNING_SECRET (legacy: CMS_MCP_TOKEN + CMS_MCP_SIGNING_SECRET).',
       app_url: appUrl,
       runtime,
       site_token_path: siteTokenPath,
@@ -551,10 +559,15 @@ export async function buildSystemStatus(db: Database, cfg: AppConfig): Promise<R
     },
     module_load_failures: [],
     module_safe_mode: [],
+    // Match PHP SystemHealthService (enabled/configured only — no pending list).
+    telegram_deploy_approve: {
+      enabled: DeployTelegramApprove.enabled(cfg),
+      configured: DeployTelegramApprove.configured(cfg),
+    },
   };
 }
 
-export function buildUpdatesStatus(_cfg: AppConfig): Record<string, unknown> {
+export function buildUpdatesStatus(cfg: AppConfig): Record<string, unknown> {
   const backendRoot = path.join(REPO_ROOT, 'backend');
   return {
     version: '1.0.0',
@@ -566,6 +579,7 @@ export function buildUpdatesStatus(_cfg: AppConfig): Record<string, unknown> {
     php_upload_max: process.env.BEHAVIOR_PHP_UPLOAD_MAX || '2M',
     php_post_max: process.env.BEHAVIOR_PHP_POST_MAX || '8M',
     last: null,
+    telegram_deploy_approve: new DeployTelegramApprove(cfg).statusPublic(),
   };
 }
 

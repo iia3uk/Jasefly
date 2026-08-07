@@ -1,6 +1,6 @@
 # Dual-runtime parity progress (AUTO)
 
-**Generated:** 2026-08-05T22:05:31.037Z  
+**Generated:** 2026-08-07T21:40:02.892Z  
 **Do not edit status by hand.** Source: behavior-runner → `module-status.mjs`.  
 **done modules:** 28/28 (auth-green-only: 0)  
 **behavior cases (last run):** pass=879 fail=0 total=879  

@@ -93,7 +93,12 @@ Hosting rate limits and GET cache apply **per site** (`cms_hosting_guard`).
 
 ## Telegram deploy approve
 
-Optional host-side human gate for **CMS update ZIP only** (`cms_release` / Updates UI). Secrets live in the site `api/config/.env` (`TELEGRAM_DEPLOY_*`) — never in `mcp-cms/.env`. When `TELEGRAM_DEPLOY_APPROVE=1`, upload returns `pending_approval`; Approve in Telegram (or admin escape hatch), then `cms_verify_alive`. Details: [deployment.md](deployment.md) · [security.md](security.md).
+Optional host-side human gate for CMS deploys (`cms_release` / `cms_deploy_update`). Secrets live on the **host** (`TELEGRAM_DEPLOY_*` in PHP `api/config/.env` or Node runtime `.env`) — never in `mcp-cms/.env`.
+
+- **php-shared:** upload stages ZIP → `pending_approval` → Approve → apply → `cms_verify_alive`
+- **node-vps:** MCP `request` → Approve → `redeem` → SSH atomic; while pending, re-run `cms_deploy_update(confirm=true)` after Approve
+
+Details: [deployment.md](deployment.md) · [security.md](security.md).
 
 ## Runtime mix
 

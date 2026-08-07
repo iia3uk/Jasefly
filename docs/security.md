@@ -17,7 +17,7 @@ List security controls that exist in this codebase (not a marketing checklist).
 | Auth + RBAC | `AuthMiddleware`, `PermissionMiddleware`, `PermissionService` |
 | Activity ACL | `GET /admin/activity` requires `activity.view`; MCP feed needs `mcp.manage` / `system.manage` |
 | MCP dual-secret (Bearer + HMAC) | `McpRequestAuth` + `AuthMiddleware`; `MCP_API_TOKEN` + `MCP_SIGNING_SECRET`; modes `legacy`/`prefer`/`require`; anti-replay `mcp_nonces` / file fallback; optional `MCP_ALLOWED_IPS` |
-| Telegram deploy approve (opt-in) | `TELEGRAM_DEPLOY_APPROVE=1` + bot/chat/webhook secret **only in** `api/config/.env`; pending ZIP → Telegram inline Approve; webhook `secret_token` + chat allowlist; admin escape hatch `/admin/updates/pending/{id}/approve` |
+| Telegram deploy approve (opt-in) | `TELEGRAM_DEPLOY_APPROVE=1` + bot/chat/webhook secret **only on host** (PHP `api/config/.env` or Node runtime `.env`); webhook `secret_token` + chat allowlist; PHP stages ZIP then applies; Node Approve then MCP redeem→SSH; admin escape hatch `/admin/updates/pending/{id}/approve` |
 | MCP status | `SystemHealthService::mcpStatus` → `configured` / `signing_configured` / `auth_mode` / `ip_allowlist_enabled` (no secret fragments) |
 | Rate limits | Login/demo: 5 / 15m fail-closed (`RateLimitMiddleware`); others fail-open if table missing; `SoftRateLimitMiddleware` |
 | CSRF Origin | Global `OriginCheckMiddleware` in `public/index.php` (all modules); MCP Bearer exempt via `mcp_api_token` |

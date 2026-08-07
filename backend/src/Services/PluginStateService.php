@@ -17,7 +17,7 @@ use Throwable;
  *  - isEnabled(): ON only when a row exists with is_enabled=1 (default-off).
  *  - Missing row → OFF (unless core), even if ModuleInterface::enabled() is true.
  *  - ModuleInterface::enabled() still applies as an extra OFF gate when a row is on
- *    (e.g. Template/Automation ship enabled()=false).
+ *    (e.g. Template ships enabled()=false).
  *  - getSettings(): stored JSON merged over the module's declared defaults.
  */
 final class PluginStateService

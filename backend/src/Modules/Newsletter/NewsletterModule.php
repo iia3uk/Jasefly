@@ -21,7 +21,7 @@ final class NewsletterModule extends AbstractModule
     public function name(): string { return 'newsletter'; }
     public function label(): string { return 'Рассылки'; }
     public function priority(): int { return 36; }
-    public function enabled(array $app): bool { return false; }
+    // Enablement via PluginStateService / modules.is_enabled (default-off).
     public function blocks(): array
     {
         return [['type' => 'newsletter-signup', 'label' => 'Подписка на рассылку', 'category' => 'basic']];

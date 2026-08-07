@@ -49,6 +49,7 @@ import {
   loadDocsPayload,
   migrationStatus,
 } from '../system/systemParity.js';
+import { DeployTelegramApprove } from '../support/DeployTelegramApprove.js';
 
 export const name = 'system';
 
@@ -71,10 +72,29 @@ export async function register(ctx: ModuleContext) {
     ctx.app.get(`${p}/admin/activity`, ...gate, async (c) => {
       const limit = Number(c.req.query('limit') ?? 100);
       const offset = Number(c.req.query('offset') ?? 0);
-      const source = String(c.req.query('source') ?? 'all');
-      const safeSource = ['all', 'admin', 'mcp'].includes(source) ? source : 'all';
-      const items = await listActivity(ctx.db, limit, offset, safeSource);
-      return ok(c, items, 200, { limit, offset, source: safeSource });
+      let source = String(c.req.query('source') ?? 'all').toLowerCase();
+      if (!['all', 'admin', 'mcp'].includes(source)) source = 'all';
+      const user = getUserFromContext(c);
+      let canMcpFeed = user === 'mcp';
+      if (!canMcpFeed && user && typeof user === 'object') {
+        const me = await ctx.auth.mePayload(user as import('../db/Database.js').Row);
+        const caps = me.capabilities || [];
+        canMcpFeed = caps.includes('*') || caps.includes('mcp.manage') || caps.includes('system.manage');
+      }
+      if (source === 'mcp' && !canMcpFeed) {
+        return fail(c, 'Forbidden: insufficient permissions', 403, [], {
+          code: 'forbidden',
+          capability: 'mcp.manage',
+        });
+      }
+      if (source === 'all' && !canMcpFeed) source = 'admin';
+      const items = await listActivity(ctx.db, limit, offset, source);
+      return ok(c, items, 200, {
+        limit,
+        offset,
+        source,
+        mcp_included: Boolean(canMcpFeed && (source === 'all' || source === 'mcp')),
+      });
     });
     ctx.app.get(`${p}/admin/search`, ...gate, async (c) => {
       const q = String(c.req.query('q') ?? '');
@@ -85,6 +105,12 @@ export async function register(ctx: ModuleContext) {
     ctx.app.get(`${p}/admin/plugins`, ...gate, async (c) => {
       const catalog = loadModuleCatalog() as Array<Record<string, unknown>>;
       const { isModuleEnabled, CORE_PLUGINS } = await import('../plugins/pluginState.js');
+      const enabledMap = new Map<string, boolean>();
+      for (const item of catalog) {
+        const name = String(item.name ?? '');
+        if (!name) continue;
+        enabledMap.set(name, await isModuleEnabled(ctx.db, name));
+      }
       const out = [];
       for (const item of catalog) {
         const name = String(item.name ?? '');
@@ -92,11 +118,22 @@ export async function register(ctx: ModuleContext) {
           out.push(item);
           continue;
         }
-        const enabled = await isModuleEnabled(ctx.db, name);
+        const enabled = enabledMap.get(name) === true;
+        const requiredBy = catalog
+          .filter((m) => {
+            const dep = String(m.name ?? '');
+            if (!dep || dep === name) return false;
+            if (enabledMap.get(dep) !== true) return false;
+            const requires = Array.isArray(m.requires) ? m.requires.map(String) : [];
+            return requires.includes(name);
+          })
+          .map((m) => String(m.name));
+        const isCore = CORE_PLUGINS.has(name);
         out.push({
           ...item,
           is_enabled: enabled,
-          can_disable: enabled && !CORE_PLUGINS.has(name),
+          required_by: requiredBy,
+          can_disable: enabled && !isCore && requiredBy.length === 0,
         });
       }
       return ok(c, out);
@@ -211,12 +248,77 @@ export async function register(ctx: ModuleContext) {
     ctx.app.post(`${p}/admin/updates`, ...gate, async (c) =>
       fail(
         c,
-        'In-panel CMS update (ZIP upload) is not implemented in Node runtime — use PHP SiteUpdater or deploy pipeline',
+        'In-panel CMS update (ZIP upload) is not implemented in Node runtime — use SSH deploy pipeline (+ Telegram approve when enabled)',
         501,
         null,
         { code: 'not_implemented' },
       ),
     );
+
+    // Public Telegram webhook (secret_token + chat allowlist inside handler)
+    ctx.app.post(`${p}/telegram/deploy-webhook`, async (c) => {
+      const secret = c.req.header('X-Telegram-Bot-Api-Secret-Token') || undefined;
+      const raw = await c.req.text();
+      const result = await new DeployTelegramApprove(ctx.cfg).handleWebhook(secret, raw);
+      const status = result.ok === false && result.error === 'bad_secret' ? 401 : 200;
+      return c.json(result, status);
+    });
+
+    ctx.app.post(`${p}/admin/deploy/telegram/request`, ...gate, async (c) => {
+      const body = await readJsonBody(c);
+      if (body instanceof Response) return body;
+      try {
+        const data = await new DeployTelegramApprove(ctx.cfg).request({
+          package: String(body.package ?? ''),
+          sha256: String(body.sha256 ?? ''),
+          requestedBy: getUserFromContext(c) === 'mcp' ? 'mcp' : 'admin',
+        });
+        return ok(c, data);
+      } catch (e) {
+        const status = Number((e as { status?: number }).status || 500);
+        return fail(c, e instanceof Error ? e.message : String(e), status as 400 | 422 | 500);
+      }
+    });
+
+    ctx.app.post(`${p}/admin/deploy/telegram/redeem`, ...gate, async (c) => {
+      const body = await readJsonBody(c);
+      if (body instanceof Response) return body;
+      try {
+        const data = new DeployTelegramApprove(ctx.cfg).redeem({
+          deploy_id: body.deploy_id != null ? String(body.deploy_id) : undefined,
+          sha256: body.sha256 != null ? String(body.sha256) : undefined,
+        });
+        return ok(c, data);
+      } catch (e) {
+        const status = Number((e as { status?: number }).status || 500);
+        const code = (e as { code?: string }).code;
+        return fail(
+          c,
+          e instanceof Error ? e.message : String(e),
+          status as 404 | 409 | 410 | 500,
+          null,
+          code ? { code } : undefined,
+        );
+      }
+    });
+
+    ctx.app.post(`${p}/admin/updates/pending/:id/approve`, ...gate, async (c) => {
+      try {
+        return ok(c, new DeployTelegramApprove(ctx.cfg).approve(c.req.param('id'), 'admin'));
+      } catch (e) {
+        const status = Number((e as { status?: number }).status || 500);
+        return fail(c, e instanceof Error ? e.message : String(e), status as 404 | 409 | 410 | 500);
+      }
+    });
+
+    ctx.app.post(`${p}/admin/updates/pending/:id/reject`, ...gate, async (c) => {
+      try {
+        return ok(c, new DeployTelegramApprove(ctx.cfg).reject(c.req.param('id'), 'admin'));
+      } catch (e) {
+        const status = Number((e as { status?: number }).status || 500);
+        return fail(c, e instanceof Error ? e.message : String(e), status as 404 | 409 | 500);
+      }
+    });
     ctx.app.get(`${p}/admin/content-pack/info`, ...gate, async (c) =>
       ok(c, {
         version: 1,
