@@ -33,8 +33,8 @@ Pass: report `ok: true` without critical/high findings.
 
 ## Execution flow
 
-1. Develop under `modules-src/{slug}/`.
-2. `php backend/bin/sdk.php certify modules-src/{slug}`.
+1. Develop under [Jasefly-Modules](https://github.com/iia3uk/Jasefly-Modules) `modules-src/{slug}/` (or `JASEFLY_MODULES_ROOT`).
+2. From Core: `php backend/bin/sdk.php certify {slug}`.
 3. `node scripts/build-module.js {slug} --yes`.
 4. Install via Module Manager or `modules.php`.
 5. Optional: `JASEFLY_LIFECYCLE_DB=1 php backend/bin/certify-lifecycle.php`.

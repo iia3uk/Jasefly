@@ -24,7 +24,7 @@
 | Корзина empty-all 500 / нет deleted_at | `SoftDeleteService::trashableMap()` = HOST ∪ `PackageSurfaceRegistry`; UI `EnterprisePages` + `TrashController` |
 | Package surfaces (trash/dashboard/sitemap/media/ACL) | `PlatformContext::surfaces()` → `PackageSurfaceRegistry` (PHP/Node); declarations in package `module.json` `surfaces` |
 | Current package architecture / LLM handoff | `docs/architecture/CURRENT.md` · `docs/architecture/LLM_CONTEXT.md` · `AGENTS.md` · catalog `release/catalog/packages.json` |
-| Extracted domain package list (15, external) | `release/catalog/packages.md` · identity `release/catalog/manifests/{slug}.json` · source repo `Jasefly-Modules/modules-src/` (nested git, ignored) · ZIP via Module Hub / local `release/modules/` |
+| Extracted domain package list (15, external) | catalog `release/catalog/packages.md` · identity `release/catalog/manifests/` · **source https://github.com/iia3uk/Jasefly-Modules** · ZIP via Module Hub / local `release/modules/` |
 | Demo Sandbox (публичный Admin/Builder) | `Modules/Demo/*` + `025_demo_sandbox.sql`; `/demo?to=builder` → билдер, `/demo?to=admin` → дашборд (`DemoEntryPage`); doors: `explore-doors` + `resolveDemoDoor`; docs `docs/demo-sandbox.md` |
 | Mobile: шаги пайплайна «плывут» | `widgets/structure.tsx` → `steps-row` (1/2 col → N на lg); `panels.tsx` pipeline scroll |
 | Mobile адаптив / safe-area / FAB | `index.css` (`.cms-hero-bleed`, overlay pad, snap rail); `SiteLayout` menu lock; `CookieBanner` / `TranslateWidget` / `SupportWidget` |
@@ -96,8 +96,8 @@
 | Node native SDK phase | `docs/node-domain-native-sdk.md` + assertions `runtime-node/tests/package-native-sdk-assertions.test.ts` |
 | Cross-runtime package architecture | `docs/cross-runtime-architecture.md` — one ZIP identity; dual zed fixture; Node host consumers use `PackageSurfaceRegistry` ∪ `hostBaselines` (trash/dashboard/sitemap/ACL) |
 | Node package host (generic ZIP runtime) | `runtime-node/src/packages/{PackageLoader,ModuleMigrations,ModuleAssets,ModulePackageService,PackageSourceSync,invokePackageEntry}.ts` + `platform/{sdk,PackageSurfaceRegistry,EventCatalog,CapabilityRuntime}.ts` + `system/hostBaselines.ts` + `/modules/{slug}/*` + docs `docs/node-package-host.md` |
-| Node domain native SDK (pure PlatformContext) | `modules-src/{slug}/backend/node` `register(ctx)`; shared `package-sdk/node/`; no `registerLegacy` / `legacyModuleBind`; docs `docs/node-domain-extraction.md` |
-| Node domain extraction (15 ZIP packages) | `modules-src/{slug}/backend/node/` + PackageLoader; host-only `registerAll.ts` |
+| Node domain native SDK (pure PlatformContext) | package `backend/node` `register(ctx)` in **Jasefly-Modules**; shared `package-sdk/node/`; docs `docs/node-domain-extraction.md` |
+| Node domain extraction (15 ZIP packages) | https://github.com/iia3uk/Jasefly-Modules + PackageLoader; host-only `registerAll.ts` |
 | Extract / migrate Node domain package | `node scripts/extract-node-domain.mjs` · `node scripts/migrate-node-domain-to-platform.mjs` |
 | SDK validate / certify CLI | `backend/bin/sdk.php` · `Platform/Analysis/*` · `build-module.js` · `backend/bin/certify-lifecycle.php` · `docs/sdk-certification.md` |
 | SDK certification / governance | `docs/sdk-certification.md` · `docs/contracts-and-governance.md` · `docs/sdk-versioning.md` |
@@ -239,7 +239,7 @@ portfolio/
 | Kind | Where |
 | --- | --- |
 | **HOST/CORE** | `backend/src/Modules/{Access,Content,Ddos,Demo,Lab,Mail,Media,ModuleManager,Overload,Portfolio,Scheduler,Seo,System,Template,Users}` + `Core/` + `Platform/` |
-| **PACKAGE** (15 extracted) | `modules-src/{slug}/` → ZIP; see `release/catalog/packages.json` |
+| **PACKAGE** (15 extracted) | https://github.com/iia3uk/Jasefly-Modules → ZIP; see `release/catalog/packages.json` |
 | **Portfolio** | Deprecated composition shell in host — **not** an extracted product package |
 
 ## Frontend modules ↔ backend

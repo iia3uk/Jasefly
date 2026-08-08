@@ -51,7 +51,7 @@ Present under `backend/src/Modules/`:
 
 ## 3. ZIP package domains (15)
 
-Sources: `modules-src/{slug}/` · ZIPs: `release/modules/jasefly-module-{slug}-*.zip`  
+Sources: https://github.com/iia3uk/Jasefly-Modules · ZIPs: `release/modules/jasefly-module-{slug}-*.zip`  
 **Not** in `backend/src/Modules/` · **no** `backend/legacy-extract/`
 
 | Package | Provides (summary) |

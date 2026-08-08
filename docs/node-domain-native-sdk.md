@@ -7,7 +7,7 @@
 ## Architecture
 
 ```
-modules-src/{slug}/backend/node/index.ts
+Jasefly-Modules `modules-src/{slug}/backend/node/index.ts` (https://github.com/iia3uk/Jasefly-Modules)
   export { register } from './domain.js'
 
 register(platformContext)  // pure PlatformContext — no ModuleContext

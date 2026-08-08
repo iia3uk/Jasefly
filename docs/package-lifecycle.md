@@ -88,7 +88,7 @@ Host SoftDelete / Dashboard / Sitemap / MediaUsage / content ACL read the proces
 
 Derived index (not SoT): `node scripts/build-package-catalog.mjs` → `release/catalog/`.
 
-Identity snapshots live in `release/catalog/manifests/{slug}.json`. Product package **source** is external (`sourceOwnership: external package/module distribution`). Optional local authoring workspace `modules-src/` is **gitignored** — Core can certify/build from fixtures or a local workspace without publishing package PHP into the Core repo. Install at runtime from ZIP / Module Hub.
+Identity snapshots live in `release/catalog/manifests/{slug}.json`. Product package **source** is https://github.com/iia3uk/Jasefly-Modules (`sourceOwnership: external`). Optional local nested `Jasefly-Modules/` is **gitignored** by Core. Install at runtime from ZIP / Module Hub — Core does not require package sources.
 
 ## Key components
 

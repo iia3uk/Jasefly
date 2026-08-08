@@ -1,15 +1,16 @@
 # Extracted domain packages (catalog)
 
 > Derived index. **Implementation sources are external** (not bundled Core).
+> Canonical source repo: https://github.com/iia3uk/Jasefly-Modules
 > Identity snapshots: `release/catalog/manifests/{slug}.json`
 > Regenerate: `node scripts/build-package-catalog.mjs`
 
 ## Architecture
 
 - **ONE PACKAGE** identity per slug (`module.json`)
-- **Source ownership:** external package / Module Hub distribution
+- **Source ownership:** https://github.com/iia3uk/Jasefly-Modules
 - **Core repo:** contracts · loaders · catalog · tooling (not package PHP/Node source)
-- Local authoring workspace (optional, gitignored): `modules-src/{slug}/`
+- Local checkout (optional, gitignored by Core): `Jasefly-Modules/modules-src/{slug}/`
 - Distributable ZIP: `jasefly-module-{slug}-{version}.zip` (release storage / Hub — not Core git)
 - PHP / Node = optional runtime entrypoints on the **same** ZIP
 

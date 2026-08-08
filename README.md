@@ -90,12 +90,13 @@ Canonical docs: [`docs/architecture/CURRENT.md`](docs/architecture/CURRENT.md) �
 | --- | --- |
 | Identity snapshot (Core) | `release/catalog/manifests/{slug}.json` |
 | Derived catalog | `release/catalog/packages.json` |
-| Package source repo | nested local **`Jasefly-Modules/`** (independent git; `JASEFLY_MODULES_ROOT` optional) |
+| Package source repo (canonical) | **[Jasefly-Modules](https://github.com/iia3uk/Jasefly-Modules)** |
+| Local checkout (optional) | nested `Jasefly-Modules/` or `JASEFLY_MODULES_ROOT` |
 | Distributable ZIP | Module Hub / `release/modules/*.zip` (**not** versioned in Core git) |
 | Build | `node scripts/build-module.js {slug} --yes` |
 | Certify | `php backend/bin/sdk.php certify {slug}` |
 
-**Core repository ≠ package source.** The 15 extracted domains live in **Jasefly-Modules** and install from ZIP / Hub. Core ships contracts, loaders, catalog, and tooling. Host modules remain under `backend/src/Modules/` (Access, Content, Mail, Scheduler, …). Portfolio is a **deprecated** composition shell — not a product ZIP.
+**Core repository ≠ package source.** The 15 extracted domains live in **[Jasefly-Modules](https://github.com/iia3uk/Jasefly-Modules)** and install from ZIP / Hub. Core ships contracts, loaders, catalog, and tooling. Host modules remain under `backend/src/Modules/` (Access, Content, Mail, Scheduler, …). Portfolio is a **deprecated** composition shell — not a product ZIP.
 
 ---
 

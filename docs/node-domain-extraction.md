@@ -6,7 +6,7 @@
 
 ## Ownership
 
-All 15 domains are package-owned under `modules-src/{slug}/` with Node entry:
+All 15 domains are package-owned in [Jasefly-Modules](https://github.com/iia3uk/Jasefly-Modules) under `modules-src/{slug}/` with Node entry:
 
 `backend/node/index.ts` → `export { register } from './domain.js'`  
 `register(platformContext)` — pure PlatformContext (no `registerLegacy` / ModuleContext)

@@ -104,6 +104,7 @@ const packages = EXTRACTED.map((slug) => {
     version,
     sourceOwnership: 'external package/module distribution',
     externalRepository: 'Jasefly-Modules',
+    repository: 'https://github.com/iia3uk/Jasefly-Modules',
     identityManifest: path.relative(root, path.join(manifestsDir, `${slug}.json`)).replace(/\\/g, '/'),
     resolvedFrom: path.relative(root, mfPath).replace(/\\/g, '/'),
     artifact,
@@ -131,6 +132,7 @@ const catalog = {
     packageIdentity: 'module.json',
     sourceOwnership: 'external package/module distribution',
     externalRepository: 'Jasefly-Modules',
+    repository: 'https://github.com/iia3uk/Jasefly-Modules',
     coreRepoRole: 'contracts · loaders · catalog · tooling (not package implementation)',
     packageSourceRoot: 'Jasefly-Modules/modules-src/{slug} (or JASEFLY_MODULES_ROOT)',
     identitySnapshot: 'release/catalog/manifests/{slug}.json',
@@ -166,15 +168,16 @@ function mdTable(rows) {
 const packagesMd = `# Extracted domain packages (catalog)
 
 > Derived index. **Implementation sources are external** (not bundled Core).
+> Canonical source repo: https://github.com/iia3uk/Jasefly-Modules
 > Identity snapshots: \`release/catalog/manifests/{slug}.json\`
 > Regenerate: \`node scripts/build-package-catalog.mjs\`
 
 ## Architecture
 
 - **ONE PACKAGE** identity per slug (\`module.json\`)
-- **Source ownership:** external package / Module Hub distribution
+- **Source ownership:** https://github.com/iia3uk/Jasefly-Modules
 - **Core repo:** contracts · loaders · catalog · tooling (not package PHP/Node source)
-- Local authoring workspace (optional, gitignored): \`modules-src/{slug}/\`
+- Local checkout (optional, gitignored by Core): \`Jasefly-Modules/modules-src/{slug}/\`
 - Distributable ZIP: \`jasefly-module-{slug}-{version}.zip\` (release storage / Hub — not Core git)
 - PHP / Node = optional runtime entrypoints on the **same** ZIP
 

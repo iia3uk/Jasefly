@@ -17,29 +17,35 @@ Read [`CMS_MAP.md`](CMS_MAP.md) first for path lookup. Product rules: [`.cursorr
 5. PHP: `backend/src/Platform/` (PlatformContext, Surfaces, contracts)  
 6. Node: `runtime-node/src/packages/`, `runtime-node/src/platform/`
 
-### Critical: package sources live in Jasefly-Modules
+### Critical: package sources are NOT in Jasefly Core
 
-**Extracted domain packages intentionally DO NOT live in the Core repository source tree.**
+**Extracted domain package source does not live in this repository.**
 
-- First-party package source repository: local nested **`Jasefly-Modules/`** (independent git; ignored by Core). Future remote name expected: `Jasefly-Modules` (no URL until created).
-- Optional env: `JASEFLY_MODULES_ROOT` for tooling discovery.
-- Absence of package sources in Core is **intentional** — not missing Core code.
-- Do **not** regenerate `backend/src/Modules/{Domain}` or `runtime-node/src/modules/{domain}.ts`.
-- Implementations ship via Module Hub / release ZIPs; Core has contracts · loaders · catalog · tooling · host modules · approved fixtures.
+Canonical first-party package source repository:
 
-### Critical ownership rules
+**https://github.com/iia3uk/Jasefly-Modules**
 
-- **Core no longer owns extracted domain modules.**
-- Do **not** invent domain-specific `PlatformContext` methods without an architectural need.
-- Do **not** treat PHP package and Node package as two products — **one ZIP, one identity, optional entrypoints**.
-- New functional domains are **packages by default** (in Jasefly-Modules) unless they require host/core ownership.
-- If a task needs a host change for a specific package slug: **stop** and check for a missing generic seam first.
+| Need | Where |
+| --- | --- |
+| Code for one of the 15 first-party modules (blog, projects, orders, forms, …) | Clone/open **https://github.com/iia3uk/Jasefly-Modules** first |
+| Package implementation change | **Jasefly-Modules** |
+| Generic Platform / SDK / Package Host / loaders / catalog | **this Jasefly Core repo** |
+
+Rules:
+
+- Absence of `blog` / `projects` / `orders` / etc. under Core is **intentional**, not missing code.
+- Do **not** restore them into `backend/src/Modules/{Domain}` or `runtime-node/src/modules/{domain}.ts`.
+- Do **not** invent domain-specific `PlatformContext` methods or host slug allowlists for convenience.
+- Local nested `Jasefly-Modules/` (if present) is the same repo, gitignored by Core; tooling: `JASEFLY_MODULES_ROOT` or auto-detect.
+- ONE ZIP · one `module.json` · optional PHP + Node entrypoints (not two package products).
+
+### Verified 15 (external)
+
+webhooks · comments · forms · analytics · newsletter · automation · notifications · support · translate · products · orders · payments · registration · blog · projects
 
 ### Verified baseline
 
-PHP suite · Node suite · Certify 15/15 · MySQL live 15/15 · Combos YES · Dual-runtime YES · Final architecture regression PASS.
-
-Synthetic dual-runtime proof: `runtime-node/tests/fixtures/modules/zed/`.
+Certify 15/15 · Dual-runtime YES · Final architecture regression PASS · synthetic proof `runtime-node/tests/fixtures/modules/zed/`.
 
 ### Historical docs
 

@@ -10,7 +10,7 @@ Show where to add a feature without patching Core bootstrap.
 | --- | --- |
 | Ship with CMS (bundled) | `backend/src/Modules/{Name}/{Name}Module.php` + `frontend/src/modules/{name}/` |
 | Soft-disable API | `registersRoutesWhenDisabled` + `SoftPluginGate` |
-| Distribute ZIP | `modules-src/{slug}/` → `build-module.js` → Module Manager; `bootPlatform` |
+| Distribute ZIP | [Jasefly-Modules](https://github.com/iia3uk/Jasefly-Modules) → `build-module.js` → Module Manager; `bootPlatform` |
 | Install-time side effects | `module.json` `hooks.*` + hook class |
 | Subscribe to CMS events | `hooks()` or `boot()` → `EventDispatcher` / `$ctx->events()` |
 | Gate SPA routes | `pluginGates.ts` + `RequirePlugin` |
