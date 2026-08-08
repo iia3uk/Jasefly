@@ -73,6 +73,8 @@ runtime-node/node_modules/
 runtime-node/dist/
 runtime-node/storage/
 runtime-node/.env
+runtime-node/scripts/_behavior-seed.ts
+runtime-node/scripts/_behavior-sync-packages.ts
 
 # Production packages & transfer (ZIPs stay local; catalog is versioned index)
 /release/*

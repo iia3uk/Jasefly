@@ -151,27 +151,33 @@ if (seed.status !== 0) {
 // Mirror Node boot PackageSourceSync into node DB + storage BEFORE cloning to PHP,
 // so PHP InstalledModuleLoader sees enabled packages under php-storage/modules.
 console.error('== package source sync (parity) ==');
-const syncFile = path.join(base, '_behavior-sync-packages.ts');
+// Must live under runtime-node/ (like _behavior-seed.ts): tsx treats tmp/*.ts as CJS
+// (no top-level await) and relative imports resolve from the file path.
+const syncFile = path.join(rn, 'scripts', '_behavior-sync-packages.ts');
+fs.mkdirSync(path.dirname(syncFile), { recursive: true });
 fs.writeFileSync(
   syncFile,
   `import { createDatabase } from '../src/db/Database.js';
 import { syncPackageSources } from '../src/packages/PackageSourceSync.js';
 import type { AppConfig } from '../src/config.js';
-const cfg: AppConfig = {
-  name:'t', url:'http://127.0.0.1', env:'test', timezone:'UTC', port:3081,
-  jwtSecret: process.env.JWT_SECRET!, jwtTtl:3600, refreshTtl:86400,
-  mcpApiToken: process.env.MCP_API_TOKEN!, mcpSigningSecret:'', mcpAuthMode:'legacy',
-  mcpAllowedIps:'', mcpSkewSeconds:300,
-  telegramDeployApprove:'0', telegramDeployBotToken:'', telegramDeployChatId:'',
-  telegramDeployWebhookSecret:'', telegramDeployTtlSeconds:3600,
-  corsOrigins:['*'],
-  storagePath: process.env.STORAGE_PATH!, runtime:'node-vps',
-  db:{ driver:'sqlite', host:'', port:0, name:'', user:'', pass:'', path: process.env.DB_PATH!, charset:'utf8mb4' }
-};
-const db = await createDatabase(cfg);
-const results = await syncPackageSources(db, cfg, { enableMode: 'test-all' });
-console.error('synced packages:', results.filter((r) => r.synced).length);
-await db.close();
+async function main() {
+  const cfg: AppConfig = {
+    name:'t', url:'http://127.0.0.1', env:'test', timezone:'UTC', port:3081,
+    jwtSecret: process.env.JWT_SECRET!, jwtTtl:3600, refreshTtl:86400,
+    mcpApiToken: process.env.MCP_API_TOKEN!, mcpSigningSecret:'', mcpAuthMode:'legacy',
+    mcpAllowedIps:'', mcpSkewSeconds:300,
+    telegramDeployApprove:'0', telegramDeployBotToken:'', telegramDeployChatId:'',
+    telegramDeployWebhookSecret:'', telegramDeployTtlSeconds:3600,
+    corsOrigins:['*'],
+    storagePath: process.env.STORAGE_PATH!, runtime:'node-vps',
+    db:{ driver:'sqlite', host:'', port:0, name:'', user:'', pass:'', path: process.env.DB_PATH!, charset:'utf8mb4' }
+  };
+  const db = await createDatabase(cfg);
+  const results = await syncPackageSources(db, cfg, { enableMode: 'test-all' });
+  console.error('synced packages:', results.filter((r) => r.synced).length);
+  await db.close();
+}
+main().catch((e) => { console.error(e); process.exit(1); });
 `,
 );
 const sync = spawnSync(process.execPath, ['--import', 'tsx', syncFile], {
