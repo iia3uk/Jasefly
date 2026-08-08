@@ -29,6 +29,10 @@ final class InstalledModuleLoader
 
     public function loadEnabled(ModuleRegistry $registry, ?Router $router = null): void
     {
+        // Ensure PackageModules\* autoload can resolve classes for this install root
+        // (hosting api/modules or behavior php-storage/modules).
+        \App\Bootstrap::addPackageModulesRoot($this->paths->modulesRoot());
+
         $quarantine = new ModuleQuarantine($this->registry, $this->safeMode, $this->db);
 
         foreach ($this->registry->listAll() as $row) {

@@ -7,7 +7,9 @@ import {
   notDeletedClause,
   readJsonBody,
   loadModuleSettings,
-  saveModuleSettings,} from './sdk/helpers.js';
+  saveModuleSettings,
+  okListOrEmpty,
+} from './sdk/helpers.js';
 
 
 
@@ -225,7 +227,7 @@ export async function register(ctx: PlatformContext) {
         }
         sql += ' ORDER BY id DESC LIMIT 300';
         return db.all(sql, params);
-      });
+      }, http.ok);
     });
 
     // Static path before /:id so "export" is not captured as an id.

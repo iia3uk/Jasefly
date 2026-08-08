@@ -7,7 +7,9 @@ import {
   notDeletedClause,
   readJsonBody,
   loadModuleSettings,
-  saveModuleSettings,} from './sdk/helpers.js';
+  saveModuleSettings,
+  okListOrEmpty,
+} from './sdk/helpers.js';
 
 import crypto from 'node:crypto';
 
@@ -321,7 +323,7 @@ export async function register(ctx: PlatformContext) {
         }
         const plainDeleted = formCols.includes('deleted_at') ? ' WHERE deleted_at IS NULL' : '';
         return db.all(`SELECT * FROM forms${plainDeleted} ORDER BY id DESC`);
-      });
+      }, http.ok);
     });
 
     http.post('/admin/forms', admin, async (c) => {
@@ -471,7 +473,7 @@ export async function register(ctx: PlatformContext) {
         const cols = await db.columns('form_submissions');
         const deleted = cols.includes('deleted_at') ? ' WHERE deleted_at IS NULL' : '';
         return db.all(`SELECT * FROM form_submissions${deleted} ORDER BY id DESC LIMIT 200`);
-      });
+      }, http.ok);
     });
 
     http.get('/admin/form-submissions/:id', admin, async (c) => {

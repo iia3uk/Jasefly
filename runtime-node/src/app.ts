@@ -145,27 +145,46 @@ export async function createApp(db: Database, cfg: AppConfig) {
     app.get(`${p}/admin/platform/events`, requireAdmin(auth), async (c) => {
       return ok(c, { events: EventCatalog.list() });
     });
-    // PHP OrdersModule: GET list/show + action POSTs only — no generic CRUD write/delete.
+    // PHP OrdersModule / Payments package: GET list/show only — no generic CRUD write/delete.
     // Register before catch-all so Hono does not invent methods via AdminCrud.
     app.post(`${p}/admin/orders`, (c) => fail(c, 'Method not allowed', 405));
     app.put(`${p}/admin/orders/:id`, (c) => fail(c, 'Method not allowed', 405));
     app.delete(`${p}/admin/orders/:id`, (c) => fail(c, 'Method not allowed', 405));
+    app.post(`${p}/admin/payments`, (c) => fail(c, 'Method not allowed', 405));
+    app.put(`${p}/admin/payments/:id`, (c) => fail(c, 'Method not allowed', 405));
+    app.delete(`${p}/admin/payments/:id`, (c) => fail(c, 'Method not allowed', 405));
 
-    // Generic admin CRUD — after module routes so /admin/access/bootstrap etc. win
+    // Extracted from host ContentModule on PHP; keep Node catch-all from inventing them
+    // (auth 401) while PHP returns bare 404.
+    const absentHostAdmin = new Set(['blog-categories', 'blog-tags']);
+
+    // Generic admin CRUD — after module routes so /admin/access/bootstrap etc. win.
+    // Still covers package tables whose Node fixtures only register a subset of routes
+    // (blog/products/…) until package Node parity is complete.
     const adminGate = [requireAdmin(auth), requirePermission(auth)] as const;
-    app.get(`${p}/admin/:resource`, ...adminGate, async (c) => {
+    app.get(`${p}/admin/:resource`, async (c, next) => {
+      if (absentHostAdmin.has(c.req.param('resource'))) return fail(c, 'Not found', 404);
+      return next();
+    }, ...adminGate, async (c) => {
       const resource = c.req.param('resource');
       if (crud.singletonTable(resource)) return crud.getSingleton(c, resource);
       return crud.list(c, resource);
     });
-    app.post(`${p}/admin/:resource`, ...adminGate, async (c) => {
+    app.post(`${p}/admin/:resource`, async (c, next) => {
+      if (absentHostAdmin.has(c.req.param('resource'))) return fail(c, 'Not found', 404);
+      return next();
+    }, ...adminGate, async (c) => {
       if (c.req.param('resource') === 'orders') return fail(c, 'Method not allowed', 405);
       return crud.create(c, c.req.param('resource'));
     });
-    app.get(`${p}/admin/:resource/:id`, ...adminGate, async (c) =>
-      crud.show(c, c.req.param('resource'), c.req.param('id')),
-    );
-    app.put(`${p}/admin/:resource/:id`, ...adminGate, async (c) => {
+    app.get(`${p}/admin/:resource/:id`, async (c, next) => {
+      if (absentHostAdmin.has(c.req.param('resource'))) return fail(c, 'Not found', 404);
+      return next();
+    }, ...adminGate, async (c) => crud.show(c, c.req.param('resource'), c.req.param('id')));
+    app.put(`${p}/admin/:resource/:id`, async (c, next) => {
+      if (absentHostAdmin.has(c.req.param('resource'))) return fail(c, 'Not found', 404);
+      return next();
+    }, ...adminGate, async (c) => {
       const resource = c.req.param('resource');
       if (resource === 'orders') return fail(c, 'Method not allowed', 405);
       if (crud.singletonTable(resource) && c.req.param('id') === undefined) {
@@ -173,12 +192,18 @@ export async function createApp(db: Database, cfg: AppConfig) {
       }
       return crud.update(c, resource, c.req.param('id'));
     });
-    app.put(`${p}/admin/:resource`, ...adminGate, async (c) => {
+    app.put(`${p}/admin/:resource`, async (c, next) => {
+      if (absentHostAdmin.has(c.req.param('resource'))) return fail(c, 'Not found', 404);
+      return next();
+    }, ...adminGate, async (c) => {
       const resource = c.req.param('resource');
       if (crud.singletonTable(resource)) return crud.putSingleton(c, resource);
       return fail(c, 'Not found', 404);
     });
-    app.delete(`${p}/admin/:resource/:id`, ...adminGate, async (c) => {
+    app.delete(`${p}/admin/:resource/:id`, async (c, next) => {
+      if (absentHostAdmin.has(c.req.param('resource'))) return fail(c, 'Not found', 404);
+      return next();
+    }, ...adminGate, async (c) => {
       if (c.req.param('resource') === 'orders') return fail(c, 'Method not allowed', 405);
       return crud.remove(c, c.req.param('resource'), c.req.param('id'));
     });

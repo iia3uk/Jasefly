@@ -17,6 +17,10 @@ if ($dbPath === '' || !is_file($dbPath)) {
     exit;
 }
 
+// Seed copies packages into {phpStorage}/modules — register for PackageModules autoload
+// (Bootstrap default only looks at backend/modules, which is empty on clean CI).
+\App\Bootstrap::addPackageModulesRoot($storage . DIRECTORY_SEPARATOR . 'modules');
+
 $app = require $apiRoot . '/config/app.php';
 $app['jwt_secret'] = getenv('BEHAVIOR_JWT_SECRET') ?: 'behavior-parity-secret-32chars!!';
 $app['mcp_api_token'] = getenv('BEHAVIOR_MCP_TOKEN') ?: 'behavior-mcp-token';

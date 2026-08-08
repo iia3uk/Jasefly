@@ -10,6 +10,28 @@ final class Bootstrap
 {
     private static bool $autoloadRegistered = false;
 
+    /** @var list<string> Absolute/normalized roots that may contain installable packages. */
+    private static array $packageModulesRoots = [];
+
+    /**
+     * Extra package tree (e.g. behavior php-storage/modules). Default root is api/modules.
+     * Safe to call before or after registerAutoload().
+     */
+    public static function addPackageModulesRoot(string $root): void
+    {
+        $norm = rtrim(str_replace('\\', '/', $root), '/');
+        if ($norm === '' || in_array($norm, self::$packageModulesRoots, true)) {
+            return;
+        }
+        self::$packageModulesRoots[] = $norm;
+    }
+
+    /** @return list<string> */
+    public static function packageModulesRoots(): array
+    {
+        return self::$packageModulesRoots;
+    }
+
     /** Register App\* autoload without DB (CLI validate-sdk / tests). */
     public static function registerAutoload(): void
     {
@@ -18,6 +40,7 @@ final class Bootstrap
         }
         self::$autoloadRegistered = true;
         $apiRoot = dirname(__DIR__);
+        self::addPackageModulesRoot($apiRoot . '/modules');
         spl_autoload_register(static function (string $class) use ($apiRoot): void {
             if (!str_starts_with($class, 'App\\')) {
                 return;
@@ -32,7 +55,7 @@ final class Bootstrap
             if (str_starts_with($relative, 'Modules/')) {
                 $candidates[] = __DIR__ . '/' . $relative . '.php';
             }
-            // App\PackageModules\{Slug}\Foo → api/modules/{slug}/backend/Foo.php
+            // App\PackageModules\{Slug}\Foo → {modulesRoot}/{slug}/backend/Foo.php
             if (str_starts_with($relative, 'PackageModules/')) {
                 $rest = substr($relative, strlen('PackageModules/'));
                 $parts = explode('/', $rest, 2);
@@ -40,16 +63,34 @@ final class Bootstrap
                 $tail = $parts[1] ?? '';
                 if ($studly !== '' && $tail !== '') {
                     $slug = strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $studly) ?? $studly);
-                    $candidates[] = $apiRoot . '/modules/' . $slug . '/backend/' . $tail . '.php';
+                    foreach (self::$packageModulesRoots as $modulesRoot) {
+                        $candidates[] = $modulesRoot . '/' . $slug . '/backend/' . $tail . '.php';
+                    }
                 }
             }
             foreach ($candidates as $file) {
+                $fileNorm = str_replace('\\', '/', $file);
                 if (is_file($file)) {
-                    // Jail: PackageModules files must stay under api/modules/
-                    if (str_contains($file, '/modules/')) {
-                        $modulesRoot = realpath($apiRoot . '/modules');
+                    // Jail: PackageModules files must stay under a registered modules root.
+                    if (str_contains($fileNorm, '/modules/')) {
                         $real = realpath($file);
-                        if ($modulesRoot === false || $real === false || !str_starts_with(str_replace('\\', '/', $real), str_replace('\\', '/', $modulesRoot) . '/')) {
+                        if ($real === false) {
+                            continue;
+                        }
+                        $realN = str_replace('\\', '/', $real);
+                        $allowed = false;
+                        foreach (self::$packageModulesRoots as $modulesRoot) {
+                            $rootReal = realpath($modulesRoot);
+                            if ($rootReal === false) {
+                                continue;
+                            }
+                            $rootN = str_replace('\\', '/', $rootReal);
+                            if ($realN === $rootN || str_starts_with($realN, $rootN . '/')) {
+                                $allowed = true;
+                                break;
+                            }
+                        }
+                        if (!$allowed) {
                             continue;
                         }
                     }

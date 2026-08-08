@@ -76,3 +76,20 @@ export async function saveModuleSettings(
   }
   return next;
 }
+
+/** PHP AdminController empty-list parity when a module table is not migrated yet. */
+export async function okListOrEmpty(
+  c: Context,
+  db: DbLike,
+  table: string,
+  rows: () => Promise<unknown[]>,
+  okFn: (c: Context, data: unknown, status?: number, meta?: Record<string, unknown>) => unknown,
+  status = 200,
+) {
+  if (!(await db.tableExists(table))) {
+    return okFn(c, [], status, {
+      warning: `Таблица «${table}» ещё не создана — выполните миграции.`,
+    });
+  }
+  return okFn(c, await rows(), status);
+}

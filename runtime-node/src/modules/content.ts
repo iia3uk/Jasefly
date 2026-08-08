@@ -16,6 +16,8 @@ function escapeXml(s: string): string {
     .replace(/'/g, '&apos;');
 }
 
+// Host/core resources only — blog/projects/products admin CRUD lives in packages
+// (match PHP ContentModule::$resources).
 const ADMIN_RESOURCES = [
   'social-links',
   'statistics',
@@ -23,8 +25,6 @@ const ADMIN_RESOURCES = [
   'education',
   'skill-categories',
   'skills',
-  'blog-categories',
-  'blog-tags',
   'testimonials',
   'navigation',
   'homepage-sections',

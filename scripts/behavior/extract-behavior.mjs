@@ -68,7 +68,8 @@ function buildScenarios(route) {
   const isAuth = route.authentication === 'auth' || route.path.includes('/admin/');
 
   // Always: unauthenticated probe for protected routes.
-  // 405 allowed when both runtimes agree the HTTP method is not registered (e.g. DELETE orders).
+  // 404 = route absent on both (extracted package not registered on host catch-all).
+  // 405 = method absent while sibling methods exist (e.g. DELETE orders/payments).
   if (isAuth) {
     scenarios.push({
       id: 'unauthenticated',
@@ -76,7 +77,7 @@ function buildScenarios(route) {
       path_params: hasParam ? Object.fromEntries([...route.path.matchAll(/\{(\w+)\}/g)].map((m) => [m[1], '1'])) : {},
       body: route.method === 'GET' || route.method === 'DELETE' ? undefined : {},
       expect: {
-        status: [401, 403, 405],
+        status: [401, 403, 404, 405],
         success: false,
       },
       compare: { http_status: true, json_envelope: true, error_code: true, db: false, events: false },
@@ -91,7 +92,7 @@ function buildScenarios(route) {
       path_params: hasParam ? Object.fromEntries([...route.path.matchAll(/\{(\w+)\}/g)].map((m) => [m[1], '1'])) : {},
       body: route.method === 'GET' || route.method === 'DELETE' ? undefined : {},
       expect: {
-        status: [401, 405],
+        status: [401, 404, 405],
         success: false,
       },
       compare: { http_status: true, json_envelope: true, error_code: true, db: false, events: false },
