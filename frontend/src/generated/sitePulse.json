@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-08-07T21:40:37.453Z",
-  "version": "backup-before-author-rewrite-19-g5fa5d9a",
-  "commit": "5fa5d9a",
+  "generated_at": "2026-08-08T19:08:39.525Z",
+  "version": "backup-before-author-rewrite-23-g747fb58",
+  "commit": "747fb58",
   "metrics": {
-    "files": 3462,
-    "php_classes": 316,
+    "files": 4837,
+    "php_classes": 264,
     "builder_widgets": 68,
-    "rest_routes_core": 66,
-    "sdk_interfaces": 23,
-    "git_commits": 111,
-    "repo_size_mb": 27.9,
-    "core_modules": 30,
+    "rest_routes_core": 62,
+    "sdk_interfaces": 29,
+    "git_commits": 115,
+    "repo_size_mb": 30,
+    "core_modules": 15,
     "package_scaffolds": 10
   },
   "github": {
@@ -20,29 +20,29 @@
     "latest_commit_date": "2026-08-08",
     "commits": [
       {
+        "hash": "747fb58",
+        "date": "2026-08-08",
+        "subject": "fix(frontend): restore SiteLayout bannerOn for host slot consent gate"
+      },
+      {
+        "hash": "daf6c59",
+        "date": "2026-08-08",
+        "subject": "docs: point agents to Jasefly-Modules GitHub for package sources"
+      },
+      {
+        "hash": "19b46c4",
+        "date": "2026-08-08",
+        "subject": "refactor: separate domain packages from Jasefly core"
+      },
+      {
+        "hash": "8815dea",
+        "date": "2026-08-08",
+        "subject": "refactor: finalize package architecture and separate domain modules from core"
+      },
+      {
         "hash": "5fa5d9a",
         "date": "2026-08-08",
         "subject": "Harden Node VPS deploy gate and restore PHP-Node behavior parity."
-      },
-      {
-        "hash": "c7850c5",
-        "date": "2026-08-08",
-        "subject": "Harden MCP and CMS update path against token leak and silent deploys."
-      },
-      {
-        "hash": "c6d4a9d",
-        "date": "2026-08-07",
-        "subject": "Merge branch 'cursor/security-acl-ssrf-host-fixes'"
-      },
-      {
-        "hash": "afe3b5d",
-        "date": "2026-08-06",
-        "subject": "fix(tests): seed content plugin on for ProjectsSoftApi default-off"
-      },
-      {
-        "hash": "8b22fe9",
-        "date": "2026-08-06",
-        "subject": "feat: platform OOB home and optional plugins default-off"
       }
     ]
   }

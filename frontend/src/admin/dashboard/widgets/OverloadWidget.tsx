@@ -37,7 +37,8 @@ export function OverloadWidget() {
     enabled: on,
     staleTime: 15_000,
     refetchInterval: 30_000,
-    queryFn: async () => unpack<OverloadStatus>(await api.get('/admin/overload/status')),
+    retry: false,
+    queryFn: async () => unpack<OverloadStatus>(await api.get('/admin/overload/status', { silent: true })),
   })
 
   const data = q.data

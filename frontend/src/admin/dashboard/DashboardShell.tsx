@@ -8,6 +8,25 @@ import { useDashboardLayout } from './useDashboardLayout'
 import { DashboardCustomizeDrawer } from './DashboardCustomizeDrawer'
 import type { DashboardWidgetId } from './types'
 
+type PackageDashCard = ReturnType<typeof getPackageDashboardCards>[number]
+
+const EMPTY_PKG_CARDS: PackageDashCard[] = []
+let pkgCardsCache: PackageDashCard[] = EMPTY_PKG_CARDS
+let pkgCardsSig = ''
+
+/**
+ * useSyncExternalStore requires referential stability from getSnapshot.
+ * getPackageDashboardCards() always allocates a new array — cache by id/label sig.
+ */
+function getStablePackageDashboardCards(): PackageDashCard[] {
+  const next = getPackageDashboardCards()
+  const sig = next.map((c) => `${c.id}\0${c.label}`).join('\n')
+  if (sig === pkgCardsSig) return pkgCardsCache
+  pkgCardsSig = sig
+  pkgCardsCache = next.length === 0 ? EMPTY_PKG_CARDS : next
+  return pkgCardsCache
+}
+
 /** Package dashboard cards are mutable — poll lightly for mount/unmount. */
 function usePackageDashboardCards() {
   return useSyncExternalStore(
@@ -15,8 +34,8 @@ function usePackageDashboardCards() {
       const id = window.setInterval(onStoreChange, 800)
       return () => window.clearInterval(id)
     },
-    () => getPackageDashboardCards(),
-    () => [],
+    getStablePackageDashboardCards,
+    () => EMPTY_PKG_CARDS,
   )
 }
 

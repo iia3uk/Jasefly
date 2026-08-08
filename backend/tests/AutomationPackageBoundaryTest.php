@@ -23,7 +23,7 @@ use App\Router;
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Automation'), 'bundled Modules/Automation removed from discovery');
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Automation'), 'legacy Automation removed after live verify');
-assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-automation-*.zip')), 'automation ZIP present');
+jasefly_test_assert_package_identity('automation', $repoRoot);
 
 $pkgDir = jasefly_test_package_dir('automation');
 assert_true($pkgDir !== null, 'automation package directory exists');

@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from 'react'
-import { createElement, Fragment, useSyncExternalStore } from 'react'
+import { createElement, Fragment, useCallback, useSyncExternalStore } from 'react'
 
 /**
  * Universal host extension points for installable packages.
@@ -21,18 +21,35 @@ type Listener = () => void
 
 const contributions = new Map<string, HostSlotContribution>()
 const listeners = new Set<Listener>()
+/** Bumped on every mutation so getSnapshot can return stable array identities. */
+let storeVersion = 0
+const EMPTY: HostSlotContribution[] = []
+const snapshotCache = new Map<string, { version: number; items: HostSlotContribution[] }>()
 
 function emit() {
+  storeVersion += 1
+  snapshotCache.clear()
   for (const l of listeners) l()
 }
 
 function subscribe(listener: Listener): () => void {
   listeners.add(listener)
-  return () => listeners.delete(listener)
+  return () => {
+    listeners.delete(listener)
+  }
 }
 
-function snapshot(): HostSlotContribution[] {
+function sortedAll(): HostSlotContribution[] {
   return [...contributions.values()].sort((a, b) => (a.order ?? 100) - (b.order ?? 100))
+}
+
+function cachedSnapshot(cacheKey: string, build: () => HostSlotContribution[]): HostSlotContribution[] {
+  const hit = snapshotCache.get(cacheKey)
+  if (hit && hit.version === storeVersion) return hit.items
+  const items = build()
+  const stable = items.length === 0 ? EMPTY : items
+  snapshotCache.set(cacheKey, { version: storeVersion, items: stable })
+  return stable
 }
 
 export function registerHostSlot(contribution: HostSlotContribution): () => void {
@@ -57,8 +74,10 @@ export function clearHostSlotsForSlug(slug: string): void {
 }
 
 export function listHostSlotContributions(slot?: HostSlotId): HostSlotContribution[] {
-  const all = snapshot()
-  return slot ? all.filter((c) => c.slot === slot) : all
+  if (!slot) {
+    return cachedSnapshot('*', sortedAll)
+  }
+  return cachedSnapshot(slot, () => sortedAll().filter((c) => c.slot === slot))
 }
 
 /** React mount for a host slot — used by SiteLayout / admin shells. */
@@ -70,7 +89,9 @@ export function HostSlot({
   /** Optional gate: return true if category is allowed (or banner off). */
   consentAllows?: (category: string) => boolean
 }): ReactNode {
-  const items = useSyncExternalStore(subscribe, () => listHostSlotContributions(id), () => [])
+  // Stable getSnapshot identity per slot id — required by useSyncExternalStore.
+  const getSnapshot = useCallback(() => listHostSlotContributions(id), [id])
+  const items = useSyncExternalStore(subscribe, getSnapshot, () => EMPTY)
   if (!items.length) return null
   return createElement(
     Fragment,

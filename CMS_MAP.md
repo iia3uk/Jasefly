@@ -103,6 +103,13 @@
 | SDK certification / governance | `docs/sdk-certification.md` · `docs/contracts-and-governance.md` · `docs/sdk-versioning.md` |
 | Capabilities / SDK report | `GET /admin/platform/capabilities` · `/admin/platform/sdk` · MCP `cms_sdk_report` / `cms_capability_report` / `cms_module_compatibility` / `cms_module_certify` / `cms_sdk_api_diff` / `cms_public_services` / `cms_sdk_deprecations` / `cms_export_sdk` |
 | Установка пакета модуля | `ModulePackageService` (upload→inspect→install) + CLI `backend/bin/modules.php` + MCP `cms_module_*` |
+| MCP `cms_module_release` взял не тот ZIP (forms→forms-sdk-reference) | `mcp-cms/src/index.js` — точный match `jasefly-module-{slug}-{semver}.zip` (не prefix) |
+| ZIP FE: `useRef is not a function` (analytics Beacon) | `frontend/src/platform/createContext.ts` + `types.ts` — `ui` должен отдавать `useRef`/`useMemo` |
+| React #185 max update depth на публичке (HostSlot) | `frontend/src/platform/hostSlots.ts` — `useSyncExternalStore` getSnapshot обязан возвращать стабильный массив (кэш до mutate) |
+| React #185 в админке (дашборд) | `frontend/src/admin/dashboard/DashboardShell.tsx` — `getPackageDashboardCards()` нестабилен для useSyncExternalStore; кэш по sig |
+| Админка 404 на comments/notifications/overload | FE: `moduleRegistry.setPluginEnabled` не должен ставить `pluginsHydrated` (гонка с `/site`); BE: пустой `/admin/plugins` = `json_encode` fail → `Response.php` + `ModuleRegistry::jsonSafeCatalogRow` |
+| GET `/admin/plugins` пустое тело / `data: null` | `Response::json` + sanitizer в `ModuleRegistry::catalog()` (битый UTF-8/INF в settings модуля) |
+| CI FAIL `* ZIP present` (9 domain packages) | ZIP не в Core git; assert → `jasefly_test_assert_package_identity` + `release/catalog/manifests/{slug}.json` |
 | FE runtime пакетных модулей | `packageModuleLoader.ts` + `GET /modules/runtime-assets` + `/modules/{slug}/` assets |
 | Отложенная публикация страниц | `PageScheduleService` (lazy publish) + `scheduled_at` в билдере |
 | Плагины вкл/выкл, гейты UI | `frontend/src/core/pluginGates.ts`, `components/RequirePlugin.tsx`, `admin/pages/PluginsPage.tsx` (about/settings: не `h-full`+`overflow-hidden` — клиппает панели); EN: `admin/i18n` + BE `PluginCatalogMeta`/`PluginCatalogMetaEn` + `Accept-Language` |

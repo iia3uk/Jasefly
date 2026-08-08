@@ -454,7 +454,7 @@ final class ModuleRegistry
                     : ('Сначала отключите: ' . $list);
             }
 
-            return [
+            $row = [
                 'name' => $name,
                 'label' => PluginCatalogMeta::displayLabel($name, $m->label()),
                 'description' => $m->description(),
@@ -503,7 +503,114 @@ final class ModuleRegistry
                     'title' => $p['title'] ?? '',
                 ], $this->safeModuleCall($m, 'demoPages', [])),
             ];
+
+            return self::jsonSafeCatalogRow($row, $name, $on);
         }, $this->modules);
+    }
+
+    /**
+     * Ensure each catalog row is JSON-encodable so one bad module setting
+     * cannot blank the entire GET /admin/plugins response body.
+     *
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private static function jsonSafeCatalogRow(array $row, string $name, bool $on): array
+    {
+        $row = self::sanitizeForJson($row);
+        $flags = JSON_UNESCAPED_UNICODE;
+        if (defined('JSON_INVALID_UTF8_SUBSTITUTE')) {
+            $flags |= JSON_INVALID_UTF8_SUBSTITUTE;
+        }
+        if (json_encode($row, $flags) !== false) {
+            return $row;
+        }
+        $encodeErr = json_last_error_msg() ?: 'unencodable';
+
+        // Strip heavy / opaque fields and retry.
+        $row['settings'] = [];
+        $row['settings_schema'] = [];
+        $row['resources'] = [];
+        $row['blueprints'] = [];
+        $row['blocks'] = [];
+        $row['long_description'] = '';
+        $row['description'] = is_string($row['description'] ?? null) ? $row['description'] : '';
+        if (json_encode($row, $flags) !== false) {
+            $row['catalog_encode_warning'] = $encodeErr;
+            return $row;
+        }
+
+        @error_log('ModuleRegistry catalog row unencodable: ' . $name . ' — ' . $encodeErr);
+        return [
+            'name' => $name,
+            'label' => $name,
+            'description' => '',
+            'long_description' => '',
+            'category' => 'system',
+            'category_label' => 'System',
+            'priority' => 0,
+            'is_enabled' => $on,
+            'requires' => [],
+            'requires_labels' => [],
+            'suggests' => [],
+            'suggests_labels' => [],
+            'missing_requires' => [],
+            'required_by' => [],
+            'required_by_labels' => [],
+            'can_enable' => !$on,
+            'can_disable' => $on,
+            'block_enable_reason' => null,
+            'block_disable_reason' => null,
+            'settings' => [],
+            'settings_schema' => [],
+            'resources' => [],
+            'admin_nav' => [],
+            'blueprints' => [],
+            'blocks' => [],
+            'public_routes' => [],
+            'demo_pages' => [],
+            'catalog_encode_error' => json_last_error_msg() ?: 'unencodable',
+        ];
+    }
+
+    /**
+     * @param mixed $value
+     * @return mixed
+     */
+    private static function sanitizeForJson(mixed $value): mixed
+    {
+        if (is_float($value) && !is_finite($value)) {
+            return null;
+        }
+        if (is_string($value)) {
+            if (!preg_match('//u', $value)) {
+                if (function_exists('mb_convert_encoding')) {
+                    $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+                } else {
+                    $value = iconv('UTF-8', 'UTF-8//IGNORE', $value) ?: '';
+                }
+            }
+            // JSON forbids raw control chars except tab/LF/CR.
+            return preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $value) ?? '';
+        }
+        if (is_array($value)) {
+            $out = [];
+            foreach ($value as $k => $v) {
+                $out[$k] = self::sanitizeForJson($v);
+            }
+            return $out;
+        }
+        if (is_object($value)) {
+            // Closures / resources are never valid in API catalog payloads.
+            if ($value instanceof \JsonSerializable) {
+                return self::sanitizeForJson($value->jsonSerialize());
+            }
+            return new \stdClass();
+        }
+        if (is_resource($value)) {
+            return null;
+        }
+        return $value;
     }
 
     /**

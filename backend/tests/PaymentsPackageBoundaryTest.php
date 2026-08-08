@@ -6,7 +6,7 @@ require_once __DIR__ . '/_package_dir.php';
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Payments'), 'bundled Modules/Payments removed from discovery');
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Payments'), 'legacy Payments removed after live verify');
-assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-payments-*.zip')), 'payments ZIP present');
+jasefly_test_assert_package_identity('payments', $repoRoot);
 
 $pkg = jasefly_test_package_dir('payments');
 assert_true(is_file($pkg . '/module.json'), 'payments package manifest exists');

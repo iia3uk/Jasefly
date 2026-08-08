@@ -20,7 +20,7 @@ use App\Router;
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Newsletter'), 'bundled Modules/Newsletter removed from discovery');
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Newsletter'), 'legacy Newsletter removed after live verify');
-assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-newsletter-*.zip')), 'newsletter ZIP present');
+jasefly_test_assert_package_identity('newsletter', $repoRoot);
 
 $pkgDir = jasefly_test_package_dir('newsletter');
 assert_true($pkgDir !== null, 'newsletter package directory exists');

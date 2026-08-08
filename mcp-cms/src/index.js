@@ -1495,8 +1495,11 @@ server.tool(
         throw new Error(r.stderr || r.stdout || 'build-module failed');
       }
       const outDir = path.join(repoRoot(), 'release', 'modules');
+      // Exact slug match: "forms" must not pick "forms-sdk-reference".
+      const esc = String(module).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const zipRe = new RegExp(`^jasefly-module-${esc}-\\d+\\.\\d+\\.\\d+\\.zip$`);
       const zips = fs.existsSync(outDir)
-        ? fs.readdirSync(outDir).filter((f) => f.startsWith(`jasefly-module-${module}-`) && f.endsWith('.zip'))
+        ? fs.readdirSync(outDir).filter((f) => zipRe.test(f))
         : [];
       zips.sort();
       const zipPath = zips.length ? path.join(outDir, zips[zips.length - 1]) : null;

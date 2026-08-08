@@ -20,7 +20,7 @@ use App\Router;
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Analytics'), 'bundled Modules/Analytics removed from discovery');
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Analytics'), 'legacy Analytics removed after live verify');
-assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-analytics-*.zip')), 'analytics ZIP present');
+jasefly_test_assert_package_identity('analytics', $repoRoot);
 
 $pkgDir = jasefly_test_package_dir('analytics');
 assert_true($pkgDir !== null, 'analytics package directory exists');

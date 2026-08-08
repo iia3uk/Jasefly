@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026-08-08 — Admin package runtime fixes + CI catalog identity
+
+- FE: `setPluginEnabled` no longer marks plugin map hydrated (stops fail-open 404s for comments/notifications/overload)
+- FE: HostSlot + DashboardShell stable `useSyncExternalStore` snapshots (React #185)
+- FE: Platform `ui` exposes `useRef`/`useMemo` for ZIP frontends
+- BE: `Response::json` never empty body on encode failure; catalog rows sanitized
+- Tests: package boundary asserts catalog identity (ZIPs not in Core git)
+- MCP: exact `jasefly-module-{slug}-{semver}.zip` match for `cms_module_release`
+
+## 2026-08-08 — Fix admin dashboard React #185 (unstable package cards snapshot)
+
+- DashboardShell: cache getPackageDashboardCards snapshot for useSyncExternalStore
+- Stops maximum update depth loop when opening admin home with ZIP dashboard cards
+
+## 2026-08-08 — Fix HostSlot infinite re-render (React #185)
+
+- Cache HostSlot useSyncExternalStore snapshots until registry mutates
+- Prevents maximum update depth when analytics/support register site.body.end slots
+- Add unit test for stable snapshot identity
+
+## 2026-08-08 — Fix package UI hooks: expose useRef and useMemo to ZIP frontends
+
+- PlatformFrontendContext.ui now includes useRef and useMemo
+- Fixes analytics Beacon crash (useRef is not a function) and React #185 loop on public site
+- CMS_MAP symptom for ZIP FE hooks
+
+## 2026-08-08 — Deploy new package architecture core to jasefly.com
+
+- Core: domain modules extracted to installable packages (Platform SDK + Package Host)
+- Remove bundled blog/forms/support/analytics/etc. implementations from Core
+- LLM handoff + catalog point to Jasefly-Modules
+- Frontend hostSlots consent gate fix for SiteLayout
+- Site content/settings preserved; domain features restored via ZIP install after deploy
+
+
 ## 2026-08-08 — Fix behavior parity after plugins default-off
 
 - Parity seed UPSERTs full baseline plugin set ON + platform singletons before PHP DB copy

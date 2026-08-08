@@ -164,7 +164,13 @@ export function hydrateDemoPlugins(): void {
   syncDisabledFromEnabled(expandEnabled(names))
 }
 
-/** Mark a single plugin enabled/disabled at runtime (after a toggle action). */
+/**
+ * Mark a single plugin enabled/disabled at runtime (toggle / package load).
+ * Does NOT mark the enable-map as hydrated — only `setEnabledPlugins` /
+ * `setPluginStates` / demo hydrate do. Otherwise a package loader calling
+ * this before `/site` arrives would fail-open every optional plugin
+ * (`!runtimeDisabled` ⇒ true) and spam 404s (comments/notifications/overload).
+ */
 export function setPluginEnabled(name: string, enabled: boolean): void {
   const aliases = PLUGIN_ALIASES[name] ?? [name]
   if (enabled) {
@@ -172,7 +178,6 @@ export function setPluginEnabled(name: string, enabled: boolean): void {
   } else {
     for (const a of aliases) runtimeDisabled.add(a)
   }
-  pluginsHydrated = true
   notifyPluginStateListeners()
 }
 

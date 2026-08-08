@@ -30,7 +30,25 @@ final class Response
             $payload['meta'] = array_merge($baseMeta, $payload['meta'], $meta);
         }
 
-        echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $flags = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
+        if (defined('JSON_INVALID_UTF8_SUBSTITUTE')) {
+            $flags |= JSON_INVALID_UTF8_SUBSTITUTE;
+        }
+        $encoded = json_encode($payload, $flags);
+        if ($encoded === false) {
+            // Never echo bare `false` (empty body / silent SPA break). Common on
+            // /admin/plugins when a module setting has invalid UTF-8 or INF/NAN.
+            @error_log('Response::json encode failed: ' . json_last_error_msg());
+            $encoded = json_encode([
+                'success' => false,
+                'error' => 'JSON encode failed: ' . json_last_error_msg(),
+                'errors' => [],
+                'data' => null,
+                'meta' => $baseMeta,
+            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '{"success":false,"error":"JSON encode failed","data":null}';
+            http_response_code(500);
+        }
+        echo $encoded;
         exit;
     }
 

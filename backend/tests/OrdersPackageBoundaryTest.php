@@ -6,7 +6,7 @@ require_once __DIR__ . '/_package_dir.php';
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Orders'), 'bundled Modules/Orders removed from discovery');
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Orders'), 'legacy Orders removed after live verify');
-assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-orders-*.zip')), 'orders ZIP present');
+jasefly_test_assert_package_identity('orders', $repoRoot);
 
 $pkg = jasefly_test_package_dir('orders');
 assert_true(is_dir($pkg), 'orders package directory exists');

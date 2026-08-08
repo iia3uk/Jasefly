@@ -20,7 +20,7 @@ use App\Router;
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Notifications'), 'bundled Modules/Notifications removed from discovery');
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Notifications'), 'legacy Notifications removed after live verify');
-assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-notifications-*.zip')), 'notifications ZIP present');
+jasefly_test_assert_package_identity('notifications', $repoRoot);
 
 $pkgDir = jasefly_test_package_dir('notifications');
 assert_true($pkgDir !== null, 'notifications package directory exists');

@@ -5,7 +5,7 @@ require_once __DIR__ . '/_package_dir.php';
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Support'), 'bundled Modules/Support removed from discovery');
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Support'), 'legacy Support removed after live verify');
-assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-support-*.zip')), 'support ZIP present');
+jasefly_test_assert_package_identity('support', $repoRoot);
 $pkg = jasefly_test_package_dir('support');
 assert_true(is_dir($pkg), 'support package directory exists');
 $mf = json_decode((string) file_get_contents($pkg . '/module.json'), true);

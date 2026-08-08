@@ -74,6 +74,8 @@ export type PlatformFrontendContext = {
     createElement: typeof import('react').createElement
     useState: typeof import('react').useState
     useEffect: typeof import('react').useEffect
+    useRef: typeof import('react').useRef
+    useMemo: typeof import('react').useMemo
     Fragment: typeof import('react').Fragment
     createRoot?: typeof import('react-dom/client').createRoot
   }
