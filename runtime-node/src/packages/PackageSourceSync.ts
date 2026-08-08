@@ -49,6 +49,11 @@ export type SyncResult = { slug: string; enabled: boolean; synced: boolean };
  * @param enableMode 'test-all' enables every synced package; 'plugins' enables when modules.is_enabled=1
  */
 function defaultSourceRoots(): string[] {
+  const fixtures = path.join(REPO_ROOT, 'backend/tests/fixtures/modules');
+  // Behavior parity must match clean CI (fixtures only) — ignore local modules-src trees.
+  if (process.env.BEHAVIOR_PARITY === '1') {
+    return fs.existsSync(fixtures) ? [path.resolve(fixtures)] : [];
+  }
   const roots: string[] = [];
   const env = process.env.JASEFLY_MODULES_ROOT?.trim();
   if (env) {
@@ -60,7 +65,7 @@ function defaultSourceRoots(): string[] {
   for (const p of [
     path.join(REPO_ROOT, 'Jasefly-Modules', 'modules-src'),
     path.join(REPO_ROOT, 'modules-src'),
-    path.join(REPO_ROOT, 'backend/tests/fixtures/modules'),
+    fixtures,
   ]) {
     if (fs.existsSync(p)) roots.push(p);
   }

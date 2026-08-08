@@ -138,6 +138,12 @@ export async function createApp(db: Database, cfg: AppConfig) {
     packageLoader,
   });
 
+  // Method-not-allowed stubs BEFORE package boot (Hono first-match wins).
+  // PHP ProjectsModule has GET/PUT/DELETE /admin/projects/{id} → POST …/reorder = 405.
+  for (const p of prefixes) {
+    app.post(`${p}/admin/projects/reorder`, (c) => fail(c, 'Method not allowed', 405));
+  }
+
   // Boot enabled ZIP package Node backends (parallel to legacy static modules)
   await packageLoader.bootEnabled();
 

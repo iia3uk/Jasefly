@@ -77,10 +77,6 @@ export async function register(ctx: PlatformContext) {
       if (blocked) return blocked;
       return crud!.publish(c, 'projects', c.req.param('id'));
     });
-    http.post('/admin/projects/reorder', admin, async (c) => {
-      const blocked = await ctx.plugins().softGate(c, 'POST', false);
-      if (blocked) return blocked;
-      return crud!.reorder(c, 'projects');
-    });
+    // No POST /admin/projects/reorder on PHP ProjectsModule — omit so host can 405.
   
 }

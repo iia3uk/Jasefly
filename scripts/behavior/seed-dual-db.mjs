@@ -35,6 +35,7 @@ const env = {
   PORT: '3081',
   TRANSLATE_PROVIDER: 'memory',
   APP_ENV: 'test',
+  BEHAVIOR_PARITY: '1',
 };
 
 const rn = path.join(root, 'runtime-node');
