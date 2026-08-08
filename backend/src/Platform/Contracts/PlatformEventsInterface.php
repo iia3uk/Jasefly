@@ -16,4 +16,20 @@ interface PlatformEventsInterface
      * @param array<string, mixed> $payload
      */
     public function publishLater(string $event, array $payload, int $delaySeconds): void;
+
+    /**
+     * Declare a public event for discovery (Automation triggers, docs).
+     * Metadata only — does not publish or deliver. Owner is forced to the calling package slug.
+     *
+     * @param array{label?:string, category?:string, payload?:array<string,mixed>} $meta
+     */
+    public function declare(string $eventId, array $meta = []): void;
+
+    /** Whether any package currently declares this public event id. */
+    public function hasDeclared(string $eventId): bool;
+
+    /**
+     * @return list<array{id:string, owner:string, label:string, category:string, payload:array<string,mixed>}>
+     */
+    public function listDeclared(): array;
 }

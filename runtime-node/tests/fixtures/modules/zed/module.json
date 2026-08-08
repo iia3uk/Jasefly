@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Zed Synthetic Probe",
+  "slug": "zed",
+  "version": "1.0.0",
+  "description": "Dual-runtime architecture probe v2 — unknown ZIP proving surfaces, settings, ACL, lifecycle, PHP+Node entrypoints. Not a product feature.",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": ["json"]
+  },
+  "dependencies": {
+    "required": {},
+    "optional": {},
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": ["api.routes", "events.publish", "events.subscribe", "permissions.check"],
+    "provides": ["zed.ping"]
+  },
+  "entrypoints": {
+    "backend": "backend/ZedProbeModule.php",
+    "node": "backend/index.mjs",
+    "frontend_manifest": "frontend-dist/manifest.json"
+  },
+  "frontend": {
+    "entry": "index.js",
+    "assets": { "js": ["index.js"] },
+    "exports": []
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "zed",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "zed.view",
+    "zed.manage"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "surfaces": {
+    "trash": [
+      { "resource": "zed-items", "table": "zed_items" }
+    ],
+    "dashboard": [
+      {
+        "table": "zed_items",
+        "count_as": "zed_items",
+        "draft_as": "zed",
+        "publish_as": "zed",
+        "recent_as": "zed_7d"
+      }
+    ],
+    "sitemap": [
+      {
+        "table": "zed_items",
+        "path_prefix": "/zed",
+        "where": { "status": "published" },
+        "priority": "0.4",
+        "soft_delete": true
+      }
+    ],
+    "media": [
+      {
+        "table": "zed_items",
+        "columns": ["cover_media_id"],
+        "public_where": { "status": "published" },
+        "soft_delete": true
+      }
+    ],
+    "content_acl": [
+      { "resource": "zed-items" }
+    ],
+    "schema": [
+      { "table": "zed_items", "role": "owner" },
+      { "table": "zed_probe", "role": "owner" }
+    ]
+  }
+}

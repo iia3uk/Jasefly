@@ -6,7 +6,9 @@ Jasefly has **one architecture** and **two production runtimes**. **Dual** is th
 | --- | --- | --- |
 | Shared hosting | PHP (`backend/`) | `jasefly build --runtime=php` → hosting ZIP |
 | VPS / cloud | Node (`runtime-node/`) | `jasefly build --runtime=node` / `cms_local_build({target:'vps'})` |
-| Local + CI | Dual | Boots both; parity gate (**879/879**, modules **28/28**) |
+| Local + CI | Dual | Boots both; HTTP contract parity gate (see [dual-runtime-parity-progress.md](dual-runtime-parity-progress.md)) |
+
+Domain product features are **packages** (`modules-src/` → one ZIP), not ~30 Core modules. See [architecture/CURRENT.md](architecture/CURRENT.md).
 
 **Source of Truth:** [`contracts/`](../contracts/README.md). Freeze: [core-freeze-1.0.md](core-freeze-1.0.md). Matrix: [runtime-target-matrix.md](runtime-target-matrix.md).
 

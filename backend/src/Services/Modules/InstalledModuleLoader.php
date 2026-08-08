@@ -10,6 +10,7 @@ use App\Core\Modules\ModuleManifest;
 use App\Core\Modules\ModulePackagePaths;
 use App\Core\Modules\PackageModuleAdapter;
 use App\Database;
+use App\Platform\Surfaces\PackageSurfaceRegistry;
 use App\Router;
 
 /**
@@ -113,19 +114,27 @@ final class InstalledModuleLoader
         $startedAt = microtime(true);
         $memBefore = memory_get_usage(true);
 
-        $before = get_declared_classes();
         require_once $entryPath;
-        $newClasses = array_diff(get_declared_classes(), $before);
         $expectedNs = 'App\\PackageModules\\' . $manifest->studlySlug() . '\\';
 
+        // Health checks (and prior boots in the same process) may already have
+        // required the entrypoint — require_once is then a no-op, so do not rely
+        // on array_diff(get_declared_classes()). Scan the package namespace.
         $inner = null;
-        foreach ($newClasses as $class) {
+        foreach (get_declared_classes() as $class) {
             if (!str_starts_with($class, $expectedNs)) {
                 continue;
             }
-            if (is_subclass_of($class, InstallableModuleInterface::class) || in_array(InstallableModuleInterface::class, class_implements($class) ?: [], true)) {
+            if (!is_subclass_of($class, InstallableModuleInterface::class)
+                && !in_array(InstallableModuleInterface::class, class_implements($class) ?: [], true)) {
+                continue;
+            }
+            // Prefer concrete *Module entry over abstract bases in the same ns.
+            if (str_ends_with($class, 'Module') || $inner === null) {
                 $inner = new $class();
-                break;
+                if (str_ends_with($class, 'Module')) {
+                    break;
+                }
             }
         }
 
@@ -135,6 +144,11 @@ final class InstalledModuleLoader
 
         if (method_exists($inner, 'setPackageManifest')) {
             $inner->setPackageManifest($manifest);
+        }
+
+        $surfaces = $manifest->surfaces();
+        if ($surfaces !== []) {
+            PackageSurfaceRegistry::register($slug, $surfaces);
         }
 
         $adapter = new PackageModuleAdapter($inner, $manifest);

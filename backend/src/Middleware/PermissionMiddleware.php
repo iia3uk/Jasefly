@@ -31,32 +31,31 @@ final class PermissionMiddleware
             $this->permissions->require($user, 'content.restore');
         }
 
+        // DELETE: only core content resources force content.delete.
+        // Package/domain modules own DELETE via their handlers (package PermissionMiddleware + require).
+        // Never maintain a slug allowlist here — unknown ZIP modules must work without core edits.
         if ($r->method === 'DELETE' && str_contains($r->path, '/admin/')) {
-            // Domain plugins own their DELETE with module perms — don't force content.delete.
-            $moduleDeleteExempt =
-                str_contains($r->path, '/admin/media')
-                || str_contains($r->path, '/admin/forms')
-                || str_contains($r->path, '/admin/form-submissions')
-                || str_contains($r->path, '/admin/orders')
-                || str_contains($r->path, '/admin/comments')
-                || str_contains($r->path, '/admin/automations')
-                || str_contains($r->path, '/admin/newsletter')
-                || str_contains($r->path, '/admin/notifications')
-                || str_contains($r->path, '/admin/scheduler')
-                || str_contains($r->path, '/admin/webhooks');
-            if (str_contains($r->path, '/admin/webhooks')) {
-                $this->permissions->require($user, 'integrations.manage');
-            } elseif (!$moduleDeleteExempt) {
-                $this->permissions->require($user, 'content.delete');
-            } elseif (str_contains($r->path, '/admin/media')
-                && !$this->permissions->can($user, 'media.manage')
-                && !$this->permissions->can($user, 'content.delete')) {
-                $this->permissions->require($user, 'media.manage');
+            if (str_contains($r->path, '/admin/media')) {
+                if (
+                    !$this->permissions->can($user, 'media.manage')
+                    && !$this->permissions->can($user, 'content.delete')
+                ) {
+                    $this->permissions->require($user, 'media.manage');
+                }
+            } else {
+                $resources = implode('|', array_map(
+                    static fn(string $name): string => preg_quote($name, '#'),
+                    PermissionService::contentResources()
+                ));
+                if ($resources !== '' && preg_match('#/admin/(' . $resources . ')(/|$)#', $r->path)) {
+                    $this->permissions->require($user, 'content.delete');
+                }
             }
         }
 
         // Content create/update/publish and revision restore: explicit capability checks
         // (Auth alone is insufficient). Handlers also call PermissionService for defense-in-depth.
+        // Package routes (/admin/{unknown-slug}/…) are not content resources — authz stays in handlers.
         $method = strtoupper($r->method);
         if (in_array($method, ['POST', 'PUT', 'PATCH'], true)) {
             if (preg_match('#/admin/pages/revisions/\d+/restore$#', $r->path)) {
@@ -65,8 +64,6 @@ final class PermissionMiddleware
                 $this->permissions->requireContentMutation($user, 'update');
             } elseif (preg_match('#/admin/pages/\d+/copy-layout$#', $r->path) && $method === 'POST') {
                 $this->permissions->requireContentMutation($user, 'update');
-            } elseif (str_contains($r->path, '/admin/webhooks')) {
-                $this->permissions->require($user, 'integrations.manage');
             } else {
                 $resources = implode('|', array_map(
                     static fn(string $name): string => preg_quote($name, '#'),

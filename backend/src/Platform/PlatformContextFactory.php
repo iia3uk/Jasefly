@@ -8,10 +8,13 @@ use App\Core\Modules\ModuleManifest;
 use App\Core\Modules\ModulePackagePaths;
 use App\Database;
 use App\Platform\Adapters\AssetsAdapter;
+use App\Platform\Adapters\AuthAdapter;
 use App\Platform\Adapters\BuilderAdapter;
 use App\Platform\Adapters\CacheAdapter;
+use App\Platform\Adapters\CatalogAdapter;
 use App\Platform\Adapters\ConfigAdapter;
 use App\Platform\Adapters\ContentAdapter;
+use App\Platform\Adapters\ContentResourcesAdapter;
 use App\Platform\Adapters\DatabaseAdapter;
 use App\Platform\Adapters\EventsAdapter;
 use App\Platform\Adapters\HealthAdapter;
@@ -20,6 +23,7 @@ use App\Platform\Adapters\LoggerAdapter;
 use App\Platform\Adapters\MailAdapter;
 use App\Platform\Adapters\MediaAdapter;
 use App\Platform\Adapters\NotificationsAdapter;
+use App\Platform\Adapters\OrdersAdapter;
 use App\Platform\Adapters\PermissionsAdapter;
 use App\Platform\Adapters\SchedulerAdapter;
 use App\Platform\Adapters\SettingsAdapter;
@@ -106,6 +110,7 @@ final class PlatformContextFactory
         $this->services->set('builder', new BuilderAdapter($slug));
         $this->services->set('logger', new LoggerAdapter($slug));
         $this->services->set('assets', new AssetsAdapter($this->paths, $slug));
+        $this->services->set('resources', new ContentResourcesAdapter($slug));
 
         $ctx = new PlatformContext(
             $slug,
@@ -116,7 +121,9 @@ final class PlatformContextFactory
             new EventsAdapter($this->events, $this->db, $slug),
             $scheduler,
             new MailAdapter($this->db, $this->app),
-            new NotificationsAdapter($this->db),
+            new NotificationsAdapter($slug),
+            new CatalogAdapter($this->db, $slug),
+            new OrdersAdapter($slug),
             $settings,
             new PermissionsAdapter($this->db),
             new UsersAdapter($this->db),
@@ -130,7 +137,9 @@ final class PlatformContextFactory
             new AssetsAdapter($this->paths, $slug),
             $health,
             new ContentAdapter($this->db),
+            new ContentResourcesAdapter($slug),
             AccessHost::get(),
+            new AuthAdapter($this->db, $this->app, $slug),
             $this->capabilities,
             $this->services,
             $this->features,
@@ -148,9 +157,13 @@ final class PlatformContextFactory
         $this->services->set('database', new DatabaseAdapter($this->db));
         $this->services->set('settings', new SettingsAdapter($this->db));
         $this->services->set('mail', new MailAdapter($this->db, $this->app));
-        $this->services->set('notifications', new NotificationsAdapter($this->db));
+        // Soft shared facade (no package slug) — packages registerBackend via per-slug adapters.
+        $this->services->set('notifications', new NotificationsAdapter(''));
+        $this->services->set('catalog', new CatalogAdapter($this->db));
+        $this->services->set('orders', new OrdersAdapter(''));
         $this->services->set('media', new MediaAdapter($this->db));
         $this->services->set('content', new ContentAdapter($this->db));
+        $this->services->set('resources', new ContentResourcesAdapter('host'));
         $this->services->set('permissions', new PermissionsAdapter($this->db));
         $this->services->set('users', new UsersAdapter($this->db));
         $this->services->set('cache', new CacheAdapter());

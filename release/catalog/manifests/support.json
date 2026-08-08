@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Support",
+  "slug": "support",
+  "version": "1.0.0",
+  "description": "Live support tickets, FAQ bot and optional agent notifications via Platform SDK.",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 2
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": [
+      "json"
+    ]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {
+      "mail": ">=1.0.0"
+    },
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "admin.pages",
+      "permissions.check"
+    ],
+    "optional": [
+      "mail.send",
+      "http.client"
+    ],
+    "provides": []
+  },
+  "entrypoints": {
+    "backend": "backend/SupportModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json",
+    "node": "backend/node/index.ts"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "support",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "support.agent",
+    "support.manage"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  }
+}

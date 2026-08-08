@@ -14,6 +14,16 @@ Packages must depend on **`App\Platform\*`** (PHP) and **`frontend/src/platform`
 
 `database()`, `storage()`, `events()`, `scheduler()` / `jobs()`, `mail()`, `notifications()`, `settings()`, `permissions()`, `users()`, `media()`, `builder()`, `http()`, `cache()`, `logger()`, `config()`, `translations()`, `assets()`, `health()`, `content()`, `capabilities()`, `access()`, plus `feature()` / `service()` for catalogued IDs.
 
+`http()` registers inbound package routes and also exposes SSRF-safe outbound helpers: `isSafeOutboundUrl()`, `postJsonOutbound()` (wraps `OutboundHttp` / `SsrfGuard`).
+
+`mail()` (`PlatformMailInterface`) is the package mail API: `isAvailable()` + `sendHtml()`. Host adapter owns SMTP transport (`Mailer`); packages must not import concrete `Mailer`. `has('mail.send')` = platform contract present (core); **`isAvailable()`** = plugin enabled + SMTP configured (`modules.settings` for `mail`). Campaign batching stays in the package via `scheduler()`.
+
+`notifications()` (`PlatformNotificationsInterface`) is a soft facade: `isAvailable()`, `notifyAdmins` / `create`, and **`registerBackend`** for the package that owns delivery. `notifications.send` is **package-provided** (not a core default). Disable/uninstall → `revokeModule` + `NotificationsAdapter::clearOwner` → `has('notifications.send')` false and `isAvailable()` false; consumers no-op or skip optional actions. Never import concrete `NotificationService`.
+
+`events()` supports `publish` / `subscribe` / `publishLater` plus **`declare($id, $meta)`**, **`hasDeclared`**, **`listDeclared`** — metadata for discovery (Automation triggers). `EventCatalog` is not a second bus; `EventDispatcher` remains the only runtime delivery path. Disable/uninstall clears declarations for that package slug.
+
+`scheduler()` / `jobs()` (`PlatformSchedulerInterface`) is the package job API: handlers, enqueue/delay, cron upsert, cancel, and `releasePackage()`. Types are forced to `{slug}.{localType}` and cron names to `{slug}:{localName}` so packages cannot collide. Hosting stays pull-based (`php backend/bin/scheduler.php run` / HTTP tick) — packages must not spawn daemons. Disable/uninstall runs `PackageJobLifecycle::release` (handlers + pending + crons).
+
 Contracts live under `backend/src/Platform/Contracts/`. Adapters under `backend/src/Platform/Adapters/` wrap Core. `CompatibilityLayer` supplies SDK generation aliases. Public service IDs are governed by `ServiceRegistry::PUBLIC_CATALOG` and `Analysis/sdk-policy.json`.
 
 ### Access Providers
@@ -77,6 +87,14 @@ Effective rights: union of all user roles + allow/deny overrides (**deny wins**)
 ### Frontend
 
 Package ESM default export registers via host context (`admin`, `builder`, `public`). Hybrid loader still accepts legacy helpers (`registerAdminNavItem`, …) in `packageModuleLoader`.
+
+Builder widgets default to namespaced types `${slug}.${type}`. Extracted modules that own **frozen public widget IDs** (`widget-types.v1.json`) pass `stableType: true` so the registry keeps the bare id (see `resolvePackageWidgetType`).
+
+Large admin screens that still ship in the host SPA can bind via universal `hostPageKey` on `admin.registerPage` + host `provideHostAdminPage(key, Component)` (`frontend/src/platform/hostAdminPages.ts`). No per-slug hardcode in the loader.
+
+Packages may mount global UI without host slug branches via `ctx.host.registerSlot(slot, Component, options)` (`site.body.end` / `site.runtime` / `admin.dashboard`). Host shells render `<HostSlot id=… />` (`frontend/src/platform/hostSlots.ts`). Optional `requiresConsentCategory` is gated by `ctx.host.allowsConsentCategory` / `consentBridge` (cookie taxonomy keys — not plugin slugs).
+
+Shared CSV formula escaping lives in `App\Support\CsvExport` (not owned by Forms). Package modules may keep a local copy or call Platform download helpers.
 
 ## Execution flow
 

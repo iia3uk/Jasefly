@@ -10,6 +10,11 @@ import {
   platformRegistry,
   trackUnregister,
 } from '@/platform/registry'
+import { resolvePackageWidgetType } from '@/platform/resolvePackageWidgetType'
+import { resolveHostAdminPage } from '@/platform/hostAdminPages'
+import { registerHostSlot } from '@/platform/hostSlots'
+import { allowsConsentCategory } from '@/platform/consentBridge'
+import type { HostSlotId } from '@/platform/types'
 
 const FEATURES: Record<string, boolean> = {
   'builder.widgets': true,
@@ -96,8 +101,12 @@ function wrapAdminScreen(screen: PlatformAdminScreen, slug: string): AdminScreen
     }
   }
 
-  if (screen.Component) {
-    const Inner = screen.Component
+  const hostComp =
+    screen.Component ??
+    (screen.hostPageKey ? resolveHostAdminPage(screen.hostPageKey) : undefined)
+
+  if (hostComp) {
+    const Inner = hostComp
     return {
       ...screen,
       Component: () =>
@@ -175,14 +184,15 @@ export function createPlatformFrontendContext(slug: string, version: string, sdk
       registerSearchProvider: (provider) => {
         platformRegistry.searchProviders.push({ ...provider, slug })
       },
+      resolveHostPage: (key) => resolveHostAdminPage(key),
     },
     builder: {
       registerWidget: (widget: PlatformWidgetDefinition) => {
-        const namespaced = widget.type.includes('.') ? widget.type : `${slug}.${widget.type}`
+        const resolved = resolvePackageWidgetType(slug, widget.type, Boolean(widget.stableType))
         const Render = wrapWidgetRender(widget, slug)
-        registerWidget({ ...widget, type: namespaced, plugin: slug, Render })
+        registerWidget({ ...widget, type: resolved, plugin: slug, Render })
         blocks.push({
-          type: namespaced,
+          type: resolved,
           label: widget.label,
           category: widget.category,
           icon: widget.icon,
@@ -190,7 +200,7 @@ export function createPlatformFrontendContext(slug: string, version: string, sdk
           settingsFields: widget.settingsFields,
           Render,
         })
-        trackUnregister(slug, () => unregisterWidget(namespaced))
+        trackUnregister(slug, () => unregisterWidget(resolved))
         flush()
       },
       registerPropertyEditor: (type, editor) => {
@@ -221,6 +231,21 @@ export function createPlatformFrontendContext(slug: string, version: string, sdk
       registerPathGate: (prefix) => {
         platformRegistry.pathGates.push({ slug, prefix })
       },
+    },
+    host: {
+      registerSlot: (slot, Component, options) => {
+        const slotId = slot as HostSlotId
+        const unreg = registerHostSlot({
+          id: options?.id || 'default',
+          slug,
+          slot: slotId,
+          Component,
+          requiresConsentCategory: options?.requiresConsentCategory,
+          order: options?.order,
+        })
+        trackUnregister(slug, unreg)
+      },
+      allowsConsentCategory: (category) => allowsConsentCategory(category),
     },
   }
 }

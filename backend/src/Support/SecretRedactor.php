@@ -16,7 +16,16 @@ final class SecretRedactor
         'api_key',
         'authorization',
         'bot_token',
+        'smtp_password',
+        'telegram_bot_token',
+        'turnstile_secret',
+        'smartcaptcha_secret',
+        'webhook_secret',
+        'client_secret',
     ];
+
+    /** Placeholder returned to clients instead of real secrets. */
+    public const MASK = '***';
 
     /** Extended key set for Demo Sandbox response pipeline. */
     public const DEMO_KEYS = [

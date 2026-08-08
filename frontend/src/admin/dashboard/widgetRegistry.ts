@@ -1,7 +1,6 @@
 import type { DashboardWidgetDef } from './types'
 import { ContentHealthWidget } from './widgets/ContentHealthWidget'
 import { McpActivityWidget } from './widgets/McpActivityWidget'
-import { AnalyticsDashWidget } from './widgets/AnalyticsDashWidget'
 import { WeekStatsWidget } from './widgets/WeekStatsWidget'
 import { CatalogCountsWidget } from './widgets/CatalogCountsWidget'
 import { PublishStatusWidget } from './widgets/PublishStatusWidget'
@@ -13,7 +12,6 @@ import { FormsWidget } from './widgets/FormsWidget'
 import { OrdersWidget } from './widgets/OrdersWidget'
 import { SchedulerWidget } from './widgets/SchedulerWidget'
 import { NotificationsWidget } from './widgets/NotificationsWidget'
-import { NewsletterWidget } from './widgets/NewsletterWidget'
 import { BlogPulseWidget } from './widgets/BlogPulseWidget'
 import { OverloadWidget } from './widgets/OverloadWidget'
 
@@ -34,15 +32,6 @@ export const DASHBOARD_WIDGETS: DashboardWidgetDef[] = [
     span: 'half',
     defaultVisible: true,
     Component: McpActivityWidget,
-  },
-  {
-    id: 'analytics',
-    title: 'Аналитика',
-    hint: 'Пульс трафика',
-    plugin: 'analytics',
-    span: 'full',
-    defaultVisible: true,
-    Component: AnalyticsDashWidget,
   },
   {
     id: 'week-stats',
@@ -143,14 +132,6 @@ export const DASHBOARD_WIDGETS: DashboardWidgetDef[] = [
     span: 'half',
     defaultVisible: true,
     Component: OverloadWidget,
-  },
-  {
-    id: 'newsletter',
-    title: 'Рассылка',
-    plugin: 'newsletter',
-    span: 'half',
-    defaultVisible: false,
-    Component: NewsletterWidget,
   },
 ]
 

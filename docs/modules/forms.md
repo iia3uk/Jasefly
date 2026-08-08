@@ -6,7 +6,9 @@ Own the system form engine: definitions, submissions, actions, builder widget `f
 
 ## How it works
 
-Bundled module `FormsModule` (`name`: `forms`). Admin CRUD under `/admin/forms` and submissions; public `GET/POST /forms/{slug}` (+ submit). Actions may call mail, Telegram, webhooks, automation, newsletter — outbound HTTP via `OutboundHttp` / `SsrfGuard`. Widget: `builder/widgets/forms.tsx`. SDK reference reimplementation (ZIP): `modules-src/forms-sdk-reference/` — see [sdk-certification.md](../sdk-certification.md).
+**ZIP package** `forms` (`modules-src/forms/` · dual-runtime PHP + Node). Not a Core/`backend/src/Modules` owner.
+
+Admin CRUD under `/admin/forms` and submissions; public `GET/POST /forms/{slug}` (+ submit). Actions may call mail, Telegram, webhooks, automation, newsletter — outbound HTTP via Platform HTTP / SSRF guard. Widget via package FE + `stableType` where applicable. SDK reference reimplementation (ZIP): `modules-src/forms-sdk-reference/` — see [sdk-certification.md](../sdk-certification.md).
 
 ## Execution flow
 
@@ -16,35 +18,19 @@ Bundled module `FormsModule` (`name`: `forms`). Admin CRUD under `/admin/forms` 
 
 ## Key components
 
-- `backend/src/Modules/Forms/`
+- Package: `modules-src/forms/` (PHP `backend/FormsModule.php`, Node `backend/node/`)
 - Tables: `forms`, `form_fields`, `form_versions`, `form_actions`, `form_submissions`, `form_submission_values`
-- FE: `frontend/src/modules/forms/`
+- Host pages via `hostPageKey` / package FE loader
 - Permissions: `forms.view`, `forms.manage`, `forms.submissions.*`, `forms.export`
-
-## Files involved
-
-- `backend/src/Modules/Forms/FormsModule.php`
-- `backend/src/Modules/Forms/migrations/`
-- `frontend/src/builder/widgets/forms.tsx`
 
 ## Related pages
 
-- [module-system.md](../module-system.md)
-- [page-builder.md](../page-builder.md)
-- [security.md](../security.md)
+- [../architecture/CURRENT.md](../architecture/CURRENT.md)
+- [../package-lifecycle.md](../package-lifecycle.md)
+- [../page-builder.md](../page-builder.md)
 
 ## Common mistakes
 
+- Assuming Forms still lives under `backend/src/Modules/Forms/`.
 - Using only legacy Mail `contact-form` widget when a system form is intended.
 - Calling webhooks without SSRF-safe URLs.
-
-## Extension points
-
-- Form actions registry inside the module; do not patch Core.
-- ZIP Forms reference for SDK-only packaging.
-
-## See also
-
-- [../events.md](../events.md)
-- [../sdk-certification.md](../sdk-certification.md)
-- [README.md](README.md)

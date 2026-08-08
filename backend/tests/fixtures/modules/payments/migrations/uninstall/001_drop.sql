@@ -1,0 +1,1 @@
+-- Preserve payment history on uninstall.

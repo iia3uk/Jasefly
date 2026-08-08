@@ -69,9 +69,9 @@ final class SystemTemplates
                 'title' => 'Проекты (обложка)',
                 'group' => 'Портфолио',
                 'route' => '/projects',
-                'description' => 'Шаблон раздела проектов (плагин Portfolio)',
+                'description' => 'Шаблон раздела проектов (плагин Projects)',
                 'template' => 'system',
-                'plugin' => 'portfolio',
+                'plugin' => 'projects',
                 'layout' => self::projectsLayout(),
             ],
             [
@@ -249,12 +249,6 @@ final class SystemTemplates
         }
         if (!empty($enabled['site'])) {
             $enabled['content'] = true;
-        }
-        if (!empty($enabled['portfolio'])) {
-            $enabled['projects'] = true;
-        }
-        if (!empty($enabled['projects'])) {
-            $enabled['portfolio'] = true;
         }
         return $enabled;
     }

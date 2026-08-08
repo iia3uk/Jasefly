@@ -72,26 +72,38 @@ Impossible pairs (`node`+`shared`, `php`+`vps`, `php`+`cloud`) fail in the CLI. 
                              │
                     Platform SDK / MCP
                              │
-                  ZIP Modules / Packages
+              ONE PACKAGE (module.json + ZIP)
+           optional PHP · optional Node entrypoints
 ```
+
+**Host/Core** owns infrastructure only. **Domain features** ship as installable packages (`modules-src/` → `release/modules/*.zip`). PHP and Node are **adapters** of one package identity — not two package systems.
+
+Canonical docs: [`docs/architecture/CURRENT.md`](docs/architecture/CURRENT.md) · catalog [`release/catalog/packages.md`](release/catalog/packages.md) · agents [`AGENTS.md`](AGENTS.md).
 
 **Dual runtime** boots PHP + Node together for development and the CI parity harness. It is not a separate production deployment target.
 
 ---
 
+## Package system
+
+| Item | Path |
+| --- | --- |
+| Identity snapshot (Core) | `release/catalog/manifests/{slug}.json` |
+| Derived catalog | `release/catalog/packages.json` |
+| Local authoring (optional, gitignored) | `modules-src/{slug}/` |
+| Distributable ZIP | Module Hub / `release/modules/*.zip` (**not** versioned in Core git) |
+| Build | `node scripts/build-module.js {slug} --yes` |
+| Certify | `php backend/bin/sdk.php certify {slug}` |
+
+**Core repository ≠ package source.** The 15 extracted domains are external packages (install from ZIP / Hub). Core ships contracts, loaders, catalog, and tooling — not product package PHP/Node source. Host modules remain under `backend/src/Modules/` (Access, Content, Mail, Scheduler, …). Portfolio is a **deprecated** composition shell — not a product ZIP.
+
+---
+
 ## Behavioral parity
 
-Covered baseline (as of Core Freeze evidence):
+Contract-scoped HTTP parity remains available (`scripts/behavior/run-all.mjs` / `jasefly test --runtime=dual`). Source of truth: [`contracts/`](contracts/README.md).
 
-| Gate | Result |
-| --- | --- |
-| Built-in modules | **28/28** done |
-| Behavioral cases | **879/879** |
-| Source of truth | [`contracts/`](contracts/README.md) |
-
-PHP and Node follow the same contracts for those scenarios. GitHub Actions boots both runtimes and compares real HTTP cases (`scripts/behavior/run-all.mjs` / `jasefly test --runtime=dual`).
-
-Parity is **contract-scoped**: do not assume absolute identity outside covered auth/deep scenarios and scrubbed env-volatile fields. Progress: [`docs/dual-runtime-parity-progress.md`](docs/dual-runtime-parity-progress.md).
+**Architecture regression baseline (2026-08-08):** PHP **1277/0** · Node **71/0** · Certify **15/15** · MySQL live **15/15** · Combos **YES** · Dual-runtime **YES**.
 
 ---
 
@@ -168,18 +180,19 @@ Rate limits and cache protect shared hosting (`cms_hosting_guard`).
 
 ## Platform SDK & ZIP modules
 
-Installable packages depend on the **Platform SDK** only (`App\Platform\*`, `frontend/src/platform`) — never Core internals.
+Installable packages depend on the **Platform SDK** only (`App\Platform\*`, `frontend/src/platform`, Node `PlatformContext`) — never Core internals.
 
 | Surface | Notes |
 | --- | --- |
 | SDK generations | **1** supported · **2** current |
 | Certification | `php backend/bin/sdk.php certify` |
 | Capabilities / permissions / events | Declared + governed snapshots |
+| Surfaces | `module.json` → trash/dashboard/sitemap/media/ACL/schema |
 | Migrations | Package-owned, additive |
-| Builder widgets / admin pages | Registered via host context |
+| Settings | `modules.settings` JSON (package SoT) |
 | Quarantine | Failed bootstrap isolates; site stays up |
 
-Docs: [`docs/platform-sdk.md`](docs/platform-sdk.md) · [`docs/sdk-certification.md`](docs/sdk-certification.md) · [`docs/package-lifecycle.md`](docs/package-lifecycle.md).
+Docs: [`docs/platform-sdk.md`](docs/platform-sdk.md) · [`docs/sdk-certification.md`](docs/sdk-certification.md) · [`docs/package-lifecycle.md`](docs/package-lifecycle.md) · [`docs/MODULE-DEVELOPMENT.md`](docs/MODULE-DEVELOPMENT.md).
 
 ---
 
@@ -248,15 +261,17 @@ start.bat
 
 | Path | Role |
 | --- | --- |
-| `backend/` | PHP runtime, installer, migrations, modules |
-| `runtime-node/` | Node runtime (VPS / cloud) |
+| `backend/` | PHP runtime, host modules, Platform SDK, installer |
+| `runtime-node/` | Node runtime + package host (VPS / cloud) |
 | `frontend/` | React public site, admin, builder |
-| `contracts/` | Dual-runtime source of truth |
-| `modules-src/` | ZIP module sources |
+| `contracts/` | Dual-runtime HTTP/contract SoT |
+| `modules-src/` | Canonical package authoring (domain ZIP sources) |
+| `release/modules/` | Built package ZIPs (local artifacts) |
+| `release/catalog/` | Derived package index for humans/LLMs |
 | `mcp-cms/` | MCP server for agents |
 | `scripts/jasefly/` | Unified CLI |
-| `docs/` | Technical documentation |
-| `release/` | Built artifacts (gitignored output) |
+| `docs/architecture/` | Current architecture + LLM handoff |
+| `AGENTS.md` | Architecture warning for AI agents |
 
 ---
 

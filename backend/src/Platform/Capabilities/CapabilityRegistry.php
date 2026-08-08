@@ -126,11 +126,13 @@ final class CapabilityRegistry implements PlatformCapabilitiesInterface
 
     private function ensureCoreDefaults(): void
     {
+        // notifications.send is package-provided (not a core default) so disable/uninstall
+        // correctly reports unavailable via has() after revokeModule.
         $defaults = [
             'mail.send', 'scheduler.jobs', 'storage.files', 'builder.widgets', 'builder.inspector',
-            'notifications.send', 'media.library', 'users.roles', 'events.publish', 'events.subscribe',
+            'media.library', 'users.roles', 'events.publish', 'events.subscribe',
             'http.client', 'settings.global', 'settings.module', 'analytics.events', 'permissions.check',
-            'content.pages', 'admin.pages', 'public.routes', 'api.routes', 'users.current',
+            'content.pages', 'content.resources', 'admin.pages', 'public.routes', 'api.routes', 'users.current',
             'access.service',
         ];
         foreach ($defaults as $cap) {

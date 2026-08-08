@@ -1,0 +1,1129 @@
+{
+  "generatedAt": "2026-08-08T18:05:58.094Z",
+  "architecture": {
+    "packageIdentity": "module.json",
+    "sourceOwnership": "external package/module distribution",
+    "coreRepoRole": "contracts · loaders · catalog · tooling (not package implementation)",
+    "localAuthoringWorkspace": "modules-src/{slug} (gitignored)",
+    "identitySnapshot": "release/catalog/manifests/{slug}.json",
+    "artifact": "release/modules/jasefly-module-{slug}-{version}.zip",
+    "artifactStorage": "release-storage / Module Hub (not Core git)",
+    "runtimeModel": "optional-entrypoints",
+    "principle": "ONE PACKAGE · ONE IDENTITY · PHP and Node are adapters, not separate products"
+  },
+  "counts": {
+    "packages": 15,
+    "php": 15,
+    "node": 15,
+    "dual": 15
+  },
+  "packages": [
+    {
+      "slug": "webhooks",
+      "name": "Webhooks",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/webhooks.json",
+      "resolvedFrom": "modules-src/webhooks/module.json",
+      "artifact": "release/modules/jasefly-module-webhooks-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/WebhooksModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "webhooks"
+      },
+      "surfaces": null,
+      "capabilities": {
+        "requires": [
+          "http.client",
+          "api.routes",
+          "admin.pages",
+          "permissions.check",
+          "settings.module",
+          "events.subscribe"
+        ],
+        "provides": [
+          "webhooks.dispatch"
+        ]
+      },
+      "permissions": [
+        "integrations.manage"
+      ],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0"
+        },
+        "optional": {},
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    },
+    {
+      "slug": "comments",
+      "name": "Comments",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/comments.json",
+      "resolvedFrom": "modules-src/comments/module.json",
+      "artifact": "release/modules/jasefly-module-comments-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/CommentsModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "comments"
+      },
+      "surfaces": {
+        "media": [
+          {
+            "table": "comments",
+            "html_columns": [
+              "body"
+            ],
+            "public_where": {
+              "status": "approved"
+            },
+            "soft_delete": true
+          }
+        ],
+        "schema": [
+          {
+            "table": "comments",
+            "role": "owner"
+          }
+        ]
+      },
+      "capabilities": {
+        "requires": [
+          "api.routes",
+          "admin.pages",
+          "permissions.check",
+          "events.publish",
+          "builder.widgets"
+        ],
+        "provides": [
+          "comments.api",
+          "comments.widgets"
+        ]
+      },
+      "permissions": [
+        "comments.view",
+        "comments.moderate",
+        "comments.manage"
+      ],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0"
+        },
+        "optional": {
+          "orders": ">=1.0.0"
+        },
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    },
+    {
+      "slug": "forms",
+      "name": "Forms",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/forms.json",
+      "resolvedFrom": "modules-src/forms/module.json",
+      "artifact": "release/modules/jasefly-module-forms-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/FormsModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "forms"
+      },
+      "surfaces": null,
+      "capabilities": {
+        "requires": [
+          "api.routes",
+          "admin.pages",
+          "permissions.check",
+          "events.publish",
+          "builder.widgets",
+          "mail.send",
+          "notifications.send",
+          "http.client"
+        ],
+        "provides": [
+          "forms.api",
+          "forms.widgets"
+        ]
+      },
+      "permissions": [
+        "forms.view",
+        "forms.manage",
+        "forms.submissions.view",
+        "forms.submissions.manage",
+        "forms.export"
+      ],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0"
+        },
+        "optional": {
+          "newsletter": ">=1.0.0",
+          "mail": ">=1.0.0"
+        },
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    },
+    {
+      "slug": "analytics",
+      "name": "Analytics",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/analytics.json",
+      "resolvedFrom": "modules-src/analytics/module.json",
+      "artifact": "release/modules/jasefly-module-analytics-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/AnalyticsModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "analytics"
+      },
+      "surfaces": null,
+      "capabilities": {
+        "requires": [
+          "api.routes",
+          "admin.pages",
+          "permissions.check",
+          "scheduler.jobs",
+          "events.publish"
+        ],
+        "optional": [
+          "builder.widgets"
+        ],
+        "provides": [
+          "analytics.collect",
+          "analytics.admin"
+        ]
+      },
+      "permissions": [
+        "analytics.view",
+        "analytics.manage"
+      ],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0"
+        },
+        "optional": {},
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    },
+    {
+      "slug": "newsletter",
+      "name": "Newsletter",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/newsletter.json",
+      "resolvedFrom": "modules-src/newsletter/module.json",
+      "artifact": "release/modules/jasefly-module-newsletter-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/NewsletterModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "newsletter"
+      },
+      "surfaces": null,
+      "capabilities": {
+        "requires": [
+          "api.routes",
+          "admin.pages",
+          "permissions.check",
+          "scheduler.jobs",
+          "events.publish",
+          "builder.widgets"
+        ],
+        "optional": [
+          "mail.send"
+        ],
+        "provides": [
+          "newsletter.subscribe",
+          "newsletter.campaigns"
+        ]
+      },
+      "permissions": [
+        "newsletter.view",
+        "newsletter.manage",
+        "newsletter.send",
+        "newsletter.subscribers.manage"
+      ],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0"
+        },
+        "optional": {
+          "mail": ">=1.0.0",
+          "scheduler": ">=1.0.0"
+        },
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    },
+    {
+      "slug": "automation",
+      "name": "Automation",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/automation.json",
+      "resolvedFrom": "modules-src/automation/module.json",
+      "artifact": "release/modules/jasefly-module-automation-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/AutomationModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "automation"
+      },
+      "surfaces": null,
+      "capabilities": {
+        "requires": [
+          "api.routes",
+          "admin.pages",
+          "permissions.check",
+          "scheduler.jobs",
+          "events.publish",
+          "events.subscribe"
+        ],
+        "optional": [
+          "mail.send",
+          "notifications.send",
+          "http.client"
+        ],
+        "provides": [
+          "automation.engine"
+        ]
+      },
+      "permissions": [
+        "automations.view",
+        "automations.manage",
+        "automations.run"
+      ],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0"
+        },
+        "optional": {
+          "scheduler": ">=1.0.0",
+          "mail": ">=1.0.0",
+          "notifications": ">=1.0.0"
+        },
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    },
+    {
+      "slug": "notifications",
+      "name": "Notifications",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/notifications.json",
+      "resolvedFrom": "modules-src/notifications/module.json",
+      "artifact": "release/modules/jasefly-module-notifications-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/NotificationsModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "notifications"
+      },
+      "surfaces": null,
+      "capabilities": {
+        "requires": [
+          "api.routes",
+          "admin.pages",
+          "permissions.check"
+        ],
+        "optional": [
+          "mail.send",
+          "http.client"
+        ],
+        "provides": [
+          "notifications.send"
+        ]
+      },
+      "permissions": [
+        "notifications.view",
+        "notifications.manage"
+      ],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0"
+        },
+        "optional": {
+          "mail": ">=1.0.0"
+        },
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    },
+    {
+      "slug": "support",
+      "name": "Support",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/support.json",
+      "resolvedFrom": "modules-src/support/module.json",
+      "artifact": "release/modules/jasefly-module-support-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/SupportModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "support"
+      },
+      "surfaces": null,
+      "capabilities": {
+        "requires": [
+          "api.routes",
+          "admin.pages",
+          "permissions.check"
+        ],
+        "optional": [
+          "mail.send",
+          "http.client"
+        ],
+        "provides": []
+      },
+      "permissions": [
+        "support.agent",
+        "support.manage"
+      ],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0"
+        },
+        "optional": {
+          "mail": ">=1.0.0"
+        },
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    },
+    {
+      "slug": "translate",
+      "name": "Translate",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/translate.json",
+      "resolvedFrom": "modules-src/translate/module.json",
+      "artifact": "release/modules/jasefly-module-translate-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/TranslateModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "translate"
+      },
+      "surfaces": null,
+      "capabilities": {
+        "requires": [
+          "api.routes",
+          "settings.module"
+        ],
+        "provides": [
+          "translate.api",
+          "translate.widgets"
+        ]
+      },
+      "permissions": [
+        "settings.manage"
+      ],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0"
+        },
+        "optional": {},
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    },
+    {
+      "slug": "products",
+      "name": "Products",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/products.json",
+      "resolvedFrom": "modules-src/products/module.json",
+      "artifact": "release/modules/jasefly-module-products-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/ProductsModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "products"
+      },
+      "surfaces": {
+        "trash": [
+          {
+            "resource": "products",
+            "table": "products"
+          }
+        ],
+        "dashboard": [
+          {
+            "table": "products",
+            "count_as": "products"
+          }
+        ],
+        "sitemap": [
+          {
+            "table": "products",
+            "path_prefix": "/products",
+            "where": {
+              "is_visible": 1
+            },
+            "priority": "0.6"
+          }
+        ],
+        "media": [
+          {
+            "table": "products",
+            "columns": [
+              "media_id"
+            ],
+            "json_columns": [
+              "gallery"
+            ],
+            "html_columns": [
+              "description"
+            ],
+            "public_where": {
+              "is_visible": 1
+            },
+            "soft_delete": true
+          }
+        ],
+        "content_acl": [
+          {
+            "resource": "products"
+          }
+        ],
+        "schema": [
+          {
+            "table": "products",
+            "role": "owner"
+          }
+        ]
+      },
+      "capabilities": {
+        "requires": [
+          "api.routes",
+          "admin.pages",
+          "permissions.check",
+          "builder.widgets"
+        ],
+        "provides": [
+          "catalog.api",
+          "catalog.widgets"
+        ]
+      },
+      "permissions": [
+        "commerce.manage"
+      ],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0"
+        },
+        "optional": {
+          "payments": ">=1.0.0",
+          "orders": ">=1.0.0"
+        },
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    },
+    {
+      "slug": "orders",
+      "name": "Orders",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/orders.json",
+      "resolvedFrom": "modules-src/orders/module.json",
+      "artifact": "release/modules/jasefly-module-orders-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/OrdersModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "orders"
+      },
+      "surfaces": {
+        "schema": [
+          {
+            "table": "orders",
+            "role": "owner"
+          },
+          {
+            "table": "order_items",
+            "role": "owner"
+          },
+          {
+            "table": "carts",
+            "role": "owner"
+          },
+          {
+            "table": "cart_items",
+            "role": "owner"
+          }
+        ]
+      },
+      "capabilities": {
+        "requires": [
+          "api.routes",
+          "permissions.check",
+          "admin.pages"
+        ],
+        "provides": [
+          "orders.api"
+        ]
+      },
+      "permissions": [
+        "orders.view",
+        "orders.manage",
+        "orders.refund",
+        "orders.export"
+      ],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0"
+        },
+        "optional": {
+          "products": ">=1.0.0",
+          "payments": ">=1.0.0"
+        },
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    },
+    {
+      "slug": "payments",
+      "name": "Payments",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/payments.json",
+      "resolvedFrom": "modules-src/payments/module.json",
+      "artifact": "release/modules/jasefly-module-payments-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/PaymentsModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "payments"
+      },
+      "surfaces": {
+        "schema": [
+          {
+            "table": "payments",
+            "role": "owner"
+          },
+          {
+            "table": "orders",
+            "role": "consumer"
+          },
+          {
+            "table": "order_items",
+            "role": "consumer"
+          }
+        ]
+      },
+      "capabilities": {
+        "requires": [
+          "api.routes",
+          "admin.pages",
+          "permissions.check",
+          "builder.widgets",
+          "events.publish",
+          "http.client"
+        ],
+        "provides": [
+          "payments.api",
+          "payments.widgets"
+        ]
+      },
+      "permissions": [
+        "commerce.manage"
+      ],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0",
+          "orders": ">=1.0.0"
+        },
+        "optional": {
+          "products": ">=1.0.0"
+        },
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    },
+    {
+      "slug": "registration",
+      "name": "Registration",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/registration.json",
+      "resolvedFrom": "modules-src/registration/module.json",
+      "artifact": "release/modules/jasefly-module-registration-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/RegistrationModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "registration"
+      },
+      "surfaces": null,
+      "capabilities": {
+        "requires": [
+          "api.routes",
+          "settings.module",
+          "mail.send"
+        ],
+        "provides": [
+          "auth.registration"
+        ]
+      },
+      "permissions": [],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0"
+        },
+        "optional": {
+          "mail": ">=1.0.0"
+        },
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    },
+    {
+      "slug": "blog",
+      "name": "Blog",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/blog.json",
+      "resolvedFrom": "modules-src/blog/module.json",
+      "artifact": "release/modules/jasefly-module-blog-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/BlogModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "blog"
+      },
+      "surfaces": {
+        "trash": [
+          {
+            "resource": "blog",
+            "table": "blog_posts"
+          },
+          {
+            "resource": "blog-categories",
+            "table": "blog_categories"
+          }
+        ],
+        "dashboard": [
+          {
+            "table": "blog_posts",
+            "count_as": "blog_posts",
+            "draft_as": "posts",
+            "publish_as": "posts",
+            "recent_as": "posts_7d"
+          }
+        ],
+        "sitemap": [
+          {
+            "table": "blog_posts",
+            "path_prefix": "/blog",
+            "where": {
+              "status": "published"
+            },
+            "priority": "0.6"
+          }
+        ],
+        "media": [
+          {
+            "table": "blog_posts",
+            "columns": [
+              "cover_media_id",
+              "og_image_id"
+            ],
+            "html_columns": [
+              "content"
+            ],
+            "public_where": {
+              "status": "published"
+            },
+            "soft_delete": true
+          }
+        ],
+        "content_acl": [
+          {
+            "resource": "blog"
+          },
+          {
+            "resource": "blog-categories"
+          },
+          {
+            "resource": "blog-tags"
+          }
+        ],
+        "schema": [
+          {
+            "table": "blog_posts",
+            "role": "owner"
+          },
+          {
+            "table": "blog_categories",
+            "role": "owner"
+          },
+          {
+            "table": "blog_tags",
+            "role": "owner"
+          }
+        ]
+      },
+      "capabilities": {
+        "requires": [
+          "api.routes",
+          "admin.pages",
+          "permissions.check",
+          "events.publish",
+          "builder.widgets"
+        ],
+        "provides": [
+          "blog.api",
+          "blog.widgets"
+        ]
+      },
+      "permissions": [
+        "content.view",
+        "content.edit",
+        "content.delete"
+      ],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0"
+        },
+        "optional": {
+          "projects": ">=1.0.0"
+        },
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    },
+    {
+      "slug": "projects",
+      "name": "Projects",
+      "version": "1.0.0",
+      "sourceOwnership": "external package/module distribution",
+      "identityManifest": "release/catalog/manifests/projects.json",
+      "resolvedFrom": "modules-src/projects/module.json",
+      "artifact": "release/modules/jasefly-module-projects-1.0.0.zip",
+      "artifactStrategy": "release-storage / Module Hub (ZIP not versioned in Core git)",
+      "entrypoints": {
+        "php": "backend/ProjectsModule.php",
+        "node": "backend/node/index.ts",
+        "frontend_manifest": "frontend-dist/manifest.json"
+      },
+      "runtime": {
+        "php": true,
+        "node": true,
+        "dual": true
+      },
+      "frontend": true,
+      "migrations": {
+        "path": "migrations",
+        "uninstall_path": "migrations/uninstall",
+        "namespace": "projects"
+      },
+      "surfaces": {
+        "trash": [
+          {
+            "resource": "projects",
+            "table": "projects"
+          },
+          {
+            "resource": "project-categories",
+            "table": "project_categories"
+          }
+        ],
+        "dashboard": [
+          {
+            "table": "projects",
+            "count_as": "projects",
+            "draft_as": "projects",
+            "publish_as": "projects",
+            "recent_as": "projects_7d",
+            "extra_status_column": "project_status",
+            "extra_statuses": [
+              "completed",
+              "in_progress",
+              "on_hold",
+              "concept",
+              "cancelled"
+            ]
+          }
+        ],
+        "sitemap": [
+          {
+            "table": "projects",
+            "path_prefix": "/projects",
+            "index_paths": [
+              "/projects",
+              "/services"
+            ],
+            "index_priority": "0.9",
+            "where": {
+              "status": "published"
+            },
+            "priority": "0.7",
+            "soft_delete": true
+          }
+        ],
+        "media": [
+          {
+            "table": "projects",
+            "columns": [
+              "cover_media_id",
+              "cover_portrait_media_id",
+              "cover_landscape_media_id",
+              "og_image_id"
+            ],
+            "html_columns": [
+              "content",
+              "description"
+            ],
+            "public_where": {
+              "status": "published"
+            },
+            "soft_delete": true
+          },
+          {
+            "table": "project_media",
+            "columns": [
+              "media_id"
+            ],
+            "join_on": "project_id",
+            "parent_table": "projects",
+            "public_where": {
+              "status": "published"
+            }
+          }
+        ],
+        "content_acl": [
+          {
+            "resource": "projects"
+          },
+          {
+            "resource": "project-categories"
+          }
+        ],
+        "schema": [
+          {
+            "table": "projects",
+            "role": "owner"
+          },
+          {
+            "table": "project_categories",
+            "role": "owner"
+          },
+          {
+            "table": "project_media",
+            "role": "owner"
+          }
+        ]
+      },
+      "capabilities": {
+        "requires": [
+          "api.routes",
+          "admin.pages",
+          "permissions.check",
+          "builder.widgets"
+        ],
+        "provides": [
+          "projects.api",
+          "projects.widgets"
+        ]
+      },
+      "permissions": [
+        "content.view",
+        "content.edit",
+        "content.delete"
+      ],
+      "dependencies": {
+        "required": {
+          "system": ">=1.0.0"
+        },
+        "optional": {
+          "blog": ">=1.0.0"
+        },
+        "conflicts": {}
+      },
+      "events": null,
+      "jobs": null
+    }
+  ]
+}

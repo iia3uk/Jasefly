@@ -170,13 +170,26 @@ final class PermissionService
      *
      * @return list<string>
      */
-    public static function contentResources(): array
+    /**
+     * Host/core content resources only.
+     * Package domains register via PackageSurfaceRegistry content_acl surfaces.
+     *
+     * @return list<string>
+     */
+    public static function hostContentResources(): array
     {
         return [
             'social-links', 'statistics', 'experience', 'education', 'skill-categories', 'skills',
-            'blog-categories', 'blog-tags', 'testimonials', 'navigation', 'homepage-sections', 'pages',
-            'services', 'projects', 'project-categories', 'blog',
+            'testimonials', 'navigation', 'homepage-sections', 'pages',
+            'services',
         ];
+    }
+
+    /** @return list<string> */
+    public static function contentResources(): array
+    {
+        $pkg = \App\Platform\Surfaces\PackageSurfaceRegistry::contentAclResources();
+        return array_values(array_unique(array_merge(self::hostContentResources(), $pkg)));
     }
 
     public function isContentResource(string $resource): bool

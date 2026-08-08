@@ -16,6 +16,8 @@ import {
   pluginMigrationFiles,
 } from '../db/migrate.js';
 import { DeployTelegramApprove } from '../support/DeployTelegramApprove.js';
+import { PackageSurfaceRegistry } from '../platform/PackageSurfaceRegistry.js';
+import { HOST_DASHBOARD_COUNT_TABLES, HOST_TRASHABLE } from './hostBaselines.js';
 
 const SNAPSHOT_PATH = path.join(path.dirname(fileURLToPath(import.meta.url)), 'registry.snapshot.json');
 
@@ -202,23 +204,53 @@ async function recentCount(db: Database, table: string, days: number): Promise<n
 }
 
 export async function buildDashboard(db: Database): Promise<Record<string, unknown>> {
-  const countTables = [
-    'projects',
-    'blog_posts',
-    'contact_messages',
-    'media',
-    'services',
-    'testimonials',
-    'pages',
-    'users',
-    'experience',
-    'education',
-    'skills',
-    'products',
-  ];
   const counts: Record<string, number> = {};
-  for (const table of countTables) {
+  for (const table of HOST_DASHBOARD_COUNT_TABLES) {
     counts[table] = await countNotDeleted(db, table);
+  }
+
+  const drafts: Record<string, number> = { pages: await statusCount(db, 'pages', 'draft') };
+  const publish: Record<string, Record<string, number>> = {
+    pages: {
+      published: await statusCount(db, 'pages', 'published'),
+      draft: drafts.pages,
+      archived: await statusCount(db, 'pages', 'archived'),
+    },
+  };
+  const recent: Record<string, number> = {};
+  const projectLifecycle: Record<string, number> = {};
+
+  for (const metric of PackageSurfaceRegistry.dashboardMetrics()) {
+    const table = metric.table;
+    const countKey = String(metric.count_as ?? metric.table);
+    counts[countKey] = await countNotDeleted(db, table);
+
+    if (metric.draft_as) {
+      const draftKey = String(metric.draft_as);
+      drafts[draftKey] = await statusCount(db, table, 'draft');
+    }
+    if (metric.publish_as) {
+      const pubKey = String(metric.publish_as);
+      if (!publish[pubKey]) {
+        publish[pubKey] = { published: 0, draft: 0, archived: 0 };
+      }
+      publish[pubKey].published = await statusCount(db, table, 'published');
+      publish[pubKey].draft = drafts[pubKey] ?? (await statusCount(db, table, 'draft'));
+      publish[pubKey].archived = await statusCount(db, table, 'archived');
+    }
+    if (metric.recent_as) {
+      recent[String(metric.recent_as)] = await recentCount(db, table, 7);
+    }
+    if (metric.extra_status_column === 'project_status') {
+      for (const st of ['completed', 'in_progress', 'on_hold', 'concept', 'cancelled']) {
+        projectLifecycle[st] = await projectStatusCount(db, st);
+      }
+    }
+  }
+
+  // Host-only recent metrics
+  if (!('media_7d' in recent)) {
+    recent.media_7d = await recentCount(db, 'media', 7);
   }
 
   let unread = 0;
@@ -233,35 +265,6 @@ export async function buildDashboard(db: Database): Promise<Record<string, unkno
       )
     : [];
 
-  const drafts = {
-    projects: await statusCount(db, 'projects', 'draft'),
-    posts: await statusCount(db, 'blog_posts', 'draft'),
-    pages: await statusCount(db, 'pages', 'draft'),
-  };
-
-  const publish = {
-    projects: {
-      published: await statusCount(db, 'projects', 'published'),
-      draft: drafts.projects,
-      archived: await statusCount(db, 'projects', 'archived'),
-    },
-    posts: {
-      published: await statusCount(db, 'blog_posts', 'published'),
-      draft: drafts.posts,
-      archived: await statusCount(db, 'blog_posts', 'archived'),
-    },
-    pages: {
-      published: await statusCount(db, 'pages', 'published'),
-      draft: drafts.pages,
-      archived: await statusCount(db, 'pages', 'archived'),
-    },
-  };
-
-  const projectLifecycle: Record<string, number> = {};
-  for (const st of ['completed', 'in_progress', 'on_hold', 'concept', 'cancelled']) {
-    projectLifecycle[st] = await projectStatusCount(db, st);
-  }
-
   let messages7d = 0;
   if (await tableExists(db, 'contact_messages')) {
     const row = await db.one(
@@ -269,32 +272,14 @@ export async function buildDashboard(db: Database): Promise<Record<string, unkno
     );
     messages7d = Number(row?.c ?? 0);
   }
+  recent.messages_7d = messages7d;
 
-  const recent = {
-    projects_7d: await recentCount(db, 'projects', 7),
-    posts_7d: await recentCount(db, 'blog_posts', 7),
-    media_7d: await recentCount(db, 'media', 7),
-    messages_7d: messages7d,
-  };
-
-  const trashable = [
-    'projects',
-    'blog_posts',
-    'media',
-    'project_categories',
-    'blog_categories',
-    'skill_categories',
-    'skills',
-    'experience',
-    'education',
-    'services',
-    'testimonials',
-    'pages',
-    'products',
-    'lab_experiments',
-  ];
   let trashTotal = 0;
-  for (const table of trashable) {
+  const trashTables = new Set([
+    ...Object.values(HOST_TRASHABLE),
+    ...Object.values(PackageSurfaceRegistry.trashable()),
+  ]);
+  for (const table of trashTables) {
     if (!(await hasDeletedAt(db, table))) continue;
     try {
       const row = await db.one(`SELECT COUNT(*) AS c FROM ${table} WHERE deleted_at IS NOT NULL`);

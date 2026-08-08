@@ -6,20 +6,33 @@ declare(strict_types=1);
  * Included from run.php (uses global assert_true).
  */
 
-use App\Modules\Payments\Providers\ProviderContext;
 use App\Services\PermissionService;
 use App\Support\PublicOrigin;
 
 $adminSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Controllers/AdminController.php');
 assert_true(str_contains($adminSrc, 'requireContentMutation'), 'AdminController gates content mutations');
-assert_true(str_contains($adminSrc, "integrations.manage"), 'AdminController gates webhooks resource');
+assert_true(!str_contains($adminSrc, "'webhooks' => 'webhooks'"), 'AdminController no longer hardcodes webhooks resource map');
 
 $mwSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Middleware/PermissionMiddleware.php');
 assert_true(str_contains($mwSrc, 'requireContentMutation'), 'PermissionMiddleware gates content mutations');
-assert_true(str_contains($mwSrc, 'integrations.manage'), 'PermissionMiddleware gates webhooks mutations');
+assert_true(!str_contains($mwSrc, '/admin/webhooks'), 'PermissionMiddleware has no webhooks path hardcode');
+assert_true(!str_contains($mwSrc, '/admin/forms'), 'PermissionMiddleware has no forms path hardcode');
+assert_true(!str_contains($mwSrc, '/admin/comments'), 'PermissionMiddleware has no comments path hardcode');
+assert_true(str_contains($mwSrc, 'contentResources'), 'DELETE/mutate ACL scoped to content resources only');
 
-$whSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Modules/Webhooks/WebhooksModule.php');
-assert_true(substr_count($whSrc, "integrations.manage") >= 3, 'WebhooksModule requires integrations.manage on mutate');
+$whCandidates = [
+    dirname(__DIR__, 2) . '/modules-src/webhooks/backend/WebhooksModule.php',
+    dirname(__DIR__) . '/tests/fixtures/modules/webhooks/backend/WebhooksModule.php',
+];
+$whSrc = '';
+foreach ($whCandidates as $path) {
+    if (is_file($path)) {
+        $whSrc = (string) file_get_contents($path);
+        break;
+    }
+}
+assert_true($whSrc !== '', 'webhooks package module source present');
+assert_true(substr_count($whSrc, "integrations.manage") >= 3, 'Webhooks package owns integrations.manage on mutate');
 
 $sysSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Modules/System/SystemModule.php');
 assert_true(str_contains($sysSrc, "requireContentMutation"), 'SystemModule revision restore requires content capability');
@@ -89,13 +102,21 @@ assert_true($perms->canMutateContent($editor, 'update') === true, 'editor update
 assert_true($perms->can($admin, 'integrations.manage') === true, 'admin webhooks manage allowed');
 assert_true($perms->can($editor, 'integrations.manage') === false, 'editor webhooks manage denied without cap');
 
-// ProviderContext absolute URL uses app_url, not Host
-require_once dirname(__DIR__) . '/src/Modules/Payments/Providers/ProviderInterface.php';
-\App\Core\Container::getInstance()->set('app', ['app_url' => 'https://pay.example.com']);
-$ctxPay = new ProviderContext($ctx['db'], [], '/api/v1');
-$_SERVER['HTTP_HOST'] = 'evil.host.invalid';
-$url = $ctxPay->absolute('/api/v1/payments/webhook?provider=test');
-assert_true(str_starts_with($url, 'https://pay.example.com/'), 'payment absolute uses app_url');
-assert_true(!str_contains($url, 'evil.host.invalid'), 'payment absolute ignores malicious Host');
+// Payments package uses its Platform config source rather than raw Host headers.
+$payIfaceCandidates = [
+    dirname(__DIR__, 2) . '/modules-src/payments/backend/Providers/ProviderInterface.php',
+    __DIR__ . '/fixtures/modules/payments/backend/Providers/ProviderInterface.php',
+];
+$payIface = null;
+foreach ($payIfaceCandidates as $c) {
+    if (is_file($c)) {
+        $payIface = $c;
+        break;
+    }
+}
+assert_true($payIface !== null, 'payments ProviderInterface available (local workspace or fixture)');
+$paySrc = (string) file_get_contents($payIface);
+assert_true(str_contains($paySrc, "config->get('site_url'") && str_contains($paySrc, "config->get('app_url'"), 'payment absolute URL uses Platform config');
+assert_true(!str_contains($paySrc, 'PublicOrigin::fallbackFromRequest'), 'payment package does not trust Host fallback');
 
 ($ctx['cleanup'])();

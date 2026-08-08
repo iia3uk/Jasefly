@@ -1,3 +1,4 @@
+import { safeFetch } from '../support/ssrfGuard.js';
 import type { EventBus } from '../platform/events.js';
 
 export type JobHandler = (payload: Record<string, unknown>, ctx: JobHandlerContext) => Promise<void> | void;
@@ -8,9 +9,30 @@ export type JobHandlerContext = {
 };
 
 const handlers = new Map<string, JobHandler>();
+const owners = new Map<string, Set<string>>(); // owner → handler types
 
 export function registerJobHandler(type: string, handler: JobHandler): void {
   handlers.set(type, handler);
+}
+
+export function registerOwnedJobHandler(ownerSlug: string, type: string, handler: JobHandler): void {
+  const owner = ownerSlug.trim();
+  const key = type.trim();
+  if (!owner || !key) throw new Error('registerOwnedJobHandler requires owner and type');
+  handlers.set(key, handler);
+  if (!owners.has(owner)) owners.set(owner, new Set());
+  owners.get(owner)!.add(key);
+}
+
+export function clearOwnedJobHandlers(ownerSlug: string): number {
+  const set = owners.get(ownerSlug.trim());
+  if (!set) return 0;
+  let n = 0;
+  for (const type of set) {
+    if (handlers.delete(type)) n++;
+  }
+  owners.delete(ownerSlug.trim());
+  return n;
 }
 
 export function getJobHandler(type: string): JobHandler | undefined {
@@ -54,7 +76,9 @@ export function parsePayload(raw: unknown): Record<string, unknown> {
 
 export function registerDefaultHandlers(events: EventBus): void {
   const noop: JobHandler = () => {};
-  for (const alias of ['noop', 'scheduler.noop', 'scheduler.cleanup', 'automation.resume', 'newsletter.campaign.send', 'analytics.retention', 'analytics.aggregate']) {
+  // Host-owned platform jobs only. Package jobs (analytics.*, newsletter.campaign.send,
+  // automation.resume) register via PlatformContext.jobs() when the package is enabled.
+  for (const alias of ['noop', 'scheduler.noop', 'scheduler.cleanup']) {
     registerJobHandler(alias, noop);
   }
 
@@ -62,7 +86,12 @@ export function registerDefaultHandlers(events: EventBus): void {
     const url = String(payload.url ?? payload.endpoint ?? '').trim();
     if (!url) throw new Error('http_ping: url required');
     const timeoutMs = Math.max(1000, Math.min(60000, Number(payload.timeout_ms ?? payload.timeout ?? 10000)));
-    const res = await fetch(url, { signal: AbortSignal.any([ctx.signal, AbortSignal.timeout(timeoutMs)]) });
+    const res = await safeFetch(url, {
+      method: 'GET',
+      timeoutMs,
+    });
+    // Honour abort from job runner when possible (safeFetch uses its own timeout signal).
+    if (ctx.signal.aborted) throw new Error('http_ping: aborted');
     if (!res.ok) throw new Error(`http_ping: HTTP ${res.status}`);
   });
 
@@ -74,4 +103,10 @@ export function registerDefaultHandlers(events: EventBus): void {
   for (const alias of ['event', 'platform.event.dispatch']) {
     registerJobHandler(alias, eventHandler);
   }
+}
+
+/** Test helper */
+export function resetJobHandlersForTests(): void {
+  handlers.clear();
+  owners.clear();
 }

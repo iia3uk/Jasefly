@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Forms",
+  "slug": "forms",
+  "version": "1.0.0",
+  "description": "Конструктор форм, заявки, экспорт CSV и виджет билдера form (stableType).",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": ["json"]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {
+      "newsletter": ">=1.0.0",
+      "mail": ">=1.0.0"
+    },
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "admin.pages",
+      "permissions.check",
+      "events.publish",
+      "builder.widgets",
+      "mail.send",
+      "notifications.send",
+      "http.client"
+    ],
+    "provides": [
+      "forms.api",
+      "forms.widgets"
+    ]
+  },
+  "entrypoints": {
+    "backend": "backend/FormsModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "forms",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "forms.view",
+    "forms.manage",
+    "forms.submissions.view",
+    "forms.submissions.manage",
+    "forms.export"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  }
+}

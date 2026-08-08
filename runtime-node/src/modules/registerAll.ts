@@ -1,27 +1,12 @@
 import type { ModuleContext } from '../core/types.js';
 import * as system from './system.js';
 import * as content from './content.js';
-import * as blog from './blog.js';
-import * as projects from './projects.js';
 import * as media from './media.js';
 import * as users from './users.js';
-import * as forms from './forms.js';
 import * as scheduler from './scheduler.js';
-import * as support from './support.js';
-import * as payments from './payments.js';
-import * as orders from './orders.js';
-import * as products from './products.js';
-import * as newsletter from './newsletter.js';
-import * as comments from './comments.js';
-import * as analytics from './analytics.js';
-import * as notifications from './notifications.js';
-import * as automation from './automation.js';
-import * as webhooks from './webhooks.js';
 import * as mail from './mail.js';
-import * as translate from './translate.js';
 import * as access from './access.js';
 import * as seo from './seo.js';
-import * as registration from './registration.js';
 import * as lab from './lab.js';
 import * as module_manager from './module-manager.js';
 import * as ddos from './ddos.js';
@@ -30,31 +15,19 @@ import * as demo from './demo.js';
 import * as portfolio from './portfolio.js';
 import * as template from './template.js';
 
-/** Register every baseline module (Node implementations). */
+/**
+ * Register host/core modules only.
+ * Domain packages (blog, forms, …) load via PackageLoader from installed package storage.
+ */
 export async function registerAllModules(ctx: ModuleContext): Promise<void> {
   await system.register(ctx);
   await content.register(ctx);
-  await blog.register(ctx);
-  await projects.register(ctx);
   await media.register(ctx);
   await users.register(ctx);
-  await forms.register(ctx);
   await scheduler.register(ctx);
-  await support.register(ctx);
-  await payments.register(ctx);
-  await orders.register(ctx);
-  await products.register(ctx);
-  await newsletter.register(ctx);
-  await comments.register(ctx);
-  await analytics.register(ctx);
-  await notifications.register(ctx);
-  await automation.register(ctx);
-  await webhooks.register(ctx);
   await mail.register(ctx);
-  await translate.register(ctx);
   await access.register(ctx);
   await seo.register(ctx);
-  await registration.register(ctx);
   await lab.register(ctx);
   await module_manager.register(ctx);
   await ddos.register(ctx);

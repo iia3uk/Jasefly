@@ -1,0 +1,1 @@
+-- Projects schema is host-owned in backend/migrations/001_schema.sql; this package preserves existing data.

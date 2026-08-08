@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Translate",
+  "slug": "translate",
+  "version": "1.0.0",
+  "jasefly": {"api_version": 1, "sdk_version": 2, "min_version": "1.0.0"},
+  "entrypoints": {"backend": "backend/TranslateModule.php", "frontend": "frontend-dist/index.js"},
+  "dependencies": {"required": {"system": ">=1.0.0"}},
+  "permissions": ["settings.manage"],
+  "install": {"preserve_data_on_uninstall": true}
+}

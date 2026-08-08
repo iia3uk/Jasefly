@@ -1,3 +1,6 @@
+> **Historical architecture/plan record.**  
+> Do not use as current implementation guide. See [`architecture/CURRENT.md`](architecture/CURRENT.md) · [`dual-runtime.md`](dual-runtime.md).
+
 # План: dual-runtime Jasefly (PHP Shared + Node VPS)
 
 **Статус:** утверждён и в реализации (см. `docs/dual-runtime-progress.md`)  

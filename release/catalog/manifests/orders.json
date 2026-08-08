@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Orders",
+  "slug": "orders",
+  "version": "1.0.0",
+  "description": "Carts, orders, statuses, and refunds.",
+  "author": {
+    "name": "Jasefly"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": [
+      "json"
+    ]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {
+      "products": ">=1.0.0",
+      "payments": ">=1.0.0"
+    },
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "permissions.check",
+      "admin.pages"
+    ],
+    "provides": [
+      "orders.api"
+    ]
+  },
+  "entrypoints": {
+    "backend": "backend/OrdersModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json",
+    "node": "backend/node/index.ts"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "orders",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "orders.view",
+    "orders.manage",
+    "orders.refund",
+    "orders.export"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  },
+  "surfaces": {
+    "schema": [
+      {
+        "table": "orders",
+        "role": "owner"
+      },
+      {
+        "table": "order_items",
+        "role": "owner"
+      },
+      {
+        "table": "carts",
+        "role": "owner"
+      },
+      {
+        "table": "cart_items",
+        "role": "owner"
+      }
+    ]
+  }
+}

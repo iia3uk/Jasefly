@@ -1,3 +1,6 @@
+> **Historical verification record (2026-08-04).**  
+> Do not use as current readiness claim. See [`architecture/CURRENT.md`](architecture/CURRENT.md) · [`architecture/LLM_CONTEXT.md`](architecture/LLM_CONTEXT.md).
+
 # Dual-runtime verification report
 
 **Date:** 2026-08-04  

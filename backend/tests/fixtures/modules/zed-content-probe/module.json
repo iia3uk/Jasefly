@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Zed Content Probe",
+  "slug": "zed-content-probe",
+  "version": "1.0.0",
+  "description": "Synthetic content-resource package boundary proof.",
+  "jasefly": {"min_version": "1.0.0", "api_version": 1, "sdk_version": 2},
+  "php": {"min_version": "8.1", "extensions": ["json"]},
+  "dependencies": {"required": {"system": ">=1.0.0"}, "optional": {}, "conflicts": {}},
+  "capabilities": {"requires": ["content.resources", "events.publish"], "provides": ["zed-content-probe.item.created"]},
+  "entrypoints": {"backend": "backend/ZedContentProbeModule.php", "frontend_manifest": "frontend-dist/manifest.json"},
+  "migrations": {"path": "migrations", "namespace": "zed-content-probe", "uninstall_path": "migrations/uninstall"},
+  "permissions": ["zed-content-probe.view", "content.edit"],
+  "install": {"preserve_data_on_uninstall": false, "allow_downgrade": false}
+}

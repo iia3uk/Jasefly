@@ -169,6 +169,10 @@ describe('ModuleManager', () => {
       body: JSON.stringify({ package_id: packageId }),
     });
     expect(install.status).toBe(200);
+    expect((await install.json()).data.status).toBe('installed');
+
+    let row = await db.one('SELECT status FROM installed_modules WHERE slug=?', [slug]);
+    expect(row?.status).toBe('installed');
 
     const enable = await app.request(`/api/v1/admin/modules/${slug}/enable`, {
       method: 'POST',
@@ -177,7 +181,7 @@ describe('ModuleManager', () => {
     expect(enable.status).toBe(200);
     expect((await enable.json()).data.status).toBe('enabled');
 
-    let row = await db.one('SELECT status FROM installed_modules WHERE slug=?', [slug]);
+    row = await db.one('SELECT status FROM installed_modules WHERE slug=?', [slug]);
     expect(row?.status).toBe('enabled');
 
     if (await db.tableExists('modules')) {

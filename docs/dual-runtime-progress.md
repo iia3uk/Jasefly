@@ -1,3 +1,6 @@
+> **Historical implementation journal.**  
+> Do not use as current implementation guide. See [`architecture/CURRENT.md`](architecture/CURRENT.md) · [`dual-runtime.md`](dual-runtime.md).
+
 # Dual-runtime implementation journal
 
 **Started:** 2026-08-04  

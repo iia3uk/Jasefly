@@ -28,7 +28,7 @@ import { resolveNavIcon } from '@/admin/navIcons'
 import { useAdminNavAttention } from '@/admin/hooks/useAdminNavAttention'
 import { api, endpoints } from '@/lib/api'
 import { usePluginEnabled } from '@/hooks/useApi'
-import { NotificationsBell } from '@/modules/notifications/NotificationsBell'
+import { HostSlot } from '@/platform/hostSlots'
 import { DemoSandboxBanner } from '@/admin/demo/DemoSandboxBanner'
 import { demoModeForPath } from '@/admin/demo/demoNav'
 
@@ -356,7 +356,7 @@ export function AdminShell() {
               <span className="hidden sm:inline">{t.viewSite}</span>
             </a>
             <GlobalSearch />
-            <NotificationsBell />
+            <HostSlot id="admin.header" />
           </div>
         </header>
         <MigrationBanner />

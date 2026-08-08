@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "description": "Frozen public widget IDs owned by installable packages (Platform stableType). Host freeze tests treat these as covered without static registerWidget in builder/widgets.",
+  "widgets": {
+    "comments": "comments",
+    "reviews": "comments",
+    "rating-summary": "comments",
+    "review-form": "comments",
+    "form": "forms",
+    "newsletter-signup": "newsletter",
+    "auth-register": "registration"
+  }
+}

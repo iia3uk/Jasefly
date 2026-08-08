@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Analytics",
+  "slug": "analytics",
+  "version": "1.0.0",
+  "description": "Сбор событий сайта, сводки трафика, цели и планировщик агрегации (beacon + admin).",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": [
+      "json"
+    ]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {},
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "admin.pages",
+      "permissions.check",
+      "scheduler.jobs",
+      "events.publish"
+    ],
+    "optional": [
+      "builder.widgets"
+    ],
+    "provides": [
+      "analytics.collect",
+      "analytics.admin"
+    ]
+  },
+  "entrypoints": {
+    "backend": "backend/AnalyticsModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json",
+    "node": "backend/node/index.ts"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "analytics",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "analytics.view",
+    "analytics.manage"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  }
+}

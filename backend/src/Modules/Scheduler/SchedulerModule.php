@@ -35,7 +35,7 @@ final class SchedulerModule extends AbstractModule
     {
         JobHandlerRegistry::register('scheduler.noop', static function (array $payload): void {
             // health / test job
-        });
+        }, 'scheduler');
         JobHandlerRegistry::register('platform.event.dispatch', static function (array $payload): void {
             $event = (string) ($payload['_platform_event'] ?? '');
             if ($event === '') {
@@ -49,7 +49,7 @@ final class SchedulerModule extends AbstractModule
             } catch (\Throwable) {
                 // dispatcher may be unavailable in CLI-only runners
             }
-        });
+        }, 'platform');
         JobHandlerRegistry::register('scheduler.cleanup', static function (array $payload) use ($db): void {
             $days = max(1, (int) ($payload['days'] ?? 30));
             $db->run(
@@ -60,7 +60,7 @@ final class SchedulerModule extends AbstractModule
                 "DELETE FROM scheduled_jobs WHERE status IN ('completed','cancelled','failed') AND finished_at < DATE_SUB(NOW(), INTERVAL ? DAY)",
                 [$days]
             );
-        });
+        }, 'scheduler');
     }
 
     public function settingsSchema(): array
@@ -165,6 +165,7 @@ final class SchedulerModule extends AbstractModule
                 'last_tick_at' => $last,
                 'cron_stale' => $stale,
                 'handlers' => JobHandlerRegistry::types(),
+                'handlers_catalog' => JobHandlerRegistry::catalog(),
             ]]);
         }, $protected);
 

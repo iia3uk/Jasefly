@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Translate",
+  "slug": "translate",
+  "version": "1.0.0",
+  "jasefly": {
+    "api_version": 1,
+    "sdk_version": 2,
+    "min_version": "1.0.0"
+  },
+  "entrypoints": {
+    "backend": "backend/TranslateModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json",
+    "node": "backend/node/index.ts"
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {},
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "settings.module"
+    ],
+    "provides": [
+      "translate.api",
+      "translate.widgets"
+    ]
+  },
+  "permissions": [
+    "settings.manage"
+  ],
+  "migrations": {
+    "path": "migrations",
+    "namespace": "translate",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  },
+  "install": {
+    "preserve_data_on_uninstall": true
+  }
+}

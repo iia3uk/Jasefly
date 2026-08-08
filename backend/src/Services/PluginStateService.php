@@ -5,6 +5,7 @@ namespace App\Services;
 
 use App\Core\Contract\ModuleInterface;
 use App\Database;
+use App\Support\SecretRedactor;
 use Throwable;
 
 /**
@@ -85,7 +86,30 @@ final class PluginStateService
     }
 
     /**
+     * Settings safe for admin API responses — secret fields masked.
+     * Internal send paths must keep using getSettings() (full secrets).
+     *
+     * @return array<string, mixed>
+     */
+    public function getPublicSettings(ModuleInterface $module): array
+    {
+        $settings = $this->getSettings($module);
+        $secretKeys = $this->secretKeysFor($module);
+        foreach ($secretKeys as $key) {
+            if (!array_key_exists($key, $settings)) {
+                continue;
+            }
+            $val = $settings[$key];
+            if (is_string($val) && $val !== '') {
+                $settings[$key] = SecretRedactor::MASK;
+            }
+        }
+        return $settings;
+    }
+
+    /**
      * Persist settings for a module (only keys present in the schema are kept).
+     * Masked / empty secret fields preserve the previously stored value.
      *
      * @param array<string, mixed> $settings
      */
@@ -97,19 +121,87 @@ final class PluginStateService
             array_column($module->settingsSchema(), 'key'),
             array_keys($module->settings()),
         );
+        $previous = $this->getSettings($module);
+        $secretKeys = $this->secretKeysFor($module);
         $clean = [];
         foreach ($settings as $k => $v) {
             // Skip UI-only schema keys (section headings).
             if (str_starts_with((string) $k, '_heading_')) {
                 continue;
             }
-            if (in_array($k, $allowed, true)) {
-                $clean[$k] = $v;
+            if (!in_array($k, $allowed, true)) {
+                continue;
+            }
+            if (in_array((string) $k, $secretKeys, true) && $this->isMaskedOrEmptySecret($v)) {
+                if (array_key_exists($k, $previous)) {
+                    $clean[$k] = $previous[$k];
+                }
+                continue;
+            }
+            $clean[$k] = $v;
+        }
+        // Ensure secrets not present in the payload are not wiped when client
+        // omits masked fields entirely.
+        foreach ($secretKeys as $key) {
+            if (!array_key_exists($key, $clean) && array_key_exists($key, $previous)) {
+                $clean[$key] = $previous[$key];
             }
         }
         $json = json_encode($clean, JSON_UNESCAPED_UNICODE);
         $this->db->upsert('modules', ['name' => $module->name(), 'is_enabled' => 1, 'settings' => $json], ['name'], ['settings']);
         $this->cache = null;
+    }
+
+    /**
+     * Secret keys from schema type=password plus credential-like key names.
+     *
+     * @return list<string>
+     */
+    public function secretKeysFor(ModuleInterface $module): array
+    {
+        $keys = [];
+        foreach ($module->settingsSchema() as $field) {
+            if (!is_array($field)) {
+                continue;
+            }
+            $key = (string) ($field['key'] ?? '');
+            if ($key === '' || str_starts_with($key, '_heading_')) {
+                continue;
+            }
+            $type = strtolower((string) ($field['type'] ?? 'text'));
+            $secretMeta = !empty($field['secret']) || !empty($field['sensitive']);
+            if ($type === 'password' || $secretMeta || $this->looksLikeSecretKey($key)) {
+                $keys[] = $key;
+            }
+        }
+        // Also cover defaults keys that match credential patterns but may omit schema.
+        foreach (array_keys($module->settings()) as $key) {
+            if ($this->looksLikeSecretKey((string) $key)) {
+                $keys[] = (string) $key;
+            }
+        }
+        return array_values(array_unique($keys));
+    }
+
+    private function looksLikeSecretKey(string $key): bool
+    {
+        $k = strtolower($key);
+        if (in_array($k, SecretRedactor::DEFAULT_KEYS, true) || in_array($k, SecretRedactor::DEMO_KEYS, true)) {
+            return true;
+        }
+        return (bool) preg_match('/(password|secret|token|api_key|private_key|webhook_secret)$/', $k);
+    }
+
+    private function isMaskedOrEmptySecret(mixed $value): bool
+    {
+        if ($value === null) {
+            return true;
+        }
+        if (!is_scalar($value)) {
+            return false;
+        }
+        $s = trim((string) $value);
+        return $s === '' || $s === SecretRedactor::MASK || $s === '••••' || $s === '********';
     }
 
     /**

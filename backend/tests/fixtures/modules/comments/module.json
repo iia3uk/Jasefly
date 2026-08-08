@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Comments",
+  "slug": "comments",
+  "version": "1.0.0",
+  "description": "Комментарии и отзывы с модерацией, рейтингами и виджетами билдера (comments, reviews, rating-summary, review-form).",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": [
+      "json"
+    ]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {
+      "orders": ">=1.0.0"
+    },
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "admin.pages",
+      "permissions.check",
+      "events.publish",
+      "builder.widgets"
+    ],
+    "provides": [
+      "comments.api",
+      "comments.widgets"
+    ]
+  },
+  "entrypoints": {
+    "backend": "backend/CommentsModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json",
+    "node": "backend/node/index.ts"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "comments",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "comments.view",
+    "comments.moderate",
+    "comments.manage"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  },
+  "surfaces": {
+    "media": [
+      {
+        "table": "comments",
+        "html_columns": [
+          "body"
+        ],
+        "public_where": {
+          "status": "approved"
+        },
+        "soft_delete": true
+      }
+    ],
+    "schema": [
+      {
+        "table": "comments",
+        "role": "owner"
+      }
+    ]
+  }
+}

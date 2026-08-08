@@ -15,6 +15,10 @@ use App\Core\Container;
 use App\Core\EventDispatcher;
 use App\Utils\Password;
 use App\Support\AdminBasePath;
+use App\Platform\Adapters\ContentResourcesAdapter;
+use App\Platform\Contracts\PlatformContentResourcesInterface;
+use App\Platform\Surfaces\PackageSurfaceRegistry;
+use App\Platform\Surfaces\SurfaceSql;
 
 final class AdminController
 {
@@ -25,31 +29,17 @@ final class AdminController
         'education' => 'education',
         'skill-categories' => 'skill_categories',
         'skills' => 'skills',
-        'projects' => 'projects',
-        'project-categories' => 'project_categories',
-        'blog' => 'blog_posts',
-        'blog-categories' => 'blog_categories',
-        'blog-tags' => 'blog_tags',
+        // Package domains (blog/projects/products/orders) register via ContentResourcesAdapter / surfaces.
         'services' => 'services',
         'testimonials' => 'testimonials',
         'navigation' => 'navigation_items',
         'homepage-sections' => 'homepage_sections',
         'pages' => 'pages',
-        // Integration plugins
-        'webhooks' => 'webhooks',
-        'orders' => 'orders',
-        'payments' => 'payments',
-        'products' => 'products',
     ];
 
     private array $slugTables = [
-        'projects' => ['table' => 'projects', 'type' => 'project'],
-        'blog' => ['table' => 'blog_posts', 'type' => 'blog_post'],
         'pages' => ['table' => 'pages', 'type' => 'page'],
         'services' => ['table' => 'services', 'type' => 'service'],
-        'products' => ['table' => 'products', 'type' => 'product'],
-        'project-categories' => ['table' => 'project_categories', 'type' => 'project_category'],
-        'blog-categories' => ['table' => 'blog_categories', 'type' => 'blog_category'],
         'skill-categories' => ['table' => 'skill_categories', 'type' => 'skill_category'],
     ];
 
@@ -89,10 +79,6 @@ final class AdminController
         if (!is_array($user)) {
             Response::error('Unauthorized', 401);
         }
-        if ($resource === 'webhooks') {
-            $this->permissions->require($user, 'integrations.manage');
-            return;
-        }
         if ($this->permissions->isContentResource($resource)) {
             $this->permissions->requireContentMutation($user, $op);
         }
@@ -105,10 +91,24 @@ final class AdminController
 
     private function table(string $resource): string
     {
+        if ($this->contentResources()->has($resource)) {
+            throw new \LogicException("Resource '{$resource}' is package-owned and must not use host tables");
+        }
         if (!isset($this->tables[$resource])) {
             Response::error('Unknown resource', 404);
         }
         return $this->tables[$resource];
+    }
+
+    private function contentResources(): PlatformContentResourcesInterface
+    {
+        return new ContentResourcesAdapter('host');
+    }
+
+    private function resourceError(array $result): never
+    {
+        $status = ($result['code'] ?? '') === 'not_found' ? 404 : 422;
+        Response::error((string) ($result['error'] ?? 'Resource operation failed'), $status);
     }
 
     /** True if the table exists in the current DB (plugin migrations may not have run). */
@@ -168,6 +168,11 @@ final class AdminController
 
     public function index(Request $r, string $resource): never
     {
+        $resources = $this->contentResources();
+        if ($resources->has($resource)) {
+            $result = $resources->list($resource, $r->query());
+            Response::json(['data' => $result['items'] ?? []]);
+        }
         $table = $this->table($resource);
         // A plugin resource whose migration hasn't run yet has no table.
         // Return an empty list rather than 500 so the admin stays usable
@@ -189,6 +194,12 @@ final class AdminController
 
     public function show(Request $r, string $resource, string $id): never
     {
+        $resources = $this->contentResources();
+        if ($resources->has($resource)) {
+            $row = $resources->get($resource, $id);
+            if (!$row) Response::error('Not found', 404);
+            Response::json(['data' => $row]);
+        }
         $table = $this->table($resource);
         if ($resource === 'pages') {
             (new PageScheduleService($this->db))->promoteDue();
@@ -196,16 +207,6 @@ final class AdminController
         $row = $this->db->one("SELECT * FROM `$table` WHERE id=? AND {$this->deletedFilter($table)}", [$id]);
         if (!$row) {
             Response::error('Not found', 404);
-        }
-        if ($resource === 'projects') {
-            $row = $this->loadProjectRelations($row);
-        }
-        if ($resource === 'blog') {
-            $row['tags'] = $this->db->all(
-                'SELECT t.* FROM blog_tags t INNER JOIN blog_post_tags p ON p.tag_id=t.id WHERE p.post_id=?',
-                [$id]
-            );
-            $row['tag_ids'] = array_map(fn($t) => (int) $t['id'], $row['tags']);
         }
         if ($resource === 'pages') {
             $row = $this->normalizePageRow($row);
@@ -216,6 +217,12 @@ final class AdminController
     public function create(Request $r, string $resource): never
     {
         $this->assertResourceMutation($r, $resource, 'create');
+        $resources = $this->contentResources();
+        if ($resources->has($resource)) {
+            $result = $resources->create($resource, $r->all(), $r->user);
+            if (empty($result['ok'])) $this->resourceError($result);
+            Response::json(['data' => $result['data'] ?? $result['item'] ?? null], 201);
+        }
         $table = $this->table($resource);
         $payload = $r->all();
         $relations = $this->extractRelations($resource, $payload);
@@ -254,6 +261,12 @@ final class AdminController
     public function update(Request $r, string $resource, string $id): never
     {
         $this->assertResourceMutation($r, $resource, 'update');
+        $resources = $this->contentResources();
+        if ($resources->has($resource)) {
+            $result = $resources->update($resource, $id, $r->all(), $r->user);
+            if (empty($result['ok'])) $this->resourceError($result);
+            Response::json(['data' => $result['data'] ?? $result['item'] ?? null]);
+        }
         $table = $this->table($resource);
         $existing = $this->db->one("SELECT * FROM `$table` WHERE id=? AND {$this->deletedFilter($table)}", [$id]);
         if (!$existing) {
@@ -310,6 +323,12 @@ final class AdminController
     public function delete(Request $r, string $resource, string $id): never
     {
         $this->assertResourceMutation($r, $resource, 'delete');
+        $resources = $this->contentResources();
+        if ($resources->has($resource)) {
+            $result = $resources->delete($resource, $id, $r->user);
+            if (empty($result['ok'])) $this->resourceError($result);
+            Response::json(['message' => 'Moved to trash', 'data' => $result['data']]);
+        }
         $table = $this->table($resource);
         $row = $this->db->one("SELECT * FROM `$table` WHERE id=? AND {$this->deletedFilter($table)}", [$id]);
         if (!$row) {
@@ -379,9 +398,10 @@ final class AdminController
 
     public function dashboard(Request $r): never
     {
+        // Host/core countable tables only — package metrics via PackageSurfaceRegistry.
         $countTables = [
-            'projects', 'blog_posts', 'contact_messages', 'media', 'services', 'testimonials',
-            'pages', 'users', 'experience', 'education', 'skills', 'products',
+            'contact_messages', 'media', 'services', 'testimonials',
+            'pages', 'users', 'experience', 'education', 'skills',
         ];
         $counts = [];
         foreach ($countTables as $table) {
@@ -398,22 +418,10 @@ final class AdminController
             : [];
 
         $drafts = [
-            'projects' => $this->dashboardStatusCount('projects', 'draft'),
-            'posts' => $this->dashboardStatusCount('blog_posts', 'draft'),
             'pages' => $this->dashboardStatusCount('pages', 'draft'),
         ];
 
         $publish = [
-            'projects' => [
-                'published' => $this->dashboardStatusCount('projects', 'published'),
-                'draft' => $drafts['projects'],
-                'archived' => $this->dashboardStatusCount('projects', 'archived'),
-            ],
-            'posts' => [
-                'published' => $this->dashboardStatusCount('blog_posts', 'published'),
-                'draft' => $drafts['posts'],
-                'archived' => $this->dashboardStatusCount('blog_posts', 'archived'),
-            ],
             'pages' => [
                 'published' => $this->dashboardStatusCount('pages', 'published'),
                 'draft' => $drafts['pages'],
@@ -422,21 +430,53 @@ final class AdminController
         ];
 
         $projectLifecycle = [];
-        foreach (['completed', 'in_progress', 'on_hold', 'concept', 'cancelled'] as $st) {
-            $projectLifecycle[$st] = $this->dashboardProjectStatusCount($st);
-        }
-
         $recent = [
-            'projects_7d' => $this->dashboardRecentCount('projects', 7),
-            'posts_7d' => $this->dashboardRecentCount('blog_posts', 7),
             'media_7d' => $this->dashboardRecentCount('media', 7),
             'messages_7d' => $this->tableExists('contact_messages')
                 ? (int) ($this->db->one('SELECT COUNT(*) c FROM contact_messages WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)')['c'] ?? 0)
                 : 0,
         ];
 
+        foreach (PackageSurfaceRegistry::dashboardMetrics() as $metric) {
+            $table = (string) ($metric['table'] ?? '');
+            if ($table === '' || !SurfaceSql::ident($table)) {
+                continue;
+            }
+            $statusCol = SurfaceSql::ident((string) ($metric['status_column'] ?? 'status')) ?? 'status';
+            if (!empty($metric['count_as'])) {
+                $counts[(string) $metric['count_as']] = $this->dashboardCount($table);
+            }
+            if (!empty($metric['draft_as'])) {
+                $drafts[(string) $metric['draft_as']] = $this->dashboardStatusCount($table, 'draft', $statusCol);
+            }
+            if (!empty($metric['publish_as'])) {
+                $key = (string) $metric['publish_as'];
+                $draftKey = (string) ($metric['draft_as'] ?? $key);
+                $publish[$key] = [
+                    'published' => $this->dashboardStatusCount($table, 'published', $statusCol),
+                    'draft' => $drafts[$draftKey] ?? $this->dashboardStatusCount($table, 'draft', $statusCol),
+                    'archived' => $this->dashboardStatusCount($table, 'archived', $statusCol),
+                ];
+            }
+            if (!empty($metric['recent_as'])) {
+                $days = max(1, (int) ($metric['recent_days'] ?? 7));
+                $recent[(string) $metric['recent_as']] = $this->dashboardRecentCount($table, $days);
+            }
+            $extraCol = SurfaceSql::ident((string) ($metric['extra_status_column'] ?? ''));
+            $extraStatuses = $metric['extra_statuses'] ?? null;
+            if ($extraCol !== null && is_array($extraStatuses)) {
+                foreach ($extraStatuses as $st) {
+                    $st = (string) $st;
+                    if ($st === '') {
+                        continue;
+                    }
+                    $projectLifecycle[$st] = $this->dashboardColumnStatusCount($table, $extraCol, $st);
+                }
+            }
+        }
+
         $trashTotal = 0;
-        foreach (SoftDeleteService::TRASHABLE as $table) {
+        foreach (SoftDeleteService::trashableMap() as $table) {
             if (!$this->tableExists($table)) {
                 continue;
             }
@@ -494,15 +534,19 @@ final class AdminController
         }
     }
 
-    private function dashboardStatusCount(string $table, string $status): int
+    private function dashboardStatusCount(string $table, string $status, string $statusColumn = 'status'): int
     {
         if (!$this->tableExists($table)) {
+            return 0;
+        }
+        $col = SurfaceSql::ident($statusColumn);
+        if ($col === null) {
             return 0;
         }
         try {
             $where = $this->softDelete->notDeletedClause($table);
             return (int) ($this->db->one(
-                "SELECT COUNT(*) c FROM `$table` WHERE status=? AND $where",
+                "SELECT COUNT(*) c FROM `$table` WHERE `{$col}`=? AND $where",
                 [$status]
             )['c'] ?? 0);
         } catch (\Throwable) {
@@ -510,15 +554,19 @@ final class AdminController
         }
     }
 
-    private function dashboardProjectStatusCount(string $status): int
+    private function dashboardColumnStatusCount(string $table, string $column, string $status): int
     {
-        if (!$this->tableExists('projects')) {
+        if (!$this->tableExists($table)) {
+            return 0;
+        }
+        $col = SurfaceSql::ident($column);
+        if ($col === null) {
             return 0;
         }
         try {
-            $where = $this->softDelete->notDeletedClause('projects');
+            $where = $this->softDelete->notDeletedClause($table);
             return (int) ($this->db->one(
-                "SELECT COUNT(*) c FROM projects WHERE project_status=? AND $where",
+                "SELECT COUNT(*) c FROM `$table` WHERE `{$col}`=? AND $where",
                 [$status]
             )['c'] ?? 0);
         } catch (\Throwable) {
@@ -545,6 +593,12 @@ final class AdminController
     public function publish(Request $r, string $resource, string $id): never
     {
         $this->assertResourceMutation($r, $resource, 'publish');
+        $resources = $this->contentResources();
+        if ($resources->has($resource)) {
+            $result = $resources->publish($resource, $id, (string) ($r->input('status') ?? 'published'), $r->user);
+            if (empty($result['ok'])) $this->resourceError($result);
+            Response::json(['message' => 'Status updated', 'status' => $result['data']['status'] ?? null]);
+        }
         $table = $this->table($resource);
         $status = (string) ($r->input('status') ?? 'published');
         if (!in_array($status, ['draft', 'published', 'archived'], true)) {
@@ -618,213 +672,6 @@ final class AdminController
         Response::json(['message' => 'Password updated']);
     }
 
-    private function extractRelations(string $resource, array &$payload): array
-    {
-        $keys = match ($resource) {
-            'projects' => ['technologies', 'features', 'timeline', 'tags', 'tag_ids', 'media', 'gallery'],
-            'blog' => ['tag_ids', 'tags'],
-            default => [],
-        };
-        $out = [];
-        foreach ($keys as $key) {
-            if (array_key_exists($key, $payload)) {
-                $out[$key] = $payload[$key];
-                unset($payload[$key]);
-            }
-        }
-        return $out;
-    }
-
-    private function syncRelations(string $resource, int $id, array $relations): void
-    {
-        if ($resource === 'projects') {
-            if (isset($relations['technologies'])) {
-                $this->db->run('DELETE FROM project_technologies WHERE project_id=?', [$id]);
-                foreach ((array) $relations['technologies'] as $i => $tech) {
-                    if (is_string($tech)) {
-                        $tech = ['name' => $tech];
-                    }
-                    $this->db->run(
-                        'INSERT INTO project_technologies(project_id,name,icon,sort_order) VALUES(?,?,?,?)',
-                        [$id, $tech['name'] ?? '', $tech['icon'] ?? null, $tech['sort_order'] ?? $i]
-                    );
-                }
-            }
-            if (isset($relations['features'])) {
-                $this->db->run('DELETE FROM project_features WHERE project_id=?', [$id]);
-                foreach ((array) $relations['features'] as $i => $feature) {
-                    if (is_string($feature)) {
-                        $feature = ['title' => $feature];
-                    }
-                    $this->db->run(
-                        'INSERT INTO project_features(project_id,title,description,icon,sort_order) VALUES(?,?,?,?,?)',
-                        [$id, $feature['title'] ?? '', $feature['description'] ?? null, $feature['icon'] ?? null, $feature['sort_order'] ?? $i]
-                    );
-                }
-            }
-            if (isset($relations['timeline'])) {
-                $this->db->run('DELETE FROM project_timeline WHERE project_id=?', [$id]);
-                foreach ((array) $relations['timeline'] as $i => $event) {
-                    if (is_string($event)) {
-                        $event = ['title' => $event];
-                    }
-                    $this->db->run(
-                        'INSERT INTO project_timeline(project_id,title,description,event_date,sort_order) VALUES(?,?,?,?,?)',
-                        [$id, $event['title'] ?? '', $event['description'] ?? null, $event['event_date'] ?? null, $event['sort_order'] ?? $i]
-                    );
-                }
-            }
-            if (isset($relations['media']) || isset($relations['gallery'])) {
-                $items = $relations['media'] ?? $relations['gallery'] ?? [];
-                if (is_string($items)) {
-                    $decoded = json_decode($items, true);
-                    $items = is_array($decoded) ? $decoded : [];
-                }
-                if (!is_array($items)) {
-                    $items = [];
-                }
-                $this->db->run('DELETE FROM project_media WHERE project_id=?', [$id]);
-                foreach ($items as $i => $item) {
-                    $url = is_array($item) ? trim((string) ($item['url'] ?? '')) : '';
-                    if ($url === '') {
-                        $url = null;
-                    }
-                    // Prefer media_id — never treat project_media.id as media_id when media_id is present
-                    if (is_array($item)) {
-                        $mediaId = $item['media_id'] ?? null;
-                        // Loaded rows may include project_media_id / joined media.id — only use media_id
-                        if ($mediaId === null && !isset($item['url']) && isset($item['id']) && !isset($item['project_media_id'])) {
-                            $mediaId = $item['id'];
-                        }
-                    } else {
-                        $mediaId = $item;
-                    }
-                    $mediaId = is_numeric($mediaId) ? (int) $mediaId : 0;
-                    if ($mediaId <= 0) {
-                        $mediaId = null;
-                    }
-
-                    if ($mediaId !== null) {
-                        $mediaNotDeleted = $this->softDelete->notDeletedClause('media');
-                        $exists = $this->db->one("SELECT id FROM media WHERE id=? AND {$mediaNotDeleted}", [$mediaId]);
-                        if (!$exists) {
-                            continue;
-                        }
-                    } elseif ($url === null) {
-                        continue;
-                    }
-
-                    $caption = is_array($item) ? ($item['caption'] ?? null) : null;
-                    if ($caption === '') {
-                        $caption = null;
-                    }
-                    $type = is_array($item) ? ($item['media_type'] ?? 'gallery') : 'gallery';
-                    if ($url !== null || (is_array($item) && (str_starts_with((string) ($item['media_mime'] ?? $item['mime_type'] ?? ''), 'video/')))) {
-                        $type = 'video';
-                    }
-                    if (!in_array($type, ['image', 'screenshot', 'video', 'gallery'], true)) {
-                        $type = 'gallery';
-                    }
-                    $this->db->run(
-                        'INSERT INTO project_media(project_id,media_id,caption,url,media_type,sort_order) VALUES(?,?,?,?,?,?)',
-                        [$id, $mediaId, $caption, $url, $type, is_array($item) ? (int) ($item['sort_order'] ?? $i) : $i]
-                    );
-                }
-            }
-            $this->syncProjectTags($id, $relations);
-        }
-
-        if ($resource === 'blog') {
-            $this->syncBlogTags($id, $relations);
-            $content = $this->db->one('SELECT content FROM blog_posts WHERE id=?', [$id])['content'] ?? null;
-            if ($content) {
-                $words = str_word_count(strip_tags((string) $content));
-                $this->db->run('UPDATE blog_posts SET reading_time=? WHERE id=?', [max(1, (int) ceil($words / 200)), $id]);
-            }
-        }
-    }
-
-    private function syncProjectTags(int $id, array $relations): void
-    {
-        $tagIds = $relations['tag_ids'] ?? null;
-        if ($tagIds === null && isset($relations['tags'])) {
-            $tagIds = [];
-            foreach ((array) $relations['tags'] as $tag) {
-                $name = is_array($tag) ? ($tag['name'] ?? '') : (string) $tag;
-                if ($name === '') {
-                    continue;
-                }
-                $slug = \App\Utils\Str::slug($name);
-                $existing = $this->db->one('SELECT id FROM project_tags WHERE slug=?', [$slug]);
-                if ($existing) {
-                    $tagIds[] = (int) $existing['id'];
-                } else {
-                    $this->db->run('INSERT INTO project_tags(name,slug) VALUES(?,?)', [$name, $slug]);
-                    $tagIds[] = $this->db->id();
-                }
-            }
-        }
-        if (is_array($tagIds)) {
-            $this->db->run('DELETE FROM project_tag_pivot WHERE project_id=?', [$id]);
-            foreach ($tagIds as $tagId) {
-                $this->db->run('INSERT INTO project_tag_pivot(project_id,tag_id) VALUES(?,?)', [$id, $tagId]);
-            }
-        }
-    }
-
-    private function syncBlogTags(int $id, array $relations): void
-    {
-        $tagIds = $relations['tag_ids'] ?? null;
-        if ($tagIds === null && isset($relations['tags'])) {
-            $tagIds = [];
-            foreach ((array) $relations['tags'] as $tag) {
-                $name = is_array($tag) ? ($tag['name'] ?? '') : (string) $tag;
-                if ($name === '') {
-                    continue;
-                }
-                $slug = \App\Utils\Str::slug($name);
-                $existing = $this->db->one('SELECT id FROM blog_tags WHERE slug=?', [$slug]);
-                if ($existing) {
-                    $tagIds[] = (int) $existing['id'];
-                } else {
-                    $this->db->run('INSERT INTO blog_tags(name,slug) VALUES(?,?)', [$name, $slug]);
-                    $tagIds[] = $this->db->id();
-                }
-            }
-        }
-        if (is_array($tagIds)) {
-            $this->db->run('DELETE FROM blog_post_tags WHERE post_id=?', [$id]);
-            foreach ($tagIds as $tagId) {
-                $this->db->run('INSERT INTO blog_post_tags(post_id,tag_id) VALUES(?,?)', [$id, $tagId]);
-            }
-        }
-    }
-
-    private function loadProjectRelations(array $row): array
-    {
-        $id = (int) $row['id'];
-        $row['technologies'] = $this->db->all('SELECT * FROM project_technologies WHERE project_id=? ORDER BY sort_order', [$id]);
-        $row['features'] = $this->db->all('SELECT * FROM project_features WHERE project_id=? ORDER BY sort_order', [$id]);
-        $row['timeline'] = $this->db->all('SELECT * FROM project_timeline WHERE project_id=? ORDER BY sort_order', [$id]);
-        $mediaNotDeleted = $this->softDelete->notDeletedClause('media', 'm');
-        $row['media'] = $this->db->all(
-            "SELECT pm.id AS project_media_id, pm.project_id, pm.media_id, pm.caption, pm.url, pm.media_type, pm.sort_order,
-                    m.id, m.path, m.thumbnail_path, m.webp_path, m.alt_text, m.original_name, m.mime_type
-             FROM project_media pm
-             LEFT JOIN media m ON m.id = pm.media_id AND {$mediaNotDeleted}
-             WHERE pm.project_id = ?
-               AND (pm.media_id IS NULL OR m.id IS NOT NULL OR (pm.url IS NOT NULL AND pm.url != ''))
-             ORDER BY pm.sort_order, pm.id",
-            [$id]
-        );
-        $row['tags'] = $this->db->all(
-            'SELECT t.* FROM project_tags t INNER JOIN project_tag_pivot p ON p.tag_id=t.id WHERE p.project_id=?',
-            [$id]
-        );
-        $row['tag_ids'] = array_map(fn($t) => (int) $t['id'], $row['tags']);
-        return $row;
-    }
-
     private function normalizePageRow(array $row): array
     {
         $raw = $row['layout_json'] ?? null;
@@ -838,3 +685,4 @@ final class AdminController
         return $row;
     }
 }
+

@@ -5,7 +5,6 @@ export type DashboardWidgetSpan = 'full' | 'half' | 'third'
 export type DashboardWidgetId =
   | 'content-health'
   | 'mcp-activity'
-  | 'analytics'
   | 'week-stats'
   | 'catalog-counts'
   | 'publish-status'
@@ -18,7 +17,6 @@ export type DashboardWidgetId =
   | 'scheduler'
   | 'overload'
   | 'notifications'
-  | 'newsletter'
   | 'blog-pulse'
 
 export type DashboardLayoutPrefs = {

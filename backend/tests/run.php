@@ -27,14 +27,18 @@ function assert_true(bool $cond, string $msg): void
 
 echo "Jasefly tests\n" . str_repeat('-', 40) . "\n";
 
-// —— Forms unit (no DB) ——
-require_once "$root/src/Modules/Forms/ConditionalLogic.php";
-require_once "$root/src/Modules/Forms/FormValidator.php";
-require_once "$root/src/Modules/Forms/CsvExport.php";
+// —— Forms unit (no DB) — package / Support ——
+$formsPkg = dirname(__DIR__, 2) . '/modules-src/forms/backend';
+if (!is_dir($formsPkg)) {
+    $formsPkg = "$root/tests/fixtures/modules/forms/backend";
+}
+require_once "$formsPkg/ConditionalLogic.php";
+require_once "$formsPkg/FormValidator.php";
+require_once "$root/src/Support/CsvExport.php";
 
-use App\Modules\Forms\ConditionalLogic;
-use App\Modules\Forms\CsvExport;
-use App\Modules\Forms\FormValidator;
+use App\PackageModules\Forms\ConditionalLogic;
+use App\PackageModules\Forms\FormValidator;
+use App\Support\CsvExport;
 
 $vis = ['op' => 'AND', 'rules' => [['field' => 'x', 'operator' => 'equals', 'value' => '1']]];
 assert_true(ConditionalLogic::isVisible($vis, ['x' => '1']) === true, 'conditional equals true');
@@ -141,6 +145,83 @@ require_once "$root/tests/CleanInstallSmokeTest.php";
 echo "Package enable sync\n";
 require_once "$root/tests/PackageEnableSyncTest.php";
 
+echo "Package install lifecycle\n";
+require_once "$root/tests/PackageInstallLifecycleTest.php";
+
+echo "Blog package boundary\n";
+require_once "$root/tests/BlogPackageBoundaryTest.php";
+
+echo "Projects package boundary\n";
+require_once "$root/tests/ProjectsPackageBoundaryTest.php";
+
+// —— Webhooks extracted package boundary ——
+echo "Webhooks package boundary\n";
+require_once "$root/tests/WebhooksPackageBoundaryTest.php";
+
+// —— Comments extracted package boundary ——
+echo "Comments package boundary\n";
+require_once "$root/tests/CommentsPackageBoundaryTest.php";
+
+// —— Products extracted package boundary ——
+echo "Products package boundary\n";
+require_once "$root/tests/ProductsPackageBoundaryTest.php";
+
+// —— Orders extracted package boundary ——
+echo "Orders package boundary\n";
+require_once "$root/tests/OrdersPackageBoundaryTest.php";
+
+// —— Payments extracted package boundary ——
+echo "Payments package boundary\n";
+require_once "$root/tests/PaymentsPackageBoundaryTest.php";
+
+// —— Forms extracted package boundary ——
+echo "Forms package boundary\n";
+require_once "$root/tests/FormsPackageBoundaryTest.php";
+
+// —— Analytics extracted package boundary ——
+echo "Analytics package boundary\n";
+require_once "$root/tests/AnalyticsPackageBoundaryTest.php";
+
+// —— Newsletter extracted package boundary ——
+echo "Newsletter package boundary\n";
+require_once "$root/tests/NewsletterPackageBoundaryTest.php";
+
+// —— Automation extracted package boundary ——
+echo "Automation package boundary\n";
+require_once "$root/tests/AutomationPackageBoundaryTest.php";
+
+// —— Notifications extracted package boundary ——
+echo "Notifications package boundary\n";
+require_once "$root/tests/NotificationsPackageBoundaryTest.php";
+
+// —— Support extracted package boundary ——
+echo "Support package boundary\n";
+require_once "$root/tests/SupportPackageBoundaryTest.php";
+
+echo "Translate package boundary\n";
+require_once "$root/tests/TranslatePackageBoundaryTest.php";
+
+// —— Registration extracted package boundary ——
+echo "Registration package boundary\n";
+require_once "$root/tests/RegistrationPackageBoundaryTest.php";
+
+// —— Synthetic unknown-slug SDK boundary probe ——
+echo "SDK boundary probe\n";
+require_once "$root/tests/SdkBoundaryProbeTest.php";
+require_once "$root/tests/DualRuntimeZedTest.php";
+require_once "$root/tests/PackageSurfaceRegistryTest.php";
+require_once "$root/tests/PackageLifecycleParityTest.php";
+
+// —— Synthetic unknown-slug Content Resources probe ——
+echo "Zed content resources probe\n";
+require_once "$root/tests/ZedContentResourcesProbeTest.php";
+
+require_once "$root/tests/InstalledModuleLoaderHealthPreloadTest.php";
+
+// —— Platform Scheduler package API probe ——
+echo "SDK scheduler probe\n";
+require_once "$root/tests/SdkSchedulerProbeTest.php";
+
 // —— Projects soft API (Design B) ——
 echo "Projects soft API\n";
 require_once "$root/tests/ProjectsSoftApiTest.php";
@@ -170,6 +251,9 @@ require_once "$root/tests/ContentAclSecurityTest.php";
 
 echo "Pentest hardening\n";
 require_once "$root/tests/PentestHardeningTest.php";
+
+echo "Mail hardening\n";
+require_once "$root/tests/MailHardeningTest.php";
 
 echo "MCP dual-secret auth\n";
 require_once "$root/tests/McpRequestAuthTest.php";

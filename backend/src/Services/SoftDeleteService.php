@@ -4,16 +4,17 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Database;
+use App\Platform\Surfaces\PackageSurfaceRegistry;
 
 final class SoftDeleteService
 {
-    /** @var array<string, string> resource => table */
-    public const TRASHABLE = [
-        'projects' => 'projects',
-        'blog' => 'blog_posts',
+    /**
+     * Host/core trashable resources only.
+     * Package-owned tables register via PackageSurfaceRegistry (not listed here).
+     * @var array<string, string> resource => table
+     */
+    public const HOST_TRASHABLE = [
         'media' => 'media',
-        'project-categories' => 'project_categories',
-        'blog-categories' => 'blog_categories',
         'skill-categories' => 'skill_categories',
         'skills' => 'skills',
         'experience' => 'experience',
@@ -21,15 +22,26 @@ final class SoftDeleteService
         'services' => 'services',
         'testimonials' => 'testimonials',
         'pages' => 'pages',
-        'products' => 'products',
         'lab-experiments' => 'lab_experiments',
     ];
 
+    /**
+     * @deprecated Use trashableMap() — host baseline only; packages via registry.
+     * @var array<string, string>
+     */
+    public const TRASHABLE = self::HOST_TRASHABLE;
+
     public function __construct(private Database $db) {}
+
+    /** @return array<string, string> resource => table */
+    public static function trashableMap(): array
+    {
+        return array_merge(self::HOST_TRASHABLE, PackageSurfaceRegistry::trashable());
+    }
 
     public function table(string $resource): ?string
     {
-        return self::TRASHABLE[$resource] ?? null;
+        return self::trashableMap()[$resource] ?? null;
     }
 
     /**
@@ -116,7 +128,7 @@ final class SoftDeleteService
     public function allTrash(): array
     {
         $out = [];
-        foreach (self::TRASHABLE as $resource => $table) {
+        foreach (self::trashableMap() as $resource => $table) {
             $items = $this->trash($table, 50);
             if ($items) {
                 $out[$resource] = array_map(fn($row) => array_merge($row, ['resource' => $resource]), $items);

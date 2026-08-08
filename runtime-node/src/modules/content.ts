@@ -2,6 +2,7 @@ import type { ModuleContext } from '../core/types.js';
 import { requireAdmin } from '../core/authMiddleware.js';
 import { requirePermission } from '../core/permissionMiddleware.js';
 import { ok, fail } from '../http/envelope.js';
+import { PackageSurfaceRegistry } from '../platform/PackageSurfaceRegistry.js';
 import { notDeletedClause } from './_helpers.js';
 
 export const name = 'content';
@@ -48,18 +49,7 @@ export async function register(ctx: ModuleContext) {
       return ok(c, row);
     });
 
-    ctx.app.get(`${p}/projects`, async (c) => {
-      if (!(await ctx.db.tableExists('projects'))) return ok(c, []);
-      const del = await notDeletedClause(ctx.db, 'projects');
-      const items = await ctx.db.all(`SELECT * FROM projects WHERE 1=1${del} ORDER BY id DESC`);
-      return ok(c, items);
-    });
-
-    ctx.app.get(`${p}/projects/:slug`, async (c) => {
-      const row = await ctx.db.one('SELECT * FROM projects WHERE slug=? LIMIT 1', [c.req.param('slug')]);
-      if (!row) return fail(c, 'Not found', 404);
-      return ok(c, row);
-    });
+    // Public /projects* owned by projects package (PackageLoader)
 
     ctx.app.get(`${p}/services`, async (c) => {
       if (!(await ctx.db.tableExists('services'))) return ok(c, []);
@@ -167,10 +157,6 @@ export async function register(ctx: ModuleContext) {
         ? await ctx.db.one('SELECT canonical_base_url FROM seo_settings LIMIT 1')
         : null;
       const base = String(seo?.canonical_base_url || ctx.cfg.url).replace(/\/$/, '');
-      // Seed enables all known plugins except template — match PHP SitemapService gates.
-      const portfolioOn = true;
-      const blogOn = true;
-      const productsOn = true;
 
       type UrlEntry = { loc: string; priority: string; lastmod?: string | null };
       const urls: UrlEntry[] = [
@@ -204,12 +190,10 @@ export async function register(ctx: ModuleContext) {
         const rows = await ctx.db.all(
           "SELECT slug, updated_at, published_at FROM pages WHERE status='published' AND is_home=0",
         );
-        for (const p of rows) {
-          const slug = String(p.slug ?? '');
+        for (const pg of rows) {
+          const slug = String(pg.slug ?? '');
           if (!slug || slug.startsWith('__') || excludeSlugs.has(slug)) continue;
-          if (slug === 'blog' && !blogOn) continue;
-          if ((slug === 'projects' || slug === 'services') && !portfolioOn) continue;
-          const lastmod = String(p.updated_at ?? p.published_at ?? '').slice(0, 10);
+          const lastmod = String(pg.updated_at ?? pg.published_at ?? '').slice(0, 10);
           urls.push({
             loc: `${base}/${slug.replace(/^\//, '')}`,
             lastmod: lastmod || null,
@@ -218,46 +202,45 @@ export async function register(ctx: ModuleContext) {
         }
       }
 
-      if (portfolioOn) {
-        urls.push({ loc: `${base}/projects`, priority: '0.9' });
-        urls.push({ loc: `${base}/services`, priority: '0.8' });
-        if (await ctx.db.tableExists('projects')) {
-          for (const p of await ctx.db.all(
-            "SELECT slug, updated_at, published_at FROM projects WHERE status='published'",
-          )) {
-            const lastmod = String(p.updated_at ?? p.published_at ?? '').slice(0, 10);
-            urls.push({
-              loc: `${base}/projects/${p.slug}`,
-              lastmod: lastmod || null,
-              priority: '0.7',
-            });
-          }
-        }
-      }
+      urls.push({ loc: `${base}/services`, priority: '0.8' });
 
-      if (blogOn && (await ctx.db.tableExists('blog_posts'))) {
-        for (const p of await ctx.db.all(
-          "SELECT slug, updated_at, published_at FROM blog_posts WHERE status='published'",
-        )) {
-          const lastmod = String(p.updated_at ?? p.published_at ?? '').slice(0, 10);
-          urls.push({
-            loc: `${base}/blog/${p.slug}`,
-            lastmod: lastmod || null,
-            priority: '0.6',
-          });
-        }
-      }
+      const seenPrefixes = new Set<string>();
+      for (const entry of PackageSurfaceRegistry.sitemapEntries()) {
+        const table = entry.table;
+        const prefix = String(entry.path_prefix ?? '').replace(/\/$/, '');
+        const priority = String(entry.priority ?? '0.6');
+        if (!prefix || !(await ctx.db.tableExists(table))) continue;
 
-      if (productsOn && (await ctx.db.tableExists('products'))) {
-        for (const p of await ctx.db.all(
-          'SELECT slug, updated_at FROM products WHERE is_visible=1 AND deleted_at IS NULL',
-        )) {
-          if (!p.slug) continue;
-          const lastmod = String(p.updated_at ?? '').slice(0, 10);
+        if (!seenPrefixes.has(prefix)) {
+          seenPrefixes.add(prefix);
+          urls.push({ loc: `${base}${prefix}`, priority: priority === '0.6' ? '0.9' : priority });
+        }
+
+        const where = (entry.where ?? {}) as Record<string, unknown>;
+        const clauses: string[] = [];
+        const params: unknown[] = [];
+        for (const [col, val] of Object.entries(where)) {
+          if (!/^[a-z][a-z0-9_]{0,63}$/.test(col)) continue;
+          clauses.push(`${col}=?`);
+          params.push(val);
+        }
+        const cols = await ctx.db.columns(table);
+        if (cols.includes('deleted_at')) {
+          clauses.push('deleted_at IS NULL');
+        }
+        const whereSql = clauses.length ? clauses.join(' AND ') : '1=1';
+        const rows = await ctx.db.all(
+          `SELECT slug, updated_at, published_at FROM ${table} WHERE ${whereSql}`,
+          params,
+        );
+        for (const row of rows) {
+          const slug = String(row.slug ?? '').trim();
+          if (!slug) continue;
+          const lastmod = String(row.updated_at ?? row.published_at ?? '').slice(0, 10);
           urls.push({
-            loc: `${base}/products/${p.slug}`,
+            loc: `${base}${prefix}/${slug.replace(/^\//, '')}`,
             lastmod: lastmod || null,
-            priority: '0.6',
+            priority,
           });
         }
       }
@@ -289,13 +272,24 @@ export async function register(ctx: ModuleContext) {
           )),
         );
       }
-      if (await ctx.db.tableExists('blog_posts')) {
-        items.push(
-          ...(await ctx.db.all(
-            `SELECT id, title, slug, 'blog' AS type FROM blog_posts WHERE title LIKE ? OR slug LIKE ? LIMIT 20`,
-            [like, like],
-          )),
-        );
+      // Package-owned searchable tables via sitemap surfaces (no host slug/table hardcodes).
+      for (const entry of PackageSurfaceRegistry.sitemapEntries()) {
+        const table = String(entry.table ?? '');
+        if (!/^[a-z][a-z0-9_]{0,63}$/.test(table)) continue;
+        if (!(await ctx.db.tableExists(table))) continue;
+        const cols = await ctx.db.columns(table);
+        if (!cols.includes('title') || !cols.includes('slug')) continue;
+        const type = String(entry.owner ?? table);
+        try {
+          items.push(
+            ...(await ctx.db.all(
+              `SELECT id, title, slug, ? AS type FROM ${table} WHERE title LIKE ? OR slug LIKE ? LIMIT 20`,
+              [type, like, like],
+            )),
+          );
+        } catch {
+          /* optional columns */
+        }
       }
       return ok(c, { items, q });
     });

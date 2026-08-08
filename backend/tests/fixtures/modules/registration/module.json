@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Registration",
+  "slug": "registration",
+  "version": "1.0.0",
+  "description": "Публичная регистрация и подтверждение email через Platform Auth и Mail.",
+  "author": {"name": "Jasefly"},
+  "license": "MIT",
+  "jasefly": {"min_version": "1.0.0", "api_version": 1, "sdk_version": 1},
+  "php": {"min_version": "8.1", "extensions": ["json"]},
+  "dependencies": {"required": {"system": ">=1.0.0"}, "optional": {"mail": ">=1.0.0"}, "conflicts": {}},
+  "capabilities": {
+    "requires": ["api.routes", "settings.module", "mail.send"],
+    "provides": ["auth.registration"]
+  },
+  "entrypoints": {"backend": "backend/RegistrationModule.php", "frontend_manifest": "frontend-dist/manifest.json"},
+  "migrations": {"path": "migrations", "namespace": "registration", "uninstall_path": "migrations/uninstall"},
+  "install": {"preserve_data_on_uninstall": true, "allow_downgrade": false}
+}

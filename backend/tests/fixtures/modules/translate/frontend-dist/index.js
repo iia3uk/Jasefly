@@ -1,0 +1,3 @@
+const api = globalThis.JaseflyPlatform;
+if (api?.registerModule) api.registerModule({ name: 'translate', label: 'Переводчик сайта', adminNav: [{ group: 'Сайт', path: '/admin/translate', label: 'Переводчик', permission: 'settings.manage', icon: 'globe' }], adminScreens: [{ path: 'translate', hostPageKey: 'translate.admin' }] });
+if (api?.registerHostSlot) { api.registerHostSlot('site.runtime', 'translate.site_widget'); api.registerHostSlot('site.runtime', 'translate.auto_warmup'); }

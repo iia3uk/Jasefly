@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\Core\Container;
-use App\Core\ModuleRegistry;
 use App\Database;
 use App\Jwt;
 use App\Request;
@@ -13,6 +11,7 @@ use App\Services\ActivityLogService;
 use App\Services\TotpService;
 use App\Support\AuthCookie;
 use App\Utils\Password;
+use App\Platform\Adapters\AuthAdapter;
 
 final class AuthController
 {
@@ -79,7 +78,7 @@ final class AuthController
             ]);
         }
 
-        $blocked = $this->registrationLoginBlock($user);
+        $blocked = AuthAdapter::loginBlock($user);
         if ($blocked !== null) {
             Response::error($blocked, 403);
         }
@@ -166,27 +165,6 @@ final class AuthController
                 ],
             ], $extraPayload),
         ]);
-    }
-
-    /** @param array<string, mixed> $user */
-    private function registrationLoginBlock(array $user): ?string
-    {
-        try {
-            $reg = Container::getInstance()->get(ModuleRegistry::class);
-            foreach ($reg->all() as $module) {
-                if ($module->name() !== 'registration') {
-                    continue;
-                }
-                if (!$reg->state()->isEnabled($module)) {
-                    return null;
-                }
-                $settings = $reg->state()->getSettings($module);
-                $svc = new \App\Modules\Registration\RegistrationService($this->db, $this->app, $settings);
-                return $svc->blockLoginUntilVerified($user);
-            }
-        } catch (\Throwable) {
-        }
-        return null;
     }
 
     public function refresh(Request $r): never

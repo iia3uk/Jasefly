@@ -1,0 +1,8 @@
+{
+  "entry": "index.js",
+  "assets": {
+    "js": ["index.js"]
+  },
+  "css": [],
+  "exports": []
+}

@@ -13,7 +13,6 @@
     "http.client",
     "mail.send",
     "media.library",
-    "notifications.send",
     "permissions.check",
     "public.routes",
     "scheduler.jobs",

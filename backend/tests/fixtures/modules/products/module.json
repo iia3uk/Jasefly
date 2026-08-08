@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Products",
+  "slug": "products",
+  "version": "1.0.0",
+  "description": "Каталог товаров, витрина и package-owned API.",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": [
+      "json"
+    ]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {
+      "payments": ">=1.0.0",
+      "orders": ">=1.0.0"
+    },
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "admin.pages",
+      "permissions.check",
+      "builder.widgets"
+    ],
+    "provides": [
+      "catalog.api",
+      "catalog.widgets"
+    ]
+  },
+  "entrypoints": {
+    "backend": "backend/ProductsModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json",
+    "node": "backend/node/index.ts"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "products",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "commerce.manage"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  },
+  "surfaces": {
+    "trash": [
+      {
+        "resource": "products",
+        "table": "products"
+      }
+    ],
+    "dashboard": [
+      {
+        "table": "products",
+        "count_as": "products"
+      }
+    ],
+    "sitemap": [
+      {
+        "table": "products",
+        "path_prefix": "/products",
+        "where": {
+          "is_visible": 1
+        },
+        "priority": "0.6"
+      }
+    ],
+    "media": [
+      {
+        "table": "products",
+        "columns": [
+          "media_id"
+        ],
+        "json_columns": [
+          "gallery"
+        ],
+        "html_columns": [
+          "description"
+        ],
+        "public_where": {
+          "is_visible": 1
+        },
+        "soft_delete": true
+      }
+    ],
+    "content_acl": [
+      {
+        "resource": "products"
+      }
+    ],
+    "schema": [
+      {
+        "table": "products",
+        "role": "owner"
+      }
+    ]
+  }
+}

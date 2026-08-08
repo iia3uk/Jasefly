@@ -1,10 +1,6 @@
-import { createElement } from 'react'
-import { registerModule } from '@/core/moduleRegistry'
-import { NotificationsPage } from './NotificationsPage'
-
-registerModule({
-  name: 'notifications',
-  label: 'Уведомления',
-  adminNav: [{ group: 'Коммуникации', path: '/admin/notifications', label: 'Уведомления', permission: 'notifications.view', icon: 'bell' }],
-  adminScreens: [{ path: 'notifications', label: 'Уведомления', group: 'Коммуникации', element: createElement(NotificationsPage) }],
-})
+/**
+ * Notifications FE moved to installable package: modules-src/notifications/frontend-dist.
+ * Host loads via packageModuleLoader. Admin page + bell via provideHostAdminPage
+ * (notifications.admin / notifications.bell) and host slot admin.header.
+ */
+export {}

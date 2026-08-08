@@ -59,6 +59,20 @@ final class EventDispatcher
                 @error_log('EventDispatcher[' . $event . ']: ' . $e->getMessage());
             }
         }
+        // Wildcard fans-out after named handlers. Used by Automation discovery bridge.
+        // EventCatalog is metadata-only — delivery stays here.
+        if ($event !== '*') {
+            foreach ($this->subscribers['*'] ?? [] as $sub) {
+                try {
+                    $result = ($sub['handler'])($event, $payload);
+                    if ($result !== null) {
+                        $payload = $result;
+                    }
+                } catch (\Throwable $e) {
+                    @error_log('EventDispatcher[*←' . $event . ']: ' . $e->getMessage());
+                }
+            }
+        }
         return $payload;
     }
 

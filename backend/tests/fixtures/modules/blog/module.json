@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Blog",
+  "slug": "blog",
+  "version": "1.0.0",
+  "description": "Blog posts, tags, public API and stableType blog-list widget.",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": [
+      "json"
+    ]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {
+      "projects": ">=1.0.0"
+    },
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "admin.pages",
+      "permissions.check",
+      "events.publish",
+      "builder.widgets"
+    ],
+    "provides": [
+      "blog.api",
+      "blog.widgets"
+    ]
+  },
+  "entrypoints": {
+    "backend": "backend/BlogModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json",
+    "node": "backend/node/index.ts"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "blog",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "content.view",
+    "content.edit",
+    "content.delete"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  },
+  "surfaces": {
+    "trash": [
+      {
+        "resource": "blog",
+        "table": "blog_posts"
+      },
+      {
+        "resource": "blog-categories",
+        "table": "blog_categories"
+      }
+    ],
+    "dashboard": [
+      {
+        "table": "blog_posts",
+        "count_as": "blog_posts",
+        "draft_as": "posts",
+        "publish_as": "posts",
+        "recent_as": "posts_7d"
+      }
+    ],
+    "sitemap": [
+      {
+        "table": "blog_posts",
+        "path_prefix": "/blog",
+        "where": {
+          "status": "published"
+        },
+        "priority": "0.6"
+      }
+    ],
+    "media": [
+      {
+        "table": "blog_posts",
+        "columns": [
+          "cover_media_id",
+          "og_image_id"
+        ],
+        "html_columns": [
+          "content"
+        ],
+        "public_where": {
+          "status": "published"
+        },
+        "soft_delete": true
+      }
+    ],
+    "content_acl": [
+      {
+        "resource": "blog"
+      },
+      {
+        "resource": "blog-categories"
+      },
+      {
+        "resource": "blog-tags"
+      }
+    ],
+    "schema": [
+      {
+        "table": "blog_posts",
+        "role": "owner"
+      },
+      {
+        "table": "blog_categories",
+        "role": "owner"
+      },
+      {
+        "table": "blog_tags",
+        "role": "owner"
+      }
+    ]
+  }
+}

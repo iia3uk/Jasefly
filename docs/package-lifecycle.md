@@ -60,6 +60,36 @@ node scripts/build-module.js my-mod --yes
 
 Schema: `backend/schemas/module.manifest.v1.json`. Required: `schema_version`, `type` (`jasefly-module`), `name`, `slug`, `version`, `jasefly`, `entrypoints.backend`. Example: `modules-src/demo-kit/module.json`.
 
+### Entrypoints (one identity)
+
+| Field | Runtime |
+| --- | --- |
+| `entrypoints.backend` | PHP (`AbstractPackageModule` / `bootPlatform`) |
+| `entrypoints.node` | Node (`register(ctx)` via PackageLoader) |
+| `entrypoints.frontend_manifest` | Packaged FE assets |
+
+PHP and Node entrypoints are optional adapters on the **same** ZIP — not separate packages.
+
+### Surfaces (optional)
+
+`module.json` → `surfaces` (and/or `ctx.surfaces().register()` at boot):
+
+`trash` · `dashboard` · `sitemap` · `media` · `content_acl` · `schema`
+
+Host SoftDelete / Dashboard / Sitemap / MediaUsage / content ACL read the process-local `PackageSurfaceRegistry` (cleared on disable/unload).
+
+### Settings / permissions
+
+- Settings SoT: `modules.settings` JSON (`modules.name` = slug)
+- Declare `permissions[]` in manifest (catalog registration; role grants stay explicit)
+- Gate routes with host permission middleware / `ctx.http().permission('…')` (fail-closed)
+
+### Catalog
+
+Derived index (not SoT): `node scripts/build-package-catalog.mjs` → `release/catalog/`.
+
+Identity snapshots live in `release/catalog/manifests/{slug}.json`. Product package **source** is external (`sourceOwnership: external package/module distribution`). Optional local authoring workspace `modules-src/` is **gitignored** — Core can certify/build from fixtures or a local workspace without publishing package PHP into the Core repo. Install at runtime from ZIP / Module Hub.
+
 ## Key components
 
 | Component | Role |

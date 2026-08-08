@@ -6,18 +6,10 @@ namespace App\Modules\Portfolio;
 use App\Core\AbstractModule;
 
 /**
- * Portfolio plugin — the portfolio product built on top of the CMS kernel.
+ * @deprecated Composition metadata retained for legacy profile and homepage
+ * settings. It no longer owns Projects or Blog identity, routes, or APIs.
  *
- * Owns the declarative metadata (blueprints, admin nav, builder blocks,
- * public routes) for every portfolio-specific content type. The actual
- * REST routes remain registered by ContentModule / ProjectsModule /
- * BlogModule to preserve backward-compatible /api/v1 endpoints — this
- * module is the single source of truth for *what* the portfolio plugin
- * contributes, so it can be enabled/disabled as a unit and discovered by
- * tooling (catalog, blueprints, blocks, public-routes endpoints).
- *
- * Disabling this module hides portfolio content from the admin UI and
- * public route map without touching the API layer.
+ * New installations should enable individual domain modules instead.
  */
 final class PortfolioModule extends AbstractModule
 {
@@ -110,7 +102,6 @@ final class PortfolioModule extends AbstractModule
             ['key' => 'education', 'table' => 'education', 'soft_delete' => true],
             ['key' => 'skills', 'table' => 'skills', 'soft_delete' => true],
             ['key' => 'skill-categories', 'table' => 'skill_categories', 'soft_delete' => true, 'sluggable' => true],
-            ['key' => 'projects', 'table' => 'projects', 'soft_delete' => true, 'sluggable' => true],
             ['key' => 'services', 'table' => 'services', 'soft_delete' => true, 'sluggable' => true],
             ['key' => 'testimonials', 'table' => 'testimonials', 'soft_delete' => true],
             ['key' => 'homepage-sections', 'table' => 'homepage_sections', 'soft_delete' => false],
@@ -181,7 +172,6 @@ final class PortfolioModule extends AbstractModule
         // renderers live on the frontend portfolio module manifest).
         return [
             ['type' => 'hero', 'label' => 'Hero', 'category' => 'portfolio'],
-            ['type' => 'projects-grid', 'label' => 'Сетка проектов', 'category' => 'portfolio'],
             ['type' => 'skills', 'label' => 'Навыки', 'category' => 'portfolio'],
             ['type' => 'experience-timeline', 'label' => 'Опыт (таймлайн)', 'category' => 'portfolio'],
             ['type' => 'services-grid', 'label' => 'Услуги', 'category' => 'portfolio'],
@@ -194,10 +184,6 @@ final class PortfolioModule extends AbstractModule
     public function publicRoutes(): array
     {
         return [
-            ['path' => '/projects', 'label' => 'Проекты'],
-            ['path' => '/projects/:slug', 'label' => 'Проект'],
-            ['path' => '/blog', 'label' => 'Блог'],
-            ['path' => '/blog/:slug', 'label' => 'Пост'],
             ['path' => '/services', 'label' => 'Услуги'],
             ['path' => '/about', 'label' => 'О себе'],
             ['path' => '/contact', 'label' => 'Контакты'],

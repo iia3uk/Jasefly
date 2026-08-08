@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "SDK Scheduler Probe",
+  "slug": "sdk-scheduler-probe",
+  "version": "1.0.0",
+  "description": "Synthetic probe for Platform Scheduler package API. No product features.",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": ["json"]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {},
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "scheduler.jobs",
+      "events.publish",
+      "permissions.check"
+    ],
+    "provides": [
+      "sdk-scheduler-probe.jobs"
+    ]
+  },
+  "entrypoints": {
+    "backend": "backend/SdkSchedulerProbeModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "sdk-scheduler-probe",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "sdk-scheduler-probe.view"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  }
+}

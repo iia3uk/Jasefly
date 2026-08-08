@@ -1,4 +1,4 @@
-# CMS Map — читать первым
+﻿# CMS Map — читать первым
 
 **Бренд:** Jasefly (AI-first dual-runtime platform; CMS — часть админки) · **Стек:** React/Vite (`frontend/`) + PHP (`backend/`) + Node (`runtime-node/`) · **Контракты:** `contracts/` · **CLI:** `scripts/jasefly/cli.mjs` · **Деплой:** MCP `user-jasefly-cms` → `cms_release`
 
@@ -21,7 +21,10 @@
 | Виджет (heading/text/hero/…) | `builder/widgets/{basic,structure,blocks,portfolio,landing,processDiagram,journey,framework,frameworkPulse,commerce,auth,access}.tsx`; универсальные: `hero-block` `showcase-block` `compare-block` `cta-block` `steps-row` `media-placeholder` `stat-row` `stats-strip` `relation-flow` `process-diagram` `features-grid` (`last_row_alignment`, optional `href`/`markers`) `projects-grid` (`layout: grid\|lead-with-stack`, `featured_priority`, cover portrait/landscape) `journey-timeline` `profile-hero`; framework: `architecture-stack` `code-snippet` `code-tabs` `status-roadmap` `dev-journey` `repo-tree` `status-timeline` `github-pulse` `explore-doors`; секции: glow/overlay/animation/responsive в `lib/sectionEffects.tsx`; /about hero: `shared/views` `ProfileHeroView` (`items-start`); journey: `shared/aboutJourneyContent.ts`; showcase: `ProjectShowcase.tsx` + `ResponsiveProjectCover` + `shared/projectCover.ts` + `shared/showcaseGeometry.ts` (secondary media ≈1:1); process: `shared/processDiagram.ts`; лендинг seed: `migrateHome.buildDefaultHomeLayout` |
 | Access / paywall / «кто видит блок» | Platform `Access/` + `Modules/Access/` (`GET/POST /access/*`); виджет «Доступ» (`access-container`) + `edit/AccessRuleEditor.tsx`; описания в `PluginCatalogMeta`; публичный `filterLayout` в `PublicController`; ZIP: `modules-src/{user-groups,subscriptions,wallet}/` |
 | Admin ACL / роли / capabilities | `Platform/Access/Acl/*` + provider `capability`; `PermissionService` adapter; `GET /auth/me` caps; `GET /admin/access/bootstrap`; FE `AuthContext.can` (не `role===admin`); Users/Roles UI; миграция `024_admin_access_layer.sql` |
-| Корзина empty-all 500 / нет deleted_at | `SoftDeleteService::emptyTrash`/`restore`/`trash` → `hasDeletedAt`; TRASHABLE: pages/education без колонки; UI `EnterprisePages` + `TrashController` |
+| Корзина empty-all 500 / нет deleted_at | `SoftDeleteService::trashableMap()` = HOST ∪ `PackageSurfaceRegistry`; UI `EnterprisePages` + `TrashController` |
+| Package surfaces (trash/dashboard/sitemap/media/ACL) | `PlatformContext::surfaces()` → `PackageSurfaceRegistry` (PHP/Node); declarations in package `module.json` `surfaces` |
+| Current package architecture / LLM handoff | `docs/architecture/CURRENT.md` · `docs/architecture/LLM_CONTEXT.md` · `AGENTS.md` · catalog `release/catalog/packages.json` |
+| Extracted domain package list (15, external) | `release/catalog/packages.md` · identity `release/catalog/manifests/{slug}.json` · ZIP via Module Hub / local `release/modules/` (gitignored) · optional local authoring `modules-src/` (gitignored) |
 | Demo Sandbox (публичный Admin/Builder) | `Modules/Demo/*` + `025_demo_sandbox.sql`; `/demo?to=builder` → билдер, `/demo?to=admin` → дашборд (`DemoEntryPage`); doors: `explore-doors` + `resolveDemoDoor`; docs `docs/demo-sandbox.md` |
 | Mobile: шаги пайплайна «плывут» | `widgets/structure.tsx` → `steps-row` (1/2 col → N на lg); `panels.tsx` pipeline scroll |
 | Mobile адаптив / safe-area / FAB | `index.css` (`.cms-hero-bleed`, overlay pad, snap rail); `SiteLayout` menu lock; `CookieBanner` / `TranslateWidget` / `SupportWidget` |
@@ -34,22 +37,23 @@
 | Lightbox картинок (блог обложка/контент) | `shared/ui/ImageLightbox.tsx` + `MediaImage lightbox` / `RichText` в `shared/ui/index.tsx`, `BlogPostView` |
 | Иконки карточек (features-grid, ?) | `shared/icons.tsx` + `shared/techBrandIcons.ts` (Lucide + Simple Icons) |
 | Переводчик выключен, но FE бьёт `/translate/batch` 404 | `TranslateWidget` / `TranslateAutoWarmup`: fail-closed до гидрации `enabled_plugins` + требовать `site.translate`; `siteHasPlugin` без массива = fail-open |
-| Переводчик / auto-warmup 429 | `TranslateAutoWarmup.tsx` + `SoftRateLimitMiddleware` + `TranslateModule` (batch тоже soft) |
+| Переводчик / auto-warmup 429 | ZIP `modules-src/translate/` (`Platform HTTP` soft limit); FE `TranslateAutoWarmup.tsx` через host slot `site.runtime` |
 | Прогрев «Нет прогресса» / en→en | `TranslateModule::allowedTargets` исключает `source_lang`; иначе chunk крутит same-lang и FE стопорится |
 | Переводчик медленный при «всё в кэше» | FE `TranslateWidget`: session/memory map + paint до API; `fill_misses=false` если `cache_ready`; Google без Libre-fallback |
 | Переводчик не весь DOM / attrs / chrome | `TranslateWidget.tsx`: корни `main/header/footer/[data-translate-root]`, attrs placeholder/aria-label/title/alt, `document.title`, MutationObserver; chrome: breadcrumbs/cookie/rail/custom_html |
 | Переводчик кэш + soft miss-fill | `POST /translate/batch` `fill_misses` → `TranslateService::translateBatch(..., fillMissCap=12)`; warmup/corpus для полноты |
 | Переводчик авто-язык по стране | `TranslateGeo.php` (CF/CDN/Accept-Language) → `publicConfig.suggested_lang`; FE `TranslateWidget` если нет localStorage; fallback `en` |
-| Переводчик corpus ≠ DOM | `TranslateCorpus::ingest` = `TranslateSync` HTML-split; singleton JSON → walkJson; без slug |
+| Переводчик corpus ≠ DOM | `PlatformContentInterface::collectHumanReadableStrings` (host tables/columns) + package `TranslateSync` HTML-split; singleton JSON → walkJson; без slug |
 | Переводчик фейки / синк контента | `TranslateCache::purgeInvalid` + `TranslateSync` (resource.afterSave) + админка «Очистить фейки» |
 | Google / LibreTranslate / MyMemory / DeepL | `TranslateService` + настройки плагина `provider` (default google) |
-| Тикеты / live chat / FAQ-бот | `modules/support/` ↔ `Modules/Support/` + `SupportWidget.tsx` |
-| Формы / заявки / виджет form | `modules/forms/` ↔ `Modules/Forms/` + `builder/widgets/forms.tsx` |
-| Планировщик / cron jobs | `modules/scheduler/` ↔ `Modules/Scheduler/` + `admin/pages/SchedulerPage.tsx` (справка «Как пользоваться» на странице) |
-| Автоматизации / уведомления / рассылки | `modules/{automation,notifications,newsletter}/` ↔ `Modules/{Automation,Notifications,Newsletter}/`; справки в `AutomationAdminPage` / `NotificationsPage` (+ POST `/admin/notifications/test`) |
+| Тикеты / live chat / FAQ-бот | ZIP `modules-src/support/` (+ fixture); host pages + widget через `site.runtime` |
+| Формы / заявки / виджет form | ZIP `modules-src/forms` (+ fixture); FE host pages via `hostPageKey`; widget `form` + `stableType`; cert example `forms-sdk-reference` (`fsr_*`) — не live engine |
+| Планировщик / cron jobs | `modules/scheduler/` ↔ `Modules/Scheduler/` + Platform `scheduler()`/`jobs()` (namespaced package jobs) + `PackageJobLifecycle` + `admin/pages/SchedulerPage.tsx`; probe `tests/fixtures/modules/sdk-scheduler-probe` |
+| Автоматизации / уведомления / рассылки | automation → ZIP `modules-src/automation` (+ EventCatalog); notifications → ZIP `modules-src/notifications` (`notifications.send` via `registerBackend`, host page/bell + slot `admin.header`); newsletter → ZIP `modules-src/newsletter` |
+| Newsletter (ZIP) | `modules-src/newsletter/` (+ fixture); host pages via `hostPageKey`; widget `newsletter-signup` + `stableType`; Scheduler `campaign.send`; Mail `$ctx->mail()` |
 | Jasefly Lab / эксперименты | `modules/lab/` ↔ `Modules/Lab/` + `/lab/:slug` (вне SiteLayout); entries: `starter`, `reference` |
 | FAQ клик в чате | `POST /support/faq/{id}/ask` + чипы в `SupportWidget` |
-| Support poll 429 | `SoftRateLimit` на GET messages + backoff в `SupportWidget`; DDoS skip `/support/` |
+| Support poll 429 | Platform `softRateLimitMiddleware` на GET messages + backoff в `SupportWidget`; DDoS skip `/support/` |
 | История чата после reload | `GET /support/active` + cookie/localStorage `visitor_key` |
 | Звук чата (виджет / inbox) | `lib/supportNotifySound.ts` + `SupportWidget` / `SupportInboxPage` |
 | Стили/цвет/шрифт/градиент текста | `builder/edit/StyleFields.tsx`, `ColorControl.tsx`, `colorUtils.ts`, `lib/googleFonts.ts` |
@@ -79,12 +83,22 @@
 | Кастомный путь админки (SPA) | `admin/adminBasePath.ts` + `site_settings.admin_base_path` + `AppRouter.tsx` |
 | Публичный поиск / 404 | `GET /search` → `SearchService::publicSearch`; `NotFoundPage` |
 | Ручные 301/302 редиректы | `admin/pages/RedirectsPage.tsx` + `PathRedirectService` + `SeoModule` routes |
-| Telegram с контакт-формы | `Modules/Mail/ContactFormService.php` + `TelegramNotifier.php` + `/admin/mail` |
+| Telegram с контакт-формы | `Modules/Mail/ContactFormService.php` + `TelegramNotifier.php` + `/admin/mail` (coupling; not extracted) |
+| SMTP / Platform mail | SoT `modules.settings` name=mail (Plugins UI `/admin/plugins` + Mail page); `$ctx->mail()` → `MailAdapter` → `Mailer`; `isAvailable` ≠ `has(mail.send)`; secrets via `getPublicSettings`; legacy `email_settings` read-only fallback (+ old SitePages `email-settings` write still present) |
 | Сообщения / mark-read «зависло» | `UtilityPages.tsx` + `.htaccess`: `/api/*` не кэшировать (`IS_API` / `no-store`); не `max-age` с HTML `index.php` |
-| Module Package Manager / ZIP модули | `Modules/ModuleManager/` + `Services/Modules/*` + `/admin/modules` + `scripts/build-module.js` + `modules-src/` + docs `MODULE-*.md`; FE reload: `packageModuleLoader` `?v=version` + unload on update; Node VPS: `runtime-node/src/modules/module-manager.ts` + `runtime-node/src/packages/*` |
+| Module Package Manager / ZIP модули | `Modules/ModuleManager/` + `Services/Modules/*` + `/admin/modules` + `scripts/build-module.js` + `modules-src/` + docs `MODULE-*.md`; FE reload: `packageModuleLoader` `?v=version` + unload on update; Node VPS: `runtime-node/src/modules/module-manager.ts` + `runtime-node/src/packages/*` (`PackageLoader`, `ModuleMigrations`, `ModuleAssets`) · docs `docs/node-package-host.md` |
 | ZIP обновился, админка модуля «старая» | кэш ESM: `packageModuleLoader` должен unload+import `?v=`; Ctrl+F5; на хостинге файл `/modules/{slug}/index.js` уже новый |
 | Плагин → пакетный модуль | `docs/glossary.md` + `docs/package-lifecycle.md` (эталон `modules-src/demo-kit/`) |
-| Platform SDK (ZIP модули) | `backend/src/Platform/` + `frontend/src/platform/` + `docs/platform-sdk.md` |
+| Platform SDK / Content Resources (ZIP модули) | `backend/src/Platform/` (`PlatformContentResourcesInterface`, `ContentResourcesAdapter`, `PlatformContext::resources()`) + `frontend/src/platform/` + `docs/platform-sdk.md` |
+| Live ZIP lifecycle verify (MySQL) | `JASEFLY_LIVE_VERIFY=1 php backend/bin/live-package-verify.php` (+ Docker MySQL / `config.local.php`); report `backend/storage/live-package-verify-report.json` |
+| PHP architecture FREEZE | `docs/php-architecture-final.md` — Core/host/ZIP ownership; no new PHP extract without Node parity need |
+| Node architecture audit (post-extract) | `docs/node-architecture-audit.md` — package host READY; native SDK; synthetic proof `package-host-zed.test.ts` |
+| Node native SDK phase | `docs/node-domain-native-sdk.md` + assertions `runtime-node/tests/package-native-sdk-assertions.test.ts` |
+| Cross-runtime package architecture | `docs/cross-runtime-architecture.md` — one ZIP identity; dual zed fixture; Node host consumers use `PackageSurfaceRegistry` ∪ `hostBaselines` (trash/dashboard/sitemap/ACL) |
+| Node package host (generic ZIP runtime) | `runtime-node/src/packages/{PackageLoader,ModuleMigrations,ModuleAssets,ModulePackageService,PackageSourceSync,invokePackageEntry}.ts` + `platform/{sdk,PackageSurfaceRegistry,EventCatalog,CapabilityRuntime}.ts` + `system/hostBaselines.ts` + `/modules/{slug}/*` + docs `docs/node-package-host.md` |
+| Node domain native SDK (pure PlatformContext) | `modules-src/{slug}/backend/node` `register(ctx)`; shared `package-sdk/node/`; no `registerLegacy` / `legacyModuleBind`; docs `docs/node-domain-extraction.md` |
+| Node domain extraction (15 ZIP packages) | `modules-src/{slug}/backend/node/` + PackageLoader; host-only `registerAll.ts` |
+| Extract / migrate Node domain package | `node scripts/extract-node-domain.mjs` · `node scripts/migrate-node-domain-to-platform.mjs` |
 | SDK validate / certify CLI | `backend/bin/sdk.php` · `Platform/Analysis/*` · `build-module.js` · `backend/bin/certify-lifecycle.php` · `docs/sdk-certification.md` |
 | SDK certification / governance | `docs/sdk-certification.md` · `docs/contracts-and-governance.md` · `docs/sdk-versioning.md` |
 | Capabilities / SDK report | `GET /admin/platform/capabilities` · `/admin/platform/sdk` · MCP `cms_sdk_report` / `cms_capability_report` / `cms_module_compatibility` / `cms_module_certify` / `cms_sdk_api_diff` / `cms_public_services` / `cms_sdk_deprecations` / `cms_export_sdk` |
@@ -106,13 +120,16 @@
 | Telegram deploy Approve (opt-in) | PHP: `Support/DeployTelegramApprove.php` · `SiteUpdater::applyStagedZip` · ZIP stage. Node VPS: `runtime-node/src/support/DeployTelegramApprove.ts` · `POST /admin/deploy/telegram/request|redeem` · Approve≠SSH (MCP redeem→SSH). Shared: `POST /telegram/deploy-webhook` + `/admin/updates/pending/{id}/approve` · env `TELEGRAM_DEPLOY_*` on **host** · mcp-cms `telegramGate.js` / `pending_approval` · tests PHP + `runtime-node/tests/deployTelegramApprove.test.ts` · `docs/deployment.md` |
 | MCP dual-secret Node | `runtime-node/src/support/mcpRequestAuth.ts` · `AuthService.meFromBearer` · CORS `X-Jasefly-*` · same headers as PHP · tests `mcpRequestAuth.test.ts` |
 | Content/webhook ACL + Host URLs | `PermissionService::{canMutateContent,requireContentMutation}` · `PermissionMiddleware` · `AdminController` · `WebhooksModule` (`integrations.manage`) · revision restore in `SystemModule` · `Support/PublicOrigin.php` · FE `sanitizeHtml` on `access.tsx` deny_template · Node `ssrfGuard.ts`/`permissionMiddleware.ts` · `ContentAclSecurityTest.php` |
-| Maintainability helpers | `Support/{SsrfGuard,OutboundHttp,SecretRedactor,PublicOrigin}.php` · `Response::error(..., $extra)` · `MaintainabilityTest.php` |
+| Maintainability helpers | `Support/{SsrfGuard,OutboundHttp,SecretRedactor,PublicOrigin,CsvExport}.php` · `Response::error(..., $extra)` · `MaintainabilityTest.php` |
+| Package host admin pages | FE `platform/hostAdminPages.ts` (`provideHostAdminPage` / `resolveHostPage`) + `PlatformAdminScreen.hostPageKey` |
+| SDK unknown-slug probe | fixture `tests/fixtures/modules/sdk-boundary-probe` + `SdkBoundaryProbeTest` (second random slug clone) |
 | Диагностика модулей (load fail / safe-mode) | `ModuleRegistry::loadFailures`, `ModuleSafeMode`, `SystemHealthService` → `/admin/system` (`EnterprisePages.tsx`) |
 | Целостность ops (snapshot/migrate/schedule/content pack) | `ModulePackageService` + `ModuleSnapshotService` + `PageScheduleService` + `ContentPackImporter` / `import-content.php --confirm` |
 | Router 404/405 / CORS OPTIONS / RateLimit | `backend/src/Router.php`, `Request.php`, `public/index.php`, `Middleware/RateLimitMiddleware.php` |
-| `/api/v1/projects` 404 при выкл. Portfolio | public GET в `ContentModule`; FE гейт `useProjects` + `HomePage` (не звать без portfolio) |
-| `/api/v1/admin/projects` при выкл. Projects | Design B: routes на `ProjectsModule` + `registersRoutesWhenDisabled`; GET list `[]`, GET item 404, mutations 409 `plugin_disabled`; public GET остаётся в `ContentModule` |
-| `/admin/{resource}` 404 при выкл. плагине | `ADMIN_RESOURCE_PLUGINS` + `useAdminResourceEnabled`; `PLUGIN_ALIASES` portfolio↔projects; `adminList`/`adminGet` silent 404→[]; Dashboard `contentHealth` gated; PluginsPage re-sync `setPluginStates` |
+| `/api/v1/projects` 404 при выкл. Projects | public GET на ZIP `modules-src/projects` через `$ctx->resources()`; FE gate = `projects` (Portfolio = deprecated composition only) |
+| `/api/v1/admin/projects` при выкл. Projects | Design B: package `registersRoutesWhenDisabled`; GET list `[]`, GET item 404; mutations fail when resource unregistered |
+| `/admin/{resource}` 404 при выкл. плагине | `ADMIN_RESOURCE_PLUGINS` + `useAdminResourceEnabled`; `adminList`/`adminGet` silent 404→[]; Dashboard `contentHealth` gated; PluginsPage re-sync `setPluginStates` |
+| Content Resources (generic package content) | `PlatformContentResourcesInterface` + `ContentResourcesAdapter` + `$ctx->resources()`; synthetic proof `zed-content-probe`; Blog/Projects ZIPs |
 | Билдер-страницы без Portfolio (about/contact/cta) | `pluginGates` + `widgetRequiredPlugin` (`cta-banner`/`blog-list`/`contact-form` ≠ portfolio) |
 | Админ-роуты / CRUD экраны | `admin/adminRoutes.tsx`, `core/moduleRegistry.ts`, `admin/pages/*` |
 | Дашборд / настраиваемые виджеты | `admin/dashboard/` (`DashboardShell`, `widgetRegistry`, `useDashboardLayout`) + prefs `admin.dashboard.layout.v1`; страница `admin/pages/DashboardPage.tsx` |
@@ -125,12 +142,16 @@
 | Админ «Навигация» (билдер шапка/подвал) | `modules/site/NavigationBuilderPage.tsx` (+ `CrudEditPage` на `navigation/:id`); публичный рендер `SiteLayout` Header/Footer |
 | Подвал слоган/копирайт HTML | `SiteLayout` Footer + `sanitizeHtml`; админ textarea в `SitePages` path=`footer` |
 | Соцсети (ядро, не Portfolio) | FE `modules/site` + hub Оформление; BE `ContentModule` resources/blueprints; `PublicController.site.social` без portfolio-gate; таблица `social_links` |
-| Проекты / блог / услуги | `modules/projects|blog|services/` ↔ `backend/src/Modules/{Projects,Blog,Content}/` |
+| Проекты / блог / услуги | ZIP `release/modules/jasefly-module-{projects,blog}-1.0.0.zip` ← `modules-src/{projects,blog}/` (+ fixtures); services host `ContentModule`; Portfolio deprecated composition (`Modules/Portfolio`) — не ZIP |
 | Редактор блога (writing studio) | `modules/blog/admin/BlogEditPage.tsx` + `BlogComposer.tsx` (TipTap HTML, bubble/slash, meta drawer) |
-| Товары / оплата | `modules/products|payments/` ↔ `Modules/Products|Payments/` |
-| Заказы / корзины / возвраты | `modules/orders/` ↔ `Modules/Orders/` + адаптер в `Payments/PaymentService.php` |
+| Webhooks (ZIP, extracted) | `modules-src/webhooks/` (+ CI fixture `backend/tests/fixtures/modules/webhooks/`); FE via `packageModuleLoader`|
+| Comments (ZIP, extracted) | `modules-src/comments/` (+ fixture `backend/tests/fixtures/modules/comments/`); frozen widgets `comments`/`reviews`/`rating-summary`/`review-form` via Platform `stableType`|
+| Builder package widgets (stable IDs) | `frontend/src/platform/resolvePackageWidgetType.ts` + `stableType` on `PlatformWidgetDefinition`; freeze cover: `builder/manifest/package-stable-widget-types.v1.json` |
+| Товары / оплата | Products ZIP `modules-src/products/`; Payments ZIP `modules-src/payments/` (+ fixture), host page via `hostPageKey: payments.admin`|
+| Заказы / корзины / возвраты | ZIP `modules-src/orders/` (+ fixture); host page via `hostPageKey: orders.admin` |
 | Комментарии / отзывы / рейтинги | `modules/comments/` ↔ `Modules/Comments/` + `builder/widgets/comments.tsx` |
-| Аналитика событий / целей | `modules/analytics/` (`AnalyticsAdminPage`, `AnalyticsCharts`, `DashboardAnalyticsWidget`) ↔ `Modules/Analytics/` + `beacon.ts` / `AnalyticsBeacon.tsx`; виджет дашборда `admin/dashboard/widgets/AnalyticsDashWidget.tsx` |
+| Аналитика событий / целей | ZIP `modules-src/analytics/` (+ fixture `tests/fixtures/modules/analytics`); FE via `packageModuleLoader`; host page `AnalyticsAdminPage` via `hostPageKey: analytics.admin`; beacon → host slot `site.body.end` + consentBridge; jobs `$ctx->scheduler()` local `retention`/`aggregate`|
+| Host slots / package mount | FE `platform/hostSlots.ts` (`site.body.end` / `site.runtime` / `admin.dashboard`) + `consentBridge.ts`; `SiteLayout` / `DashboardShell` mount `<HostSlot />` — без slug-hardcode |
 | Медиа / неиспользуемые / битые | `UtilityPages` `MediaLibraryPage` + справка; BE `MediaUsageService` (`/admin/media/unused`) + `MediaController` purge-missing |
 | Перегрузки / load average / 503 | FE `modules/overload` + `OverloadPage` + dashboard `OverloadWidget`; BE `Modules/Overload/` (`OverloadGuardMiddleware`, `OverloadService`: per-CPU + sustained + quiet after `SiteUpdater`); HTML early shed в `scripts/build-hosting.js` `rootIndexPhp` |
 | Auth / users / 2FA | `context/AuthContext.tsx`, `Modules/Users/`, `Controllers/AuthController.php` |
@@ -142,7 +163,7 @@
 | Demo package module source | локально `modules-src/demo-kit/`; CI/public: `backend/tests/fixtures/modules/demo-kit/` |
 | Access ZIP scaffolds (group / subscription / wallet) | `modules-src/{user-groups,subscriptions,wallet}/` → register AccessProviders (local-only) |
 | Forms SDK certification reference | локально `modules-src/forms-sdk-reference/`; CI/public: `backend/tests/fixtures/modules/forms-sdk-reference/` |
-| modules-src нет в git / CI падает на certify | эталоны в `backend/tests/fixtures/modules/`; resolve: `SdkCliService` + `scripts/build-module.js` |
+| certify без локального modules-src | CI fixtures `backend/tests/fixtures/modules/`; resolve: `SdkCliService` + `scripts/build-module.js`; authoring SoT = `modules-src/` |
 | AI Content Optimizer (ZIP, OpenRouter SEO-рерайт) | `modules-src/ai-content-optimizer/` → ZIP `release/modules/`; FE `frontend-dist/index.js` (профили/настройки OpenRouter/лог); job `ai-content-optimizer.tick` |
 | IndexNow (ZIP, Bing/Яндекс/Seznam + rate-limit) | `modules-src/indexnow/` → ZIP `release/modules/`; админка `/admin/indexnow`; ключ `/{key}.txt`; cooldown 429 / URL / debounce; Google≠IndexNow |
 | Карта / maps / leaflet / OSM | ZIP `modules-src/maps/` → виджет `maps.map`, демо `/maps-demo`, админка `/admin/maps`; default Яндекс; docs `docs/modules/maps.md` |
@@ -206,39 +227,49 @@ portfolio/
 | `payment-checkout` `payment-methods` `seller-info` `offer-document` | `widgets/commerce.tsx` |
 | `auth-login` `auth-register` | `widgets/auth.tsx` |
 | `form` | `widgets/forms.tsx` (plugin forms) |
-| `newsletter-signup` | `widgets/newsletter.tsx` (plugin newsletter) |
+| `newsletter-signup` | ZIP package `modules-src/newsletter` (stableType); host stub `widgets/newsletter.tsx` |
 | `comments` `reviews` `rating-summary` `review-form` | `widgets/comments.tsx` (plugin comments) |
 
 Видео-URL логика: `builder/lib/videoEmbed.ts`.
 
 ---
 
+## Ownership (кратко)
+
+| Kind | Where |
+| --- | --- |
+| **HOST/CORE** | `backend/src/Modules/{Access,Content,Ddos,Demo,Lab,Mail,Media,ModuleManager,Overload,Portfolio,Scheduler,Seo,System,Template,Users}` + `Core/` + `Platform/` |
+| **PACKAGE** (15 extracted) | `modules-src/{slug}/` → ZIP; see `release/catalog/packages.json` |
+| **Portfolio** | Deprecated composition shell in host — **not** an extracted product package |
+
 ## Frontend modules ↔ backend
 
 | FE `modules/` | BE `Modules/` | Суть |
 | --- | --- | --- |
-| `portfolio/` | `Portfolio/` | портфолио-плагин / витрина |
-| `projects/` | `Projects/` | кейсы |
-| `blog/` | (часто Content/Blog) `Blog/` | посты |
+| `portfolio/` | `Portfolio/` | deprecated composition metadata (не ZIP) |
+| `projects/` | ZIP `modules-src/projects` | кейсы / Content Resources |
+| `blog/` | ZIP `modules-src/blog` | посты / Content Resources |
 | `services/` | Content/услуги | услуги |
-| `products/` | `Products/` | каталог |
-| `payments/` | `Payments/` | checkout |
+| _(ZIP)_ products | `PackageModules\Products` | каталог; host product admin pages via `hostPageKey`|
+| _(ZIP)_ payments | `PackageModules\Payments` | checkout, provider webhooks and commerce catalog |
 | `media/` | `Media/` | файлы |
 | `users/` | `Users/` | админы/роли |
 | `site/` | `System` + Content | тема, SEO, settings |
 | `site/productLanding/` | — | витринный лендинг продукта Jasefly (`ProductLanding`) |
-| `registration/` | `Registration/` | публичная регистрация |
-| `translate/` | `Translate/` | оверлей-переводчик сайта |
-| `support/` | `Support/` | тикеты / live chat / FAQ-бот |
-| `automation/` | `Automation/` | сценарии событий и действий |
-| `notifications/` | `Notifications/` | inbox и внешняя доставка уведомлений |
-| `newsletter/` | `Newsletter/` | подписчики и email-кампании |
-| `orders/` | `Orders/` | корзины, заказы, статусы и возвраты |
-| `comments/` | `Comments/` | комментарии, отзывы и модерация |
-| `analytics/` | `Analytics/` | события, цели, агрегация и retention |
-| `mail/` `webhooks/` `ddos/` `overload/` `system/` | одноимённые | интеграции / безопасность |
+| _(ZIP)_ registration | `PackageModules\Registration` | публичная регистрация; Platform `auth()` lifecycle gate, users остаются host-owned |
+| _(ZIP)_ translate | `PackageModules\Translate` | оверлей-переводчик сайта; host admin/widget via `hostPageKey` + `site.runtime`|
+| _(ZIP)_ support | `PackageModules\Support` | тикеты / live chat / FAQ-бот; host slot `site.runtime`|
+| _(ZIP)_ automation | `PackageModules\Automation` | сценарии + EventCatalog triggers; Scheduler `resume`|
+| _(ZIP)_ notifications | `PackageModules\Notifications` | inbox + `notifications.send` provider; host `admin.header` bell|
+| _(ZIP)_ newsletter | `PackageModules\Newsletter` | подписчики/кампании + `newsletter-signup`|
+| _(ZIP)_ orders | `PackageModules\Orders` | корзины, заказы, статусы и возвраты; host page `orders.admin`|
+| `comments/` (FE shell) | ZIP `modules-src/comments` | UI mirror; domain owned by package, not `Modules/Comments` |
+| `mail/` `ddos/` `overload/` `system/` | одноимённые | host infra |
+| _(ZIP)_ webhooks | `PackageModules\Webhooks` | исходящие webhooks — не bundled FE `modules/webhooks` |
+| _(ZIP)_ comments | `PackageModules\Comments` | комментарии/отзывы + frozen builder widgets |
+| _(ZIP)_ analytics | `PackageModules\Analytics` | beacon (host slot) + admin overview/goals + scheduler retention/aggregate|
 
-Новый модуль: `docs/module-system.md` + `docs/extension-points.md` + зеркало в `frontend/src/modules/{name}/`.
+Новый **host** модуль: `docs/module-system.md`. Новый **domain** feature: package (`docs/package-lifecycle.md` · `modules-src/`). See `docs/architecture/CURRENT.md`.
 
 ---
 

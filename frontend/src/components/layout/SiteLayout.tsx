@@ -13,12 +13,10 @@ import { SiteTemplateInjector } from '@/components/layout/SiteTemplateInjector'
 import { AdminBar } from '@/components/layout/AdminBar'
 import { ensureGoogleFontsLoaded, findGoogleFontPreset } from '@/builder/lib/googleFonts'
 import { CookieBanner } from '@/components/layout/CookieBanner'
-import { TranslateWidget } from '@/components/TranslateWidget'
-import { SupportWidget } from '@/components/SupportWidget'
-import { TranslateAutoWarmup } from '@/components/TranslateAutoWarmup'
 import { SnapSectionRail } from '@/components/layout/SnapSectionRail'
 import { useCookieConsent, allowsAnalytics } from '@/lib/cookieConsent'
-import { AnalyticsBeacon } from '@/modules/analytics/AnalyticsBeacon'
+import { HostSlot } from '@/platform/hostSlots'
+import { allowsConsentCategory } from '@/platform/consentBridge'
 import { SiteBreadcrumbs } from '@/components/layout/SiteBreadcrumbs'
 import { useContactInfo } from '@/hooks/useApi'
 import { withSiteNameSuffix } from '@/lib/seoTitle'
@@ -494,10 +492,8 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       </div>
       <CookieBanner />
       <SnapSectionRail />
-      <TranslateWidget />
-      <SupportWidget />
-      <TranslateAutoWarmup />
-      <AnalyticsBeacon />
+      <HostSlot id="site.runtime" />
+      <HostSlot id="site.body.end" consentAllows={(cat) => !bannerOn || allowsConsentCategory(cat)} />
     </>
   )
 }

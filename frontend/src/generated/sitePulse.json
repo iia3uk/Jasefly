@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-07T21:33:38.167Z",
-  "version": "backup-before-author-rewrite-18-gc7850c5",
-  "commit": "c7850c5",
+  "generated_at": "2026-08-07T21:40:37.453Z",
+  "version": "backup-before-author-rewrite-19-g5fa5d9a",
+  "commit": "5fa5d9a",
   "metrics": {
-    "files": 3412,
+    "files": 3462,
     "php_classes": 316,
     "builder_widgets": 68,
     "rest_routes_core": 66,
     "sdk_interfaces": 23,
-    "git_commits": 110,
+    "git_commits": 111,
     "repo_size_mb": 27.9,
     "core_modules": 30,
     "package_scaffolds": 10
@@ -19,6 +19,11 @@
     "latest_tag": "backup-before-author-rewrite",
     "latest_commit_date": "2026-08-08",
     "commits": [
+      {
+        "hash": "5fa5d9a",
+        "date": "2026-08-08",
+        "subject": "Harden Node VPS deploy gate and restore PHP-Node behavior parity."
+      },
       {
         "hash": "c7850c5",
         "date": "2026-08-08",
@@ -38,11 +43,6 @@
         "hash": "8b22fe9",
         "date": "2026-08-06",
         "subject": "feat: platform OOB home and optional plugins default-off"
-      },
-      {
-        "hash": "287d086",
-        "date": "2026-08-06",
-        "subject": "chore: sync changelog and sitePulse after auth/security releases"
       }
     ]
   }

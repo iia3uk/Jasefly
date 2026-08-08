@@ -157,74 +157,8 @@ final class PublicController
         Response::json(['data' => $categories]);
     }
 
-    public function projects(Request $r, ?string $slug = null): never
-    {
-        // Public project pages are owned by the portfolio product surface.
-        if (!$this->pluginEnabled('portfolio')) {
-            if ($slug !== null) {
-                Response::error('Not found', 404);
-            }
-            Response::json(['data' => []]);
-        }
-        $notDeleted = $this->softDelete->notDeletedClause('projects');
-        if ($slug !== null) {
-            $project = $this->db->one("SELECT * FROM projects WHERE slug=? AND status=? AND $notDeleted", [$slug, 'published']);
-            if (!$project) {
-                $redirect = $this->slugs->resolve('project', $slug);
-                if ($redirect) {
-                    $this->slugs->redirectOr404('project', $slug, '/projects');
-                }
-                Response::error('Not found', 404);
-            }
-            Response::json(['data' => $this->enrichProject($project)]);
-        }
-
-        $featured = $r->query('featured');
-        $sql = "SELECT * FROM projects WHERE status=? AND $notDeleted";
-        $params = ['published'];
-        if ($featured === '1') {
-            $sql .= ' AND is_featured=1';
-        }
-        $sql .= ' ORDER BY sort_order, published_at DESC, id DESC';
-        $rows = $this->db->all($sql, $params);
-        foreach ($rows as &$row) {
-            $row = $this->enrichProject($row, false);
-        }
-        Response::json(['data' => $rows]);
-    }
-
-    public function blog(Request $r, ?string $slug = null): never
-    {
-        if (!$this->pluginEnabled('blog')) {
-            if ($slug !== null) {
-                Response::error('Not found', 404);
-            }
-            Response::json(['data' => []]);
-        }
-        $notDeleted = $this->softDelete->notDeletedClause('blog_posts');
-        if ($slug !== null) {
-            $post = $this->db->one("SELECT * FROM blog_posts WHERE slug=? AND status=? AND $notDeleted", [$slug, 'published']);
-            if (!$post) {
-                $redirect = $this->slugs->resolve('blog_post', $slug);
-                if ($redirect) {
-                    $this->slugs->redirectOr404('blog_post', $slug, '/blog');
-                }
-                Response::error('Not found', 404);
-            }
-            $post = $this->enrichPost($post);
-            $post['related'] = $this->relatedPosts((int) $post['id'], $post['category_id'] ?? null);
-            Response::json(['data' => $post]);
-        }
-
-        $rows = $this->db->all(
-            "SELECT * FROM blog_posts WHERE status=? AND $notDeleted ORDER BY published_at DESC, id DESC",
-            ['published']
-        );
-        foreach ($rows as &$row) {
-            $row = $this->enrichPost($row, false);
-        }
-        Response::json(['data' => $rows]);
-    }
+    // Public /projects and /blog are package-owned via Platform resources()
+    // (modules-src/projects|blog). Host no longer routes or projects those types.
 
     public function services(Request $r): never
     {
@@ -258,7 +192,7 @@ final class PublicController
     {
         // Только data-разделы Portfolio/Blog, не маркетинговые CMS-страницы about/contact.
         $pluginSlugs = [
-            'projects' => 'portfolio',
+            'projects' => 'projects',
             'services' => 'portfolio',
             'blog' => 'blog',
         ];
@@ -430,23 +364,35 @@ final class PublicController
         if (!$this->pluginEnabled('translate')) {
             return null;
         }
-        try {
-            /** @var ModuleRegistry $reg */
-            $reg = Container::getInstance()->get(ModuleRegistry::class);
-            $module = $reg->get('translate');
-            if ($module instanceof \App\Modules\Translate\TranslateModule) {
-                return $module->publicConfig();
-            }
-        } catch (Throwable) {
-        }
-        return [
+        $defaults = [
             'widget_enabled' => true,
             'auto_warmup' => true,
             'source_lang' => 'ru',
             'languages' => ['en', 'de', 'fr', 'es'],
             'position' => 'bottom-right',
-            'provider' => 'mymemory',
+            'provider' => 'google',
+            'cache_ready' => false,
+            'content_hash' => '',
+            'mode' => 'cache',
+            'geo_auto_lang' => true,
+            'visitor_country' => null,
+            'suggested_lang' => 'ru',
+            'geo_via' => 'host-default',
         ];
+        try {
+            $row = $this->db->one('SELECT settings FROM modules WHERE name=?', ['translate']);
+            $settings = json_decode((string) ($row['settings'] ?? ''), true);
+            if (is_array($settings)) {
+                $rawLanguages = (string) ($settings['languages'] ?? implode(',', $defaults['languages']));
+                $settings['languages'] = array_values(array_filter(
+                    preg_split('/[\s,;]+/', strtolower($rawLanguages)) ?: [],
+                    static fn(string $language): bool => $language !== ''
+                ));
+                return array_replace($defaults, $settings);
+            }
+        } catch (Throwable) {
+        }
+        return $defaults;
     }
 
     /** @return array{homepage_template: string, show_blog: bool, show_services: bool, show_testimonials: bool}|null */
@@ -527,7 +473,7 @@ final class PublicController
         // about/contact — CMS-страницы билдера, не зависят от Portfolio.
         $gates = [
             '/services' => 'portfolio',
-            '/projects' => 'portfolio',
+            '/projects' => 'projects',
             '/blog' => 'blog',
             '/products' => 'products',
             '/register' => 'registration',
@@ -620,113 +566,6 @@ final class PublicController
         header('Content-Type: text/plain; charset=utf-8');
         echo $body;
         exit;
-    }
-
-    private function enrichProject(array $project, bool $full = true): array
-    {
-        $project = $this->hydrateMedia($project, [
-            'cover_media_id',
-            'cover_portrait_media_id',
-            'cover_landscape_media_id',
-            'og_image_id',
-        ]);
-        $id = (int) $project['id'];
-        $project['technologies'] = $this->db->all(
-            'SELECT * FROM project_technologies WHERE project_id=? ORDER BY sort_order, id',
-            [$id]
-        );
-        $project['tags'] = $this->db->all(
-            'SELECT t.* FROM project_tags t INNER JOIN project_tag_pivot p ON p.tag_id=t.id WHERE p.project_id=? ORDER BY t.name',
-            [$id]
-        );
-        if ($full) {
-            $mediaNotDeleted = $this->softDelete->notDeletedClause('media', 'm');
-            $project['media'] = $this->db->all(
-                "SELECT pm.id AS project_media_id, pm.project_id, pm.media_id, pm.caption, pm.url, pm.media_type, pm.sort_order,
-                        m.id, m.path, m.thumbnail_path, m.webp_path, m.mime_type, m.alt_text, m.original_name
-                 FROM project_media pm
-                 LEFT JOIN media m ON m.id = pm.media_id AND {$mediaNotDeleted}
-                 WHERE pm.project_id = ?
-                   AND (pm.media_id IS NULL OR m.id IS NOT NULL OR (pm.url IS NOT NULL AND pm.url != ''))
-                 ORDER BY pm.sort_order, pm.id",
-                [$id]
-            );
-            $project['features'] = $this->db->all(
-                'SELECT * FROM project_features WHERE project_id=? ORDER BY sort_order, id',
-                [$id]
-            );
-            $project['timeline'] = $this->db->all(
-                'SELECT * FROM project_timeline WHERE project_id=? ORDER BY sort_order, id',
-                [$id]
-            );
-            if (!empty($project['category_id'])) {
-                $project['category'] = $this->db->one('SELECT * FROM project_categories WHERE id=?', [$project['category_id']]);
-            }
-            $project['related_posts'] = $this->postsForProject($id);
-        }
-        return $project;
-    }
-
-    private function enrichPost(array $post, bool $full = true): array
-    {
-        $post = $this->hydrateMedia($post, ['cover_media_id', 'og_image_id']);
-        $post['toc_json'] = $this->decodeJson($post['toc_json'] ?? null);
-        $post['tags'] = $this->db->all(
-            'SELECT t.* FROM blog_tags t INNER JOIN blog_post_tags p ON p.tag_id=t.id WHERE p.post_id=? ORDER BY t.name',
-            [$post['id']]
-        );
-        if (!empty($post['category_id'])) {
-            $post['category'] = $this->db->one('SELECT * FROM blog_categories WHERE id=?', [$post['category_id']]);
-        }
-        if (!empty($post['project_id'])) {
-            $projAlive = $this->softDelete->notDeletedClause('projects');
-            $linked = $this->db->one(
-                "SELECT id, title, slug FROM projects WHERE id=? AND status=? AND {$projAlive}",
-                [(int) $post['project_id'], 'published']
-            );
-            $post['project'] = $linked ?: null;
-        } else {
-            $post['project'] = null;
-        }
-        if ($full && empty($post['reading_time']) && !empty($post['content'])) {
-            $words = str_word_count(strip_tags((string) $post['content']));
-            $post['reading_time'] = max(1, (int) ceil($words / 200));
-        }
-        return $post;
-    }
-
-    /** Published blog posts linked to a project (admin project_id). */
-    private function postsForProject(int $projectId): array
-    {
-        $notDeleted = $this->softDelete->notDeletedClause('blog_posts');
-        $rows = $this->db->all(
-            "SELECT id, title, slug, excerpt, cover_media_id, published_at, reading_time
-             FROM blog_posts
-             WHERE status=? AND project_id=? AND {$notDeleted}
-             ORDER BY published_at DESC, id DESC
-             LIMIT 6",
-            ['published', $projectId]
-        );
-        foreach ($rows as &$row) {
-            $row = $this->hydrateMedia($row, ['cover_media_id']);
-        }
-        return $rows;
-    }
-
-    private function relatedPosts(int $id, ?int $categoryId): array
-    {
-        if (!$categoryId) {
-            return [];
-        }
-        $rows = $this->db->all(
-            'SELECT id, title, slug, excerpt, cover_media_id, published_at, reading_time
-             FROM blog_posts WHERE status=? AND category_id=? AND id<>? ORDER BY published_at DESC LIMIT 3',
-            ['published', $categoryId, $id]
-        );
-        foreach ($rows as &$row) {
-            $row = $this->hydrateMedia($row, ['cover_media_id']);
-        }
-        return $rows;
     }
 
     private function hydrateMedia(array $row, array $keys): array

@@ -1,3 +1,7 @@
+> **Historical verification record (2026-08-05).**
+> Do not use as current implementation guide.
+> Current architecture: [architecture/CURRENT.md](architecture/CURRENT.md) · [architecture/LLM_CONTEXT.md](architecture/LLM_CONTEXT.md).
+
 # Dual-runtime verification report (deep parity progress)
 
 **Date:** 2026-08-05  

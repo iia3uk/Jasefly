@@ -31,6 +31,8 @@
     "scheduler",
     "mail",
     "notifications",
+    "catalog",
+    "orders",
     "settings",
     "permissions",
     "users",
@@ -44,6 +46,7 @@
     "assets",
     "health",
     "content",
+    "resources",
     "capabilities",
     "features",
     "access"

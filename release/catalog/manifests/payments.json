@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Payments",
+  "slug": "payments",
+  "version": "1.0.0",
+  "description": "Multi-provider checkout and payment webhooks.",
+  "author": {
+    "name": "Jasefly"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": [
+      "json"
+    ]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0",
+      "orders": ">=1.0.0"
+    },
+    "optional": {
+      "products": ">=1.0.0"
+    },
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "admin.pages",
+      "permissions.check",
+      "builder.widgets",
+      "events.publish",
+      "http.client"
+    ],
+    "provides": [
+      "payments.api",
+      "payments.widgets"
+    ]
+  },
+  "entrypoints": {
+    "backend": "backend/PaymentsModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json",
+    "node": "backend/node/index.ts"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "payments",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "commerce.manage"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  },
+  "surfaces": {
+    "schema": [
+      {
+        "table": "payments",
+        "role": "owner"
+      },
+      {
+        "table": "orders",
+        "role": "consumer"
+      },
+      {
+        "table": "order_items",
+        "role": "consumer"
+      }
+    ]
+  }
+}

@@ -129,7 +129,11 @@ export async function runMigrations(
   };
 }
 
-/** Discover plugin SQL paths like PHP MigrationService::pluginMigrationFiles. */
+/**
+ * Host-bundled module SQL still living under backend/src/Modules (Lab/Access/…).
+ * ZIP package migrations are NOT discovered here — they apply from
+ * storage/modules/{slug}/migrations via packages/ModuleMigrations.ts at install/enable.
+ */
 export function pluginMigrationFiles(): Record<string, string> {
   const modulesDir = path.join(REPO_ROOT, 'backend/src/Modules');
   const out: Record<string, string> = {};

@@ -2,6 +2,7 @@ import type { Context } from 'hono';
 import type { Database } from '../db/Database.js';
 import { fail, ok } from '../http/envelope.js';
 import { runMigrations } from '../db/migrate.js';
+import { listEnabledInstalledPackageSlugs } from '../packages/ModuleAssets.js';
 import { listEnabledPlugins } from '../plugins/pluginState.js';
 import { NODE_MODULE_NAMES } from './moduleNames.js';
 
@@ -11,10 +12,10 @@ async function singleton(db: Database, table: string) {
 }
 
 /**
- * PHP ModuleRegistry discovery order. Only names present in modules.is_enabled=1
- * (plus core system/users) are returned — default-off when no row.
+ * Host UI ordering hints for host/core modules only (not extracted package slugs).
+ * Installed ZIP packages appear via installed_modules — order after host entries.
  */
-const PHP_PLUGIN_ORDER = [
+const HOST_PLUGIN_ORDER = [
   'module-manager',
   'system',
   'demo',
@@ -23,27 +24,13 @@ const PHP_PLUGIN_ORDER = [
   'access',
   'ddos',
   'users',
-  'automation',
-  'notifications',
   'content',
   'media',
   'portfolio',
-  'projects',
-  'forms',
-  'newsletter',
-  'blog',
-  'registration',
-  'comments',
   'mail',
-  'support',
-  'translate',
-  'analytics',
-  'webhooks',
-  'orders',
-  'payments',
-  'products',
   'lab',
   'seo',
+  'template',
 ] as const;
 
 function pluginOn(plugins: string[], name: string): boolean {
@@ -75,8 +62,23 @@ export async function siteHandler(c: Context, db: Database) {
     /* ignore */
   }
 
-  const catalog = PHP_PLUGIN_ORDER.filter((n) => (NODE_MODULE_NAMES as readonly string[]).includes(n));
-  const plugins = await listEnabledPlugins(db, catalog);
+  // Host modules: order hint ∩ statically registered names (legacy path).
+  const hostCatalog = HOST_PLUGIN_ORDER.filter((n) => (NODE_MODULE_NAMES as readonly string[]).includes(n));
+  const hostEnabled = await listEnabledPlugins(db, hostCatalog);
+  // Packages: installed_modules registry is SoT — unknown slugs included, no source whitelist.
+  const packageEnabled = await listEnabledInstalledPackageSlugs(db);
+  const seen = new Set<string>();
+  const plugins: string[] = [];
+  for (const name of hostEnabled) {
+    if (seen.has(name)) continue;
+    seen.add(name);
+    plugins.push(name);
+  }
+  for (const name of packageEnabled) {
+    if (seen.has(name)) continue;
+    seen.add(name);
+    plugins.push(name);
+  }
   const portfolioOn = pluginOn(plugins, 'portfolio');
   const translateOn = pluginOn(plugins, 'translate');
 

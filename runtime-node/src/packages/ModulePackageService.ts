@@ -4,6 +4,9 @@ import path from 'node:path';
 import { ModuleHealth } from './ModuleHealth.js';
 import { ModulePaths } from './ModulePaths.js';
 import { ModuleRegistry } from './ModuleRegistry.js';
+import { applyPackageMigrations, applyPackageUninstallMigrations } from './ModuleMigrations.js';
+import type { PackageLoader } from './PackageLoader.js';
+import { releasePackageJobs } from './PackageJobLifecycle.js';
 import { extractZipSafe, isZipMagic, scanZip } from './zipSafe.js';
 import type { Database } from '../db/Database.js';
 import { assertModuleAllowedOnShared } from '../platform/capabilities.js';
@@ -12,11 +15,17 @@ export class ModulePackageService {
   readonly paths: ModulePaths;
   readonly registry: ModuleRegistry;
   readonly health: ModuleHealth;
+  private loader: PackageLoader | null = null;
 
   constructor(private db: Database, storagePath: string) {
     this.paths = new ModulePaths(storagePath);
     this.registry = new ModuleRegistry(db, this.paths);
     this.health = new ModuleHealth(this.registry, this.paths);
+  }
+
+  /** Bind generic package backend loader (optional — lifecycle still works without it). */
+  setPackageLoader(loader: PackageLoader | null): void {
+    this.loader = loader;
   }
 
   async uploadBuffer(originalName: string, buf: Buffer): Promise<{ package_id: string; path: string; size: number; original_name: string }> {
@@ -135,25 +144,83 @@ export class ModulePackageService {
       });
     }
 
+    const mig = await applyPackageMigrations(this.db, this.paths, slug, version);
+    if (!mig.ok) {
+      await this.registry.setStatus(slug, 'failed', mig.error ?? 'Migration failed', 'failed');
+      await this.registry.mirrorPluginEnabled(slug, false);
+      throw new Error(`Package migrations failed: ${mig.error ?? 'unknown'}`);
+    }
+
+    await this.registerPermissions(manifest, slug);
+
     const health = await this.health.check(slug);
-    return { ok: true, slug, status: 'installed', health };
+    return { ok: true, slug, status: 'installed', health, migrations: mig };
+  }
+
+  /** Parity with PHP ModulePackageService::registerPermissions — catalog only, no auto role grants. */
+  private async registerPermissions(manifest: Record<string, unknown>, moduleSlug: string): Promise<void> {
+    if (!(await this.db.tableExists('permissions'))) return;
+    const perms = Array.isArray(manifest.permissions) ? manifest.permissions : [];
+    for (const raw of perms) {
+      const permSlug = String(raw ?? '').trim();
+      if (!permSlug) continue;
+      const name = permSlug
+        .replace(/[._-]+/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+      try {
+        await this.db.run(
+          `INSERT OR IGNORE INTO permissions (slug, name, group_name, description) VALUES (?, ?, ?, ?)`,
+          [permSlug, name, moduleSlug, ''],
+        );
+      } catch {
+        try {
+          await this.db.run(
+            `INSERT IGNORE INTO permissions (slug, name, group_name, description) VALUES (?, ?, ?, ?)`,
+            [permSlug, name, moduleSlug, ''],
+          );
+        } catch {
+          /* catalog optional on partial schemas */
+        }
+      }
+    }
   }
 
   async enable(slug: string): Promise<Record<string, unknown>> {
     const row = await this.registry.getBySlug(slug);
     if (!row) throw new Error('Module not found');
+    const version = String(row.installed_version ?? '0.0.0');
+
+    const mig = await applyPackageMigrations(this.db, this.paths, slug, version);
+    if (!mig.ok) {
+      await this.registry.setStatus(slug, 'installed', mig.error ?? 'Migration failed', 'failed');
+      await this.registry.mirrorPluginEnabled(slug, false);
+      throw new Error(`Package migrations failed: ${mig.error ?? 'unknown'}`);
+    }
+
     await this.registry.setStatus(slug, 'enabled', null, 'unknown');
     await this.registry.mirrorPluginEnabled(slug, true);
+
+    let loadResult: Record<string, unknown> | null = null;
+    if (this.loader) {
+      const r = await this.loader.load(slug);
+      loadResult = r as unknown as Record<string, unknown>;
+      if (!r.ok && !r.skipped) {
+        throw new Error(r.error ?? 'Package backend load failed');
+      }
+    }
+
     const health = await this.health.check(slug);
-    return { ok: true, slug, status: 'enabled', health };
+    return { ok: true, slug, status: 'enabled', health, migrations: mig, load: loadResult };
   }
 
   async disable(slug: string): Promise<Record<string, unknown>> {
     const row = await this.registry.getBySlug(slug);
     if (!row) throw new Error('Module not found');
+    if (this.loader) await this.loader.unload(slug);
+    const jobs = await releasePackageJobs(this.db, slug);
     await this.registry.setStatus(slug, 'disabled', null, String(row.health_status ?? 'unknown'));
     await this.registry.mirrorPluginEnabled(slug, false);
-    return { ok: true, slug, status: 'disabled' };
+    return { ok: true, slug, status: 'disabled', jobs };
   }
 
   async rollback(slug: string): Promise<Record<string, unknown>> {
@@ -166,10 +233,34 @@ export class ModulePackageService {
       (err as Error & { status: number }).status = 409;
       throw err;
     }
+    if (!fs.existsSync(backupPath)) {
+      const err = new Error('Rollback snapshot path missing on disk');
+      (err as Error & { status: number }).status = 409;
+      throw err;
+    }
+
+    if (this.loader) await this.loader.unload(slug);
+    await releasePackageJobs(this.db, slug);
+
+    const dest = this.paths.moduleRoot(slug);
+    if (fs.existsSync(dest)) fs.rmSync(dest, { recursive: true, force: true });
+    this.paths.ensureDir(path.dirname(dest));
+    // backup may be a directory snapshot or a zip; directory restore first
+    if (fs.statSync(backupPath).isDirectory()) {
+      fs.cpSync(backupPath, dest, { recursive: true });
+    } else {
+      const buf = fs.readFileSync(backupPath);
+      if (!isZipMagic(buf)) {
+        const err = new Error('Unsupported rollback snapshot format');
+        (err as Error & { status: number }).status = 409;
+        throw err;
+      }
+      extractZipSafe(buf, dest, (root, target) => this.paths.assertContained(root, target));
+    }
 
     await this.registry.setStatus(slug, 'rolled_back', null, 'unknown');
     await this.registry.mirrorPluginEnabled(slug, false);
-    return { ok: true, slug, status: 'rolled_back', backup_path: backupPath };
+    return { ok: true, slug, status: 'rolled_back', backup_path: backupPath, restored: true };
   }
 
   inspect(packageId: string): Record<string, unknown> {
@@ -225,6 +316,7 @@ export class ModulePackageService {
     const quarantineDir = this.resolveQuarantineDir(packageId);
     const packageRoot = this.detectPackageRoot(quarantineDir);
     const manifest = this.readManifestFromDir(packageRoot);
+    await this.registerPermissions(manifest, slug);
     const dest = this.paths.moduleRoot(slug);
     if (fs.existsSync(dest)) fs.rmSync(dest, { recursive: true, force: true });
     this.paths.ensureDir(path.dirname(dest));
@@ -235,13 +327,49 @@ export class ModulePackageService {
       `UPDATE installed_modules SET name=?, installed_version=?, manifest_json=?, updated_at=? WHERE slug=?`,
       [String(manifest.name ?? slug), version, JSON.stringify(manifest), nowIso(), slug],
     );
+
+    const mig = await applyPackageMigrations(this.db, this.paths, slug, version);
+    if (!mig.ok) {
+      await this.registry.setStatus(slug, 'failed', mig.error ?? 'Migration failed', 'failed');
+      await this.registry.mirrorPluginEnabled(slug, false);
+      if (this.loader) await this.loader.unload(slug);
+      throw new Error(`Package migrations failed: ${mig.error ?? 'unknown'}`);
+    }
+
+    if (String(row.status ?? '') === 'enabled' && this.loader) {
+      await this.loader.load(slug);
+    }
+
     const health = await this.health.check(slug);
-    return { ok: true, slug, status: String(row.status ?? 'installed'), version, health };
+    return { ok: true, slug, status: String(row.status ?? 'installed'), version, health, migrations: mig };
   }
 
   async uninstall(slug: string, keepData = true): Promise<Record<string, unknown>> {
     const row = await this.registry.getBySlug(slug);
     if (!row) throw new Error('Module not found');
+
+    if (this.loader) await this.loader.unload(slug);
+    await releasePackageJobs(this.db, slug);
+
+    let uninstallMig: Awaited<ReturnType<typeof applyPackageUninstallMigrations>> | null = null;
+    if (!keepData) {
+      const manifest = (() => {
+        try {
+          return this.readManifestFromDir(this.paths.moduleRoot(slug));
+        } catch {
+          return null;
+        }
+      })();
+      const migBlock = (manifest?.migrations ?? {}) as Record<string, unknown>;
+      const uninstallRel =
+        typeof migBlock.uninstall_path === 'string' && migBlock.uninstall_path.trim()
+          ? String(migBlock.uninstall_path).trim()
+          : 'migrations/uninstall';
+      uninstallMig = await applyPackageUninstallMigrations(this.db, this.paths, slug, uninstallRel);
+      if (!uninstallMig.ok) {
+        throw new Error(`Package uninstall migrations failed: ${uninstallMig.error ?? 'unknown'}`);
+      }
+    }
 
     const dest = this.paths.moduleRoot(slug);
     if (fs.existsSync(dest)) fs.rmSync(dest, { recursive: true, force: true });
@@ -254,7 +382,13 @@ export class ModulePackageService {
       await this.registry.mirrorPluginEnabled(slug, false);
     }
 
-    return { ok: true, slug, keep_data: keepData, status: keepData ? 'uninstalled' : 'deleted' };
+    return {
+      ok: true,
+      slug,
+      keep_data: keepData,
+      status: keepData ? 'uninstalled' : 'deleted',
+      uninstall_migrations: uninstallMig,
+    };
   }
 
   async reconcilePluginMirror(dryRun = true): Promise<Record<string, unknown>> {

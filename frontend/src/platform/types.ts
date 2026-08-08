@@ -19,6 +19,11 @@ export type PlatformAdminScreen = {
   Component?: ComponentType<Record<string, never>>
   lazy?: () => Promise<{ default: ComponentType<Record<string, never>> }>
   element?: ReactElement
+  /**
+   * Bind a host-provided admin page by key (`provideHostAdminPage`).
+   * Universal bridge for extracted modules whose admin UI still lives in the host SPA.
+   */
+  hostPageKey?: string
 }
 
 export type PlatformPublicRouteDef = {
@@ -33,9 +38,31 @@ export type PlatformWidgetDefinition = {
   category: 'structure' | 'basic' | 'portfolio' | 'commerce' | 'integration' | (string & {})
   icon?: string
   plugin?: string
+  /**
+   * Register under `type` as-is (no `${slug}.` prefix).
+   * Use for extracted platform modules that own frozen public widget IDs
+   * in `builder/manifest/widget-types.v1.json`. Default false.
+   */
+  stableType?: boolean
   defaultSettings: Record<string, unknown>
   settingsFields: PlatformSettingsField[]
   Render: ComponentType<{ settings: Record<string, unknown>; editMode?: boolean }>
+}
+
+export type HostSlotId = 'site.body.end' | 'site.runtime' | 'admin.dashboard' | 'admin.header'
+
+export type HostSdk = {
+  /**
+   * Contribute a React component to a host layout slot.
+   * Cleared automatically when the package FE unloads (disable/update).
+   */
+  registerSlot: (
+    slot: HostSlotId,
+    Component: ComponentType<Record<string, never>>,
+    options?: { id?: string; requiresConsentCategory?: string; order?: number },
+  ) => void
+  /** Cookie-consent category gate (necessary / analytics / marketing / …). */
+  allowsConsentCategory: (category: string) => boolean
 }
 
 export type PlatformFrontendContext = {
@@ -53,6 +80,7 @@ export type PlatformFrontendContext = {
   admin: AdminSdk
   builder: BuilderSdk
   public: PublicSdk
+  host: HostSdk
 }
 
 export type AdminSdk = {
@@ -68,6 +96,8 @@ export type AdminSdk = {
   registerDashboardCard: (card: { id: string; label: string; render: () => ReactNode }) => void
   registerTopBarButton: (btn: { id: string; label: string; onClick: () => void }) => void
   registerSearchProvider: (provider: { id: string; label: string; search: (q: string) => Promise<Array<{ title: string; href: string }>> }) => void
+  /** Resolve a host-provided page component previously registered via provideHostAdminPage. */
+  resolveHostPage: (key: string) => ComponentType<Record<string, never>> | undefined
 }
 
 export type BuilderSdk = {

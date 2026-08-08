@@ -6,6 +6,7 @@ import type { AdminScreen, PublicRouteDef } from '@/core/pluginTypes'
 import type { WidgetDefinition } from '@/builder/types'
 import { createPlatformFrontendContext } from '@/platform/createContext'
 import { getPlatformDashboardCards, unregisterPlatformModule } from '@/platform/registry'
+import { resolvePackageWidgetType } from '@/platform/resolvePackageWidgetType'
 
 const loaded = new Set<string>()
 /** slug → last imported package version (reload FE when ZIP updates). */
@@ -154,11 +155,11 @@ function createContext(slug: string, version: string): ModuleFrontendContext {
       publicRoutes.push(route)
       flush()
     },
-    registerBuilderWidget: (widget: WidgetDefinition) => {
-      const namespaced = widget.type.includes('.') ? widget.type : `${slug}.${widget.type}`
-      registerWidget({ ...widget, type: namespaced, plugin: slug })
+    registerBuilderWidget: (widget: WidgetDefinition & { stableType?: boolean }) => {
+      const resolved = resolvePackageWidgetType(slug, widget.type, Boolean(widget.stableType))
+      registerWidget({ ...widget, type: resolved, plugin: slug })
       blocks.push({
-        type: namespaced,
+        type: resolved,
         label: widget.label,
         category: widget.category,
         icon: widget.icon,

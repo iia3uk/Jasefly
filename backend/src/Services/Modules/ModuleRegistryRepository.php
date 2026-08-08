@@ -63,6 +63,24 @@ final class ModuleRegistryRepository
 
     public function setStatus(string $slug, string $status, ?string $lastError = null, ?string $healthStatus = null): void
     {
+        $existing = $this->getBySlug($slug);
+        // Failure paths may call setStatus before the first full upsert — never INSERT
+        // a partial row (MySQL NOT NULL `name` would mask the real exception).
+        if ($existing === null) {
+            $this->upsert([
+                'slug' => $slug,
+                'name' => $slug,
+                'installed_version' => '0.0.0',
+                'status' => $status,
+                'source' => 'package',
+                'last_error' => $lastError,
+                'health_status' => $healthStatus ?? 'unknown',
+                'enabled_at' => $status === 'enabled' ? gmdate('Y-m-d H:i:s') : null,
+                'disabled_at' => $status === 'disabled' ? gmdate('Y-m-d H:i:s') : null,
+            ]);
+            return;
+        }
+
         $patch = ['status' => $status];
         if ($lastError !== null) {
             $patch['last_error'] = $lastError;

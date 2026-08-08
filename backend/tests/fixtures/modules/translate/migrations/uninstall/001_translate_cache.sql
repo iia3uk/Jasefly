@@ -1,0 +1,1 @@
+-- Translation cache is preserved by package manifest.

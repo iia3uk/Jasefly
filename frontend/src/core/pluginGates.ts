@@ -37,7 +37,7 @@ export function pluginForAdminResource(resource: string): string | null {
 export const PATH_PLUGIN_GATES: Array<{ prefix: string; plugin: string }> = [
   // about/contact — обычные CMS-страницы билдера, без Portfolio
   { prefix: '/services', plugin: 'portfolio' },
-  { prefix: '/projects', plugin: 'portfolio' },
+  { prefix: '/projects', plugin: 'projects' },
   { prefix: '/blog', plugin: 'blog' },
   { prefix: '/products', plugin: 'products' },
   { prefix: '/register', plugin: 'registration' },
@@ -51,7 +51,7 @@ export const PATH_PLUGIN_GATES: Array<{ prefix: string; plugin: string }> = [
 export const SLUG_PLUGIN_GATES: Record<string, string> = {
   about: 'portfolio',
   contact: 'portfolio',
-  projects: 'portfolio',
+  projects: 'projects',
   services: 'portfolio',
   blog: 'blog',
   register: 'registration',

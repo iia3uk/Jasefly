@@ -120,9 +120,31 @@ final class JobRunner
         $t0 = microtime(true);
 
         try {
+            $owner = JobHandlerRegistry::ownerOf($type);
+            if ($owner !== null && !$this->isOwnerActive($owner)) {
+                $ms = (int) round((microtime(true) - $t0) * 1000);
+                $err = 'owner_inactive:' . $owner;
+                $this->db->run(
+                    "UPDATE scheduled_jobs SET status='cancelled', finished_at=NOW(), last_error=? WHERE id=?",
+                    [$err, $id]
+                );
+                $this->logAttempt($id, $attempt, 'cancelled', $err, $ms);
+                $this->dispatch('scheduler.job.cancelled', ['job_id' => $id, 'type' => $type, 'reason' => 'owner_inactive']);
+                return false;
+            }
+
             $handler = JobHandlerRegistry::get($type);
             if (!$handler) {
-                throw new \RuntimeException("No handler registered for job type: {$type}");
+                // Orphan / unregistered — cancel without retry burn (package disable/uninstall).
+                $ms = (int) round((microtime(true) - $t0) * 1000);
+                $err = 'no_handler:' . $type;
+                $this->db->run(
+                    "UPDATE scheduled_jobs SET status='cancelled', finished_at=NOW(), last_error=? WHERE id=?",
+                    [$err, $id]
+                );
+                $this->logAttempt($id, $attempt, 'cancelled', $err, $ms);
+                $this->dispatch('scheduler.job.cancelled', ['job_id' => $id, 'type' => $type, 'reason' => 'no_handler']);
+                return false;
             }
             $handler($payload);
             $ms = (int) round((microtime(true) - $t0) * 1000);
@@ -159,6 +181,26 @@ final class JobRunner
     private function backoffSeconds(int $attempt): int
     {
         return min(3600, (int) (2 ** max(0, $attempt - 1)) * 5);
+    }
+
+    /**
+     * Platform/infra owners stay active. Package owners follow modules.is_enabled.
+     * Missing modules row → fail-open (bundled core plugins without a row).
+     */
+    private function isOwnerActive(string $owner): bool
+    {
+        if (in_array($owner, ['scheduler', 'platform'], true)) {
+            return true;
+        }
+        try {
+            $row = $this->db->one('SELECT is_enabled FROM modules WHERE name=? LIMIT 1', [$owner]);
+            if (!$row) {
+                return true;
+            }
+            return (int) ($row['is_enabled'] ?? 0) === 1;
+        } catch (\Throwable) {
+            return true;
+        }
     }
 
     private function logAttempt(int $jobId, int $attempt, string $status, ?string $error, int $ms): void

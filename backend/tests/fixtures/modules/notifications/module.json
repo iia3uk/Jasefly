@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Notifications",
+  "slug": "notifications",
+  "version": "1.0.0",
+  "description": "Внутренний inbox админов + optional email/Telegram через Platform Mail/HTTP. Provides notifications.send.",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": [
+      "json"
+    ]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {
+      "mail": ">=1.0.0"
+    },
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "admin.pages",
+      "permissions.check"
+    ],
+    "optional": [
+      "mail.send",
+      "http.client"
+    ],
+    "provides": [
+      "notifications.send"
+    ]
+  },
+  "entrypoints": {
+    "backend": "backend/NotificationsModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "notifications",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "notifications.view",
+    "notifications.manage"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  }
+}

@@ -762,9 +762,43 @@ server.tool(
 
 server.tool(
   'cms_list_resources',
-  'Список доступных CRUD-ресурсов и singleton-настроек CMS.',
-  {},
-  async () => ok({ resources: RESOURCES, singletons: SINGLETONS }),
+  'CRUD-ресурсы: host hints ∪ runtime package surfaces.content_acl (не lifecycle whitelist).',
+  siteSchema(),
+  async ({ site }) => {
+    const hints = RESOURCES;
+    const discovered = [];
+    try {
+      const rows = (await getClient(site).get('/admin/modules'))?.data ?? [];
+      for (const row of Array.isArray(rows) ? rows : []) {
+        if (String(row.status ?? '') !== 'enabled') continue;
+        let mf = row.manifest ?? row.manifest_json ?? null;
+        if (typeof mf === 'string') {
+          try {
+            mf = JSON.parse(mf);
+          } catch {
+            mf = null;
+          }
+        }
+        const acl = mf?.surfaces?.content_acl;
+        if (!Array.isArray(acl)) continue;
+        for (const item of acl) {
+          const r = String(item?.resource ?? '').trim();
+          if (r) discovered.push(r);
+        }
+      }
+    } catch {
+      // offline / auth — return hints only
+    }
+    const resources = [...new Set([...hints, ...discovered])];
+    return ok({
+      resources,
+      singletons: SINGLETONS,
+      hints,
+      discovered,
+      authoritative: false,
+      note: 'hints + runtime surfaces; CRUD still validates via host/package routes',
+    });
+  },
 );
 
 server.tool(
@@ -859,16 +893,22 @@ server.tool(
 
 server.tool(
   'cms_publish',
-  'Сменить статус публикации blog или projects.',
+  'Сменить статус публикации ресурса через POST /admin/{resource}/{id}/publish (slug-agnostic; resource must expose that route).',
   siteSchema({
-    resource: z.enum(['blog', 'projects']),
-        id: z.union([z.string(), z.number()]),
-        status: z.enum(['published', 'draft', 'archived']).default('published'),
+    resource: z.string().min(1).describe('Admin resource key, e.g. blog, projects, pages'),
+    id: z.union([z.string(), z.number()]),
+    status: z.enum(['published', 'draft', 'archived']).default('published'),
   }),
   async ({ site, resource, id, status }) => {
     try {
       const cms = getClient(site);
-      const res = await cms.post(`/admin/${resource}/${id}/publish`, { status });
+      const key = String(resource || '')
+        .trim()
+        .replace(/^\/+|\/+$/g, '');
+      if (!key || key.includes('..') || key.includes('/') || key.includes('\\')) {
+        return fail(new Error('Invalid resource'));
+      }
+      const res = await cms.post(`/admin/${key}/${id}/publish`, { status });
       return ok(res?.data ?? res);
     } catch (e) {
       return fail(e);

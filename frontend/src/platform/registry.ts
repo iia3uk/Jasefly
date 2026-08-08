@@ -1,5 +1,6 @@
 import type { ComponentType, ReactElement, ReactNode } from 'react'
 import type { PublicRouteDef } from '@/core/pluginTypes'
+import { clearHostSlotsForSlug } from '@/platform/hostSlots'
 
 type Scoped = { slug: string }
 
@@ -31,6 +32,7 @@ export function unregisterPlatformModule(slug: string): void {
     }
   }
   unregisterFns.delete(slug)
+  clearHostSlotsForSlug(slug)
   for (let i = topBarButtons.length - 1; i >= 0; i--) if (topBarButtons[i].slug === slug) topBarButtons.splice(i, 1)
   for (let i = searchProviders.length - 1; i >= 0; i--) if (searchProviders[i].slug === slug) searchProviders.splice(i, 1)
   for (let i = inspectorPanels.length - 1; i >= 0; i--) if (inspectorPanels[i].slug === slug) inspectorPanels.splice(i, 1)

@@ -49,8 +49,19 @@ final class SchedulerTick
         }
         $queue = new JobQueue($this->db);
         foreach ($rows as $row) {
+            $jobType = (string) $row['job_type'];
+            $owner = JobHandlerRegistry::ownerOf($jobType);
+            if ($owner !== null && !$this->isOwnerActive($owner)) {
+                // Skip enqueue while owner package is disabled; keep schedule row for re-enable.
+                $next = $this->nextFromExpression((string) $row['expression']);
+                $this->db->run(
+                    'UPDATE cron_schedules SET next_run_at=? WHERE id=?',
+                    [$next, (int) $row['id']]
+                );
+                continue;
+            }
             $queue->push(
-                (string) $row['job_type'],
+                $jobType,
                 json_decode((string) ($row['payload'] ?? '{}'), true) ?: [],
                 null,
                 'cron',
@@ -66,6 +77,22 @@ final class SchedulerTick
             $n++;
         }
         return $n;
+    }
+
+    private function isOwnerActive(string $owner): bool
+    {
+        if (in_array($owner, ['scheduler', 'platform'], true)) {
+            return true;
+        }
+        try {
+            $row = $this->db->one('SELECT is_enabled FROM modules WHERE name=? LIMIT 1', [$owner]);
+            if (!$row) {
+                return true;
+            }
+            return (int) ($row['is_enabled'] ?? 0) === 1;
+        } catch (\Throwable) {
+            return true;
+        }
     }
 
     /** Minimal cron: supports every-N-minutes and hourly/daily shortcuts. */

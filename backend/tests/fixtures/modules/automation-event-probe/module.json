@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Automation Event Probe",
+  "slug": "automation-event-probe",
+  "version": "1.0.0",
+  "description": "Synthetic EventCatalog declare probe for Automation discovery.",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": [
+      "json"
+    ]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {},
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "events.publish",
+      "events.subscribe"
+    ],
+    "provides": [
+      "automation-event-probe.signal"
+    ]
+  },
+  "entrypoints": {
+    "backend": "backend/AutomationEventProbeModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "automation-event-probe",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "automation-event-probe.view"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  }
+}

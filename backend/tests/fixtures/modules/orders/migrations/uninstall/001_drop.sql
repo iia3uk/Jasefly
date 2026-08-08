@@ -1,0 +1,1 @@
+-- Orders data preserved on uninstall.

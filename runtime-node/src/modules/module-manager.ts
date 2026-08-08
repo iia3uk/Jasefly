@@ -10,7 +10,9 @@ import { readJsonBody } from './_helpers.js';
 export const name = 'module-manager';
 
 function svc(ctx: ModuleContext): ModulePackageService {
-  return new ModulePackageService(ctx.db, ctx.cfg.storagePath);
+  const service = new ModulePackageService(ctx.db, ctx.cfg.storagePath);
+  if (ctx.packageLoader) service.setPackageLoader(ctx.packageLoader);
+  return service;
 }
 
 function decodeOperationLog(row: Row): Record<string, unknown> {

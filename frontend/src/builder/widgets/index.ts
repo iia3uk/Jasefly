@@ -11,9 +11,9 @@ import { registerJourneyWidgets } from '@/builder/widgets/journey'
 import { registerCommerceWidgets } from '@/builder/widgets/commerce'
 import { registerAuthWidgets } from '@/builder/widgets/auth'
 import { registerAccessWidgets } from '@/builder/widgets/access'
-import { registerFormWidgets } from '@/builder/widgets/forms'
-import { registerNewsletterWidgets } from '@/builder/widgets/newsletter'
-import { registerCommentWidgets } from '@/builder/widgets/comments'
+// newsletter-signup — ZIP package via stableType (packageModuleLoader)
+// forms widget `form` — ZIP package via stableType (packageModuleLoader)
+// comments widgets — ZIP package registers frozen IDs via stableType (packageModuleLoader)
 import { registerWidget } from '@/builder/registry'
 import { getBlocks } from '@/core/moduleRegistry'
 
@@ -35,9 +35,6 @@ export function initBuilderWidgets() {
   registerCommerceWidgets()
   registerAuthWidgets()
   registerAccessWidgets()
-  registerFormWidgets()
-  registerNewsletterWidgets()
-  registerCommentWidgets()
 
   // Plugin-contributed blocks: each manifest block carries a renderer +
   // settings schema. We bridge them into the builder widget registry so the

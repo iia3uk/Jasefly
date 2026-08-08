@@ -59,10 +59,7 @@ return function (Router $router, $db, array $app, string $prefix = '/api/v1'): v
     $router->get($p('/skills'), [$public, 'skills']);
     $router->get($p('/services'), [$public, 'services']);
     $router->get($p('/testimonials'), [$public, 'testimonials']);
-    $router->get($p('/projects'), [$public, 'projects']);
-    $router->get($p('/projects/{slug}'), [$public, 'projects']);
-    $router->get($p('/blog'), [$public, 'blog']);
-    $router->get($p('/blog/{slug}'), [$public, 'blog']);
+    // /projects and /blog are package-owned (ZIP modules via Platform resources()).
     $router->get($p('/contact-info'), [$public, 'contactInfo']);
     $router->get($p('/pages/{slug}'), [$public, 'page']);
     $router->get($p('/media/{id}'), [$media, 'stream']);

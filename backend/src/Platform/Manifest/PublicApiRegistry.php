@@ -52,7 +52,7 @@ final class PublicApiRegistry
                 'access.service', 'mail.send', 'scheduler.jobs', 'storage.files', 'builder.widgets', 'builder.inspector',
                 'notifications.send', 'media.library', 'users.roles', 'events.publish', 'events.subscribe',
                 'http.client', 'settings.global', 'settings.module', 'analytics.events', 'permissions.check',
-                'content.pages', 'admin.pages', 'public.routes', 'api.routes', 'users.current',
+                'content.pages', 'content.resources', 'admin.pages', 'public.routes', 'api.routes', 'users.current',
             ],
             'feature_flags' => (new FeatureFlags())->all(),
         ];

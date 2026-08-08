@@ -1,0 +1,5 @@
+/** Projects package frontend: host editor bridge + frozen widget type. */
+const SLUG = 'projects'
+const VERSION = '1.0.0'
+export const JaseflyFrontendModule = { slug: SLUG, version: VERSION, sdkVersion: 1, async register(ctx) { const Component = ctx.admin?.resolveHostPage?.('projects.editor'); const nav = { group: 'Контент', path: '/admin/projects', label: 'Проекты', permission: 'content.view', icon: 'folder' }; const page = { path: 'projects/:id', label: 'Редактирование проекта', group: 'Контент', permission: 'content.edit', hostPageKey: 'projects.editor', ...(Component ? { Component } : {}) }; ctx.admin?.registerNavItem?.(nav); ctx.admin?.registerPage?.({ path: 'projects', label: 'Проекты', group: 'Контент', permission: 'content.view', hostPageKey: 'projects.list' }); ctx.admin?.registerPage?.(page); const def = { type: 'projects-grid', label: 'Сетка проектов', category: 'content', stableType: true, defaultSettings: { title: 'Проекты', limit: 12 }, Render: () => null }; ctx.builder?.registerWidget?.(def) || ctx.registerBuilderWidget?.(def) }, async unregister() {} }
+export default JaseflyFrontendModule

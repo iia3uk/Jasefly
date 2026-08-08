@@ -56,10 +56,11 @@ final class MailModule extends AbstractModule
                     ['value' => 'none', 'label' => 'Без шифрования'],
                 ]],
             ['key' => 'smtp_username', 'label' => 'SMTP логин', 'type' => 'text', 'default' => ''],
-            ['key' => 'smtp_password', 'label' => 'SMTP пароль', 'type' => 'text', 'default' => ''],
+            ['key' => 'smtp_password', 'label' => 'SMTP пароль', 'type' => 'password', 'secret' => true, 'default' => ''],
             ['key' => 'success_message', 'label' => 'Сообщение после отправки', 'type' => 'text',
                 'default' => 'Спасибо! Сообщение отправлено. Мы ответим вам в ближайшее время.'],
 
+            // Telegram delivery remains coupled to Mail plugin (not extracted) — credentials only.
             ['key' => '_heading_telegram', 'label' => 'Telegram', 'type' => 'heading', 'default' => '',
                 'help' => 'Мгновенные уведомления о заявках с формы. Создайте бота у @BotFather и узнайте chat_id.'],
             ['key' => 'telegram_enabled', 'label' => 'Уведомлять в Telegram', 'type' => 'select', 'default' => '0',
@@ -67,7 +68,7 @@ final class MailModule extends AbstractModule
                     ['value' => '0', 'label' => 'Выключено'],
                     ['value' => '1', 'label' => 'Включено'],
                 ]],
-            ['key' => 'telegram_bot_token', 'label' => 'Bot token', 'type' => 'text', 'default' => ''],
+            ['key' => 'telegram_bot_token', 'label' => 'Bot token', 'type' => 'password', 'secret' => true, 'default' => ''],
             ['key' => 'telegram_chat_id', 'label' => 'Chat ID', 'type' => 'text', 'default' => '',
                 'help' => 'Личный chat_id или id группы/канала'],
 
@@ -80,9 +81,9 @@ final class MailModule extends AbstractModule
                     ['value' => 'smartcaptcha', 'label' => 'Яндекс SmartCaptcha'],
                 ]],
             ['key' => 'turnstile_site_key', 'label' => 'Turnstile site key', 'type' => 'text', 'default' => ''],
-            ['key' => 'turnstile_secret', 'label' => 'Turnstile secret key', 'type' => 'text', 'default' => ''],
+            ['key' => 'turnstile_secret', 'label' => 'Turnstile secret key', 'type' => 'password', 'secret' => true, 'default' => ''],
             ['key' => 'smartcaptcha_site_key', 'label' => 'SmartCaptcha client key', 'type' => 'text', 'default' => ''],
-            ['key' => 'smartcaptcha_secret', 'label' => 'SmartCaptcha server key', 'type' => 'text', 'default' => ''],
+            ['key' => 'smartcaptcha_secret', 'label' => 'SmartCaptcha server key', 'type' => 'password', 'secret' => true, 'default' => ''],
         ];
     }
 

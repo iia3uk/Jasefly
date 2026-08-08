@@ -7,6 +7,7 @@ use App\Core\EventDispatcher;
 use App\Database;
 use App\Modules\Scheduler\JobQueue;
 use App\Platform\Contracts\PlatformEventsInterface;
+use App\Platform\Events\EventCatalog;
 
 final class EventsAdapter implements PlatformEventsInterface
 {
@@ -38,5 +39,20 @@ final class EventsAdapter implements PlatformEventsInterface
         } catch (\Throwable) {
             $this->publish($event, $payload);
         }
+    }
+
+    public function declare(string $eventId, array $meta = []): void
+    {
+        EventCatalog::declare($eventId, $this->moduleSlug, $meta);
+    }
+
+    public function hasDeclared(string $eventId): bool
+    {
+        return EventCatalog::has($eventId);
+    }
+
+    public function listDeclared(): array
+    {
+        return EventCatalog::list();
     }
 }

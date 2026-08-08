@@ -164,8 +164,8 @@ export function AppRouter() {
           <Route path="/register" element={<PluginOr404 plugin="registration"><RegisterPage /></PluginOr404>} />
           <Route path="/register/verify" element={<PluginOr404 plugin="registration"><RegisterVerifyPage /></PluginOr404>} />
           <Route path="/about" element={<CmsOr slug="about" path="/about"><AboutPage /></CmsOr>} />
-          <Route path="/projects" element={<PluginOr404 plugin="portfolio"><CmsOr slug="projects" path="/projects"><ProjectsPage /></CmsOr></PluginOr404>} />
-          <Route path="/projects/:slug" element={<PluginOr404 plugin="portfolio"><ProjectDetailPage /></PluginOr404>} />
+          <Route path="/projects" element={<PluginOr404 plugin="projects"><CmsOr slug="projects" path="/projects"><ProjectsPage /></CmsOr></PluginOr404>} />
+          <Route path="/projects/:slug" element={<PluginOr404 plugin="projects"><ProjectDetailPage /></PluginOr404>} />
           <Route path="/services" element={<PluginOr404 plugin="portfolio"><CmsOr slug="services" path="/services"><ServicesPage /></CmsOr></PluginOr404>} />
           <Route path="/products/:slug" element={<PluginOr404 plugin="products"><ProductDetailPage /></PluginOr404>} />
           <Route path="/blog" element={<PluginOr404 plugin="blog"><CmsOr slug="blog" path="/blog"><BlogPage /></CmsOr></PluginOr404>} />

@@ -141,7 +141,8 @@ final class FormSubmitService
     private function notify(array $form, array $values, string $publicId): void
     {
         $notifyEmail = $this->ctx->settings()->get('notify_email');
-        if ($notifyEmail && $this->ctx->capabilities()->has('mail.send')) {
+        // has(mail.send)=contract; isAvailable()=transport ready
+        if ($notifyEmail && $this->ctx->mail()->isAvailable()) {
             $lines = [];
             foreach ($values as $k => $v) {
                 $lines[] = htmlspecialchars((string) $k) . ': ' . htmlspecialchars(is_scalar($v) ? (string) $v : json_encode($v));

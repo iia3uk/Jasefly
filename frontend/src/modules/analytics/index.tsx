@@ -1,10 +1,7 @@
-import { createElement } from 'react'
-import { registerModule } from '@/core/moduleRegistry'
-import { AnalyticsAdminPage } from './AnalyticsAdminPage'
-
-registerModule({
-  name:'analytics',
-  label:'Аналитика',
-  adminNav:[{group:'Система',path:'/admin/analytics',label:'Аналитика',permission:'analytics.view',icon:'bar-chart-3'}],
-  adminScreens:[{path:'analytics',label:'Аналитика',group:'Система',element:createElement(AnalyticsAdminPage)}],
-})
+/**
+ * Analytics FE moved to installable package: modules-src/analytics/frontend-dist.
+ * Host loads it via packageModuleLoader when the package is enabled.
+ * Admin UI remains host-bound via provideHostAdminPage (analytics.admin).
+ * Beacon mounts via host slot site.body.end (no static SiteLayout import).
+ */
+export {}

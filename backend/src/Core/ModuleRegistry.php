@@ -125,10 +125,18 @@ final class ModuleRegistry
 
     public function register(ModuleInterface $module): void
     {
-        foreach ($this->modules as $existing) {
-            if ($existing->name() === $module->name()) {
+        foreach ($this->modules as $i => $existing) {
+            if ($existing->name() !== $module->name()) {
+                continue;
+            }
+            // Installable ZIP package wins over same-slug bundled module.
+            // Enables gradual extraction without dual runtime registrations.
+            if ($module instanceof PackageModuleAdapter && !$existing instanceof PackageModuleAdapter) {
+                $this->modules[$i] = $module;
+                $this->blueprintIndex = null;
                 return;
             }
+            return;
         }
         $this->modules[] = $module;
     }
@@ -525,7 +533,8 @@ final class ModuleRegistry
     private function safeModuleSettings(ModuleInterface $m): array
     {
         try {
-            return $this->state->getSettings($m);
+            // Public catalog must never leak SMTP passwords / bot tokens / etc.
+            return $this->state->getPublicSettings($m);
         } catch (\Throwable $e) {
             $this->recordLoadFailure($m->name(), 'settings', $e->getMessage(), $e::class, $e->getFile() ?: null, $e->getLine() ?: null, gmdate(DATE_ATOM));
             $this->quarantinePackageIfNeeded($m, $e, 'settings');

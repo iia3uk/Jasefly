@@ -6,6 +6,7 @@ declare(strict_types=1);
  * (prod: pages, education).
  */
 
+use App\Platform\Surfaces\PackageSurfaceRegistry;
 use App\Services\SoftDeleteService;
 
 if (!extension_loaded('pdo_sqlite')) {
@@ -17,6 +18,11 @@ require_once __DIR__ . '/helpers.php';
 $ctx = jasefly_test_sqlite_boot();
 $pdo = $ctx['pdo'];
 $db = $ctx['db'];
+
+PackageSurfaceRegistry::resetForTests();
+PackageSurfaceRegistry::register('projects', [
+    'trash' => [['resource' => 'projects', 'table' => 'projects']],
+]);
 
 $pdo->exec(
     "CREATE TABLE education (
@@ -56,15 +62,16 @@ assert_true(
 assert_true($soft->restore('education', 1) === false, 'restore without deleted_at returns false');
 assert_true($soft->restore('projects', 2) === true, 'restore with deleted_at succeeds');
 
-// Simulate empty-all walk over TRASHABLE including a no-column table
+// Simulate empty-all walk over host∪package trashable including a no-column table
 $total = 0;
-foreach (SoftDeleteService::TRASHABLE as $table) {
+foreach (SoftDeleteService::trashableMap() as $table) {
     try {
         $total += $soft->emptyTrash($table);
     } catch (Throwable $e) {
         assert_true(false, 'emptyTrash must not throw on ' . $table . ': ' . $e->getMessage());
     }
 }
-assert_true($total >= 0, 'empty-all walk over TRASHABLE completes without exception');
+assert_true($total >= 0, 'empty-all walk over trashableMap completes without exception');
+PackageSurfaceRegistry::resetForTests();
 
 $ctx['cleanup']();

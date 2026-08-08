@@ -1,0 +1,9 @@
+{
+  "slug": "comments",
+  "version": "1.0.0",
+  "entry": "index.js",
+  "export": "JaseflyFrontendModule",
+  "assets": {
+    "js": ["index.js"]
+  }
+}

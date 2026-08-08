@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Modules\Overload;
 
 use App\Database;
+use App\Platform\Adapters\MailAdapter;
 use App\Response;
 
 /**
@@ -423,11 +424,10 @@ final class OverloadService
     private function sendOverloadEmails(array $sample, bool $test = false): bool
     {
         $recipients = $this->notifyRecipients();
-        if ($recipients === [] || !class_exists(\App\Modules\Mail\Mailer::class)) {
+        $mail = new MailAdapter($this->db, $this->app !== [] ? $this->app : ['storage' => $this->storage]);
+        if ($recipients === [] || !$mail->isAvailable()) {
             return false;
         }
-        $mailSettings = $this->mailPluginSettings();
-        $logDir = rtrim($this->storage, '/\\') . '/logs';
         $host = (string) ($_SERVER['HTTP_HOST'] ?? ($this->app['url'] ?? 'site'));
         $cpus = self::cpuCount();
         $subject = ($test ? '[TEST] ' : '') . "Перегрузка сервера — {$host}";
@@ -442,20 +442,8 @@ final class OverloadService
         $html = '<pre style="font:14px/1.45 ui-monospace,monospace">'
             . htmlspecialchars($body, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</pre>';
 
-        $any = false;
-        try {
-            $mailer = new \App\Modules\Mail\Mailer($mailSettings, $logDir);
-            foreach ($recipients as $email) {
-                try {
-                    $mailer->sendHtml($email, $subject, $html, null, $body);
-                    $any = true;
-                } catch (\Throwable) {
-                }
-            }
-        } catch (\Throwable) {
-            return false;
-        }
-        return $any;
+        $result = $mail->sendHtml($recipients, $subject, $html, $body);
+        return (bool) ($result['ok'] ?? false);
     }
 
     /** @return list<string> */

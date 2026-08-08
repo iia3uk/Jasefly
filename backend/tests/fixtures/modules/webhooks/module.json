@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Webhooks",
+  "slug": "webhooks",
+  "version": "1.0.0",
+  "description": "Исходящие webhooks при событиях CMS (resource.afterSave, page.afterPublish, contact.message).",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": ["curl", "json"]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {},
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "http.client",
+      "api.routes",
+      "admin.pages",
+      "permissions.check",
+      "settings.module",
+      "events.subscribe"
+    ],
+    "provides": ["webhooks.dispatch"]
+  },
+  "entrypoints": {
+    "backend": "backend/WebhooksModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "webhooks",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "integrations.manage"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  }
+}

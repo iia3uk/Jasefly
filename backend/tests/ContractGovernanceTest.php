@@ -106,8 +106,13 @@ $scanRoots = [
     $repoRoot . '/backend/src/Controllers',
     $repoRoot . '/backend/src/Core',
     $repoRoot . '/backend/src/Modules',
+    // Extracted ZIP packages (CI SoT) may own frozen event identifiers via PlatformEvents::publish
+    $repoRoot . '/backend/tests/fixtures/modules',
 ];
 foreach ($scanRoots as $dir) {
+    if (!is_dir($dir)) {
+        continue;
+    }
     $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
     foreach ($it as $file) {
         /** @var SplFileInfo $file */
@@ -118,9 +123,20 @@ foreach ($scanRoots as $dir) {
 }
 $missingEvents = [];
 foreach ($frozenEvents as $event) {
-    $needle = "dispatch('" . $event . "'";
-    $needle2 = 'dispatch("' . $event . '"';
-    if (!str_contains($phpBlob, $needle) && !str_contains($phpBlob, $needle2)) {
+    $needles = [
+        "dispatch('" . $event . "'",
+        'dispatch("' . $event . '"',
+        "publish('" . $event . "'",
+        'publish("' . $event . '"',
+    ];
+    $found = false;
+    foreach ($needles as $needle) {
+        if (str_contains($phpBlob, $needle)) {
+            $found = true;
+            break;
+        }
+    }
+    if (!$found) {
         $missingEvents[] = $event;
     }
 }

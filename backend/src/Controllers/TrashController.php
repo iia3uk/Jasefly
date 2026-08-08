@@ -77,7 +77,7 @@ final class TrashController
             Response::error('Empty all trash requires confirm=true', 422);
         }
         $total = 0;
-        foreach (SoftDeleteService::TRASHABLE as $resource => $table) {
+        foreach (SoftDeleteService::trashableMap() as $resource => $table) {
             $total += $this->softDelete->emptyTrash($table);
         }
         $this->activity->log($r, 'empty_trash', 'all', null, null, ['count' => $total]);

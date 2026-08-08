@@ -16,7 +16,7 @@ node scripts/jasefly/cli.mjs test --runtime=node   # runtime-node unit + VPS smo
 
 ### Dual behavioral parity
 
-`runtime=dual` → `scripts/behavior/run-all.mjs`: seed twin SQLite DBs, boot PHP + Node, compare HTTP cases from `contracts/behavior/`. Module status: [dual-runtime-parity-progress.md](dual-runtime-parity-progress.md) (**28/28** modules, **879/879** cases). Contract-scoped — not absolute identity outside covered scenarios.
+`runtime=dual` → `scripts/behavior/run-all.mjs`: seed twin SQLite DBs, boot PHP + Node, compare HTTP cases from `contracts/behavior/`. Snapshot: [dual-runtime-parity-progress.md](dual-runtime-parity-progress.md) (HTTP contracts; not “Core owns N domains”). Package architecture: [architecture/CURRENT.md](architecture/CURRENT.md).
 
 ### Backend (PHP)
 

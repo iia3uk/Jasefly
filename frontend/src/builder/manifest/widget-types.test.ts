@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 const dir = path.dirname(fileURLToPath(import.meta.url))
 const widgetsDir = path.join(dir, '..', 'widgets')
 const snapshotPath = path.join(dir, 'widget-types.v1.json')
+const packageStablePath = path.join(dir, 'package-stable-widget-types.v1.json')
 
 function scanRegisteredWidgetTypes(): string[] {
   const types = new Set<string>()
@@ -20,13 +21,28 @@ function scanRegisteredWidgetTypes(): string[] {
   return [...types].sort()
 }
 
+function packageStableWidgetTypes(): string[] {
+  if (!fs.existsSync(packageStablePath)) return []
+  const doc = JSON.parse(fs.readFileSync(packageStablePath, 'utf8')) as {
+    widgets?: Record<string, string>
+  }
+  return Object.keys(doc.widgets ?? {}).sort()
+}
+
 describe('builder widget type freeze', () => {
   it('does not remove widget IDs from widget-types.v1.json', () => {
     const snap = JSON.parse(fs.readFileSync(snapshotPath, 'utf8')) as { widgets: string[] }
     const frozen = [...snap.widgets].sort()
     const live = scanRegisteredWidgetTypes()
-    const removed = frozen.filter((id) => !live.includes(id))
+    const packageStable = packageStableWidgetTypes()
+    const covered = new Set([...live, ...packageStable])
+
+    // Package-owned stable IDs must themselves be frozen public contract members.
+    const undeclared = packageStable.filter((id) => !frozen.includes(id))
+    expect(undeclared, `package-stable widgets missing from freeze: ${undeclared.join(', ')}`).toEqual([])
+
+    const removed = frozen.filter((id) => !covered.has(id))
     expect(removed, `removed widget types: ${removed.join(', ')}`).toEqual([])
-    expect(live.length).toBeGreaterThanOrEqual(frozen.length)
+    expect(covered.size).toBeGreaterThanOrEqual(frozen.length)
   })
 })

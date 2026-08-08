@@ -7,11 +7,14 @@ use App\Database;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\PermissionMiddleware;
 use App\Middleware\RateLimitMiddleware;
+use App\Middleware\SoftRateLimitMiddleware;
 use App\Platform\Contracts\PlatformHttpInterface;
 use App\Platform\Contracts\PlatformRequestInterface;
 use App\Request;
 use App\Router;
 use App\Services\PermissionService;
+use App\Support\OutboundHttp;
+use App\Support\SsrfGuard;
 
 final class HttpAdapter implements PlatformHttpInterface
 {
@@ -52,9 +55,25 @@ final class HttpAdapter implements PlatformHttpInterface
         return new AuthMiddleware((string) ($this->app['jwt_secret'] ?? ''));
     }
 
-    public function permissionMiddleware(): object
+    public function permissionMiddleware(?string $capability = null): object
     {
         $db = $this->db ?? throw new \RuntimeException('Database required for permission middleware');
+        $cap = $capability !== null ? trim($capability) : '';
+        if ($cap !== '') {
+            return new class($db, $cap) {
+                public function __construct(private \App\Database $db, private string $capability) {}
+
+                public function __invoke(\App\Request $r, callable $next): mixed
+                {
+                    $user = $r->user ?? null;
+                    if (!$user) {
+                        \App\Response::error('Unauthorized', 401);
+                    }
+                    (new PermissionService($this->db))->require($user, $this->capability);
+                    return $next();
+                }
+            };
+        }
         return new PermissionMiddleware(new PermissionService($db));
     }
 
@@ -62,6 +81,12 @@ final class HttpAdapter implements PlatformHttpInterface
     {
         $db = $this->db ?? throw new \RuntimeException('Database required for rate limit middleware');
         return new RateLimitMiddleware($db, $maxAttempts, $windowSeconds);
+    }
+
+    public function softRateLimitMiddleware(int $maxAttempts, int $windowSeconds, array $throttleData = []): object
+    {
+        $db = $this->db ?? throw new \RuntimeException('Database required for soft rate limit middleware');
+        return new SoftRateLimitMiddleware($db, $maxAttempts, $windowSeconds, $throttleData);
     }
 
     public function download(string $filename, string $body, string $contentType = 'text/csv; charset=utf-8', array $headers = []): never
@@ -77,6 +102,21 @@ final class HttpAdapter implements PlatformHttpInterface
         }
         echo $body;
         exit;
+    }
+
+    public function isSafeOutboundUrl(string $url): bool
+    {
+        return SsrfGuard::isSafeHttpUrl($url);
+    }
+
+    public function postJsonOutbound(string $url, array|string $body, array $headers = [], int $timeoutSeconds = 5): bool
+    {
+        return OutboundHttp::postJson($url, $body, $headers, $timeoutSeconds);
+    }
+
+    public function requestOutbound(string $url, array $options = []): array
+    {
+        return OutboundHttp::request($url, $options);
     }
 
     /** @param callable(PlatformRequestInterface, mixed...): mixed $handler */

@@ -1,0 +1,5 @@
+/** Support package FE — host-owned screens and runtime widget. */
+const SLUG = 'support'
+const VERSION = '1.0.0'
+function page(ctx, spec) { const Comp=ctx.admin?.resolveHostPage?.(spec.hostPageKey); const route={...spec,...(Comp?{Component:Comp}:{})}; const nav={group:spec.group,path:`/admin/${spec.path}`,label:spec.label,permission:spec.permission,icon:spec.icon}; ctx.admin?.registerNavItem?.(nav); ctx.admin?.registerPage?.(route); }
+export default { slug: SLUG, version: VERSION, async register(ctx) { page(ctx,{path:'support',label:'Поддержка',group:'Коммуникации',permission:'support.agent',icon:'message-circle',hostPageKey:'support.inbox'}); page(ctx,{path:'support/faq',label:'FAQ бота',group:'Коммуникации',permission:'support.manage',icon:'help-circle',hostPageKey:'support.faq'}); const SupportWidgetHost=ctx.admin?.resolveHostPage?.('support.site_widget'); if(SupportWidgetHost&&ctx.host?.registerSlot)ctx.host.registerSlot('site.runtime',()=>ctx.ui.createElement(SupportWidgetHost),{id:'chat',order:10}); }, async unregister() {} }

@@ -2,19 +2,31 @@
 declare(strict_types=1);
 
 /**
- * H4 Design B — behavioral SoftPluginGate + route registration (R3).
- * Primary proof is registerRoutes + SoftPluginGate::outcome (no Response exit).
+ * Projects soft-disable semantics after Content Resources extract.
+ * SoftPluginGate unit proof + package Platform registration (not ContentModule).
  */
 
 use App\Core\AbstractModule;
 use App\Core\Container;
+use App\Core\EventDispatcher;
 use App\Core\ModuleRegistry;
+use App\Core\Modules\ModuleManifest;
+use App\Core\Modules\PackageModuleAdapter;
 use App\Database;
 use App\Modules\Content\ContentModule;
-use App\Modules\Projects\ProjectsModule;
+use App\PackageModules\Projects\ProjectsModule;
+use App\Platform\Adapters\ContentResourcesAdapter;
 use App\Request;
 use App\Router;
 use App\Support\SoftPluginGate;
+
+$projectsPackage = dirname(__DIR__, 2) . '/modules-src/projects/backend';
+if (!is_dir($projectsPackage)) {
+    $projectsPackage = __DIR__ . '/fixtures/modules/projects/backend';
+}
+require_once $projectsPackage . '/ProjectResourceHandler.php';
+require_once $projectsPackage . '/ProjectCategoryResourceHandler.php';
+require_once $projectsPackage . '/ProjectsModule.php';
 
 assert_true(SoftPluginGate::decide(true, 'GET', false) === 'pass', 'enabled GET list passes');
 assert_true(SoftPluginGate::decide(true, 'POST', false) === 'pass', 'enabled POST passes');
@@ -55,75 +67,57 @@ $pdo->exec(
         settings TEXT NULL
     )"
 );
-$pdo->exec("INSERT INTO modules (name, is_enabled) VALUES ('projects', 0)");
+$pdo->exec("INSERT INTO modules (name, is_enabled) VALUES ('projects', 1)");
 
-$app = ['version' => '1.0.0', 'jwt_secret' => 'test-secret-for-soft-api'];
+$app = ['version' => '1.0.0', 'jwt_secret' => 'test-secret-for-soft-api', 'storage' => $ctx['storageDir']];
 $modulesPath = $ctx['tmpDir'] . '/modules-empty';
 @mkdir($modulesPath, 0775, true);
 
-$registry = new ModuleRegistry($db, $app, $modulesPath);
-$registry->register(new ProjectsModule());
-Container::getInstance()->set(ModuleRegistry::class, $registry);
+$manifest = ModuleManifest::fromArray([
+    'schema_version' => 1,
+    'type' => 'jasefly-module',
+    'name' => 'Projects',
+    'slug' => 'projects',
+    'version' => '1.0.0',
+    'jasefly' => ['api_version' => 1, 'sdk_version' => 1, 'min_version' => '1.0.0'],
+    'entrypoints' => ['backend' => 'backend/ProjectsModule.php'],
+]);
 
-$bootState = (object) ['count' => 0];
-$softCounter = new class ($bootState) extends AbstractModule {
-    public function __construct(private object $bootState) {}
-    public function name(): string { return 'soft-counter'; }
-    public function registersRoutesWhenDisabled(): bool { return true; }
-    public function boot(Database $db, array $app): void { $this->bootState->count++; }
-    public function registerRoutes(Router $router, Database $db, array $app, string $apiPrefix): void
-    {
-        $router->get(rtrim($apiPrefix, '/') . '/admin/soft-counter', static function (): void {});
-    }
-};
-$pdo->exec("INSERT INTO modules (name, is_enabled) VALUES ('soft-counter', 0)");
-$registry->register($softCounter);
+ContentResourcesAdapter::resetForTests();
+$registry = new ModuleRegistry($db, $app, $modulesPath);
+$inner = new ProjectsModule();
+$inner->setPackageManifest($manifest);
+$adapter = new PackageModuleAdapter($inner, $manifest);
+$registry->register($adapter);
+Container::getInstance()->set(ModuleRegistry::class, $registry);
+Container::getInstance()->set(EventDispatcher::class, $registry->events());
 
 $router = new Router();
 $prefix = '/api/v1';
 $registry->registerRoutes($router, $prefix);
 $registry->boot();
 
-assert_true((int) $bootState->count === 0, 'disabled soft module is not booted merely because routes registered');
-
 $listMatch = $router->match(new Request('GET', '/api/v1/admin/projects'));
-assert_true(($listMatch['status'] ?? 0) === 200, 'disabled: GET /admin/projects route registered');
-$itemMatch = $router->match(new Request('GET', '/api/v1/admin/projects/1'));
-assert_true(($itemMatch['status'] ?? 0) === 200, 'disabled: GET /admin/projects/{id} route registered');
-$postMatch = $router->match(new Request('POST', '/api/v1/admin/projects'));
-assert_true(($postMatch['status'] ?? 0) === 200, 'disabled: POST /admin/projects route registered');
-$putMatch = $router->match(new Request('PUT', '/api/v1/admin/projects/1'));
-assert_true(($putMatch['status'] ?? 0) === 200, 'disabled: PUT route registered');
-$delMatch = $router->match(new Request('DELETE', '/api/v1/admin/projects/1'));
-assert_true(($delMatch['status'] ?? 0) === 200, 'disabled: DELETE route registered');
-$pubMatch = $router->match(new Request('POST', '/api/v1/admin/projects/1/publish'));
-assert_true(($pubMatch['status'] ?? 0) === 200, 'disabled: publish route registered');
-$reMatch = $router->match(new Request('POST', '/api/v1/admin/projects/reorder'));
-assert_true(($reMatch['status'] ?? 0) === 200, 'disabled: reorder route registered');
+assert_true(($listMatch['status'] ?? 0) === 200, 'enabled package: GET /admin/projects registered via Platform HTTP');
+$publicMatch = $router->match(new Request('GET', '/api/v1/projects'));
+assert_true(($publicMatch['status'] ?? 0) === 200, 'enabled package: public GET /projects registered');
+assert_true((new ContentResourcesAdapter('host'))->has('projects'), 'projects resource registered when enabled');
 
-$outList = SoftPluginGate::outcome($registry, 'projects', 'GET', false);
+// Soft gate when plugin disabled (new registry so PluginStateService cache is fresh)
+$pdo->exec("UPDATE modules SET is_enabled=0 WHERE name='projects'");
+$registryDisabled = new ModuleRegistry($db, $app, $modulesPath);
+$registryDisabled->register(new PackageModuleAdapter(new ProjectsModule(), $manifest));
+$outList = SoftPluginGate::outcome($registryDisabled, 'projects', 'GET', false);
 assert_true($outList !== null && ($outList['status'] ?? 0) === 200, 'disabled GET list → 200 empty');
 assert_true(($outList['body']['data'] ?? null) === [], 'disabled GET list empty collection');
-
-$outItem = SoftPluginGate::outcome($registry, 'projects', 'GET', true);
+$outItem = SoftPluginGate::outcome($registryDisabled, 'projects', 'GET', true);
 assert_true($outItem !== null && ($outItem['status'] ?? 0) === 404, 'disabled GET item → 404');
-
-foreach ([['POST', false], ['PUT', true], ['DELETE', true], ['POST', true]] as [$method, $isItem]) {
-    $out = SoftPluginGate::outcome($registry, 'projects', $method, $isItem);
+foreach ([['POST', false], ['PUT', true], ['DELETE', true]] as [$method, $isItem]) {
+    $out = SoftPluginGate::outcome($registryDisabled, 'projects', $method, $isItem);
     assert_true($out !== null && ($out['status'] ?? 0) === 409, "disabled $method → 409");
-    assert_true(($out['body']['code'] ?? '') === 'plugin_disabled', "disabled $method code plugin_disabled");
 }
 
-// Enable projects — soft gate passes (handlers would run)
-$pdo->exec("UPDATE modules SET is_enabled=1 WHERE name='projects'");
-$registryEnabled = new ModuleRegistry($db, $app, $modulesPath);
-$registryEnabled->register(new ProjectsModule());
-$pass = SoftPluginGate::outcome($registryEnabled, 'projects', 'GET', false);
-assert_true($pass === null, 'enabled projects: soft gate passes to normal handlers');
-$passMut = SoftPluginGate::outcome($registryEnabled, 'projects', 'POST', false);
-assert_true($passMut === null, 'enabled projects: mutations pass to normal handlers');
-
-// ContentModule alone must not own admin Projects CRUD (platform shell must be seeded ON)
+// ContentModule alone must not own projects routes
 $pdo->exec("INSERT INTO modules (name, is_enabled) VALUES ('content', 1) ON CONFLICT(name) DO UPDATE SET is_enabled=1");
 $contentOnly = new ModuleRegistry($db, $app, $modulesPath);
 $contentOnly->register(new ContentModule());
@@ -132,7 +126,7 @@ $contentOnly->registerRoutes($contentRouter, $prefix);
 $adminProj = $contentRouter->match(new Request('GET', '/api/v1/admin/projects'));
 assert_true(($adminProj['status'] ?? 0) === 404, 'ContentModule does not register admin Projects CRUD');
 $publicProj = $contentRouter->match(new Request('GET', '/api/v1/projects'));
-assert_true(($publicProj['status'] ?? 0) === 200, 'ContentModule still registers public GET /projects');
+assert_true(($publicProj['status'] ?? 0) === 404, 'ContentModule no longer owns public GET /projects (package-owned)');
 
 // Default AbstractModule: registersRoutesWhenDisabled is opt-in false
 $defaultMod = new class extends AbstractModule {

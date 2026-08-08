@@ -7,24 +7,18 @@ import type { AppConfig } from '../config.js';
 import { CONTRACTS_ROOT, readContractJson, REPO_ROOT } from '../config.js';
 import type { Database } from '../db/Database.js';
 import { fail } from '../http/envelope.js';
+import { PackageSurfaceRegistry } from '../platform/PackageSurfaceRegistry.js';
+import { HOST_TRASHABLE } from './hostBaselines.js';
 import { runMigrations } from '../db/migrate.js';
 
-export const TRASHABLE: Record<string, string> = {
-  projects: 'projects',
-  blog: 'blog_posts',
-  media: 'media',
-  'project-categories': 'project_categories',
-  'blog-categories': 'blog_categories',
-  'skill-categories': 'skill_categories',
-  skills: 'skills',
-  experience: 'experience',
-  education: 'education',
-  services: 'services',
-  testimonials: 'testimonials',
-  pages: 'pages',
-  products: 'products',
-  'lab-experiments': 'lab_experiments',
-};
+/** @deprecated Use trashableMap() */
+export const TRASHABLE = HOST_TRASHABLE;
+
+export { HOST_TRASHABLE };
+
+export function trashableMap(): Record<string, string> {
+  return { ...HOST_TRASHABLE, ...PackageSurfaceRegistry.trashable() };
+}
 
 function nowSql(): string {
   return new Date().toISOString().slice(0, 19).replace('T', ' ');
@@ -38,7 +32,7 @@ async function hasDeletedAt(db: Database, table: string): Promise<boolean> {
 /** PHP SoftDeleteService::allTrash — empty PHP array encodes as []. */
 export async function trashIndex(db: Database): Promise<Record<string, unknown[]> | unknown[]> {
   const out: Record<string, unknown[]> = {};
-  for (const [resource, table] of Object.entries(TRASHABLE)) {
+  for (const [resource, table] of Object.entries(trashableMap())) {
     if (!(await hasDeletedAt(db, table))) continue;
     const items = await db.all(
       `SELECT * FROM ${table} WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC LIMIT 50`,
@@ -51,7 +45,7 @@ export async function trashIndex(db: Database): Promise<Record<string, unknown[]
 }
 
 export async function trashRestore(db: Database, resource: string, id: string): Promise<boolean> {
-  const table = TRASHABLE[resource];
+  const table = trashableMap()[resource];
   if (!table || !(await hasDeletedAt(db, table))) return false;
   const row = await db.one(`SELECT * FROM ${table} WHERE id=?`, [id]);
   if (!row) return false;
@@ -60,7 +54,7 @@ export async function trashRestore(db: Database, resource: string, id: string): 
 }
 
 export async function trashForceDelete(db: Database, resource: string, id: string): Promise<boolean> {
-  const table = TRASHABLE[resource];
+  const table = trashableMap()[resource];
   if (!table) return false;
   const row = await db.one(`SELECT * FROM ${table} WHERE id=?`, [id]);
   if (!row) return false;
@@ -69,7 +63,7 @@ export async function trashForceDelete(db: Database, resource: string, id: strin
 }
 
 export async function trashEmpty(db: Database, resource: string): Promise<number> {
-  const table = TRASHABLE[resource];
+  const table = trashableMap()[resource];
   if (!table || !(await hasDeletedAt(db, table))) return 0;
   const countRow = await db.one(`SELECT COUNT(*) AS c FROM ${table} WHERE deleted_at IS NOT NULL`);
   const count = Number(countRow?.c ?? 0);
@@ -79,7 +73,7 @@ export async function trashEmpty(db: Database, resource: string): Promise<number
 
 export async function trashEmptyAll(db: Database): Promise<number> {
   let total = 0;
-  for (const resource of Object.keys(TRASHABLE)) {
+  for (const resource of Object.keys(trashableMap())) {
     total += await trashEmpty(db, resource);
   }
   return total;

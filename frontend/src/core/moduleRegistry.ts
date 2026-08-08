@@ -74,13 +74,10 @@ const manifests: ModuleManifest[] = []
 const runtimeDisabled = new Set<string>()
 let pluginsHydrated = false
 
-/** Backend `content` ↔ frontend `site` are the same surface.
- *  Portfolio product toggle also gates Projects admin API (routes live on ProjectsModule). */
+/** Backend `content` ↔ frontend `site` are the same surface. */
 const PLUGIN_ALIASES: Record<string, string[]> = {
   content: ['content', 'site'],
   site: ['site', 'content'],
-  portfolio: ['portfolio', 'projects'],
-  projects: ['projects', 'portfolio'],
 }
 
 const KNOWN_PLUGINS = [

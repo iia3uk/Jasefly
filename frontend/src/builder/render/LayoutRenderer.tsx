@@ -23,8 +23,24 @@ import {
   useLayoutScrollSnap,
 } from '@/builder/lib/sectionEffects'
 import clsx from 'clsx'
+import packageStableWidgetTypes from '@/builder/manifest/package-stable-widget-types.v1.json'
 
 initBuilderWidgets()
+
+const STABLE_PACKAGE_WIDGETS = new Set(
+  Object.keys((packageStableWidgetTypes as { widgets?: Record<string, string> }).widgets ?? {}),
+)
+
+/**
+ * Package-owned widgets: namespaced types, frozen stableType IDs, or hyphenated package slugs.
+ * No product-slug allowlist — unknown ZIP modules must work without core edits.
+ */
+function isPackageWidgetType(widgetType: string | undefined, plugin: string | null | undefined): boolean {
+  if (!widgetType) return false
+  if (widgetType.includes('.')) return true
+  if (STABLE_PACKAGE_WIDGETS.has(widgetType)) return true
+  return Boolean(plugin && plugin.includes('-'))
+}
 
 type Props = {
   layout: PageLayout | null | undefined
@@ -49,17 +65,6 @@ function HiddenBadge() {
       Скрыто
     </span>
   )
-}
-
-function isPackagePlugin(name: string | null | undefined): boolean {
-  if (!name) return false
-  return name.includes('-') || name === 'forms-sdk-reference'
-}
-
-function isPackageWidgetType(widgetType: string | undefined, plugin: string | null | undefined): boolean {
-  if (!widgetType) return false
-  if (widgetType.includes('.')) return true
-  return isPackagePlugin(plugin)
 }
 
 function WidgetNode({
@@ -146,6 +151,11 @@ function WidgetNode({
       Неизвестный виджет: {widgetType}
     </div>
   )
+
+  // Missing widget impl (e.g. extracted module not installed) must not break public pages.
+  if (!editMode && !def) {
+    return null
+  }
 
   if (!editMode && pluginOff && !packageUnavailable) {
     return null

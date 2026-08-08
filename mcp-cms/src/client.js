@@ -398,14 +398,13 @@ export function hostingGuardStatus(query) {
 
 export { listSitesPublic, siteCount, resolveSite, loadSites };
 
-export const RESOURCES = [
+/**
+ * Host/core CRUD resource hints for MCP UX only.
+ * Not authoritative — cms_list_resources merges runtime package surfaces.content_acl.
+ * Lifecycle MCP tools remain slug-agnostic via installed_modules.
+ */
+export const HOST_RESOURCE_HINTS = [
   'pages',
-  'blog',
-  'blog-categories',
-  'blog-tags',
-  'projects',
-  'project-categories',
-  'products',
   'services',
   'navigation',
   'homepage-sections',
@@ -417,6 +416,18 @@ export const RESOURCES = [
   'statistics',
   'social-links',
   'media',
+];
+
+/** @deprecated Use HOST_RESOURCE_HINTS + runtime discovery */
+export const RESOURCES = [
+  ...HOST_RESOURCE_HINTS,
+  // Package domains kept as UX hints until operators call cms_list_resources (site-aware).
+  'blog',
+  'blog-categories',
+  'blog-tags',
+  'projects',
+  'project-categories',
+  'products',
 ];
 
 export const SINGLETONS = [

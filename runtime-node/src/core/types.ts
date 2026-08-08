@@ -4,6 +4,7 @@ import type { AuthService } from '../auth/AuthService.js';
 import type { AdminCrud } from '../crud/AdminCrud.js';
 import type { Database } from '../db/Database.js';
 import type { EventBus } from '../platform/events.js';
+import type { PackageLoader } from '../packages/PackageLoader.js';
 
 export interface ModuleContext {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -14,6 +15,8 @@ export interface ModuleContext {
   auth: AuthService;
   crud: AdminCrud;
   apiPrefixes: string[];
+  /** Generic ZIP package backend loader (parallel to legacy static modules). */
+  packageLoader?: PackageLoader;
 }
 
 export interface JaseflyModule {

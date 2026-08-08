@@ -1,0 +1,5 @@
+/** Blog package frontend: host editor bridge + frozen widget type. */
+const SLUG = 'blog'
+const VERSION = '1.0.0'
+export const JaseflyFrontendModule = { slug: SLUG, version: VERSION, sdkVersion: 1, async register(ctx) { const Component = ctx.admin?.resolveHostPage?.('blog.editor'); const nav = { group: 'Контент', path: '/admin/blog', label: 'Блог', permission: 'content.view', icon: 'newspaper' }; const page = { path: 'blog/:id', label: 'Редактирование поста', group: 'Контент', permission: 'content.edit', hostPageKey: 'blog.editor', ...(Component ? { Component } : {}) }; ctx.admin?.registerNavItem?.(nav); ctx.admin?.registerPage?.({ path: 'blog', label: 'Блог', group: 'Контент', permission: 'content.view', hostPageKey: 'blog.list' }); ctx.admin?.registerPage?.(page); const def = { type: 'blog-list', label: 'Сетка блога', category: 'content', stableType: true, defaultSettings: { title: 'Блог', limit: 12 }, Render: () => null }; ctx.builder?.registerWidget?.(def) || ctx.registerBuilderWidget?.(def) }, async unregister() {} }
+export default JaseflyFrontendModule

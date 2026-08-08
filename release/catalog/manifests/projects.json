@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Projects",
+  "slug": "projects",
+  "version": "1.0.0",
+  "description": "Projects catalog, categories, public projection and stableType projects-grid.",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": [
+      "json"
+    ]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {
+      "blog": ">=1.0.0"
+    },
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "admin.pages",
+      "permissions.check",
+      "builder.widgets"
+    ],
+    "provides": [
+      "projects.api",
+      "projects.widgets"
+    ]
+  },
+  "entrypoints": {
+    "backend": "backend/ProjectsModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json",
+    "node": "backend/node/index.ts"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "projects",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "content.view",
+    "content.edit",
+    "content.delete"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  },
+  "surfaces": {
+    "trash": [
+      {
+        "resource": "projects",
+        "table": "projects"
+      },
+      {
+        "resource": "project-categories",
+        "table": "project_categories"
+      }
+    ],
+    "dashboard": [
+      {
+        "table": "projects",
+        "count_as": "projects",
+        "draft_as": "projects",
+        "publish_as": "projects",
+        "recent_as": "projects_7d",
+        "extra_status_column": "project_status",
+        "extra_statuses": [
+          "completed",
+          "in_progress",
+          "on_hold",
+          "concept",
+          "cancelled"
+        ]
+      }
+    ],
+    "sitemap": [
+      {
+        "table": "projects",
+        "path_prefix": "/projects",
+        "index_paths": [
+          "/projects",
+          "/services"
+        ],
+        "index_priority": "0.9",
+        "where": {
+          "status": "published"
+        },
+        "priority": "0.7",
+        "soft_delete": true
+      }
+    ],
+    "media": [
+      {
+        "table": "projects",
+        "columns": [
+          "cover_media_id",
+          "cover_portrait_media_id",
+          "cover_landscape_media_id",
+          "og_image_id"
+        ],
+        "html_columns": [
+          "content",
+          "description"
+        ],
+        "public_where": {
+          "status": "published"
+        },
+        "soft_delete": true
+      },
+      {
+        "table": "project_media",
+        "columns": [
+          "media_id"
+        ],
+        "join_on": "project_id",
+        "parent_table": "projects",
+        "public_where": {
+          "status": "published"
+        }
+      }
+    ],
+    "content_acl": [
+      {
+        "resource": "projects"
+      },
+      {
+        "resource": "project-categories"
+      }
+    ],
+    "schema": [
+      {
+        "table": "projects",
+        "role": "owner"
+      },
+      {
+        "table": "project_categories",
+        "role": "owner"
+      },
+      {
+        "table": "project_media",
+        "role": "owner"
+      }
+    ]
+  }
+}

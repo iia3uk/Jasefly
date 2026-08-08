@@ -133,7 +133,7 @@ export class ModuleRegistry {
   async listModuleMigrations(slug: string): Promise<InstalledModuleRow[]> {
     if (!(await this.db.tableExists('module_migrations'))) return [];
     return this.db.all(
-      'SELECT migration, checksum, module_version, batch, applied_at FROM module_migrations WHERE module_slug=? ORDER BY applied_at, id',
+      'SELECT migration, checksum, module_version, batch, applied_at FROM module_migrations WHERE module_slug=? ORDER BY migration ASC',
       [slug],
     );
   }

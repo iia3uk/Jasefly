@@ -1,3 +1,6 @@
+> **Historical / auto-generated parity snapshot.** Counts refer to HTTP behavior contracts, not “Core owns 28 domain modules”.
+> Package architecture: [architecture/CURRENT.md](architecture/CURRENT.md).
+
 # Dual-runtime parity progress (AUTO)
 
 **Generated:** 2026-08-07T21:40:02.892Z  

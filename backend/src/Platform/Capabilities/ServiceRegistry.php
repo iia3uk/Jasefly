@@ -6,9 +6,11 @@ namespace App\Platform\Capabilities;
 use App\Platform\Contracts\PlatformAssetsInterface;
 use App\Platform\Contracts\PlatformBuilderInterface;
 use App\Platform\Contracts\PlatformCacheInterface;
+use App\Platform\Contracts\PlatformCatalogInterface;
 use App\Platform\Contracts\PlatformCapabilitiesInterface;
 use App\Platform\Contracts\PlatformConfigInterface;
 use App\Platform\Contracts\PlatformContentInterface;
+use App\Platform\Contracts\PlatformContentResourcesInterface;
 use App\Platform\Contracts\PlatformDatabaseInterface;
 use App\Platform\Contracts\PlatformEventsInterface;
 use App\Platform\Contracts\PlatformHealthInterface;
@@ -17,6 +19,7 @@ use App\Platform\Contracts\PlatformLoggerInterface;
 use App\Platform\Contracts\PlatformMailInterface;
 use App\Platform\Contracts\PlatformMediaInterface;
 use App\Platform\Contracts\PlatformNotificationsInterface;
+use App\Platform\Contracts\PlatformOrdersInterface;
 use App\Platform\Contracts\PlatformPermissionsInterface;
 use App\Platform\Contracts\PlatformSchedulerInterface;
 use App\Platform\Contracts\PlatformSettingsInterface;
@@ -40,6 +43,8 @@ final class ServiceRegistry
         'scheduler' => PlatformSchedulerInterface::class,
         'mail' => PlatformMailInterface::class,
         'notifications' => PlatformNotificationsInterface::class,
+        'catalog' => PlatformCatalogInterface::class,
+        'orders' => PlatformOrdersInterface::class,
         'settings' => PlatformSettingsInterface::class,
         'permissions' => PlatformPermissionsInterface::class,
         'users' => PlatformUsersInterface::class,
@@ -53,6 +58,7 @@ final class ServiceRegistry
         'assets' => PlatformAssetsInterface::class,
         'health' => PlatformHealthInterface::class,
         'content' => PlatformContentInterface::class,
+        'resources' => PlatformContentResourcesInterface::class,
         'capabilities' => PlatformCapabilitiesInterface::class,
         'features' => FeatureFlags::class,
         'access' => \App\Platform\Contracts\PlatformAccessInterface::class,
@@ -134,6 +140,8 @@ final class ServiceRegistry
         $capMap = [
             'mail' => 'mail.send',
             'notifications' => 'notifications.send',
+            'catalog' => 'catalog.inventory',
+            'orders' => 'orders.checkout',
             'media' => 'media.library',
             'scheduler' => 'scheduler.jobs',
             'storage' => 'storage.files',
@@ -144,6 +152,7 @@ final class ServiceRegistry
             'users' => 'users.current',
             'builder' => 'builder.widgets',
             'content' => 'content.pages',
+            'resources' => 'content.resources',
             'db' => null,
             'database' => null,
             'cache' => null,

@@ -49,10 +49,7 @@ final class ContentModule extends AbstractModule
         $router->get($p('/experience'), [$public, 'experience']);
         $router->get($p('/education'), [$public, 'education']);
         $router->get($p('/skills'), [$public, 'skills']);
-        // Public project list/detail stay on Content (portfolio gate in PublicController).
-        // Admin projects CRUD lives on ProjectsModule with soft-disabled Design B.
-        $router->get($p('/projects'), [$public, 'projects']);
-        $router->get($p('/projects/{slug}'), [$public, 'projects']);
+        // Public /projects owned by Projects package via Platform resources().
         $router->get($p('/services'), [$public, 'services']);
         $router->get($p('/testimonials'), [$public, 'testimonials']);
         $router->get($p('/contact-info'), [$public, 'contactInfo']);
@@ -61,9 +58,9 @@ final class ContentModule extends AbstractModule
         $router->get($p('/sitemap.xml'), [$public, 'sitemap']);
         $router->get($p('/robots.txt'), [$public, 'robots']);
 
+        // Host/core resources only — blog/projects/products register package admin routes.
         $resources = [
             'social-links', 'statistics', 'experience', 'education', 'skill-categories', 'skills',
-            'blog-categories', 'blog-tags',
             'testimonials', 'navigation', 'homepage-sections', 'pages',
             'services',
         ];

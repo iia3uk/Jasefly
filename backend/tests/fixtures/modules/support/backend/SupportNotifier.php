@@ -1,0 +1,19 @@
+<?php
+declare(strict_types=1);
+namespace App\PackageModules\Support;
+use App\Platform\Contracts\PlatformHttpInterface;
+use App\Platform\Contracts\PlatformMailInterface;
+/** Package-only notification fanout. */
+final class SupportNotifier {
+ public function __construct(private array $settings, private array $mailSettings, private string $logDir, private PlatformMailInterface $mail, private PlatformHttpInterface $http, private string $adminInboxUrl='/admin/support') {}
+ public function notifyNewActivity(array $payload): void { $title=($payload['kind']??'message')==='ticket'?'?? ����� ����� ���������':'?? ����� ��������� � ���������'; $text=$title."\n�����: ".($payload['public_id']??'')."\n".($payload['note']??'')."\n".($payload['preview']??'')."\n".$this->adminInboxUrl; $sent=false; if($this->on('notify_telegram')||$this->mailHasTelegram()) $sent=$this->sendTelegram($text)||$sent; if($this->on('notify_discord')) $sent=$this->sendJson((string)($this->settings['discord_webhook_url']??''),['content'=>mb_substr($text,0,1900)],'discord')||$sent; if($this->on('notify_max')) $sent=$this->sendJson((string)($this->settings['max_api_url']??''),['chat_id'=>$this->settings['max_chat_id']??'','text'=>mb_substr($text,0,4000)],'max',['Authorization: Bearer '.trim((string)($this->settings['max_bot_token']??''))])||$sent; if($this->on('notify_email')) $sent=$this->sendEmail($title,$text,(string)($payload['public_id']??''))||$sent; if(!$sent) $this->log('skip','no configured channel delivered'); }
+ public function testTelegram(): array { if(!$this->mailHasTelegram()) return ['ok'=>false,'error'=>'��� bot token / chat id (Support ��� ������ �����)']; return $this->sendTelegram('���� Support > Telegram') ? ['ok'=>true] : ['ok'=>false,'error'=>'�� ������� ���������']; }
+ private function on(string $key): bool { return in_array(strtolower(trim((string)($this->settings[$key]??''))),['1','true','yes','on'],true) || ($this->settings[$key]??false)===true; }
+ private function token(): string { return trim((string)($this->settings['telegram_bot_token']??$this->mailSettings['telegram_bot_token']??'')); }
+ private function chat(): string { return trim((string)($this->settings['telegram_chat_id']??$this->mailSettings['telegram_chat_id']??'')); }
+ private function mailHasTelegram(): bool { return $this->token()!==''&&$this->chat()!==''; }
+ private function sendTelegram(string $text): bool { $url='https://api.telegram.org/bot'.$this->token().'/sendMessage'; return $this->sendJson($url,['chat_id'=>$this->chat(),'text'=>mb_substr($text,0,4000)],'telegram'); }
+ private function sendJson(string $url,array $body,string $channel,array $headers=[]): bool { if(!$this->http->isSafeOutboundUrl($url)){ $this->log($channel,'unsafe URL'); return false;} $ok=$this->http->postJsonOutbound($url,$body,$headers,8); $this->log($channel,$ok?'sent ok':'send failed'); return $ok; }
+ private function sendEmail(string $subject,string $text,string $id): bool { $to=trim((string)($this->settings['notify_email_to']??$this->mailSettings['to_email']??$this->mailSettings['from_email']??'')); if($to===''||!$this->mail->isAvailable())return false; $r=$this->mail->sendHtml($to,$subject,'<p>'.nl2br(htmlspecialchars($text,ENT_QUOTES,'UTF-8')).'</p><p><small>����� #'.htmlspecialchars($id,ENT_QUOTES,'UTF-8').'</small></p>',$text); return (bool)($r['ok']??false); }
+ private function log(string $channel,string $message): void { if(!is_dir($this->logDir))@mkdir($this->logDir,0755,true); @file_put_contents($this->logDir.'/support.log',date('c')." notify.$channel ".mb_substr($message,0,500)."\n",FILE_APPEND); }
+}

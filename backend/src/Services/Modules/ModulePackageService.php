@@ -313,6 +313,32 @@ final class ModulePackageService
             } catch (\Throwable) {
             }
             try {
+                \App\Platform\Adapters\NotificationsAdapter::clearOwner($slug);
+                \App\Platform\Adapters\CatalogAdapter::clearOwner($slug);
+                \App\Platform\Adapters\OrdersAdapter::clearOwner($slug);
+                \App\Platform\Adapters\ContentResourcesAdapter::clearOwnerRegistrations($slug);
+                \App\Platform\Surfaces\PackageSurfaceRegistry::clearOwner($slug);
+            } catch (\Throwable) {
+            }
+            try {
+                $cleared = \App\Platform\Events\EventCatalog::clearOwner($slug);
+                if ($cleared > 0) {
+                    $this->registry->appendOperationLog($opId, 'EventCatalog clearOwner: ' . $cleared);
+                }
+            } catch (\Throwable) {
+            }
+            try {
+                $hygiene = \App\Modules\Scheduler\PackageJobLifecycle::release($this->db, $slug);
+                $this->registry->appendOperationLog(
+                    $opId,
+                    'Scheduler release: handlers=' . ($hygiene['handlers'] ?? 0)
+                    . ' cancelled=' . ($hygiene['cancelled'] ?? 0)
+                    . ' crons=' . ($hygiene['crons'] ?? 0)
+                );
+            } catch (\Throwable $schedErr) {
+                $this->registry->appendOperationLog($opId, 'Scheduler release skipped: ' . $schedErr->getMessage());
+            }
+            try {
                 $this->runLifecycleHook('after_disable', $manifest, $slug, 'disable', $opId);
             } catch (\Throwable $hookErr) {
                 if (!$force) {
@@ -401,6 +427,33 @@ final class ModulePackageService
 
             $this->removeInstalledFiles($slug);
             $this->registry->deleteModule($slug);
+            try {
+                $hygiene = \App\Modules\Scheduler\PackageJobLifecycle::release($this->db, $slug);
+                $this->registry->appendOperationLog(
+                    $opId,
+                    'Scheduler release on uninstall: handlers=' . ($hygiene['handlers'] ?? 0)
+                    . ' cancelled=' . ($hygiene['cancelled'] ?? 0)
+                    . ' crons=' . ($hygiene['crons'] ?? 0)
+                );
+            } catch (\Throwable $schedErr) {
+                $this->registry->appendOperationLog($opId, 'Scheduler release skipped: ' . $schedErr->getMessage());
+            }
+            try {
+                (new \App\Platform\Capabilities\CapabilityRegistry($this->db))->revokeModule($slug);
+            } catch (\Throwable) {
+            }
+            try {
+                \App\Platform\Adapters\NotificationsAdapter::clearOwner($slug);
+                \App\Platform\Adapters\CatalogAdapter::clearOwner($slug);
+                \App\Platform\Adapters\OrdersAdapter::clearOwner($slug);
+                \App\Platform\Adapters\ContentResourcesAdapter::clearOwnerRegistrations($slug);
+                \App\Platform\Surfaces\PackageSurfaceRegistry::clearOwner($slug);
+            } catch (\Throwable) {
+            }
+            try {
+                \App\Platform\Events\EventCatalog::clearOwner($slug);
+            } catch (\Throwable) {
+            }
             $this->syncPluginState($slug, false);
             (new ModuleSafeMode($this->paths))->clear($slug);
 
@@ -549,10 +602,10 @@ final class ModulePackageService
             $signatureStatus = (string) ($validation['signature']['status'] ?? 'unsigned');
 
             $nextStatus = $operation === 'install'
-                ? 'enabled'
+                ? 'installed'
                 : (string) ($existingRow['status'] ?? 'enabled');
-            // Recover from quarantine/failed on successful update; keep explicit disabled.
-            if ($nextStatus === 'installed' || $nextStatus === 'failed') {
+            // Recover from failed/quarantined on successful update; keep explicit disabled/installed.
+            if ($operation === 'update' && $nextStatus === 'failed') {
                 $nextStatus = 'enabled';
             }
 
@@ -597,6 +650,12 @@ final class ModulePackageService
                 $this->syncPluginState($slug, false);
                 $this->registry->finishOperation($opId, 'failed', 'Health check failed: ' . $msg, $backupPath, $backupPath !== null, false);
                 throw new \RuntimeException('Health check failed: ' . $msg);
+            }
+            // Explicit lifecycle: install → installed → enabled (states not mixed).
+            if ($operation === 'install' && $nextStatus === 'installed') {
+                $this->registry->appendOperationLog($opId, 'Lifecycle transition: installed → enabled');
+                $nextStatus = 'enabled';
+                $this->syncPluginState($slug, true);
             }
             $this->registry->setStatus($slug, $nextStatus, null, $healthStatus);
             // File rollback is available when a snapshot was taken (update).
@@ -879,11 +938,13 @@ final class ModulePackageService
     {
         $src = str_replace('\\', '/', $src);
         $dest = str_replace('\\', '/', $dest);
-        $this->paths->assertContained($jailRoot, dirname($dest));
+        // Create parents first — dual-runtime packages nest backend/node/sdk/*;
+        // assertContained(realpath) cannot jail a path whose parent does not exist yet.
         $parent = dirname($dest);
         if (!is_dir($parent)) {
             @mkdir($parent, 0775, true);
         }
+        $this->paths->assertContained($jailRoot, $dest);
         if (!@copy($src, $dest)) {
             throw new \RuntimeException('Copy failed: ' . basename($dest));
         }

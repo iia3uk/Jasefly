@@ -158,9 +158,27 @@ assert_true(($out['nested']['secret'] ?? '') === '***', 'SecretRedactor redacts 
 assert_true(($out['nested']['ok'] ?? '') === 'visible', 'SecretRedactor keeps non-secret fields');
 
 // —— Webhooks / Auth / outbound source contracts ——
-$whSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Modules/Webhooks/WebhooksModule.php');
-assert_true(str_contains($whSrc, 'OutboundHttp::postJson') || str_contains($whSrc, 'SsrfGuard::isSafeHttpUrl'), 'WebhooksModule uses OutboundHttp/SsrfGuard');
-assert_true(str_contains($whSrc, 'X-Jasefly-Signature'), 'WebhooksModule signs with HMAC header');
+$whCandidates = [
+    dirname(__DIR__, 2) . '/modules-src/webhooks/backend/WebhooksModule.php',
+    dirname(__DIR__) . '/tests/fixtures/modules/webhooks/backend/WebhooksModule.php',
+];
+$whSrc = '';
+foreach ($whCandidates as $whPath) {
+    if (is_file($whPath)) {
+        $whSrc = (string) file_get_contents($whPath);
+        break;
+    }
+}
+assert_true($whSrc !== '', 'webhooks package source present');
+assert_true(
+    str_contains($whSrc, 'postJsonOutbound') || str_contains($whSrc, 'isSafeOutboundUrl'),
+    'Webhooks package uses Platform outbound HTTP helpers'
+);
+assert_true(str_contains($whSrc, 'X-Jasefly-Signature'), 'Webhooks package signs with HMAC header');
+$httpIface = (string) file_get_contents(dirname(__DIR__) . '/src/Platform/Contracts/PlatformHttpInterface.php');
+assert_true(str_contains($httpIface, 'isSafeOutboundUrl'), 'PlatformHttpInterface exposes isSafeOutboundUrl');
+assert_true(str_contains($httpIface, 'postJsonOutbound'), 'PlatformHttpInterface exposes postJsonOutbound');
+assert_true(str_contains($httpIface, 'requestOutbound'), 'PlatformHttpInterface exposes requestOutbound');
 assert_true(str_contains((string) file_get_contents(dirname(__DIR__) . '/src/Support/OutboundHttp.php'), 'SsrfGuard::isSafeHttpUrl'), 'OutboundHttp applies SsrfGuard');
 assert_true(str_contains((string) file_get_contents(dirname(__DIR__) . '/src/Support/OutboundHttp.php'), 'CURLOPT_RESOLVE'), 'OutboundHttp pins DNS via CURLOPT_RESOLVE');
 assert_true(method_exists(SsrfGuard::class, 'resolvePublicIp'), 'SsrfGuard::resolvePublicIp exists');

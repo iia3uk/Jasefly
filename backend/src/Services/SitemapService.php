@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Core\Container;
-use App\Core\ModuleRegistry;
 use App\Database;
+use App\Platform\Surfaces\PackageSurfaceRegistry;
+use App\Platform\Surfaces\SurfaceSql;
 use Throwable;
 
 final class SitemapService
@@ -18,9 +18,6 @@ final class SitemapService
 
         $seo = $this->db->one('SELECT canonical_base_url FROM seo_settings LIMIT 1');
         $base = rtrim((string) ($seo['canonical_base_url'] ?? $this->app['url']), '/');
-        $portfolioOn = $this->pluginEnabled('portfolio');
-        $blogOn = $this->pluginEnabled('blog');
-        $productsOn = $this->pluginEnabled('products');
 
         $urls = [
             ['loc' => $base . '/', 'priority' => '1.0'],
@@ -33,15 +30,14 @@ final class SitemapService
             'payment', 'payment-success', 'payment-fail',
             'product-card', 'product-detail', 'product-detail-simple', 'product-detail-storefront',
             'product-detail-marketplace', 'product-detail-digital', 'product-detail-landing',
-            // Portfolio/data templates — listed explicitly below when plugins on
-            'projects', 'services',
+            // Package index templates — listing URLs come from package sitemap surfaces
+            'projects', 'services', 'blog',
         ];
         $excludeList = "'" . implode("','", array_map(
             static fn (string $s): string => str_replace("'", "''", $s),
             $excludeSlugs
         )) . "'";
 
-        // Custom CMS pages (non-system) — including about/contact/features without Portfolio
         try {
             foreach ($this->db->all(
                 "SELECT slug, updated_at, published_at FROM pages
@@ -50,13 +46,6 @@ final class SitemapService
             ) as $p) {
                 $slug = (string) ($p['slug'] ?? '');
                 if ($slug === '' || str_starts_with($slug, '__')) {
-                    continue;
-                }
-                // Skip plugin-owned index pages when plugin is off (also covered by page API gates)
-                if ($slug === 'blog' && !$blogOn) {
-                    continue;
-                }
-                if (($slug === 'projects' || $slug === 'services') && !$portfolioOn) {
                     continue;
                 }
                 $urls[] = [
@@ -69,45 +58,9 @@ final class SitemapService
             // pages table may lack columns on old installs
         }
 
-        if ($portfolioOn) {
-            $urls[] = ['loc' => $base . '/projects', 'priority' => '0.9'];
-            $urls[] = ['loc' => $base . '/services', 'priority' => '0.8'];
-
-            foreach ($this->db->all("SELECT slug, updated_at, published_at FROM projects WHERE status='published'") as $p) {
-                $urls[] = [
-                    'loc' => $base . '/projects/' . $p['slug'],
-                    'lastmod' => substr((string) ($p['updated_at'] ?? $p['published_at']), 0, 10),
-                    'priority' => '0.7',
-                ];
-            }
-        }
-
-        if ($blogOn) {
-            foreach ($this->db->all("SELECT slug, updated_at, published_at FROM blog_posts WHERE status='published'") as $p) {
-                $urls[] = [
-                    'loc' => $base . '/blog/' . $p['slug'],
-                    'lastmod' => substr((string) ($p['updated_at'] ?? $p['published_at']), 0, 10),
-                    'priority' => '0.6',
-                ];
-            }
-        }
-
-        if ($productsOn) {
-            try {
-                foreach ($this->db->all(
-                    "SELECT slug, updated_at FROM products WHERE is_visible=1 AND deleted_at IS NULL"
-                ) as $p) {
-                    if (empty($p['slug'])) {
-                        continue;
-                    }
-                    $urls[] = [
-                        'loc' => $base . '/products/' . $p['slug'],
-                        'lastmod' => substr((string) ($p['updated_at'] ?? ''), 0, 10) ?: null,
-                        'priority' => '0.6',
-                    ];
-                }
-            } catch (Throwable) {
-                // products table may be absent if plugin never migrated
+        foreach (PackageSurfaceRegistry::sitemapEntries() as $entry) {
+            foreach ($this->urlsFromSurface($base, $entry) as $u) {
+                $urls[] = $u;
             }
         }
 
@@ -120,25 +73,69 @@ final class SitemapService
             if (!empty($u['lastmod'])) {
                 echo '<lastmod>' . htmlspecialchars((string) $u['lastmod'], ENT_XML1) . '</lastmod>';
             }
-            echo '<priority>' . $u['priority'] . '</priority>';
+            echo '<priority>' . ($u['priority'] ?? '0.5') . '</priority>';
             echo '</url>';
         }
         echo '</urlset>';
         exit;
     }
 
-    private function pluginEnabled(string $name): bool
+    /**
+     * @param array<string, mixed> $entry
+     * @return list<array{loc:string,lastmod?:string|null,priority:string}>
+     */
+    private function urlsFromSurface(string $base, array $entry): array
     {
-        try {
-            /** @var ModuleRegistry $reg */
-            $reg = Container::getInstance()->get(ModuleRegistry::class);
-            $module = $reg->get($name);
-            if (!$module) {
-                return false;
-            }
-            return $reg->state()->isEnabled($module);
-        } catch (Throwable) {
-            return false;
+        $out = [];
+        $table = SurfaceSql::ident((string) ($entry['table'] ?? ''));
+        if ($table === null) {
+            return $out;
         }
+
+        $indexPaths = $entry['index_paths'] ?? [];
+        if (is_array($indexPaths)) {
+            foreach ($indexPaths as $ip) {
+                $path = '/' . ltrim((string) $ip, '/');
+                $out[] = [
+                    'loc' => $base . $path,
+                    'priority' => (string) ($entry['index_priority'] ?? $entry['priority'] ?? '0.8'),
+                ];
+            }
+        }
+
+        $slugCol = SurfaceSql::ident((string) ($entry['slug_column'] ?? 'slug')) ?? 'slug';
+        $where = is_array($entry['where'] ?? null) ? $entry['where'] : [];
+        [$whereSql, $params] = SurfaceSql::equalityWhere($where);
+        $soft = SurfaceSql::softDeleteClause($entry);
+        $priority = (string) ($entry['priority'] ?? '0.6');
+        $prefix = rtrim((string) ($entry['path_prefix'] ?? ''), '/');
+
+        try {
+            $sql = "SELECT `{$slugCol}` AS slug, updated_at"
+                . (isset($entry['where']['status']) || true ? ', published_at' : '')
+                . " FROM `{$table}` WHERE {$whereSql} AND {$soft}";
+            // published_at may be absent — fall back
+            try {
+                $rows = $this->db->all($sql, $params);
+            } catch (Throwable) {
+                $sql = "SELECT `{$slugCol}` AS slug, updated_at FROM `{$table}` WHERE {$whereSql} AND {$soft}";
+                $rows = $this->db->all($sql, $params);
+            }
+            foreach ($rows as $p) {
+                $slug = (string) ($p['slug'] ?? '');
+                if ($slug === '') {
+                    continue;
+                }
+                $out[] = [
+                    'loc' => $base . $prefix . '/' . ltrim($slug, '/'),
+                    'lastmod' => substr((string) ($p['updated_at'] ?? $p['published_at'] ?? ''), 0, 10) ?: null,
+                    'priority' => $priority,
+                ];
+            }
+        } catch (Throwable) {
+            // table may be absent if package never migrated
+        }
+
+        return $out;
     }
 }

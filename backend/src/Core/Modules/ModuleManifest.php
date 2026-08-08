@@ -179,6 +179,16 @@ final class ModuleManifest
         return array_values(array_map('strval', $perms));
     }
 
+    /**
+     * Host surface declarations (trash/dashboard/sitemap/media/content_acl/schema).
+     * @return array<string, mixed>
+     */
+    public function surfaces(): array
+    {
+        $s = $this->data['surfaces'] ?? null;
+        return is_array($s) ? $s : [];
+    }
+
     public function preserveDataOnUninstall(): bool
     {
         $i = $this->data['install'] ?? [];

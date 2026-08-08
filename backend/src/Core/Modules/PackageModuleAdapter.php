@@ -44,6 +44,11 @@ final class PackageModuleAdapter extends AbstractModule
         return $this->inner->priority();
     }
 
+    public function registersRoutesWhenDisabled(): bool
+    {
+        return $this->inner->registersRoutesWhenDisabled();
+    }
+
     public function requires(): array
     {
         return array_keys($this->packageManifest->requiredDependencies());
@@ -90,6 +95,10 @@ final class PackageModuleAdapter extends AbstractModule
                     $this->packageManifest->slug(),
                     80,
                 );
+            }
+            $surfaces = $this->packageManifest->surfaces();
+            if ($surfaces !== []) {
+                $ctx->surfaces()->register($surfaces);
             }
             $this->inner->bootPlatform($ctx);
         } catch (\Throwable $e) {

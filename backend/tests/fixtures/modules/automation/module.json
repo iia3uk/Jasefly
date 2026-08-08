@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Automation",
+  "slug": "automation",
+  "version": "1.0.0",
+  "description": "Сценарии по событиям платформы: условия, действия, delay через Scheduler; triggers из EventCatalog.",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": [
+      "json"
+    ]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {
+      "scheduler": ">=1.0.0",
+      "mail": ">=1.0.0",
+      "notifications": ">=1.0.0"
+    },
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "admin.pages",
+      "permissions.check",
+      "scheduler.jobs",
+      "events.publish",
+      "events.subscribe"
+    ],
+    "optional": [
+      "mail.send",
+      "notifications.send",
+      "http.client"
+    ],
+    "provides": [
+      "automation.engine"
+    ]
+  },
+  "entrypoints": {
+    "backend": "backend/AutomationModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "automation",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "automations.view",
+    "automations.manage",
+    "automations.run"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  }
+}

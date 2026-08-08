@@ -7,9 +7,9 @@ import {
 } from '@/core/pluginGates'
 
 describe('pluginForPath', () => {
-  it('gates portfolio data paths but not about/contact marketing pages', () => {
-    expect(pluginForPath('/projects')).toBe('portfolio')
-    expect(pluginForPath('/projects/foo')).toBe('portfolio')
+  it('gates projects via projects plugin; services via portfolio chrome; about/contact ungated', () => {
+    expect(pluginForPath('/projects')).toBe('projects')
+    expect(pluginForPath('/projects/foo')).toBe('projects')
     expect(pluginForPath('/services')).toBe('portfolio')
     expect(pluginForPath('/about')).toBeNull()
     expect(pluginForPath('/contact')).toBeNull()

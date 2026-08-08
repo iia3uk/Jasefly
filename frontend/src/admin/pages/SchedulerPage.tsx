@@ -7,9 +7,6 @@ import { Button, GhostButton, GlassPanel, Skeleton } from '@/components/ui'
 import { RequirePermission } from '@/admin/components/RequirePermission'
 import { useAuth } from '@/context/AuthContext'
 import { usePluginEnabled } from '@/hooks/useApi'
-import { Link } from 'react-router-dom'
-import { adminUrl } from '@/admin/adminBasePath'
-
 type JobRow = {
   id: number
   type: string
@@ -62,22 +59,6 @@ const HANDLER_HELP: Record<string, { title: string; source: string }> = {
   'platform.event.dispatch': {
     title: 'Отложенное событие платформы',
     source: 'SDK EventsAdapter::publishLater',
-  },
-  'automation.resume': {
-    title: 'Продолжить сценарий после паузы',
-    source: 'Модуль Автоматизации (шаг delay)',
-  },
-  'analytics.retention': {
-    title: 'Удалить устаревшие события аналитики',
-    source: 'Модуль Аналитика',
-  },
-  'analytics.aggregate': {
-    title: 'Собрать дневную сводку аналитики',
-    source: 'Модуль Аналитика',
-  },
-  'newsletter.campaign.send': {
-    title: 'Отправка кампании рассылки',
-    source: 'Модуль Newsletter',
   },
 }
 
@@ -148,15 +129,8 @@ function SchedulerHelp({ handlers }: { handlers: string[] }) {
             </p>
             <ul className="list-disc space-y-1.5 pl-5">
               <li>
-                <Link to={adminUrl('/automations')} className="text-emerald-400 hover:underline">Автоматизации</Link>
-                {' '}— шаг с задержкой → тип <code className="text-zinc-200">automation.resume</code>
-              </li>
-              <li>
-                <Link to={adminUrl('/newsletter/campaigns')} className="text-emerald-400 hover:underline">Рассылки</Link>
-                {' '}→ <code className="text-zinc-200">newsletter.campaign.send</code> (если модуль включён)
-              </li>
-              <li>
-                Аналитика / платформа / пакетные модули — сами вызывают очередь при своих сценариях
+                Пакетные модули (автоматизации, рассылки, аналитика и др.) — кладут namespaced jobs
+                через Platform Scheduler API (локальный тип → <code className="text-zinc-200">{'{slug}.{type}'}</code>)
               </li>
               <li>
                 Таблица <code className="text-zinc-200">cron_schedules</code> — периодические задания (если строки добавлены в БД)

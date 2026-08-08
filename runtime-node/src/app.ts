@@ -7,10 +7,14 @@ import type { Database } from './db/Database.js';
 import { fail, ok } from './http/envelope.js';
 import { availableCapabilities, loadCapabilitiesDoc } from './platform/capabilities.js';
 import { EventBus } from './platform/events.js';
+import { EventCatalog } from './platform/EventCatalog.js';
 import { requireAdmin, requireAuth } from './core/authMiddleware.js';
 import { requirePermission } from './core/permissionMiddleware.js';
 import { healthHandler, siteHandler } from './modules/publicSite.js';
 import { registerAllModules } from './modules/registerAll.js';
+import { PackageLoader } from './packages/PackageLoader.js';
+import { registerModuleAssetRoutes } from './packages/ModuleAssets.js';
+import { syncPackageSources } from './packages/PackageSourceSync.js';
 
 type Vars = {
   Variables: {
@@ -102,6 +106,27 @@ export async function createApp(db: Database, cfg: AppConfig) {
     });
   }
 
+  const packageLoader = new PackageLoader({
+    app,
+    db,
+    cfg,
+    events,
+    apiPrefixes: prefixes,
+    auth,
+    crud,
+  });
+
+  // Safe package FE assets — before catch-all admin CRUD
+  registerModuleAssetRoutes(app, db, cfg.storagePath);
+
+  // Package HTTP dispatcher (table-driven — safe after matcher build / late enable)
+  for (const p of prefixes) {
+    app.use(`${p}/*`, packageLoader.dispatcher());
+  }
+
+  // Sync modules-src → storage and enable (test: all with Node entry; prod: plugin-enabled)
+  await syncPackageSources(db, cfg);
+
   await registerAllModules({
     app,
     db,
@@ -110,9 +135,16 @@ export async function createApp(db: Database, cfg: AppConfig) {
     auth,
     crud,
     apiPrefixes: prefixes,
+    packageLoader,
   });
 
+  // Boot enabled ZIP package Node backends (parallel to legacy static modules)
+  await packageLoader.bootEnabled();
+
   for (const p of prefixes) {
+    app.get(`${p}/admin/platform/events`, requireAdmin(auth), async (c) => {
+      return ok(c, { events: EventCatalog.list() });
+    });
     // PHP OrdersModule: GET list/show + action POSTs only — no generic CRUD write/delete.
     // Register before catch-all so Hono does not invent methods via AdminCrud.
     app.post(`${p}/admin/orders`, (c) => fail(c, 'Method not allowed', 405));

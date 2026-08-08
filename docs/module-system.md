@@ -1,8 +1,10 @@
-# Module system (bundled)
+# Module system (host / Core)
 
 ## Purpose
 
-Describe how bundled modules under `backend/src/Modules/` are discovered, enabled, booted, and exposed.
+Describe how **host-owned** modules under `backend/src/Modules/` are discovered, enabled, booted, and exposed.
+
+Extracted domain features are **packages** (`modules-src/` → ZIP), not folders here. See [architecture/CURRENT.md](architecture/CURRENT.md) and [package-lifecycle.md](package-lifecycle.md).
 
 ## How it works
 

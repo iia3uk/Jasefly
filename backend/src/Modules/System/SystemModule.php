@@ -262,7 +262,10 @@ final class SystemModule extends AbstractModule
             }
             $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
             $registry->state()->setSettings($module, is_array($body['settings'] ?? null) ? $body['settings'] : []);
-            Response::json(['success' => true, 'data' => ['name' => $name, 'settings' => $registry->state()->getSettings($module)]]);
+            Response::json(['success' => true, 'data' => [
+                'name' => $name,
+                'settings' => $registry->state()->getPublicSettings($module),
+            ]]);
         }, $protected);
 
         // Plugin kernel: aggregated blueprints / blocks / public routes / events

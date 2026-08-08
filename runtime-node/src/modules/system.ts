@@ -34,7 +34,7 @@ import {
   rekeyLayoutIds,
   schemaSnapshot,
   snapshotPageRevision,
-  TRASHABLE,
+  trashableMap,
   trashEmpty,
   trashEmptyAll,
   trashForceDelete,
@@ -357,7 +357,7 @@ export async function register(ctx: ModuleContext) {
     ctx.app.get(`${p}/admin/trash`, ...gate, async (c) => ok(c, await trashIndex(ctx.db)));
     ctx.app.post(`${p}/admin/trash/:resource/:id/restore`, ...gate, async (c) => {
       const { resource, id } = c.req.param();
-      if (!TRASHABLE[resource]) return fail(c, 'Resource not trashable', 422);
+      if (!trashableMap()[resource]) return fail(c, 'Resource not trashable', 422);
       if (!(await trashRestore(ctx.db, resource, id))) return fail(c, 'Not found', 404);
       return ok(c, { id: Number(id), resource, message: 'Restored' });
     });

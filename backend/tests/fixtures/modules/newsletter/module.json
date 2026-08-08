@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "type": "jasefly-module",
+  "name": "Newsletter",
+  "slug": "newsletter",
+  "version": "1.0.0",
+  "description": "Подписчики, double opt-in, кампании и отправка через Platform Scheduler + Mail.",
+  "author": {
+    "name": "Jasefly",
+    "url": "https://jasefly.com"
+  },
+  "license": "MIT",
+  "jasefly": {
+    "min_version": "1.0.0",
+    "api_version": 1,
+    "sdk_version": 1
+  },
+  "php": {
+    "min_version": "8.1",
+    "extensions": ["json"]
+  },
+  "dependencies": {
+    "required": {
+      "system": ">=1.0.0"
+    },
+    "optional": {
+      "mail": ">=1.0.0",
+      "scheduler": ">=1.0.0"
+    },
+    "conflicts": {}
+  },
+  "capabilities": {
+    "requires": [
+      "api.routes",
+      "admin.pages",
+      "permissions.check",
+      "scheduler.jobs",
+      "events.publish",
+      "builder.widgets"
+    ],
+    "optional": [
+      "mail.send"
+    ],
+    "provides": [
+      "newsletter.subscribe",
+      "newsletter.campaigns"
+    ]
+  },
+  "entrypoints": {
+    "backend": "backend/NewsletterModule.php",
+    "frontend_manifest": "frontend-dist/manifest.json"
+  },
+  "migrations": {
+    "path": "migrations",
+    "namespace": "newsletter",
+    "uninstall_path": "migrations/uninstall"
+  },
+  "permissions": [
+    "newsletter.view",
+    "newsletter.manage",
+    "newsletter.send",
+    "newsletter.subscribers.manage"
+  ],
+  "install": {
+    "preserve_data_on_uninstall": true,
+    "allow_downgrade": false
+  },
+  "hooks": {
+    "after_install": "hooks/PostInstallHook.php"
+  }
+}

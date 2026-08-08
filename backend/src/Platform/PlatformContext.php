@@ -7,12 +7,15 @@ use App\Platform\Attributes\DeprecatedApi;
 use App\Platform\Capabilities\CapabilityRegistry;
 use App\Platform\Capabilities\ServiceRegistry;
 use App\Platform\Contracts\PlatformAccessInterface;
+use App\Platform\Contracts\PlatformAuthInterface;
 use App\Platform\Contracts\PlatformAssetsInterface;
 use App\Platform\Contracts\PlatformBuilderInterface;
 use App\Platform\Contracts\PlatformCacheInterface;
+use App\Platform\Contracts\PlatformCatalogInterface;
 use App\Platform\Contracts\PlatformCapabilitiesInterface;
 use App\Platform\Contracts\PlatformConfigInterface;
 use App\Platform\Contracts\PlatformContentInterface;
+use App\Platform\Contracts\PlatformContentResourcesInterface;
 use App\Platform\Contracts\PlatformDatabaseInterface;
 use App\Platform\Contracts\PlatformEventsInterface;
 use App\Platform\Contracts\PlatformHealthInterface;
@@ -22,12 +25,15 @@ use App\Platform\Contracts\PlatformLoggerInterface;
 use App\Platform\Contracts\PlatformMailInterface;
 use App\Platform\Contracts\PlatformMediaInterface;
 use App\Platform\Contracts\PlatformNotificationsInterface;
+use App\Platform\Contracts\PlatformOrdersInterface;
 use App\Platform\Contracts\PlatformPermissionsInterface;
 use App\Platform\Contracts\PlatformSchedulerInterface;
 use App\Platform\Contracts\PlatformSettingsInterface;
 use App\Platform\Contracts\PlatformStorageInterface;
+use App\Platform\Contracts\PlatformSurfacesInterface;
 use App\Platform\Contracts\PlatformTranslationsInterface;
 use App\Platform\Contracts\PlatformUsersInterface;
+use App\Platform\Adapters\SurfacesAdapter;
 use App\Platform\Manifest\FeatureFlags;
 use App\Platform\Manifest\PlatformModuleManifestInterface;
 
@@ -52,6 +58,8 @@ final class PlatformContext
         private PlatformSchedulerInterface $scheduler,
         private PlatformMailInterface $mail,
         private PlatformNotificationsInterface $notifications,
+        private PlatformCatalogInterface $catalog,
+        private PlatformOrdersInterface $orders,
         private PlatformSettingsInterface $settings,
         private PlatformPermissionsInterface $permissions,
         private PlatformUsersInterface $users,
@@ -65,7 +73,9 @@ final class PlatformContext
         private PlatformAssetsInterface $assets,
         private PlatformHealthInterface $health,
         private PlatformContentInterface $content,
+        private PlatformContentResourcesInterface $resources,
         private PlatformAccessInterface $access,
+        private PlatformAuthInterface $auth,
         private CapabilityRegistry $capabilities,
         private ServiceRegistry $services,
         private FeatureFlags $features,
@@ -127,6 +137,16 @@ final class PlatformContext
     public function notifications(): PlatformNotificationsInterface
     {
         return $this->notifications;
+    }
+
+    public function catalog(): PlatformCatalogInterface
+    {
+        return $this->catalog;
+    }
+
+    public function orders(): PlatformOrdersInterface
+    {
+        return $this->orders;
     }
 
     public function settings(): PlatformSettingsInterface
@@ -194,9 +214,25 @@ final class PlatformContext
         return $this->content;
     }
 
+    public function resources(): PlatformContentResourcesInterface
+    {
+        return $this->resources;
+    }
+
+    /** Package → host surface registration (trash/dashboard/sitemap/media/ACL/schema). */
+    public function surfaces(): PlatformSurfacesInterface
+    {
+        return new SurfacesAdapter($this->moduleSlug);
+    }
+
     public function access(): PlatformAccessInterface
     {
         return $this->access;
+    }
+
+    public function auth(): PlatformAuthInterface
+    {
+        return $this->auth;
     }
 
     public function capabilities(): PlatformCapabilitiesInterface

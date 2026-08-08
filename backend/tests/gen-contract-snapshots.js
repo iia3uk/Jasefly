@@ -28,7 +28,7 @@ function writeJson(rel, data) {
   })
 }
 
-// Builder widget types (core widgets dir only)
+// Builder widget types (core widgets dir + package-stable frozen IDs)
 {
   const dir = path.join(root, 'frontend/src/builder/widgets')
   const types = new Set()
@@ -39,6 +39,11 @@ function writeJson(rel, data) {
     let m
     const local = new RegExp(re.source, 'g')
     while ((m = local.exec(src))) types.add(m[1])
+  }
+  const pkgStablePath = path.join(root, 'frontend/src/builder/manifest/package-stable-widget-types.v1.json')
+  if (fs.existsSync(pkgStablePath)) {
+    const pkg = JSON.parse(fs.readFileSync(pkgStablePath, 'utf8'))
+    for (const id of Object.keys(pkg.widgets || {})) types.add(id)
   }
   writeJson('frontend/src/builder/manifest/widget-types.v1.json', {
     schema_version: 1,
@@ -55,7 +60,7 @@ function writeJson(rel, data) {
     'storage.files',
     'builder.widgets',
     'builder.inspector',
-    'notifications.send',
+    // notifications.send is package-provided (not a core default)
     'media.library',
     'users.roles',
     'events.publish',

@@ -22,16 +22,17 @@ Implementation is authoritative. Agent path lookup: root [`CMS_MAP.md`](../CMS_M
 
 ## Execution flow (reading order)
 
-0. **[runtime-target-matrix.md](runtime-target-matrix.md)** · [dual-runtime.md](dual-runtime.md) · **[core-freeze-1.0.md](core-freeze-1.0.md)** — where code runs, what is frozen
-1. [glossary.md](glossary.md) — Module / Plugin / Package / SoftPluginGate
-2. [ownership-boundaries.md](ownership-boundaries.md) — who owns which layer
-3. [bootstrap-and-request.md](bootstrap-and-request.md) — HTTP → handler (PHP path)
-4. [routing.md](routing.md) — route registration and match
-5. [authentication.md](authentication.md) · [authorization.md](authorization.md)
-6. [module-system.md](module-system.md) — bundled discovery / boot / enable
-7. [plugin-gates.md](plugin-gates.md) — disabled behavior (BE + FE)
-8. [package-lifecycle.md](package-lifecycle.md) — ZIP install lifecycle
-9. [events.md](events.md) · [platform-sdk.md](platform-sdk.md) · [contracts-and-governance.md](contracts-and-governance.md)
+0. **[architecture/CURRENT.md](architecture/CURRENT.md)** · **[architecture/LLM_CONTEXT.md](architecture/LLM_CONTEXT.md)** · [`../AGENTS.md`](../AGENTS.md) — package vs host ownership (read first)
+1. **[runtime-target-matrix.md](runtime-target-matrix.md)** · [dual-runtime.md](dual-runtime.md) · **[core-freeze-1.0.md](core-freeze-1.0.md)** — where code runs, what is frozen
+2. [glossary.md](glossary.md) — Module / Plugin / Package / SoftPluginGate
+3. [ownership-boundaries.md](ownership-boundaries.md) — who owns which layer
+4. [bootstrap-and-request.md](bootstrap-and-request.md) — HTTP → handler (PHP path)
+5. [routing.md](routing.md) — route registration and match
+6. [authentication.md](authentication.md) · [authorization.md](authorization.md)
+7. [module-system.md](module-system.md) — **host** bundled discovery / boot / enable
+8. [plugin-gates.md](plugin-gates.md) — disabled behavior (BE + FE)
+9. [package-lifecycle.md](package-lifecycle.md) — ZIP install lifecycle · [`../release/catalog/packages.md`](../release/catalog/packages.md)
+10. [events.md](events.md) · [platform-sdk.md](platform-sdk.md) · [contracts-and-governance.md](contracts-and-governance.md)
 10. [frontend-architecture.md](frontend-architecture.md) · [page-builder.md](page-builder.md)
 11. [database-and-migrations.md](database-and-migrations.md)
 12. [diagnostics.md](diagnostics.md) · [cli.md](cli.md) · [testing.md](testing.md)

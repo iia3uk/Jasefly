@@ -1,26 +1,17 @@
 import type { MiddlewareHandler } from 'hono';
 import type { AuthService } from '../auth/AuthService.js';
 import { fail } from '../http/envelope.js';
+import { PackageSurfaceRegistry } from '../platform/PackageSurfaceRegistry.js';
+import { HOST_CONTENT_RESOURCES } from '../system/hostBaselines.js';
 
-/** Parity with PHP PermissionService::contentResources(). */
-export const CONTENT_RESOURCES = [
-  'social-links',
-  'statistics',
-  'experience',
-  'education',
-  'skill-categories',
-  'skills',
-  'blog-categories',
-  'blog-tags',
-  'testimonials',
-  'navigation',
-  'homepage-sections',
-  'pages',
-  'services',
-  'projects',
-  'project-categories',
-  'blog',
-] as const;
+/** Host baseline ∪ package registry (parity with PHP PermissionService::contentResources). */
+export function contentResources(): readonly string[] {
+  const fromRegistry = PackageSurfaceRegistry.contentAclResources();
+  return [...new Set([...HOST_CONTENT_RESOURCES, ...fromRegistry])];
+}
+
+/** @deprecated Use contentResources() */
+export const CONTENT_RESOURCES = contentResources();
 
 const CONTENT_UPDATE_ANY = [
   'content.update',
@@ -84,7 +75,9 @@ export function mutationCapabilitiesFor(method: string, path: string): readonly 
     return CONTENT_UPDATE_ANY;
   }
 
-  const resAlt = CONTENT_RESOURCES.map((r) => r.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  const resAlt = contentResources()
+    .map((r) => r.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|');
   if (new RegExp(`^/admin/(${resAlt})$`).test(p) && m === 'POST') return CONTENT_CREATE_ANY;
   if (new RegExp(`^/admin/(${resAlt})/reorder$`).test(p)) return CONTENT_UPDATE_ANY;
   if (new RegExp(`^/admin/(${resAlt})/\\d+/publish$`).test(p)) return CONTENT_PUBLISH_ANY;

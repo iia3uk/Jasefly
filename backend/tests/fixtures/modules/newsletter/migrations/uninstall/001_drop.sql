@@ -1,0 +1,10 @@
+﻿DROP TABLE IF EXISTS `newsletter_events`;
+DROP TABLE IF EXISTS `newsletter_deliveries`;
+DROP TABLE IF EXISTS `newsletter_campaigns`;
+DROP TABLE IF EXISTS `newsletter_templates`;
+DROP TABLE IF EXISTS `subscriber_tag_links`;
+DROP TABLE IF EXISTS `subscriber_tags`;
+DROP TABLE IF EXISTS `subscriber_list_members`;
+DROP TABLE IF EXISTS `subscriber_lists`;
+DROP TABLE IF EXISTS `subscribers`;
+DROP TABLE IF EXISTS `suppression_list`;
