@@ -117,7 +117,8 @@ export function registerModuleAssetRoutes(
   storagePath: string,
 ): void {
   app.get('/modules/:slug/*', async (c: Context) => {
-    const slug = c.req.param('slug');
+    const slug = String(c.req.param('slug') ?? '');
+    if (!slug) return fail(c, 'Not found', 404);
     const pathname = new URL(c.req.url).pathname;
     const prefix = `/modules/${slug}/`;
     const rel = pathname.startsWith(prefix) ? pathname.slice(prefix.length) : '';
