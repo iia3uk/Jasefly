@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 /**
  * Module boundary: registration is a ZIP package using Platform Auth and Mail.
  * Included from run.php (uses global assert_true).
@@ -11,9 +13,7 @@ assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Registration'), 'bundled Mo
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Registration'), 'legacy Registration removed after live verify');
 assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-registration-*.zip')), 'registration ZIP present');
 
-$pkg = is_dir($repoRoot . '/modules-src/registration')
-    ? $repoRoot . '/modules-src/registration'
-    : dirname(__DIR__) . '/tests/fixtures/modules/registration';
+$pkg = jasefly_test_package_dir('registration');
 assert_true(is_dir($pkg), 'registration package directory exists');
 assert_true(is_file($pkg . '/module.json'), 'registration manifest exists');
 assert_true(is_file($pkg . '/backend/RegistrationModule.php'), 'registration backend entry exists');
@@ -53,7 +53,7 @@ $main = (string) file_get_contents($repoRoot . '/frontend/src/main.tsx');
 assert_true(!preg_match("/import\\s+['\"]@\\/modules\\/registration['\"]/", $main), 'main has no static registration module import');
 
 $stable = json_decode((string) file_get_contents($repoRoot . '/frontend/src/builder/manifest/package-stable-widget-types.v1.json'), true);
-assert_true(($stable['widgets']['auth-register'] ?? '') === 'registration', 'stable widget map owns auth-registerв†’registration');
+assert_true(($stable['widgets']['auth-register'] ?? '') === 'registration', 'stable widget map owns auth-registerРІвЂ вЂ™registration');
 
 $migration = (string) file_get_contents($pkg . '/migrations/001_registration.sql');
 assert_true(str_contains($migration, 'ADD COLUMN IF NOT EXISTS'), 'registration migration is additive');

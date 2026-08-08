@@ -31,12 +31,13 @@ function read(rel: string): string {
 /** Local authoring workspace (gitignored) or CI fixture — never require Core-tracked package source. */
 function packageFile(slug: string, rel: string): string {
   const candidates = [
+    path.join(REPO_ROOT, 'Jasefly-Modules', 'modules-src', slug, rel),
     path.join(REPO_ROOT, 'modules-src', slug, rel),
     path.join(REPO_ROOT, 'backend/tests/fixtures/modules', slug, rel),
   ];
   const hit = candidates.find((p) => fs.existsSync(p));
   if (!hit) {
-    throw new Error(`Missing package file for ${slug}: ${rel} (modules-src or fixtures)`);
+    throw new Error(`Missing package file for ${slug}: ${rel} (Jasefly-Modules / modules-src / fixtures)`);
   }
   return fs.readFileSync(hit, 'utf8');
 }

@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 /**
- * Priority 7 — Maintainability smoke (shared helpers + error envelope).
+ * Priority 7 вЂ” Maintainability smoke (shared helpers + error envelope).
  * Included from run.php (uses global assert_true).
  */
 
@@ -34,17 +36,11 @@ $sysSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Modules/System/Sys
 assert_true(str_contains($sysSrc, "Response::error('Plugin not found', 404)"), 'SystemModule uses Response::error for missing plugin');
 assert_true(!str_contains($sysSrc, "Response::json(['success' => false, 'error' => 'Plugin not found']"), 'SystemModule no longer ad-hoc plugin-not-found json');
 
-$formsPkgDir = dirname(__DIR__, 2) . '/modules-src/forms/backend';
-if (!is_dir($formsPkgDir)) {
-    $formsPkgDir = __DIR__ . '/fixtures/modules/forms/backend';
-}
+$formsPkgDir = jasefly_test_package_dir('forms') . '/backend';
 $formsSrc = (string) file_get_contents($formsPkgDir . '/FormActionRegistry.php');
 assert_true(str_contains($formsSrc, 'postJsonOutbound'), 'Forms package send_webhook uses PlatformHttp postJsonOutbound');
 
-$autoPkgDir = dirname(__DIR__, 2) . '/modules-src/automation/backend';
-if (!is_dir($autoPkgDir)) {
-    $autoPkgDir = __DIR__ . '/fixtures/modules/automation/backend';
-}
+$autoPkgDir = jasefly_test_package_dir('automation') . '/backend';
 $autoSrc = (string) file_get_contents($autoPkgDir . '/AutomationEngine.php');
 assert_true(
     str_contains($autoSrc, 'SecretRedactor::redact')

@@ -13,6 +13,8 @@ require_once "$root/src/Bootstrap.php";
 $failed = 0;
 $passed = 0;
 
+require_once __DIR__ . '/_package_dir.php';
+
 function assert_true(bool $cond, string $msg): void
 {
     global $failed, $passed;
@@ -27,10 +29,21 @@ function assert_true(bool $cond, string $msg): void
 
 echo "Jasefly tests\n" . str_repeat('-', 40) . "\n";
 
-// —— Forms unit (no DB) — package / Support ——
-$formsPkg = dirname(__DIR__, 2) . '/modules-src/forms/backend';
-if (!is_dir($formsPkg)) {
-    $formsPkg = "$root/tests/fixtures/modules/forms/backend";
+// вЂ”вЂ” Forms unit (no DB) вЂ” package / Support вЂ”вЂ”
+$repoRoot = dirname(__DIR__, 2);
+$formsPkg = null;
+foreach ([
+    $repoRoot . '/Jasefly-Modules/modules-src/forms/backend',
+    $repoRoot . '/modules-src/forms/backend',
+    "$root/tests/fixtures/modules/forms/backend",
+] as $cand) {
+    if (is_dir($cand)) {
+        $formsPkg = $cand;
+        break;
+    }
+}
+if ($formsPkg === null) {
+    throw new RuntimeException('forms package backend not found (Jasefly-Modules / fixtures)');
 }
 require_once "$formsPkg/ConditionalLogic.php";
 require_once "$formsPkg/FormValidator.php";
@@ -60,12 +73,12 @@ assert_true(CsvExport::cell('+1') === "'+1", 'csv formula escape +');
 $csv = CsvExport::build(['a'], [['=1', 'ok']]);
 assert_true(str_contains($csv, "'=1") || str_contains($csv, "'=1"), 'csv build escapes');
 
-// —— Scheduler backoff math ——
+// вЂ”вЂ” Scheduler backoff math вЂ”вЂ”
 require_once "$root/src/Modules/Scheduler/JobHandlerRegistry.php";
 \App\Modules\Scheduler\JobHandlerRegistry::register('test.ping', static function (): void {});
 assert_true(\App\Modules\Scheduler\JobHandlerRegistry::has('test.ping'), 'job handler registry');
 
-// —— Automation conditions (if present) ——
+// вЂ”вЂ” Automation conditions (if present) вЂ”вЂ”
 $condFile = "$root/src/Modules/Automation/ConditionEngine.php";
 if (is_file($condFile)) {
     require_once $condFile;
@@ -82,66 +95,66 @@ if (is_file($condFile)) {
     ], $ctx) === false, 'automation condition less_than false');
 }
 
-// —— Module package validator (no DB) ——
+// вЂ”вЂ” Module package validator (no DB) вЂ”вЂ”
 echo "Module package validator\n";
 require_once "$root/tests/ModulePackageValidatorTest.php";
 
-// —— Module package paths (path jail) ——
+// вЂ”вЂ” Module package paths (path jail) вЂ”вЂ”
 echo "Module package paths\n";
 require_once "$root/tests/ModulePackagePathsTest.php";
 
-// —— SqlTranspiler ——
+// вЂ”вЂ” SqlTranspiler вЂ”вЂ”
 echo "SqlTranspiler\n";
 require_once "$root/tests/SqlTranspilerTest.php";
 
-// —— Package quarantine isolation (broken ZIP must not kill API) ——
+// вЂ”вЂ” Package quarantine isolation (broken ZIP must not kill API) вЂ”вЂ”
 echo "Module quarantine isolation\n";
 require_once "$root/tests/ModuleQuarantineIsolationTest.php";
 
 echo "Module quarantine policy\n";
 require_once "$root/tests/ModuleQuarantinePolicyTest.php";
 
-// —— Diagnostics (safe-mode / loadFailures) ——
+// вЂ”вЂ” Diagnostics (safe-mode / loadFailures) вЂ”вЂ”
 echo "Diagnostics\n";
 require_once "$root/tests/DiagnosticsTest.php";
 
-// —— Access control (DSL + layout filter) ——
+// вЂ”вЂ” Access control (DSL + layout filter) вЂ”вЂ”
 echo "AccessService\n";
 require_once "$root/tests/AccessServiceTest.php";
 
-// —— Admin ACL (capabilities / overrides / multi-role) ——
+// вЂ”вЂ” Admin ACL (capabilities / overrides / multi-role) вЂ”вЂ”
 echo "AclAccess\n";
 require_once "$root/tests/AclAccessTest.php";
 
-// —— Platform SDK ——
+// вЂ”вЂ” Platform SDK вЂ”вЂ”
 echo "Platform SDK\n";
 require_once "$root/tests/PlatformSdkTest.php";
 
-// —— Platform package lifecycle (offline) ——
+// вЂ”вЂ” Platform package lifecycle (offline) вЂ”вЂ”
 echo "Platform package lifecycle\n";
 require_once "$root/tests/PlatformPackageLifecycleTest.php";
 
-// —— Core migration smoke (SQLite) ——
+// вЂ”вЂ” Core migration smoke (SQLite) вЂ”вЂ”
 echo "Migration smoke (SQLite)\n";
 require_once "$root/tests/MigrationSmokeTest.php";
 
-// —— SQLite migration compat regressions (rowid triggers / MODIFY / mirror bootstrap) ——
+// вЂ”вЂ” SQLite migration compat regressions (rowid triggers / MODIFY / mirror bootstrap) вЂ”вЂ”
 echo "Migration SQLite compat\n";
 require_once "$root/tests/MigrationSqliteCompatTest.php";
 
-// —— API route contracts (SQLite for controller ctor) ——
+// вЂ”вЂ” API route contracts (SQLite for controller ctor) вЂ”вЂ”
 echo "API route contracts\n";
 require_once "$root/tests/ApiRouteContractTest.php";
 
-// —— Permission matrix (SQLite) ——
+// вЂ”вЂ” Permission matrix (SQLite) вЂ”вЂ”
 echo "PermissionService\n";
 require_once "$root/tests/PermissionServiceTest.php";
 
-// —— Clean install + upgrade-from-previous (SQLite) ——
+// вЂ”вЂ” Clean install + upgrade-from-previous (SQLite) вЂ”вЂ”
 echo "Clean install / upgrade\n";
 require_once "$root/tests/CleanInstallSmokeTest.php";
 
-// —— Package enable sync (installed_modules ↔ modules mirror) ——
+// вЂ”вЂ” Package enable sync (installed_modules в†” modules mirror) вЂ”вЂ”
 echo "Package enable sync\n";
 require_once "$root/tests/PackageEnableSyncTest.php";
 
@@ -154,95 +167,95 @@ require_once "$root/tests/BlogPackageBoundaryTest.php";
 echo "Projects package boundary\n";
 require_once "$root/tests/ProjectsPackageBoundaryTest.php";
 
-// —— Webhooks extracted package boundary ——
+// вЂ”вЂ” Webhooks extracted package boundary вЂ”вЂ”
 echo "Webhooks package boundary\n";
 require_once "$root/tests/WebhooksPackageBoundaryTest.php";
 
-// —— Comments extracted package boundary ——
+// вЂ”вЂ” Comments extracted package boundary вЂ”вЂ”
 echo "Comments package boundary\n";
 require_once "$root/tests/CommentsPackageBoundaryTest.php";
 
-// —— Products extracted package boundary ——
+// вЂ”вЂ” Products extracted package boundary вЂ”вЂ”
 echo "Products package boundary\n";
 require_once "$root/tests/ProductsPackageBoundaryTest.php";
 
-// —— Orders extracted package boundary ——
+// вЂ”вЂ” Orders extracted package boundary вЂ”вЂ”
 echo "Orders package boundary\n";
 require_once "$root/tests/OrdersPackageBoundaryTest.php";
 
-// —— Payments extracted package boundary ——
+// вЂ”вЂ” Payments extracted package boundary вЂ”вЂ”
 echo "Payments package boundary\n";
 require_once "$root/tests/PaymentsPackageBoundaryTest.php";
 
-// —— Forms extracted package boundary ——
+// вЂ”вЂ” Forms extracted package boundary вЂ”вЂ”
 echo "Forms package boundary\n";
 require_once "$root/tests/FormsPackageBoundaryTest.php";
 
-// —— Analytics extracted package boundary ——
+// вЂ”вЂ” Analytics extracted package boundary вЂ”вЂ”
 echo "Analytics package boundary\n";
 require_once "$root/tests/AnalyticsPackageBoundaryTest.php";
 
-// —— Newsletter extracted package boundary ——
+// вЂ”вЂ” Newsletter extracted package boundary вЂ”вЂ”
 echo "Newsletter package boundary\n";
 require_once "$root/tests/NewsletterPackageBoundaryTest.php";
 
-// —— Automation extracted package boundary ——
+// вЂ”вЂ” Automation extracted package boundary вЂ”вЂ”
 echo "Automation package boundary\n";
 require_once "$root/tests/AutomationPackageBoundaryTest.php";
 
-// —— Notifications extracted package boundary ——
+// вЂ”вЂ” Notifications extracted package boundary вЂ”вЂ”
 echo "Notifications package boundary\n";
 require_once "$root/tests/NotificationsPackageBoundaryTest.php";
 
-// —— Support extracted package boundary ——
+// вЂ”вЂ” Support extracted package boundary вЂ”вЂ”
 echo "Support package boundary\n";
 require_once "$root/tests/SupportPackageBoundaryTest.php";
 
 echo "Translate package boundary\n";
 require_once "$root/tests/TranslatePackageBoundaryTest.php";
 
-// —— Registration extracted package boundary ——
+// вЂ”вЂ” Registration extracted package boundary вЂ”вЂ”
 echo "Registration package boundary\n";
 require_once "$root/tests/RegistrationPackageBoundaryTest.php";
 
-// —— Synthetic unknown-slug SDK boundary probe ——
+// вЂ”вЂ” Synthetic unknown-slug SDK boundary probe вЂ”вЂ”
 echo "SDK boundary probe\n";
 require_once "$root/tests/SdkBoundaryProbeTest.php";
 require_once "$root/tests/DualRuntimeZedTest.php";
 require_once "$root/tests/PackageSurfaceRegistryTest.php";
 require_once "$root/tests/PackageLifecycleParityTest.php";
 
-// —— Synthetic unknown-slug Content Resources probe ——
+// вЂ”вЂ” Synthetic unknown-slug Content Resources probe вЂ”вЂ”
 echo "Zed content resources probe\n";
 require_once "$root/tests/ZedContentResourcesProbeTest.php";
 
 require_once "$root/tests/InstalledModuleLoaderHealthPreloadTest.php";
 
-// —— Platform Scheduler package API probe ——
+// вЂ”вЂ” Platform Scheduler package API probe вЂ”вЂ”
 echo "SDK scheduler probe\n";
 require_once "$root/tests/SdkSchedulerProbeTest.php";
 
-// —— Projects soft API (Design B) ——
+// вЂ”вЂ” Projects soft API (Design B) вЂ”вЂ”
 echo "Projects soft API\n";
 require_once "$root/tests/ProjectsSoftApiTest.php";
 
-// —— Soft delete empty-all (tables without deleted_at) ——
+// вЂ”вЂ” Soft delete empty-all (tables without deleted_at) вЂ”вЂ”
 echo "SoftDelete empty trash\n";
 require_once "$root/tests/SoftDeleteEmptyTrashTest.php";
 
-// —— Operation / schedule / snapshot integrity ——
+// вЂ”вЂ” Operation / schedule / snapshot integrity вЂ”вЂ”
 echo "Operation integrity\n";
 require_once "$root/tests/OperationIntegrityTest.php";
 
-// —— Router / core hardening ——
+// вЂ”вЂ” Router / core hardening вЂ”вЂ”
 echo "Router / core\n";
 require_once "$root/tests/RouterTest.php";
 
-// —— Contract governance (API / caps / services / perms / events / MCP) ——
+// вЂ”вЂ” Contract governance (API / caps / services / perms / events / MCP) вЂ”вЂ”
 echo "Contract governance\n";
 require_once "$root/tests/ContractGovernanceTest.php";
 
-// —— Security verification ——
+// вЂ”вЂ” Security verification вЂ”вЂ”
 echo "Security verification\n";
 require_once "$root/tests/SecurityVerificationTest.php";
 
@@ -264,11 +277,11 @@ require_once "$root/tests/DeployTelegramApproveTest.php";
 echo "Demo sandbox\n";
 require_once "$root/tests/DemoSandboxTest.php";
 
-// —— Maintainability (shared helpers / error envelope) ——
+// вЂ”вЂ” Maintainability (shared helpers / error envelope) вЂ”вЂ”
 echo "Maintainability\n";
 require_once "$root/tests/MaintainabilityTest.php";
 
-// —— SiteUpdater Vite assets prune ——
+// вЂ”вЂ” SiteUpdater Vite assets prune вЂ”вЂ”
 echo "SiteUpdater assets prune\n";
 require_once "$root/tests/SiteUpdaterAssetsPruneTest.php";
 

@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Orders'), 'bundled Modules/Orders removed from discovery');
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Orders'), 'legacy Orders removed after live verify');
 assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-orders-*.zip')), 'orders ZIP present');
 
-$pkg = is_dir($repoRoot . '/modules-src/orders')
-    ? $repoRoot . '/modules-src/orders'
-    : dirname(__DIR__) . '/tests/fixtures/modules/orders';
+$pkg = jasefly_test_package_dir('orders');
 assert_true(is_dir($pkg), 'orders package directory exists');
 
 $manifest = json_decode((string) file_get_contents($pkg . '/module.json'), true);

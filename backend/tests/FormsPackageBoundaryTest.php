@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 /**
  * Module boundary: forms is a ZIP package owning frozen builder widget ID `form`.
  * Included from run.php (uses global assert_true).
@@ -16,10 +18,8 @@ use App\Router;
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Forms'), 'bundled Modules/Forms removed from discovery');
 
-$pkgDir = $repoRoot . '/modules-src/forms';
-if (!is_dir($pkgDir)) {
-    $pkgDir = dirname(__DIR__) . '/tests/fixtures/modules/forms';
-}
+$pkgDir = jasefly_test_package_dir('forms');
+assert_true($pkgDir !== null, 'forms package directory exists');
 assert_true(is_dir($pkgDir), 'forms package directory exists');
 assert_true(is_file($pkgDir . '/module.json'), 'forms module.json exists');
 assert_true(is_file($pkgDir . '/backend/FormsModule.php'), 'forms backend entry exists');
@@ -73,7 +73,7 @@ assert_true(in_array('form', $widgets, true), 'frozen widget-types keeps form');
 
 $stablePath = dirname(__DIR__, 2) . '/frontend/src/builder/manifest/package-stable-widget-types.v1.json';
 $stableJson = json_decode((string) file_get_contents($stablePath), true);
-assert_true(($stableJson['widgets']['form'] ?? '') === 'forms', 'package-stable map owns form→forms');
+assert_true(($stableJson['widgets']['form'] ?? '') === 'forms', 'package-stable map owns formв†’forms');
 
 $mig = (string) file_get_contents($pkgDir . '/migrations/001_forms.sql');
 assert_true(str_contains($mig, 'CREATE TABLE IF NOT EXISTS'), 'migration is non-destructive IF NOT EXISTS');
@@ -88,7 +88,7 @@ assert_true(is_dir($fsrDir), 'forms-sdk-reference remains a separate package');
 $fsrMf = json_decode((string) file_get_contents($fsrDir . '/module.json'), true);
 assert_true(($fsrMf['slug'] ?? '') === 'forms-sdk-reference', 'forms-sdk-reference slug unchanged');
 
-// —— Package wins over same-slug bundled ——
+// вЂ”вЂ” Package wins over same-slug bundled вЂ”вЂ”
 if (!extension_loaded('pdo_sqlite')) {
     echo "  SKIP forms runtime boundary (pdo_sqlite missing)\n";
     return;

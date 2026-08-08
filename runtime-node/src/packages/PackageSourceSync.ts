@@ -49,10 +49,22 @@ export type SyncResult = { slug: string; enabled: boolean; synced: boolean };
  * @param enableMode 'test-all' enables every synced package; 'plugins' enables when modules.is_enabled=1
  */
 function defaultSourceRoots(): string[] {
-  return [
+  const roots: string[] = [];
+  const env = process.env.JASEFLY_MODULES_ROOT?.trim();
+  if (env) {
+    const envPath = path.isAbsolute(env) ? env : path.resolve(REPO_ROOT, env);
+    const asSrc = path.join(envPath, 'modules-src');
+    if (fs.existsSync(asSrc)) roots.push(asSrc);
+    else if (fs.existsSync(envPath)) roots.push(envPath);
+  }
+  for (const p of [
+    path.join(REPO_ROOT, 'Jasefly-Modules', 'modules-src'),
     path.join(REPO_ROOT, 'modules-src'),
     path.join(REPO_ROOT, 'backend/tests/fixtures/modules'),
-  ].filter((p) => fs.existsSync(p));
+  ]) {
+    if (fs.existsSync(p)) roots.push(p);
+  }
+  return [...new Set(roots.map((p) => path.resolve(p)))];
 }
 
 export async function syncPackageSources(

@@ -1,10 +1,11 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Projects'), 'bundled Modules/Projects removed from discovery');
-$pkg = $repoRoot . '/modules-src/projects';
-if (!is_dir($pkg)) $pkg = __DIR__ . '/fixtures/modules/projects';
+$pkg = jasefly_test_package_dir('projects');
 assert_true(is_file($pkg . '/module.json'), 'projects module manifest exists');
 assert_true(is_file($pkg . '/backend/ProjectsModule.php'), 'projects package entry exists');
 assert_true(is_file($pkg . '/backend/ProjectResourceHandler.php'), 'projects resource handler exists');

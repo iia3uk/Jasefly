@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-/** Validate modules-src/{slug} structure + Platform SDK compliance */
+/** Validate package structure + Platform SDK compliance */
 import fs from 'fs'
 import path from 'path'
 import { spawnSync } from 'child_process'
 import { fileURLToPath } from 'url'
+import { resolveModuleSrc } from './modules-root.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(__dirname, '..')
@@ -12,9 +13,9 @@ if (!slug) {
   console.error('Usage: node scripts/validate-module.js <slug>')
   process.exit(1)
 }
-const dir = path.join(root, 'modules-src', slug)
+const dir = resolveModuleSrc(root, slug)
 const errors = []
-if (!fs.existsSync(dir)) errors.push('missing source dir')
+if (!dir) errors.push('missing source dir (JASEFLY_MODULES_ROOT / Jasefly-Modules / fixtures)')
 const mf = path.join(dir, 'module.json')
 if (!fs.existsSync(mf)) errors.push('missing module.json')
 else {

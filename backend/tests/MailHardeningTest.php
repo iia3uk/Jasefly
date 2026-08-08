@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 /**
  * Mail hardening: SoT, isAvailable semantics, secrets redaction, Platform consumers.
  * Included from run.php (uses global assert_true).
@@ -79,7 +81,7 @@ foreach ([
             continue; // Mail transport internals
         }
         if (str_ends_with($norm, '/Platform/Adapters/MailAdapter.php')) {
-            continue; // Platform boundary → Mailer
+            continue; // Platform boundary в†’ Mailer
         }
         $src = (string) file_get_contents($path);
         if (preg_match('/new\\s+\\\\?App\\\\Modules\\\\Mail\\\\Mailer\\b|new\\s+Mailer\\b|use\\s+App\\\\Modules\\\\Mail\\\\Mailer\\b/', $src)) {
@@ -92,7 +94,7 @@ assert_true($hostMailerHits === [], 'no concrete Mailer callers outside Mail imp
 $caps = new CapabilityRegistry(null);
 assert_true($caps->has('mail.send'), 'mail.send remains core/platform capability');
 
-// —— Runtime SQLite ——
+// вЂ”вЂ” Runtime SQLite вЂ”вЂ”
 if (!extension_loaded('pdo_sqlite')) {
     echo "  SKIP MailHardening runtime (pdo_sqlite missing)\n";
     return;
@@ -131,7 +133,7 @@ $pdo->exec(
 
 $mail = new MailAdapter($db, $app);
 assert_true($mail instanceof PlatformMailInterface, 'MailAdapter implements PlatformMailInterface');
-assert_true(!$mail->isAvailable(), 'unconfigured mail → isAvailable false');
+assert_true(!$mail->isAvailable(), 'unconfigured mail в†’ isAvailable false');
 
 $secret = 'super-secret-smtp-pass';
 $pdo->exec(
@@ -152,12 +154,12 @@ $pdo->exec(
 );
 
 $mailReady = new MailAdapter($db, $app);
-assert_true($mailReady->isAvailable(), 'configured SMTP in modules.settings → isAvailable true');
+assert_true($mailReady->isAvailable(), 'configured SMTP in modules.settings в†’ isAvailable true');
 
 $pdo->exec("UPDATE modules SET is_enabled=0 WHERE name='mail'");
-assert_true(!(new MailAdapter($db, $app))->isAvailable(), 'disabled mail plugin → isAvailable false');
+assert_true(!(new MailAdapter($db, $app))->isAvailable(), 'disabled mail plugin в†’ isAvailable false');
 $pdo->exec("UPDATE modules SET is_enabled=1 WHERE name='mail'");
-assert_true((new MailAdapter($db, $app))->isAvailable(), 're-enabled mail → isAvailable true');
+assert_true((new MailAdapter($db, $app))->isAvailable(), 're-enabled mail в†’ isAvailable true');
 
 // UI/runtime same SoT: PluginStateService getSettings matches adapter readiness source
 $mailModule = new class extends AbstractModule {
@@ -224,7 +226,7 @@ $pdo->exec(
      VALUES (1, 'legacy@example.com', 'Legacy', 'smtp.legacy.test', 'legacy-secret')"
 );
 $legacyMail = new MailAdapter($db, $app);
-assert_true($legacyMail->isAvailable(), 'legacy email_settings adoption → isAvailable true');
+assert_true($legacyMail->isAvailable(), 'legacy email_settings adoption в†’ isAvailable true');
 
 // Capability still present while transport may be unavailable
 $pdo->exec("DELETE FROM email_settings");

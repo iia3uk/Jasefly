@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 /**
  * Module boundary: webhooks is a ZIP package, not a bundled Modules/* plugin.
  * Included from run.php (uses global assert_true).
@@ -17,10 +19,8 @@ $repoRoot = dirname(__DIR__, 2);
 $bundled = dirname(__DIR__) . '/src/Modules/Webhooks';
 assert_true(!is_dir($bundled), 'bundled Modules/Webhooks removed from discovery path');
 
-$pkgDir = $repoRoot . '/modules-src/webhooks';
-if (!is_dir($pkgDir)) {
-    $pkgDir = dirname(__DIR__) . '/tests/fixtures/modules/webhooks';
-}
+$pkgDir = jasefly_test_package_dir('webhooks');
+assert_true($pkgDir !== null, 'webhooks package directory exists');
 assert_true(is_dir($pkgDir), 'webhooks package directory exists');
 assert_true(is_file($pkgDir . '/module.json'), 'webhooks module.json exists');
 assert_true(is_file($pkgDir . '/backend/WebhooksModule.php'), 'webhooks backend entry exists');
@@ -40,7 +40,7 @@ assert_true(
     'Platform HTTP outbound helpers exist'
 );
 
-// —— Package wins over same-slug bundled ——
+// вЂ”вЂ” Package wins over same-slug bundled вЂ”вЂ”
 if (!extension_loaded('pdo_sqlite')) {
     echo "  SKIP webhooks runtime boundary (pdo_sqlite missing)\n";
     return;
@@ -114,7 +114,7 @@ foreach ($registry->all() as $mod) {
 assert_true($found instanceof PackageModuleAdapter, 'package adapter replaces bundled same slug');
 assert_true($found->label() === 'Webhooks', 'winning module is package label');
 
-// Clean discover without Modules/Webhooks → no webhooks module
+// Clean discover without Modules/Webhooks в†’ no webhooks module
 $emptyReg = new ModuleRegistry($db, $app, $registryPath);
 $emptyReg->discover();
 $hasWh = false;

@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 /**
  * Module boundary: notifications ZIP provides notifications.send via registerBackend.
  * Included from run.php (uses global assert_true).
@@ -20,10 +22,8 @@ assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Notifications'), 'bundled M
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Notifications'), 'legacy Notifications removed after live verify');
 assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-notifications-*.zip')), 'notifications ZIP present');
 
-$pkgDir = $repoRoot . '/modules-src/notifications';
-if (!is_dir($pkgDir)) {
-    $pkgDir = dirname(__DIR__) . '/tests/fixtures/modules/notifications';
-}
+$pkgDir = jasefly_test_package_dir('notifications');
+assert_true($pkgDir !== null, 'notifications package directory exists');
 assert_true(is_dir($pkgDir), 'notifications package directory exists');
 assert_true(is_file($pkgDir . '/module.json'), 'notifications module.json exists');
 assert_true(is_file($pkgDir . '/backend/NotificationsModule.php'), 'notifications backend entry exists');
@@ -92,18 +92,16 @@ assert_true(!str_contains($adminApp, 'modules/notifications/NotificationsBell'),
 assert_true(str_contains($adminApp, "HostSlot") && str_contains($adminApp, 'admin.header'), 'AdminApp mounts admin.header HostSlot');
 
 // Consumers must not import concrete NotificationService
-$autoPath = is_file($repoRoot . '/modules-src/automation/backend/AutomationEngine.php')
-    ? $repoRoot . '/modules-src/automation/backend/AutomationEngine.php'
-    : dirname(__DIR__) . '/tests/fixtures/modules/automation/backend/AutomationEngine.php';
-$autoEngine = (string) file_get_contents($autoPath);
+$autoDir = jasefly_test_package_dir('automation');
+assert_true($autoDir !== null, 'automation package directory exists');
+$autoEngine = (string) file_get_contents($autoDir . '/backend/AutomationEngine.php');
 assert_true(str_contains($autoEngine, 'PlatformNotificationsInterface'), 'Automation uses Platform Notifications');
 assert_true(str_contains($autoEngine, 'isAvailable'), 'Automation checks notifications isAvailable');
 assert_true(!str_contains($autoEngine, 'NotificationService'), 'Automation has no NotificationService import');
 
-$formsPath = is_file($repoRoot . '/modules-src/forms/backend/FormActionRegistry.php')
-    ? $repoRoot . '/modules-src/forms/backend/FormActionRegistry.php'
-    : dirname(__DIR__) . '/tests/fixtures/modules/forms/backend/FormActionRegistry.php';
-$formsAct = (string) file_get_contents($formsPath);
+$formsDir = jasefly_test_package_dir('forms');
+assert_true($formsDir !== null, 'forms package directory exists');
+$formsAct = (string) file_get_contents($formsDir . '/backend/FormActionRegistry.php');
 assert_true(str_contains($formsAct, 'PlatformNotificationsInterface'), 'Forms uses Platform Notifications');
 assert_true(!preg_match('/Modules\\\\Notifications\\\\NotificationService/', $formsAct), 'Forms has no concrete NotificationService');
 
@@ -111,7 +109,7 @@ $mig = (string) file_get_contents($pkgDir . '/migrations/001_notifications.sql')
 assert_true(str_contains($mig, 'CREATE TABLE IF NOT EXISTS'), 'migration is non-destructive IF NOT EXISTS');
 assert_true(str_contains($mig, 'notifications'), 'migration targets notifications');
 
-// вЂ”вЂ” Generic capability provide/revoke (unknown slug, no core map) вЂ”вЂ”
+// РІР‚вЂќРІР‚вЂќ Generic capability provide/revoke (unknown slug, no core map) РІР‚вЂќРІР‚вЂќ
 NotificationsAdapter::resetForTests();
 $caps = new CapabilityRegistry(null);
 assert_true(!$caps->has('notifications.send'), 'notifications.send absent without provider');
@@ -145,7 +143,7 @@ $adapterA->registerBackend(
 assert_true($adapterA->isAvailable(), 're-enable restores backend');
 NotificationsAdapter::resetForTests();
 
-// вЂ”вЂ” Package wins over same-slug bundled вЂ”вЂ”
+// РІР‚вЂќРІР‚вЂќ Package wins over same-slug bundled РІР‚вЂќРІР‚вЂќ
 if (!extension_loaded('pdo_sqlite')) {
     echo "  SKIP notifications runtime boundary (pdo_sqlite missing)\n";
     return;

@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 /**
  * Module boundary: analytics is a ZIP package (scheduler + host slots, no core hardcodes).
  * Included from run.php (uses global assert_true).
@@ -20,10 +22,8 @@ assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Analytics'), 'bundled Modul
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Analytics'), 'legacy Analytics removed after live verify');
 assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-analytics-*.zip')), 'analytics ZIP present');
 
-$pkgDir = $repoRoot . '/modules-src/analytics';
-if (!is_dir($pkgDir)) {
-    $pkgDir = dirname(__DIR__) . '/tests/fixtures/modules/analytics';
-}
+$pkgDir = jasefly_test_package_dir('analytics');
+assert_true($pkgDir !== null, 'analytics package directory exists');
 assert_true(is_dir($pkgDir), 'analytics package directory exists');
 assert_true(is_file($pkgDir . '/module.json'), 'analytics module.json exists');
 assert_true(is_file($pkgDir . '/backend/AnalyticsModule.php'), 'analytics backend entry exists');
@@ -101,7 +101,7 @@ assert_true(str_contains($mig, 'CREATE TABLE IF NOT EXISTS'), 'migration is non-
 assert_true(str_contains($mig, 'analytics_events'), 'migration targets analytics_events');
 assert_true(str_contains($mig, 'analytics_sessions'), 'migration targets analytics_sessions');
 
-// вЂ”вЂ” Package wins over same-slug bundled вЂ”вЂ”
+// РІР‚вЂќРІР‚вЂќ Package wins over same-slug bundled РІР‚вЂќРІР‚вЂќ
 if (!extension_loaded('pdo_sqlite')) {
     echo "  SKIP analytics runtime boundary (pdo_sqlite missing)\n";
     return;
@@ -178,9 +178,9 @@ foreach ($registry->all() as $mod) {
     }
 }
 assert_true($found instanceof PackageModuleAdapter, 'package adapter replaces bundled same slug');
-assert_true(in_array($found->label(), ['Analytics', 'Аналитика'], true), 'winning module is package label');
+assert_true($found->label() !== '' && $found->label() !== 'Analytics Bundled Stub', 'winning module is package label');
 
-// Scheduler ownership: local names в†’ analytics.*
+// Scheduler ownership: local names РІвЂ вЂ™ analytics.*
 JobHandlerRegistry::resetForTests();
 $sched = new SchedulerAdapter($db, 'analytics');
 $sched->registerHandler('retention', static function (): array { return ['ok' => true]; });

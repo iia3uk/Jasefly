@@ -42,6 +42,7 @@ assert_true(($owners['zed_items'] ?? null) === 'zed', 'schema owner for zed_item
 $ownerByTable = [];
 foreach (['blog', 'projects', 'products', 'orders', 'payments', 'comments'] as $slug) {
     $candidates = [
+        $repoRoot . '/Jasefly-Modules/modules-src/' . $slug . '/module.json',
         $repoRoot . '/modules-src/' . $slug . '/module.json',
         $repoRoot . '/release/catalog/manifests/' . $slug . '.json',
         dirname(__DIR__) . '/tests/fixtures/modules/' . $slug . '/module.json',

@@ -90,12 +90,12 @@ Canonical docs: [`docs/architecture/CURRENT.md`](docs/architecture/CURRENT.md) �
 | --- | --- |
 | Identity snapshot (Core) | `release/catalog/manifests/{slug}.json` |
 | Derived catalog | `release/catalog/packages.json` |
-| Local authoring (optional, gitignored) | `modules-src/{slug}/` |
+| Package source repo | nested local **`Jasefly-Modules/`** (independent git; `JASEFLY_MODULES_ROOT` optional) |
 | Distributable ZIP | Module Hub / `release/modules/*.zip` (**not** versioned in Core git) |
 | Build | `node scripts/build-module.js {slug} --yes` |
 | Certify | `php backend/bin/sdk.php certify {slug}` |
 
-**Core repository ≠ package source.** The 15 extracted domains are external packages (install from ZIP / Hub). Core ships contracts, loaders, catalog, and tooling — not product package PHP/Node source. Host modules remain under `backend/src/Modules/` (Access, Content, Mail, Scheduler, …). Portfolio is a **deprecated** composition shell — not a product ZIP.
+**Core repository ≠ package source.** The 15 extracted domains live in **Jasefly-Modules** and install from ZIP / Hub. Core ships contracts, loaders, catalog, and tooling. Host modules remain under `backend/src/Modules/` (Access, Content, Mail, Scheduler, …). Portfolio is a **deprecated** composition shell — not a product ZIP.
 
 ---
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-/** Scaffold modules-src/{slug}/ skeleton (Platform SDK) */
+/** Scaffold a new package under Jasefly-Modules (or JASEFLY_MODULES_ROOT). */
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { resolveModulesRoots } from './modules-root.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(__dirname, '..')
@@ -13,7 +14,11 @@ if (!slug || !/^[a-z][a-z0-9-]{1,62}[a-z0-9]$/.test(slug)) {
 }
 
 const studly = slug.split(/[-_]+/).map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('')
-const dir = path.join(root, 'modules-src', slug)
+const preferred =
+  resolveModulesRoots(root).find((r) => r.replace(/\\/g, '/').includes('Jasefly-Modules')) ||
+  path.join(root, 'Jasefly-Modules', 'modules-src')
+fs.mkdirSync(preferred, { recursive: true })
+const dir = path.join(preferred, slug)
 if (fs.existsSync(dir)) {
   console.error('Already exists:', dir)
   process.exit(1)
@@ -159,7 +164,7 @@ Validate & certify:
 
 \`\`\`bash
 node scripts/validate-module.js ${slug}
-php backend/bin/sdk.php certify modules-src/${slug}
+php backend/bin/sdk.php certify ${slug}
 node scripts/build-module.js ${slug} --yes
 \`\`\`
 `,

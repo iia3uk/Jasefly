@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 /**
  * P0 security regressions: content/webhook/revision ACL + PublicOrigin host hardening.
  * Included from run.php (uses global assert_true).
@@ -20,18 +22,9 @@ assert_true(!str_contains($mwSrc, '/admin/forms'), 'PermissionMiddleware has no 
 assert_true(!str_contains($mwSrc, '/admin/comments'), 'PermissionMiddleware has no comments path hardcode');
 assert_true(str_contains($mwSrc, 'contentResources'), 'DELETE/mutate ACL scoped to content resources only');
 
-$whCandidates = [
-    dirname(__DIR__, 2) . '/modules-src/webhooks/backend/WebhooksModule.php',
-    dirname(__DIR__) . '/tests/fixtures/modules/webhooks/backend/WebhooksModule.php',
-];
-$whSrc = '';
-foreach ($whCandidates as $path) {
-    if (is_file($path)) {
-        $whSrc = (string) file_get_contents($path);
-        break;
-    }
-}
-assert_true($whSrc !== '', 'webhooks package module source present');
+$whDir = jasefly_test_package_dir('webhooks');
+assert_true($whDir !== null, 'webhooks package module source present');
+$whSrc = (string) file_get_contents($whDir . '/backend/WebhooksModule.php');
 assert_true(substr_count($whSrc, "integrations.manage") >= 3, 'Webhooks package owns integrations.manage on mutate');
 
 $sysSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Modules/System/SystemModule.php');
@@ -40,7 +33,7 @@ assert_true(str_contains($sysSrc, "requireContentMutation"), 'SystemModule revis
 $accessFe = (string) file_get_contents(dirname(__DIR__, 2) . '/frontend/src/builder/widgets/access.tsx');
 assert_true(str_contains($accessFe, 'sanitizeHtml(template)'), 'deny_template_html uses sanitizeHtml');
 
-// —— PublicOrigin: configured app_url wins over malicious Host ——
+// вЂ”вЂ” PublicOrigin: configured app_url wins over malicious Host вЂ”вЂ”
 $_SERVER['HTTP_HOST'] = 'evil.attacker.example';
 $_SERVER['HTTPS'] = 'on';
 $origin = PublicOrigin::resolve(null, ['app_url' => 'https://cms.example.com']);
@@ -103,18 +96,10 @@ assert_true($perms->can($admin, 'integrations.manage') === true, 'admin webhooks
 assert_true($perms->can($editor, 'integrations.manage') === false, 'editor webhooks manage denied without cap');
 
 // Payments package uses its Platform config source rather than raw Host headers.
-$payIfaceCandidates = [
-    dirname(__DIR__, 2) . '/modules-src/payments/backend/Providers/ProviderInterface.php',
-    __DIR__ . '/fixtures/modules/payments/backend/Providers/ProviderInterface.php',
-];
-$payIface = null;
-foreach ($payIfaceCandidates as $c) {
-    if (is_file($c)) {
-        $payIface = $c;
-        break;
-    }
-}
-assert_true($payIface !== null, 'payments ProviderInterface available (local workspace or fixture)');
+$payDir = jasefly_test_package_dir('payments');
+assert_true($payDir !== null, 'payments ProviderInterface available (local workspace or fixture)');
+$payIface = $payDir . '/backend/Providers/ProviderInterface.php';
+assert_true(is_file($payIface), 'payments ProviderInterface file exists');
 $paySrc = (string) file_get_contents($payIface);
 assert_true(str_contains($paySrc, "config->get('site_url'") && str_contains($paySrc, "config->get('app_url'"), 'payment absolute URL uses Platform config');
 assert_true(!str_contains($paySrc, 'PublicOrigin::fallbackFromRequest'), 'payment package does not trust Host fallback');

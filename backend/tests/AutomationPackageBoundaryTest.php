@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 /**
  * Module boundary: automation is a ZIP package (EventCatalog discovery, Scheduler resume).
  * Included from run.php (uses global assert_true).
@@ -23,10 +25,8 @@ assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Automation'), 'bundled Modu
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Automation'), 'legacy Automation removed after live verify');
 assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-automation-*.zip')), 'automation ZIP present');
 
-$pkgDir = $repoRoot . '/modules-src/automation';
-if (!is_dir($pkgDir)) {
-    $pkgDir = dirname(__DIR__) . '/tests/fixtures/modules/automation';
-}
+$pkgDir = jasefly_test_package_dir('automation');
+assert_true($pkgDir !== null, 'automation package directory exists');
 assert_true(is_dir($pkgDir), 'automation package directory exists');
 assert_true(is_file($pkgDir . '/module.json'), 'automation module.json exists');
 assert_true(is_file($pkgDir . '/backend/AutomationModule.php'), 'automation backend entry exists');
@@ -125,7 +125,7 @@ $probeSrc = (string) file_get_contents($probeDir . '/backend/AutomationEventProb
 assert_true(str_contains($probeSrc, 'probe.signal.fired'), 'probe declares unknown event');
 assert_true(str_contains($probeSrc, 'declare('), 'probe uses events.declare');
 
-// вЂ”вЂ” Runtime: EventCatalog discovery + clearOwner + scheduler namespace вЂ”вЂ”
+// РІР‚вЂќРІР‚вЂќ Runtime: EventCatalog discovery + clearOwner + scheduler namespace РІР‚вЂќРІР‚вЂќ
 if (!extension_loaded('pdo_sqlite')) {
     echo "  SKIP automation runtime boundary (pdo_sqlite missing)\n";
     return;

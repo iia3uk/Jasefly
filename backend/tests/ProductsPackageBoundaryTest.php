@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 /**
  * Products is package-owned; catalog routes and CRUD must not reintroduce
  * AdminController or host Services imports.
@@ -8,10 +10,8 @@ declare(strict_types=1);
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Products'), 'bundled Modules/Products removed from discovery');
 
-$pkgDir = $repoRoot . '/modules-src/products';
-if (!is_dir($pkgDir)) {
-    $pkgDir = dirname(__DIR__) . '/tests/fixtures/modules/products';
-}
+$pkgDir = jasefly_test_package_dir('products');
+assert_true($pkgDir !== null, 'products package directory exists');
 assert_true(is_file($pkgDir . '/module.json'), 'products module manifest exists');
 assert_true(is_file($pkgDir . '/backend/ProductsModule.php'), 'products package backend entry exists');
 assert_true(is_file($pkgDir . '/backend/ProductService.php'), 'products package CRUD service exists');

@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 /**
  * Module boundary: newsletter is a ZIP package (Scheduler + Platform Mail, stableType widget).
  * Included from run.php (uses global assert_true).
@@ -20,10 +22,8 @@ assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Newsletter'), 'bundled Modu
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Newsletter'), 'legacy Newsletter removed after live verify');
 assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-newsletter-*.zip')), 'newsletter ZIP present');
 
-$pkgDir = $repoRoot . '/modules-src/newsletter';
-if (!is_dir($pkgDir)) {
-    $pkgDir = dirname(__DIR__) . '/tests/fixtures/modules/newsletter';
-}
+$pkgDir = jasefly_test_package_dir('newsletter');
+assert_true($pkgDir !== null, 'newsletter package directory exists');
 assert_true(is_dir($pkgDir), 'newsletter package directory exists');
 assert_true(is_file($pkgDir . '/module.json'), 'newsletter module.json exists');
 assert_true(is_file($pkgDir . '/backend/NewsletterModule.php'), 'newsletter backend entry exists');
@@ -97,7 +97,7 @@ assert_true(in_array('newsletter-signup', $widgets, true), 'frozen widget-types 
 
 $stablePath = $repoRoot . '/frontend/src/builder/manifest/package-stable-widget-types.v1.json';
 $stableJson = json_decode((string) file_get_contents($stablePath), true);
-assert_true(($stableJson['widgets']['newsletter-signup'] ?? '') === 'newsletter', 'package-stable map owns newsletter-signupв†’newsletter');
+assert_true(($stableJson['widgets']['newsletter-signup'] ?? '') === 'newsletter', 'package-stable map owns newsletter-signupРІвЂ вЂ™newsletter');
 
 $mainTsx = (string) file_get_contents($repoRoot . '/frontend/src/main.tsx');
 assert_true(!preg_match("/import\\s+['\"]@\\/modules\\/newsletter['\"]/", $mainTsx), 'host main has no static newsletter module import');
@@ -112,7 +112,7 @@ assert_true(str_contains($mig, 'CREATE TABLE IF NOT EXISTS'), 'migration is non-
 assert_true(str_contains($mig, 'subscribers'), 'migration targets subscribers');
 assert_true(str_contains($mig, 'newsletter_campaigns'), 'migration targets newsletter_campaigns');
 
-// вЂ”вЂ” Package wins over same-slug bundled вЂ”вЂ”
+// РІР‚вЂќРІР‚вЂќ Package wins over same-slug bundled РІР‚вЂќРІР‚вЂќ
 if (!extension_loaded('pdo_sqlite')) {
     echo "  SKIP newsletter runtime boundary (pdo_sqlite missing)\n";
     return;

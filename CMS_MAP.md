@@ -24,7 +24,7 @@
 | Корзина empty-all 500 / нет deleted_at | `SoftDeleteService::trashableMap()` = HOST ∪ `PackageSurfaceRegistry`; UI `EnterprisePages` + `TrashController` |
 | Package surfaces (trash/dashboard/sitemap/media/ACL) | `PlatformContext::surfaces()` → `PackageSurfaceRegistry` (PHP/Node); declarations in package `module.json` `surfaces` |
 | Current package architecture / LLM handoff | `docs/architecture/CURRENT.md` · `docs/architecture/LLM_CONTEXT.md` · `AGENTS.md` · catalog `release/catalog/packages.json` |
-| Extracted domain package list (15, external) | `release/catalog/packages.md` · identity `release/catalog/manifests/{slug}.json` · ZIP via Module Hub / local `release/modules/` (gitignored) · optional local authoring `modules-src/` (gitignored) |
+| Extracted domain package list (15, external) | `release/catalog/packages.md` · identity `release/catalog/manifests/{slug}.json` · source repo `Jasefly-Modules/modules-src/` (nested git, ignored) · ZIP via Module Hub / local `release/modules/` |
 | Demo Sandbox (публичный Admin/Builder) | `Modules/Demo/*` + `025_demo_sandbox.sql`; `/demo?to=builder` → билдер, `/demo?to=admin` → дашборд (`DemoEntryPage`); doors: `explore-doors` + `resolveDemoDoor`; docs `docs/demo-sandbox.md` |
 | Mobile: шаги пайплайна «плывут» | `widgets/structure.tsx` → `steps-row` (1/2 col → N на lg); `panels.tsx` pipeline scroll |
 | Mobile адаптив / safe-area / FAB | `index.css` (`.cms-hero-bleed`, overlay pad, snap rail); `SiteLayout` menu lock; `CookieBanner` / `TranslateWidget` / `SupportWidget` |

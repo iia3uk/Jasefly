@@ -1,10 +1,11 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Blog'), 'bundled Modules/Blog removed from discovery');
-$pkg = $repoRoot . '/modules-src/blog';
-if (!is_dir($pkg)) $pkg = __DIR__ . '/fixtures/modules/blog';
+$pkg = jasefly_test_package_dir('blog');
 assert_true(is_file($pkg . '/module.json'), 'blog module manifest exists');
 assert_true(is_file($pkg . '/backend/BlogModule.php'), 'blog package entry exists');
 assert_true(is_file($pkg . '/backend/BlogResourceHandler.php'), 'blog resource handler exists');

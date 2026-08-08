@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 /**
  * Projects soft-disable semantics after Content Resources extract.
  * SoftPluginGate unit proof + package Platform registration (not ContentModule).
@@ -20,35 +22,32 @@ use App\Request;
 use App\Router;
 use App\Support\SoftPluginGate;
 
-$projectsPackage = dirname(__DIR__, 2) . '/modules-src/projects/backend';
-if (!is_dir($projectsPackage)) {
-    $projectsPackage = __DIR__ . '/fixtures/modules/projects/backend';
-}
+$projectsPackage = jasefly_test_package_dir('projects') . '/backend';
 require_once $projectsPackage . '/ProjectResourceHandler.php';
 require_once $projectsPackage . '/ProjectCategoryResourceHandler.php';
 require_once $projectsPackage . '/ProjectsModule.php';
 
 assert_true(SoftPluginGate::decide(true, 'GET', false) === 'pass', 'enabled GET list passes');
 assert_true(SoftPluginGate::decide(true, 'POST', false) === 'pass', 'enabled POST passes');
-assert_true(SoftPluginGate::decide(false, 'GET', false) === 'empty_list', 'disabled GET list → empty_list');
-assert_true(SoftPluginGate::decide(false, 'GET', true) === 'not_found', 'disabled GET item → not_found');
-assert_true(SoftPluginGate::decide(false, 'POST', false) === 'plugin_disabled', 'disabled POST → plugin_disabled');
-assert_true(SoftPluginGate::decide(false, 'PUT', true) === 'plugin_disabled', 'disabled PUT → plugin_disabled');
-assert_true(SoftPluginGate::decide(false, 'DELETE', true) === 'plugin_disabled', 'disabled DELETE → plugin_disabled');
+assert_true(SoftPluginGate::decide(false, 'GET', false) === 'empty_list', 'disabled GET list в†’ empty_list');
+assert_true(SoftPluginGate::decide(false, 'GET', true) === 'not_found', 'disabled GET item в†’ not_found');
+assert_true(SoftPluginGate::decide(false, 'POST', false) === 'plugin_disabled', 'disabled POST в†’ plugin_disabled');
+assert_true(SoftPluginGate::decide(false, 'PUT', true) === 'plugin_disabled', 'disabled PUT в†’ plugin_disabled');
+assert_true(SoftPluginGate::decide(false, 'DELETE', true) === 'plugin_disabled', 'disabled DELETE в†’ plugin_disabled');
 
 $mod = new ProjectsModule();
 assert_true($mod->registersRoutesWhenDisabled() === true, 'ProjectsModule opts into soft routes');
 assert_true((new ContentModule())->registersRoutesWhenDisabled() === false, 'ContentModule does not soft-register (opt-in)');
 
 $emptyList = SoftPluginGate::responseFor('empty_list', 'projects');
-assert_true(($emptyList['status'] ?? 0) === 200, 'disabled GET list → 200');
+assert_true(($emptyList['status'] ?? 0) === 200, 'disabled GET list в†’ 200');
 assert_true(($emptyList['body']['data'] ?? null) === [], 'disabled GET list body is empty collection');
 
 $notFound = SoftPluginGate::responseFor('not_found', 'projects');
-assert_true(($notFound['status'] ?? 0) === 404, 'disabled GET item → 404');
+assert_true(($notFound['status'] ?? 0) === 404, 'disabled GET item в†’ 404');
 
 $disabled = SoftPluginGate::responseFor('plugin_disabled', 'projects');
-assert_true(($disabled['status'] ?? 0) === 409, 'disabled mutation → 409');
+assert_true(($disabled['status'] ?? 0) === 409, 'disabled mutation в†’ 409');
 assert_true(($disabled['body']['code'] ?? '') === 'plugin_disabled', 'error code plugin_disabled');
 
 if (!extension_loaded('pdo_sqlite')) {
@@ -108,13 +107,13 @@ $pdo->exec("UPDATE modules SET is_enabled=0 WHERE name='projects'");
 $registryDisabled = new ModuleRegistry($db, $app, $modulesPath);
 $registryDisabled->register(new PackageModuleAdapter(new ProjectsModule(), $manifest));
 $outList = SoftPluginGate::outcome($registryDisabled, 'projects', 'GET', false);
-assert_true($outList !== null && ($outList['status'] ?? 0) === 200, 'disabled GET list → 200 empty');
+assert_true($outList !== null && ($outList['status'] ?? 0) === 200, 'disabled GET list в†’ 200 empty');
 assert_true(($outList['body']['data'] ?? null) === [], 'disabled GET list empty collection');
 $outItem = SoftPluginGate::outcome($registryDisabled, 'projects', 'GET', true);
-assert_true($outItem !== null && ($outItem['status'] ?? 0) === 404, 'disabled GET item → 404');
+assert_true($outItem !== null && ($outItem['status'] ?? 0) === 404, 'disabled GET item в†’ 404');
 foreach ([['POST', false], ['PUT', true], ['DELETE', true]] as [$method, $isItem]) {
     $out = SoftPluginGate::outcome($registryDisabled, 'projects', $method, $isItem);
-    assert_true($out !== null && ($out['status'] ?? 0) === 409, "disabled $method → 409");
+    assert_true($out !== null && ($out['status'] ?? 0) === 409, "disabled $method в†’ 409");
 }
 
 // ContentModule alone must not own projects routes

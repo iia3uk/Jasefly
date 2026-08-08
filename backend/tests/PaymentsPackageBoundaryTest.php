@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Payments'), 'bundled Modules/Payments removed from discovery');
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Payments'), 'legacy Payments removed after live verify');
 assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-payments-*.zip')), 'payments ZIP present');
 
-$pkg = is_dir($repoRoot . '/modules-src/payments')
-    ? $repoRoot . '/modules-src/payments'
-    : dirname(__DIR__) . '/tests/fixtures/modules/payments';
+$pkg = jasefly_test_package_dir('payments');
 assert_true(is_file($pkg . '/module.json'), 'payments package manifest exists');
 assert_true(is_file($pkg . '/backend/PaymentsModule.php'), 'payments package entry exists');
 

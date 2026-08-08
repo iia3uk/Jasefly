@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 /**
- * Priority 6 — Security verification regressions (no network, minimal DB).
+ * Priority 6 вЂ” Security verification regressions (no network, minimal DB).
  * Included from run.php (uses global assert_true).
  */
 
@@ -14,7 +16,7 @@ use App\Services\TotpService;
 use App\Support\SsrfGuard;
 use App\Utils\Password;
 
-// —— SSRF guard ——
+// вЂ”вЂ” SSRF guard вЂ”вЂ”
 assert_true(SsrfGuard::isBlockedHost('localhost') === true, 'SSRF blocks localhost');
 assert_true(SsrfGuard::isBlockedHost('127.0.0.1') === true, 'SSRF blocks 127.0.0.1');
 assert_true(SsrfGuard::isBlockedHost('::1') === true, 'SSRF blocks ::1');
@@ -26,7 +28,7 @@ assert_true(SsrfGuard::isSafeHttpUrl('ftp://example.com/x') === false, 'SSRF rej
 assert_true(SsrfGuard::isSafeHttpUrl('not-a-url') === false, 'SSRF rejects invalid URL');
 assert_true(SsrfGuard::isSafeHttpUrl('https://example.com/hook') === true, 'SSRF allows public https URL');
 
-// —— Password hashing ——
+// вЂ”вЂ” Password hashing вЂ”вЂ”
 $hash = Password::hash('correct-horse-battery');
 assert_true(Password::verify('correct-horse-battery', $hash) === true, 'Password verify ok');
 assert_true(Password::verify('wrong-password', $hash) === false, 'Password verify rejects wrong');
@@ -34,7 +36,7 @@ if (defined('PASSWORD_ARGON2ID')) {
     assert_true(str_starts_with($hash, '$argon2id$'), 'Password uses Argon2id when available');
 }
 
-// —— TOTP ——
+// вЂ”вЂ” TOTP вЂ”вЂ”
 $totp = new TotpService();
 $secret = $totp->generateSecret();
 $code = $totp->codeAt($secret, intdiv(time(), 30));
@@ -46,7 +48,7 @@ if ($code !== '000000') {
 $url = $totp->otpAuthUrl($secret, 'admin@example.com');
 assert_true(str_starts_with($url, 'otpauth://totp/'), 'TOTP otpauth URL shape');
 
-// —— JWT type segregation ——
+// вЂ”вЂ” JWT type segregation вЂ”вЂ”
 $secretJwt = 'test-jwt-secret-for-security-suite';
 $access = Jwt::encode(['sub' => 1, 'type' => 'access', 'exp' => time() + 60], $secretJwt);
 $refresh = Jwt::encode(['sub' => 1, 'type' => 'refresh', 'exp' => time() + 3600], $secretJwt);
@@ -59,13 +61,13 @@ assert_true(($rTok['type'] ?? '') === 'refresh', 'JWT refresh type preserved');
 assert_true(($c['type'] ?? '') === '2fa_challenge', 'JWT 2fa_challenge type preserved');
 assert_true($access !== $refresh, 'access and refresh tokens differ');
 
-// —— Refresh token storage uses SHA-256 of raw token (not plaintext) ——
+// вЂ”вЂ” Refresh token storage uses SHA-256 of raw token (not plaintext) вЂ”вЂ”
 $rawRefresh = 'refresh-token-raw-value';
 $stored = hash('sha256', $rawRefresh);
 assert_true(strlen($stored) === 64, 'refresh token hash is sha256 hex');
 assert_true($stored !== $rawRefresh, 'refresh token is not stored plaintext');
 
-// —— Backup encrypt/decrypt roundtrip ——
+// вЂ”вЂ” Backup encrypt/decrypt roundtrip вЂ”вЂ”
 if (!function_exists('sodium_crypto_secretbox') && !function_exists('openssl_encrypt')) {
     echo "  SKIP backup encrypt/decrypt (ext-sodium and ext-openssl missing)\n";
 } else {
@@ -85,7 +87,7 @@ if (!function_exists('sodium_crypto_secretbox') && !function_exists('openssl_enc
     assert_true($dec->invoke($backup, $blob) === $plain, 'backup decrypt roundtrip');
 }
 
-// —— Media upload allowlist excludes PHP / executable ——
+// вЂ”вЂ” Media upload allowlist excludes PHP / executable вЂ”вЂ”
 $mediaRef = new ReflectionClass(MediaService::class);
 $media = $mediaRef->newInstanceWithoutConstructor();
 $allowedFn = $mediaRef->getMethod('allowedUploadTypes');
@@ -108,7 +110,7 @@ try {
 }
 assert_true($svgBan, 'SVG upload hard-rejected');
 
-// —— Path jail ——
+// вЂ”вЂ” Path jail вЂ”вЂ”
 $tmpRoot = sys_get_temp_dir() . '/jasefly-sec-' . bin2hex(random_bytes(3));
 @mkdir($tmpRoot . '/safe', 0775, true);
 @mkdir($tmpRoot . '/outside', 0775, true);
@@ -144,7 +146,7 @@ assert_true($prefixThrew, 'path jail rejects sibling prefix collision (demo vs d
 @rmdir($tmpRoot . '/safe');
 @rmdir($tmpRoot);
 
-// —— Automation / shared log redaction ——
+// вЂ”вЂ” Automation / shared log redaction вЂ”вЂ”
 $out = \App\Support\SecretRedactor::redact([
     'password' => 'secret',
     'token' => 'abc',
@@ -157,19 +159,10 @@ assert_true(($out['api_key'] ?? '') === '***', 'SecretRedactor redacts api_key')
 assert_true(($out['nested']['secret'] ?? '') === '***', 'SecretRedactor redacts nested secret');
 assert_true(($out['nested']['ok'] ?? '') === 'visible', 'SecretRedactor keeps non-secret fields');
 
-// —— Webhooks / Auth / outbound source contracts ——
-$whCandidates = [
-    dirname(__DIR__, 2) . '/modules-src/webhooks/backend/WebhooksModule.php',
-    dirname(__DIR__) . '/tests/fixtures/modules/webhooks/backend/WebhooksModule.php',
-];
-$whSrc = '';
-foreach ($whCandidates as $whPath) {
-    if (is_file($whPath)) {
-        $whSrc = (string) file_get_contents($whPath);
-        break;
-    }
-}
-assert_true($whSrc !== '', 'webhooks package source present');
+// вЂ”вЂ” Webhooks / Auth / outbound source contracts вЂ”вЂ”
+$whDir = jasefly_test_package_dir('webhooks');
+assert_true($whDir !== null, 'webhooks package source present');
+$whSrc = (string) file_get_contents($whDir . '/backend/WebhooksModule.php');
 assert_true(
     str_contains($whSrc, 'postJsonOutbound') || str_contains($whSrc, 'isSafeOutboundUrl'),
     'Webhooks package uses Platform outbound HTTP helpers'
@@ -190,7 +183,7 @@ assert_true(str_contains($authSrc, "public function refresh"), 'AuthController h
 assert_true(str_contains($authSrc, "'refresh_token' => \$refresh"), 'Auth refresh returns rotated refresh_token');
 assert_true(substr_count($authSrc, 'DELETE FROM refresh_tokens WHERE token_hash=?') >= 1, 'Auth deletes refresh token hashes');
 
-// —— Production hardening: no anonymous debug leak ——
+// вЂ”вЂ” Production hardening: no anonymous debug leak вЂ”вЂ”
 $prevEnv = getenv('APP_ENV');
 $prevAuth = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
 $prevGet = $_GET;

@@ -16,7 +16,12 @@ function syncSdk(slug) {
   const dest = path.join(root, 'modules-src', slug, 'backend', 'node', 'sdk');
   fs.mkdirSync(dest, { recursive: true });
   for (const f of ['helpers.ts', 'platform-types.ts']) {
-    fs.copyFileSync(path.join(root, 'package-sdk', 'node', f), path.join(dest, f));
+    const sdkRoot = [
+      path.join(root, 'Jasefly-Modules', 'package-sdk', 'node'),
+      path.join(root, 'package-sdk', 'node'),
+    ].find((p) => fs.existsSync(p));
+    if (!sdkRoot) throw new Error('package-sdk/node not found (Jasefly-Modules or Core)');
+    fs.copyFileSync(path.join(sdkRoot, f), path.join(dest, f));
   }
 }
 

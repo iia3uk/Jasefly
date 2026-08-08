@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 /**
  * Module boundary: comments is a ZIP package owning frozen builder widget IDs.
  * Included from run.php (uses global assert_true).
@@ -16,10 +18,8 @@ use App\Router;
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Comments'), 'bundled Modules/Comments removed from discovery');
 
-$pkgDir = $repoRoot . '/modules-src/comments';
-if (!is_dir($pkgDir)) {
-    $pkgDir = dirname(__DIR__) . '/tests/fixtures/modules/comments';
-}
+$pkgDir = jasefly_test_package_dir('comments');
+assert_true($pkgDir !== null, 'comments package directory exists');
 assert_true(is_dir($pkgDir), 'comments package directory exists');
 assert_true(is_file($pkgDir . '/module.json'), 'comments module.json exists');
 assert_true(is_file($pkgDir . '/backend/CommentsModule.php'), 'comments backend entry exists');
@@ -60,7 +60,7 @@ foreach (['comments', 'reviews', 'rating-summary', 'review-form'] as $wid) {
 $mig = (string) file_get_contents($pkgDir . '/migrations/001_comments.sql');
 assert_true(str_contains($mig, 'CREATE TABLE IF NOT EXISTS'), 'migration is non-destructive IF NOT EXISTS');
 
-// —— Package wins over same-slug bundled ——
+// вЂ”вЂ” Package wins over same-slug bundled вЂ”вЂ”
 if (!extension_loaded('pdo_sqlite')) {
     echo "  SKIP comments runtime boundary (pdo_sqlite missing)\n";
     return;

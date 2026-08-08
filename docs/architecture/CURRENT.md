@@ -4,7 +4,7 @@
 
 Jasefly is **not** a core with ~30 built-in domain modules.
 
-**Core repository ≠ package source repository.** This git tree publishes Host/Core, Platform SDK, package loaders, catalog, and tooling. Domain package **implementations** are external (Module Hub / release ZIPs). Optional local authoring workspace `modules-src/` is gitignored.
+**Core repository ≠ package source repository.** This git tree publishes Host/Core, Platform SDK, package loaders, catalog, and tooling. Domain package **implementations** live in the sibling/nested local repository **`Jasefly-Modules/`** (independent git; ignored by Core). Installables are Module Hub / release ZIPs. Future remote name expected: `Jasefly-Modules` (no URL until created).
 
 ## Principles
 
@@ -22,8 +22,8 @@ Jasefly is **not** a core with ~30 built-in domain modules.
 | --- | --- |
 | Identity snapshot (in Core) | `release/catalog/manifests/{slug}.json` |
 | Derived catalog | `release/catalog/packages.json` |
-| Local authoring (optional, gitignored) | `modules-src/{slug}/` |
-| Distributable ZIP | `jasefly-module-{slug}-{version}.zip` → Module Hub / `release/modules/` (not Core git) |
+| Package source repo | `Jasefly-Modules/modules-src/{slug}/` (or `JASEFLY_MODULES_ROOT`) |
+| Distributable ZIP | `jasefly-module-{slug}-{version}.zip` → Module Hub / Core `release/modules/` (not Core git) |
 | CI / SDK fixtures | `backend/tests/fixtures/modules/`, `runtime-node/tests/fixtures/modules/zed/` |
 
 Build ZIP (needs local source or fixture): `node scripts/build-module.js {slug} --yes`  

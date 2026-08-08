@@ -28,8 +28,11 @@ Desktop.ini
 # ZIP install trees (copied from release ZIP at install time — not authoring SoT)
 /backend/modules/
 
-# Local package authoring workspace (product package sources are external — not Core repo)
-# Dev may keep modules-src/ locally for build/certify; CI uses backend/tests/fixtures/modules/.
+# Nested first-party packages repository (independent git; not a submodule)
+/Jasefly-Modules/
+
+# Local leftover package authoring workspace (optional packages only; gitignored)
+# Verified extracted domains live in Jasefly-Modules/. CI uses backend/tests/fixtures/modules/.
 /modules-src/
 
 # Backend secrets & runtime

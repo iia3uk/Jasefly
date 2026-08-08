@@ -30,6 +30,7 @@ describe('PackageSurfaceRegistry architecture', () => {
     const owners: Record<string, string> = {};
     for (const slug of ['blog', 'projects', 'products', 'orders', 'payments', 'comments']) {
       const candidates = [
+        path.join(repo, 'Jasefly-Modules', 'modules-src', slug, 'module.json'),
         path.join(repo, 'modules-src', slug, 'module.json'),
         path.join(repo, 'release/catalog/manifests', `${slug}.json`),
         path.join(repo, 'backend/tests/fixtures/modules', slug, 'module.json'),

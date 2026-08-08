@@ -47,15 +47,26 @@ final class SdkCliService
         if (is_dir($arg)) {
             return realpath($arg) ?: $arg;
         }
-        foreach ([
-            $this->repoRoot . '/modules-src/' . $arg,
-            // CI/public reference packages (modules-src is local-only / gitignored)
-            $this->repoRoot . '/backend/tests/fixtures/modules/' . $arg,
-            dirname($this->repoRoot) . '/modules/' . $arg,
-            $this->repoRoot . '/../modules/' . $arg,
-            $this->repoRoot . '/modules/' . $arg,
-        ] as $c) {
-            if (is_dir($c)) {
+
+        $candidates = [];
+        $env = getenv('JASEFLY_MODULES_ROOT');
+        if (is_string($env) && trim($env) !== '') {
+            $envPath = $env;
+            if (!preg_match('~^[A-Za-z]:[\\\\/]|^/~', $envPath)) {
+                $envPath = $this->repoRoot . '/' . ltrim(str_replace('\\', '/', $envPath), '/');
+            }
+            $candidates[] = rtrim($envPath, "/\\") . '/modules-src/' . $arg;
+            $candidates[] = rtrim($envPath, "/\\") . '/' . $arg;
+        }
+        $candidates[] = $this->repoRoot . '/Jasefly-Modules/modules-src/' . $arg;
+        $candidates[] = $this->repoRoot . '/modules-src/' . $arg;
+        $candidates[] = $this->repoRoot . '/backend/tests/fixtures/modules/' . $arg;
+        $candidates[] = dirname($this->repoRoot) . '/modules/' . $arg;
+        $candidates[] = $this->repoRoot . '/../modules/' . $arg;
+        $candidates[] = $this->repoRoot . '/modules/' . $arg;
+
+        foreach ($candidates as $c) {
+            if (is_dir($c) && is_file($c . '/module.json')) {
                 return realpath($c) ?: $c;
             }
         }

@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 /**
- * Build a Jasefly module package ZIP from modules-src/{slug}/
+ * Build a Jasefly module package ZIP from an external/local package source.
  * Usage: node scripts/build-module.js <slug> [--version=x.y.z] [--output=release/modules] [--yes]
+ *
+ * Source resolution: JASEFLY_MODULES_ROOT → Jasefly-Modules/modules-src → modules-src → fixtures
+ * Core runtime does not require package sources.
  */
 import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
 import { fileURLToPath } from 'url'
 import { spawnSync } from 'child_process'
+import { resolveModuleSrc } from './modules-root.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(__dirname, '..')
@@ -24,20 +28,13 @@ if (!slug) {
   process.exit(1)
 }
 
-function resolveModuleSrc(name) {
-  for (const c of [
-    path.join(root, 'modules-src', name),
-    // CI/public reference packages when modules-src is gitignored
-    path.join(root, 'backend', 'tests', 'fixtures', 'modules', name),
-  ]) {
-    if (fs.existsSync(c)) return c
-  }
-  return null
-}
-
-const src = resolveModuleSrc(slug)
+const src = resolveModuleSrc(root, slug)
 if (!src) {
-  console.error('Module source not found:', slug, '(modules-src/ or backend/tests/fixtures/modules/)')
+  console.error(
+    'Module source not found:',
+    slug,
+    '(set JASEFLY_MODULES_ROOT, or use Jasefly-Modules/modules-src, modules-src, or fixtures)',
+  )
   process.exit(1)
 }
 

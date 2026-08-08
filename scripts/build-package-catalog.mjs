@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Derive release/catalog from committed identity manifests (+ optional local modules-src).
+ * Derive release/catalog from committed identity manifests (+ optional external modules root).
  * Catalog is an index — not a second source of truth for package implementation.
  *
  * Identity resolution order per slug:
- *   1. modules-src/{slug}/module.json          (local ignored authoring workspace)
+ *   1. JASEFLY_MODULES_ROOT / Jasefly-Modules/modules-src/{slug}/module.json
  *   2. release/catalog/manifests/{slug}.json   (committed identity snapshot)
  *   3. backend/tests/fixtures/modules/{slug}/module.json
  *
@@ -13,6 +13,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { resolveModuleSrc } from './modules-root.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
@@ -41,17 +42,18 @@ const runtimeDir = path.join(outDir, 'runtime');
 const manifestsDir = path.join(outDir, 'manifests');
 
 function resolveManifest(slug) {
+  const fromModules = resolveModuleSrc(root, slug);
   const candidates = [
-    path.join(root, 'modules-src', slug, 'module.json'),
+    fromModules ? path.join(fromModules, 'module.json') : null,
     path.join(manifestsDir, `${slug}.json`),
     path.join(root, 'backend', 'tests', 'fixtures', 'modules', slug, 'module.json'),
-  ];
+  ].filter(Boolean);
   for (const p of candidates) {
     if (fs.existsSync(p)) {
       return { path: p, data: JSON.parse(fs.readFileSync(p, 'utf8')) };
     }
   }
-  throw new Error(`Missing identity manifest for ${slug} (modules-src / catalog/manifests / fixtures)`);
+  throw new Error(`Missing identity manifest for ${slug} (Jasefly-Modules / catalog/manifests / fixtures)`);
 }
 
 function findArtifact(slug, version) {
@@ -101,6 +103,7 @@ const packages = EXTRACTED.map((slug) => {
     name: String(mf.name ?? slug),
     version,
     sourceOwnership: 'external package/module distribution',
+    externalRepository: 'Jasefly-Modules',
     identityManifest: path.relative(root, path.join(manifestsDir, `${slug}.json`)).replace(/\\/g, '/'),
     resolvedFrom: path.relative(root, mfPath).replace(/\\/g, '/'),
     artifact,
@@ -127,8 +130,9 @@ const catalog = {
   architecture: {
     packageIdentity: 'module.json',
     sourceOwnership: 'external package/module distribution',
+    externalRepository: 'Jasefly-Modules',
     coreRepoRole: 'contracts · loaders · catalog · tooling (not package implementation)',
-    localAuthoringWorkspace: 'modules-src/{slug} (gitignored)',
+    packageSourceRoot: 'Jasefly-Modules/modules-src/{slug} (or JASEFLY_MODULES_ROOT)',
     identitySnapshot: 'release/catalog/manifests/{slug}.json',
     artifact: 'release/modules/jasefly-module-{slug}-{version}.zip',
     artifactStorage: 'release-storage / Module Hub (not Core git)',

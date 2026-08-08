@@ -1,11 +1,13 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/_package_dir.php';
+
 $repoRoot = dirname(__DIR__, 2);
 assert_true(!is_dir(dirname(__DIR__) . '/src/Modules/Translate'), 'bundled Modules/Translate removed from discovery');
 assert_true(!is_dir($repoRoot . '/backend/legacy-extract/Translate'), 'legacy Translate removed after live verify');
 assert_true(!empty(glob($repoRoot . '/release/modules/jasefly-module-translate-*.zip')), 'translate ZIP present');
-$pkg = is_dir($repoRoot . '/modules-src/translate') ? $repoRoot . '/modules-src/translate' : dirname(__DIR__) . '/tests/fixtures/modules/translate';
+$pkg = jasefly_test_package_dir('translate');
 assert_true(is_dir($pkg), 'translate package directory exists');
 $manifest = json_decode((string) file_get_contents($pkg . '/module.json'), true);
 assert_true(is_array($manifest) && ($manifest['slug'] ?? '') === 'translate', 'translate manifest slug');

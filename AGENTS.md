@@ -17,35 +17,30 @@ Read [`CMS_MAP.md`](CMS_MAP.md) first for path lookup. Product rules: [`.cursorr
 5. PHP: `backend/src/Platform/` (PlatformContext, Surfaces, contracts)  
 6. Node: `runtime-node/src/packages/`, `runtime-node/src/platform/`
 
-### Critical: package sources are NOT in this repository
+### Critical: package sources live in Jasefly-Modules
 
 **Extracted domain packages intentionally DO NOT live in the Core repository source tree.**
 
-- `modules-src/` is a **local gitignored** authoring workspace (optional on a developer machine).
-- Absence of `modules-src/{slug}/` is **not** missing Core code and **not** a reason to recreate domains in Core.
-- Do **not** regenerate:
-  - `backend/src/Modules/{Domain}`
-  - `runtime-node/src/modules/{domain}.ts`
-- Package implementations ship separately via **Module Hub / release ZIP artifacts** (`jasefly-module-{slug}-{version}.zip`).
-- Core contains: contracts · loaders · catalog · tooling · host modules · approved test fixtures.
-- If you need a specific package’s implementation, work from its **external** package source / artifact — do not pull domain ownership back into Core.
+- First-party package source repository: local nested **`Jasefly-Modules/`** (independent git; ignored by Core). Future remote name expected: `Jasefly-Modules` (no URL until created).
+- Optional env: `JASEFLY_MODULES_ROOT` for tooling discovery.
+- Absence of package sources in Core is **intentional** — not missing Core code.
+- Do **not** regenerate `backend/src/Modules/{Domain}` or `runtime-node/src/modules/{domain}.ts`.
+- Implementations ship via Module Hub / release ZIPs; Core has contracts · loaders · catalog · tooling · host modules · approved fixtures.
 
 ### Critical ownership rules
 
 - **Core no longer owns extracted domain modules.**
-- Do **not** move package code back into Core Controllers or host static slug/table/resource allowlists for convenience.
 - Do **not** invent domain-specific `PlatformContext` methods without an architectural need.
 - Do **not** treat PHP package and Node package as two products — **one ZIP, one identity, optional entrypoints**.
-- New functional domains are **packages by default** unless they require host/core ownership.
-- Packages interact via: PlatformContext · capabilities · events · resources · **surfaces** · lifecycle contracts.
+- New functional domains are **packages by default** (in Jasefly-Modules) unless they require host/core ownership.
 - If a task needs a host change for a specific package slug: **stop** and check for a missing generic seam first.
 
-### Verified baseline (do not “re-extract” to re-prove)
+### Verified baseline
 
-PHP 1277/0 · Node 71/0 · Certify 15/15 · MySQL live 15/15 · Combos YES · Dual-runtime YES · Final architecture regression PASS.
+PHP suite · Node suite · Certify 15/15 · MySQL live 15/15 · Combos YES · Dual-runtime YES · Final architecture regression PASS.
 
 Synthetic dual-runtime proof: `runtime-node/tests/fixtures/modules/zed/`.
 
 ### Historical docs
 
-Files marked **Historical / superseded** (e.g. older extraction audits) are records only — not implementation guides.
+Files marked **Historical / superseded** are records only — not implementation guides.
