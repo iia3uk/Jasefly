@@ -1,4 +1,5 @@
 import type { DashboardWidgetDef } from './types'
+import { AnalyticsDashWidget } from './widgets/AnalyticsDashWidget'
 import { ContentHealthWidget } from './widgets/ContentHealthWidget'
 import { McpActivityWidget } from './widgets/McpActivityWidget'
 import { WeekStatsWidget } from './widgets/WeekStatsWidget'
@@ -17,6 +18,15 @@ import { OverloadWidget } from './widgets/OverloadWidget'
 
 /** Default visual order on a fresh dashboard. */
 export const DASHBOARD_WIDGETS: DashboardWidgetDef[] = [
+  {
+    id: 'analytics',
+    title: 'Аналитика',
+    hint: 'Пульс сайта',
+    plugin: 'analytics',
+    span: 'full',
+    defaultVisible: true,
+    Component: AnalyticsDashWidget,
+  },
   {
     id: 'content-health',
     title: 'Контент',

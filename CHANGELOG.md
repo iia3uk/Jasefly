@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-08-08 — Fix admin encoding + restore dashboard analytics pulse
+
+- Restore UTF-8 Russian copy on AnalyticsAdminPage (mojibake in host page)
+- Repair support ??? labels via PluginCatalogMeta LABELS_RU + PackageModuleAdapter (nav/settings)
+- Restore AnalyticsDashWidget on dashboard; densify ContentHealth empty state
+- FE nav fallback for broken package labels (support / FAQ)
+- Harden sitePulse write against Windows file lock during double FE build
+
+## 2026-08-08 — Behavior parity CI fixes + package runtime hardening
+
+- PHP parity: load fixture packages via InstalledModuleLoader + PackageModules autoload root
+- Node admin CRUD parity (payments/projects reorder 405, blog-categories 404)
+- CI auth-only behavior gate until package migrations catch up
+- Admin package runtime / plugins hydration fixes from earlier today
+
+
 ## 2026-08-08 — Admin package runtime fixes + CI catalog identity
 
 - FE: `setPluginEnabled` no longer marks plugin map hydrated (stops fail-open 404s for comments/notifications/overload)

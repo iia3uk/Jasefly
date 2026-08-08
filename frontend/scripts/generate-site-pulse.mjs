@@ -137,5 +137,28 @@ const pulse = {
 }
 
 fs.mkdirSync(outDir, { recursive: true })
-fs.writeFileSync(outFile, JSON.stringify(pulse, null, 2) + '\n')
+const payload = JSON.stringify(pulse, null, 2) + '\n'
+const tmpFile = outFile + '.tmp'
+let lastErr
+for (let attempt = 0; attempt < 5; attempt++) {
+  try {
+    fs.writeFileSync(tmpFile, payload)
+    fs.renameSync(tmpFile, outFile)
+    lastErr = null
+    break
+  } catch (e) {
+    lastErr = e
+    try {
+      fs.unlinkSync(tmpFile)
+    } catch {
+      /* ignore */
+    }
+    // Windows often locks the previous write for a beat (AV / parallel build).
+    const until = Date.now() + 100 * (attempt + 1)
+    while (Date.now() < until) {
+      /* spin */
+    }
+  }
+}
+if (lastErr) throw lastErr
 console.log('Wrote', path.relative(repoRoot, outFile), 'version=', pulse.version)

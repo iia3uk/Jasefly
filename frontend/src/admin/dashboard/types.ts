@@ -3,6 +3,7 @@ import type { ComponentType } from 'react'
 export type DashboardWidgetSpan = 'full' | 'half' | 'third'
 
 export type DashboardWidgetId =
+  | 'analytics'
   | 'content-health'
   | 'mcp-activity'
   | 'week-stats'

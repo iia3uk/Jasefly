@@ -86,8 +86,16 @@ function AdminNav({
     const hub = findHubByNavPath(to)
     if (hub) return hub.navLabel
     const canon = toCanonicalAdminPath(to)
+    if (canon === '/admin/support/faq' || canon.startsWith('/admin/support/faq/')) {
+      return locale === 'en' ? 'Bot FAQ' : 'FAQ бота'
+    }
     const seg = canon.replace(/^\/admin\/?/, '').split('/')[0] || ''
     const translated = seg ? resourceTitle(seg) : label
+    const broken =
+      !label.trim() ||
+      /[\uFFFD]/.test(label) ||
+      (label.match(/\?/g) ?? []).length >= Math.max(3, Math.ceil(label.length * 0.45))
+    if (broken && translated && translated !== seg.replace(/-/g, ' ')) return translated
     return translated !== seg.replace(/-/g, ' ') ? translated : label
   }
 

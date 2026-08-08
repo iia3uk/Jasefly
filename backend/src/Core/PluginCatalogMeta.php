@@ -65,20 +65,71 @@ final class PluginCatalogMeta
         ];
     }
 
+    /** Stable RU labels when a package entrypoint returns mojibake / ???. */
+    public const LABELS_RU = [
+        'system' => 'System',
+        'users' => 'Users & Roles',
+        'registration' => 'Регистрация',
+        'portfolio' => 'Портфолио',
+        'projects' => 'Проекты',
+        'blog' => 'Блог',
+        'content' => 'Content',
+        'media' => 'Медиатека',
+        'seo' => 'SEO',
+        'template' => 'Шаблоны',
+        'products' => 'Товары',
+        'payments' => 'Payments',
+        'orders' => 'Заказы',
+        'comments' => 'Комментарии',
+        'analytics' => 'Аналитика',
+        'mail' => 'Почта',
+        'ddos' => 'DDoS защита',
+        'overload' => 'Перегрузки',
+        'translate' => 'Переводчик',
+        'webhooks' => 'Webhooks',
+        'support' => 'Поддержка',
+        'lab' => 'Jasefly Lab',
+        'scheduler' => 'Планировщик',
+        'module-manager' => 'Модули',
+        'access' => 'Контроль доступа',
+        'forms' => 'Формы',
+        'notifications' => 'Уведомления',
+        'automation' => 'Автоматизация',
+        'newsletter' => 'Рассылки',
+    ];
+
+    /** True when a module label lost encoding (???? / U+FFFD). */
+    public static function isBrokenLabel(string $label): bool
+    {
+        $label = trim($label);
+        if ($label === '') {
+            return true;
+        }
+        if (str_contains($label, "\u{FFFD}")) {
+            return true;
+        }
+        $q = substr_count($label, '?');
+        $len = max(1, strlen($label));
+        return $q >= 3 && ($q / $len) >= 0.45;
+    }
+
     /** English-aware display label for admin lists. */
     public static function displayLabel(string $name, string $fallback): string
     {
-        if (self::$locale !== 'en') {
+        if (self::$locale === 'en') {
+            if (isset(PluginCatalogMetaEn::LABELS[$name])) {
+                return PluginCatalogMetaEn::LABELS[$name];
+            }
+            // Avoid showing Cyrillic fallbacks when EN is requested.
+            if (preg_match('/\p{Cyrillic}/u', $fallback)) {
+                return ucfirst(str_replace(['-', '_'], ' ', $name));
+            }
             return $fallback;
         }
-        if (isset(PluginCatalogMetaEn::LABELS[$name])) {
-            return PluginCatalogMetaEn::LABELS[$name];
+        if (self::isBrokenLabel($fallback) && isset(self::LABELS_RU[$name])) {
+            return self::LABELS_RU[$name];
         }
-        // Avoid showing Cyrillic fallbacks when EN is requested.
-        if (preg_match('/\p{Cyrillic}/u', $fallback)) {
-            return ucfirst(str_replace(['-', '_'], ' ', $name));
-        }
-        return $fallback;
+        return $fallback !== '' ? $fallback : (self::LABELS_RU[$name] ?? $name);
     }
 
     /**

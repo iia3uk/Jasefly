@@ -1,6 +1,11 @@
 import { useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { GripVertical, LayoutDashboard, SlidersHorizontal } from 'lucide-react'
-import { usePluginEnabled, usePluginsHydrated } from '@/hooks/useApi'
+import { usePluginsHydrated } from '@/hooks/useApi'
+import {
+  arePluginsHydrated,
+  isPluginEnabledReady,
+  subscribePluginState,
+} from '@/core/moduleRegistry'
 import { getPackageDashboardCards } from '@/core/packageModuleLoader'
 import { HostSlot } from '@/platform/hostSlots'
 import { DASHBOARD_WIDGETS, DASHBOARD_WIDGET_MAP, spanClass } from './widgetRegistry'
@@ -41,40 +46,24 @@ function usePackageDashboardCards() {
 
 function useUnavailableIds(): Set<DashboardWidgetId> {
   const hydrated = usePluginsHydrated()
-  const support = usePluginEnabled('support')
-  const forms = usePluginEnabled('forms')
-  const orders = usePluginEnabled('orders')
-  const scheduler = usePluginEnabled('scheduler')
-  const overload = usePluginEnabled('overload')
-  const notifications = usePluginEnabled('notifications')
-  const blog = usePluginEnabled('blog')
+  // Recompute when any plugin enable bit flips (no per-slug hardcode in this shell).
+  const pluginEpoch = useSyncExternalStore(
+    subscribePluginState,
+    () =>
+      DASHBOARD_WIDGETS.map((d) => `${d.plugin ?? ''}:${d.plugin ? (isPluginEnabledReady(d.plugin) ? 1 : 0) : '-'}`).join(
+        '|',
+      ),
+    () => '',
+  )
 
   return useMemo(() => {
     const set = new Set<DashboardWidgetId>()
-    if (!hydrated) return set
-    const gate: Record<string, boolean> = {
-      support,
-      forms,
-      orders,
-      scheduler,
-      overload,
-      notifications,
-      blog,
-    }
+    if (!hydrated && !arePluginsHydrated()) return set
     for (const def of DASHBOARD_WIDGETS) {
-      if (def.plugin && !gate[def.plugin]) set.add(def.id)
+      if (def.plugin && !isPluginEnabledReady(def.plugin)) set.add(def.id)
     }
     return set
-  }, [
-    hydrated,
-    support,
-    forms,
-    orders,
-    scheduler,
-    overload,
-    notifications,
-    blog,
-  ])
+  }, [hydrated, pluginEpoch])
 }
 
 export function DashboardShell() {
@@ -85,8 +74,15 @@ export function DashboardShell() {
   const [editMode, setEditMode] = useState(false)
   const [dragId, setDragId] = useState<DashboardWidgetId | null>(null)
 
+  // Prefer host pulse widget; suppress only when package used registerDashboardCard
+  // (HostSlot alone can register an empty mount after React #185 — keep host fallback).
+  const packageHasAnalyticsCard = packageCards.some((c) => /analytics/i.test(c.id))
   const visibleIds = layout.order.filter(
-    (id) => !isHidden(id) && !unavailable.has(id) && DASHBOARD_WIDGET_MAP[id],
+    (id) =>
+      !isHidden(id) &&
+      !unavailable.has(id) &&
+      DASHBOARD_WIDGET_MAP[id] &&
+      !(id === 'analytics' && packageHasAnalyticsCard),
   )
   const packageCardNodes: ReactNode[] = packageCards.map((card) => (
     <div key={`pkg-${card.id}`} className="col-span-1 min-w-0 lg:col-span-6">

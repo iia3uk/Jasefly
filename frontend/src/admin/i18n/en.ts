@@ -598,6 +598,7 @@ export const resources: Record<string, string> = {
   'newsletter-campaigns': 'Campaigns',
   comments: 'Comments',
   analytics: 'Analytics',
+  support: 'Support',
   users: 'Users',
   products: 'Products',
 }

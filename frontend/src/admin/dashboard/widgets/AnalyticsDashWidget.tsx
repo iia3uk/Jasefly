@@ -1,8 +1,5 @@
 /**
- * Host analytics dashboard card removed — package contributes via
- * `registerDashboardCard` / `host.registerSlot('admin.dashboard')`.
- * Kept as empty stub so old layout prefs with id `analytics` do not crash.
+ * Host analytics dashboard card (package may also register via HostSlot).
+ * Restored so the dashboard pulse is not empty when the package FE card fails to mount.
  */
-export function AnalyticsDashWidget(): null {
-  return null
-}
+export { DashboardAnalyticsWidget as AnalyticsDashWidget } from '@/modules/analytics/DashboardAnalyticsWidget'

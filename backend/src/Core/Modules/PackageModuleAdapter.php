@@ -6,6 +6,7 @@ namespace App\Core\Modules;
 use App\Core\AbstractModule;
 use App\Core\Container;
 use App\Core\EventDispatcher;
+use App\Core\PluginCatalogMeta;
 use App\Database;
 use App\Platform\Capabilities\CapabilityRegistry;
 use App\Platform\PlatformContextFactory;
@@ -30,7 +31,8 @@ final class PackageModuleAdapter extends AbstractModule
 
     public function label(): string
     {
-        return $this->inner->label() !== '' ? $this->inner->label() : $this->packageManifest->name();
+        $raw = $this->inner->label() !== '' ? $this->inner->label() : $this->packageManifest->name();
+        return PluginCatalogMeta::displayLabel($this->name(), $raw);
     }
 
     public function description(): string
@@ -109,7 +111,29 @@ final class PackageModuleAdapter extends AbstractModule
 
     public function adminNav(): array
     {
-        return $this->inner->adminNav();
+        $nav = $this->inner->adminNav();
+        $slug = $this->name();
+        $out = [];
+        foreach ($nav as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $path = (string) ($item['path'] ?? '');
+            $label = (string) ($item['label'] ?? '');
+            if (PluginCatalogMeta::isBrokenLabel($label)) {
+                if ($path === '/admin/support/faq' || str_starts_with($path, '/admin/support/faq/')) {
+                    $item['label'] = 'FAQ бота';
+                } elseif ($slug !== '' && isset(PluginCatalogMeta::LABELS_RU[$slug])) {
+                    $item['label'] = PluginCatalogMeta::LABELS_RU[$slug];
+                }
+            }
+            $group = (string) ($item['group'] ?? '');
+            if (PluginCatalogMeta::isBrokenLabel($group)) {
+                $item['group'] = 'Коммуникации';
+            }
+            $out[] = $item;
+        }
+        return $out;
     }
 
     public function resources(): array
@@ -139,7 +163,73 @@ final class PackageModuleAdapter extends AbstractModule
 
     public function settingsSchema(): array
     {
-        return $this->inner->settingsSchema();
+        $schema = $this->inner->settingsSchema();
+        return $this->repairSchemaLabels($schema);
+    }
+
+    /**
+     * @param list<array<string, mixed>> $schema
+     * @return list<array<string, mixed>>
+     */
+    private function repairSchemaLabels(array $schema): array
+    {
+        if ($this->name() !== 'support') {
+            return $schema;
+        }
+        $defaults = [
+            'widget_enabled' => 'Показывать виджет чата',
+            'widget_title' => 'Заголовок виджета',
+            'greeting' => 'Приветствие',
+            'position' => 'Позиция',
+            'poll_interval_ms' => 'Интервал опроса (мс)',
+            'require_contact_on_leave' => 'Требовать контакт при уходе',
+            'social_types' => 'Типы соцсетей',
+            'bot_fallback' => 'Ответ бота',
+            'disposable_domains' => 'Доп. disposable-домены',
+            'notify_email' => 'Email-уведомления',
+            'notify_email_to' => 'Email получателя',
+            'notify_telegram' => 'Telegram',
+            'telegram_bot_token' => 'Telegram bot token',
+            'telegram_chat_id' => 'Telegram chat id',
+            'notify_discord' => 'Discord webhook',
+            'discord_webhook_url' => 'Discord webhook URL',
+            'notify_max' => 'Max messenger',
+            'max_api_url' => 'Max bot API URL',
+            'max_bot_token' => 'Max bot token',
+            'max_chat_id' => 'Max chat id',
+        ];
+        $optionDefaults = [
+            'bottom-left' => 'Слева внизу',
+            'bottom-right' => 'Справа внизу',
+        ];
+        $out = [];
+        foreach ($schema as $field) {
+            if (!is_array($field)) {
+                continue;
+            }
+            $key = (string) ($field['key'] ?? '');
+            $label = (string) ($field['label'] ?? '');
+            if ($key !== '' && isset($defaults[$key]) && PluginCatalogMeta::isBrokenLabel($label)) {
+                $field['label'] = $defaults[$key];
+            }
+            if (isset($field['options']) && is_array($field['options'])) {
+                $opts = [];
+                foreach ($field['options'] as $opt) {
+                    if (!is_array($opt)) {
+                        continue;
+                    }
+                    $val = (string) ($opt['value'] ?? '');
+                    $ol = (string) ($opt['label'] ?? '');
+                    if ($val !== '' && isset($optionDefaults[$val]) && PluginCatalogMeta::isBrokenLabel($ol)) {
+                        $opt['label'] = $optionDefaults[$val];
+                    }
+                    $opts[] = $opt;
+                }
+                $field['options'] = $opts;
+            }
+            $out[] = $field;
+        }
+        return $out;
     }
 
     public function settings(): array
