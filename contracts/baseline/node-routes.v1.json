@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-08-04T21:27:26.527Z",
+  "generated_at": "2026-08-08T19:22:41.825Z",
   "generator": "scripts/contracts/extract-node-routes.mjs",
-  "route_count": 424,
+  "route_count": 430,
   "routes": [
     {
       "id": "DELETE /admin/{resource}/{id}",
@@ -14,13 +14,13 @@
       "id": "DELETE /admin/analytics/goals/{id}",
       "method": "DELETE",
       "path": "/admin/analytics/goals/{id}",
-      "file": "runtime-node/src/modules/analytics.ts"
+      "file": "backend/tests/fixtures/modules/analytics/backend/node/domain.ts"
     },
     {
       "id": "DELETE /admin/automations/{id}",
       "method": "DELETE",
       "path": "/admin/automations/{id}",
-      "file": "runtime-node/src/modules/automation.ts"
+      "file": "backend/tests/fixtures/modules/automation/backend/node/domain.ts"
     },
     {
       "id": "DELETE /admin/blog-categories/{id}",
@@ -47,7 +47,7 @@
       "id": "DELETE /admin/comments/{id}",
       "method": "DELETE",
       "path": "/admin/comments/{id}",
-      "file": "runtime-node/src/modules/comments.ts"
+      "file": "backend/tests/fixtures/modules/comments/backend/node/domain.ts"
     },
     {
       "id": "DELETE /admin/contact-messages/{id}",
@@ -73,13 +73,13 @@
       "id": "DELETE /admin/form-submissions/{id}",
       "method": "DELETE",
       "path": "/admin/form-submissions/{id}",
-      "file": "runtime-node/src/modules/forms.ts"
+      "file": "backend/tests/fixtures/modules/forms/backend/node/domain.ts"
     },
     {
       "id": "DELETE /admin/forms/{id}",
       "method": "DELETE",
       "path": "/admin/forms/{id}",
-      "file": "runtime-node/src/modules/forms.ts"
+      "file": "backend/tests/fixtures/modules/forms/backend/node/domain.ts"
     },
     {
       "id": "DELETE /admin/homepage-sections/{id}",
@@ -123,25 +123,25 @@
       "id": "DELETE /admin/newsletter/campaigns/{id}",
       "method": "DELETE",
       "path": "/admin/newsletter/campaigns/{id}",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "DELETE /admin/newsletter/lists/{id}",
       "method": "DELETE",
       "path": "/admin/newsletter/lists/{id}",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "DELETE /admin/newsletter/subscribers/{id}",
       "method": "DELETE",
       "path": "/admin/newsletter/subscribers/{id}",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "DELETE /admin/notification-templates/{id}",
       "method": "DELETE",
       "path": "/admin/notification-templates/{id}",
-      "file": "runtime-node/src/modules/notifications.ts"
+      "file": "backend/tests/fixtures/modules/notifications/backend/node/domain.ts"
     },
     {
       "id": "DELETE /admin/orders/{id}",
@@ -236,7 +236,7 @@
       "id": "DELETE /admin/support/faq/{id}",
       "method": "DELETE",
       "path": "/admin/support/faq/{id}",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "DELETE /admin/testimonials/{id}",
@@ -310,31 +310,31 @@
       "id": "GET /admin/analytics/goals",
       "method": "GET",
       "path": "/admin/analytics/goals",
-      "file": "runtime-node/src/modules/analytics.ts"
+      "file": "backend/tests/fixtures/modules/analytics/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/analytics/overview",
       "method": "GET",
       "path": "/admin/analytics/overview",
-      "file": "runtime-node/src/modules/analytics.ts"
+      "file": "backend/tests/fixtures/modules/analytics/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/automations",
       "method": "GET",
       "path": "/admin/automations",
-      "file": "runtime-node/src/modules/automation.ts"
+      "file": "backend/tests/fixtures/modules/automation/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/automations/{id}",
       "method": "GET",
       "path": "/admin/automations/{id}",
-      "file": "runtime-node/src/modules/automation.ts"
+      "file": "backend/tests/fixtures/modules/automation/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/automations/{id}/runs",
       "method": "GET",
       "path": "/admin/automations/{id}/runs",
-      "file": "runtime-node/src/modules/automation.ts"
+      "file": "backend/tests/fixtures/modules/automation/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/blocks",
@@ -400,7 +400,7 @@
       "id": "GET /admin/comments",
       "method": "GET",
       "path": "/admin/comments",
-      "file": "runtime-node/src/modules/comments.ts"
+      "file": "backend/tests/fixtures/modules/comments/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/contact-info",
@@ -497,37 +497,37 @@
       "id": "GET /admin/form-submissions",
       "method": "GET",
       "path": "/admin/form-submissions",
-      "file": "runtime-node/src/modules/forms.ts"
+      "file": "backend/tests/fixtures/modules/forms/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/form-submissions/{id}",
       "method": "GET",
       "path": "/admin/form-submissions/{id}",
-      "file": "runtime-node/src/modules/forms.ts"
+      "file": "backend/tests/fixtures/modules/forms/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/forms",
       "method": "GET",
       "path": "/admin/forms",
-      "file": "runtime-node/src/modules/forms.ts"
+      "file": "backend/tests/fixtures/modules/forms/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/forms/{id}",
       "method": "GET",
       "path": "/admin/forms/{id}",
-      "file": "runtime-node/src/modules/forms.ts"
+      "file": "backend/tests/fixtures/modules/forms/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/forms/{id}/export",
       "method": "GET",
       "path": "/admin/forms/{id}/export",
-      "file": "runtime-node/src/modules/forms.ts"
+      "file": "backend/tests/fixtures/modules/forms/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/forms/{id}/submissions",
       "method": "GET",
       "path": "/admin/forms/{id}/submissions",
-      "file": "runtime-node/src/modules/forms.ts"
+      "file": "backend/tests/fixtures/modules/forms/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/hero",
@@ -718,43 +718,43 @@
       "id": "GET /admin/newsletter/campaigns",
       "method": "GET",
       "path": "/admin/newsletter/campaigns",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/newsletter/lists",
       "method": "GET",
       "path": "/admin/newsletter/lists",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/newsletter/subscribers",
       "method": "GET",
       "path": "/admin/newsletter/subscribers",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/newsletter/subscribers/export",
       "method": "GET",
       "path": "/admin/newsletter/subscribers/export",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/notification-templates",
       "method": "GET",
       "path": "/admin/notification-templates",
-      "file": "runtime-node/src/modules/notifications.ts"
+      "file": "backend/tests/fixtures/modules/notifications/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/notifications",
       "method": "GET",
       "path": "/admin/notifications",
-      "file": "runtime-node/src/modules/notifications.ts"
+      "file": "backend/tests/fixtures/modules/notifications/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/notifications/unread-count",
       "method": "GET",
       "path": "/admin/notifications/unread-count",
-      "file": "runtime-node/src/modules/notifications.ts"
+      "file": "backend/tests/fixtures/modules/notifications/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/orders",
@@ -774,7 +774,7 @@
       "id": "GET /admin/orders/export",
       "method": "GET",
       "path": "/admin/orders/export",
-      "file": "runtime-node/src/modules/orders.ts"
+      "file": "backend/tests/fixtures/modules/orders/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/overload/status",
@@ -841,6 +841,12 @@
       "file": "runtime-node/src/modules/module-manager.ts"
     },
     {
+      "id": "GET /admin/platform/events",
+      "method": "GET",
+      "path": "/admin/platform/events",
+      "file": "runtime-node/src/app.ts"
+    },
+    {
       "id": "GET /admin/platform/sdk",
       "method": "GET",
       "path": "/admin/platform/sdk",
@@ -863,7 +869,7 @@
       "id": "GET /admin/products-meta/templates",
       "method": "GET",
       "path": "/admin/products-meta/templates",
-      "file": "runtime-node/src/modules/products.ts"
+      "file": "backend/tests/fixtures/modules/products/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/products/{id}",
@@ -1049,19 +1055,19 @@
       "id": "GET /admin/support/faq",
       "method": "GET",
       "path": "/admin/support/faq",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/support/tickets",
       "method": "GET",
       "path": "/admin/support/tickets",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/support/tickets/{id}",
       "method": "GET",
       "path": "/admin/support/tickets/{id}",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/system/last-error",
@@ -1100,7 +1106,7 @@
       "id": "GET /admin/translate/status",
       "method": "GET",
       "path": "/admin/translate/status",
-      "file": "runtime-node/src/modules/translate.ts"
+      "file": "backend/tests/fixtures/modules/translate/backend/node/domain.ts"
     },
     {
       "id": "GET /admin/trash",
@@ -1150,19 +1156,19 @@
       "id": "GET /auth/verify-email",
       "method": "GET",
       "path": "/auth/verify-email",
-      "file": "runtime-node/src/modules/registration.ts"
+      "file": "backend/tests/fixtures/modules/registration/backend/node/domain.ts"
     },
     {
       "id": "GET /blog",
       "method": "GET",
       "path": "/blog",
-      "file": "runtime-node/src/modules/blog.ts"
+      "file": "backend/tests/fixtures/modules/blog/backend/node/domain.ts"
     },
     {
       "id": "GET /blog/{slug}",
       "method": "GET",
       "path": "/blog/{slug}",
-      "file": "runtime-node/src/modules/blog.ts"
+      "file": "backend/tests/fixtures/modules/blog/backend/node/domain.ts"
     },
     {
       "id": "GET /capabilities",
@@ -1174,19 +1180,19 @@
       "id": "GET /comments",
       "method": "GET",
       "path": "/comments",
-      "file": "runtime-node/src/modules/comments.ts"
+      "file": "backend/tests/fixtures/modules/comments/backend/node/domain.ts"
     },
     {
       "id": "GET /commerce/catalog",
       "method": "GET",
       "path": "/commerce/catalog",
-      "file": "runtime-node/src/modules/payments.ts"
+      "file": "backend/tests/fixtures/modules/payments/backend/node/domain.ts"
     },
     {
       "id": "GET /commerce/item",
       "method": "GET",
       "path": "/commerce/item",
-      "file": "runtime-node/src/modules/payments.ts"
+      "file": "backend/tests/fixtures/modules/payments/backend/node/domain.ts"
     },
     {
       "id": "GET /contact-info",
@@ -1216,7 +1222,7 @@
       "id": "GET /forms/{slug}",
       "method": "GET",
       "path": "/forms/{slug}",
-      "file": "runtime-node/src/modules/forms.ts"
+      "file": "backend/tests/fixtures/modules/forms/backend/node/domain.ts"
     },
     {
       "id": "GET /health",
@@ -1258,19 +1264,19 @@
       "id": "GET /newsletter/confirm",
       "method": "GET",
       "path": "/newsletter/confirm",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "GET /newsletter/unsubscribe",
       "method": "GET",
       "path": "/newsletter/unsubscribe",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "GET /orders/cart",
       "method": "GET",
       "path": "/orders/cart",
-      "file": "runtime-node/src/modules/orders.ts"
+      "file": "backend/tests/fixtures/modules/orders/backend/node/domain.ts"
     },
     {
       "id": "GET /pages/{slug}",
@@ -1282,37 +1288,37 @@
       "id": "GET /payments/config",
       "method": "GET",
       "path": "/payments/config",
-      "file": "runtime-node/src/modules/payments.ts"
+      "file": "backend/tests/fixtures/modules/payments/backend/node/domain.ts"
     },
     {
       "id": "GET /payments/status/{id}",
       "method": "GET",
       "path": "/payments/status/{id}",
-      "file": "runtime-node/src/modules/payments.ts"
+      "file": "backend/tests/fixtures/modules/payments/backend/node/domain.ts"
     },
     {
       "id": "GET /products",
       "method": "GET",
       "path": "/products",
-      "file": "runtime-node/src/modules/products.ts"
+      "file": "backend/tests/fixtures/modules/products/backend/node/domain.ts"
     },
     {
       "id": "GET /products/{slug}",
       "method": "GET",
       "path": "/products/{slug}",
-      "file": "runtime-node/src/modules/products.ts"
+      "file": "backend/tests/fixtures/modules/products/backend/node/domain.ts"
     },
     {
       "id": "GET /products/config",
       "method": "GET",
       "path": "/products/config",
-      "file": "runtime-node/src/modules/products.ts"
+      "file": "backend/tests/fixtures/modules/products/backend/node/domain.ts"
     },
     {
       "id": "GET /products/facets",
       "method": "GET",
       "path": "/products/facets",
-      "file": "runtime-node/src/modules/products.ts"
+      "file": "backend/tests/fixtures/modules/products/backend/node/domain.ts"
     },
     {
       "id": "GET /profile",
@@ -1324,19 +1330,19 @@
       "id": "GET /projects",
       "method": "GET",
       "path": "/projects",
-      "file": "runtime-node/src/modules/content.ts"
+      "file": "backend/tests/fixtures/modules/projects/backend/node/domain.ts"
     },
     {
       "id": "GET /projects/{slug}",
       "method": "GET",
       "path": "/projects/{slug}",
-      "file": "runtime-node/src/modules/content.ts"
+      "file": "backend/tests/fixtures/modules/projects/backend/node/domain.ts"
     },
     {
       "id": "GET /registration/config",
       "method": "GET",
       "path": "/registration/config",
-      "file": "runtime-node/src/modules/registration.ts"
+      "file": "backend/tests/fixtures/modules/registration/backend/node/domain.ts"
     },
     {
       "id": "GET /robots.txt",
@@ -1384,31 +1390,31 @@
       "id": "GET /support/active",
       "method": "GET",
       "path": "/support/active",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "GET /support/config",
       "method": "GET",
       "path": "/support/config",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "GET /support/faq",
       "method": "GET",
       "path": "/support/faq",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "GET /support/tickets/{publicId}",
       "method": "GET",
       "path": "/support/tickets/{publicId}",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "GET /support/tickets/{publicId}/messages",
       "method": "GET",
       "path": "/support/tickets/{publicId}/messages",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "GET /testimonials",
@@ -1438,31 +1444,31 @@
       "id": "POST /admin/analytics/aggregate",
       "method": "POST",
       "path": "/admin/analytics/aggregate",
-      "file": "runtime-node/src/modules/analytics.ts"
+      "file": "backend/tests/fixtures/modules/analytics/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/analytics/goals",
       "method": "POST",
       "path": "/admin/analytics/goals",
-      "file": "runtime-node/src/modules/analytics.ts"
+      "file": "backend/tests/fixtures/modules/analytics/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/automations",
       "method": "POST",
       "path": "/admin/automations",
-      "file": "runtime-node/src/modules/automation.ts"
+      "file": "backend/tests/fixtures/modules/automation/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/automations/{id}/run",
       "method": "POST",
       "path": "/admin/automations/{id}/run",
-      "file": "runtime-node/src/modules/automation.ts"
+      "file": "backend/tests/fixtures/modules/automation/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/automations/{id}/test",
       "method": "POST",
       "path": "/admin/automations/{id}/test",
-      "file": "runtime-node/src/modules/automation.ts"
+      "file": "backend/tests/fixtures/modules/automation/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/backup",
@@ -1495,13 +1501,13 @@
       "id": "POST /admin/blog/{id}/publish",
       "method": "POST",
       "path": "/admin/blog/{id}/publish",
-      "file": "runtime-node/src/modules/blog.ts"
+      "file": "backend/tests/fixtures/modules/blog/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/comments/{id}/moderate",
       "method": "POST",
       "path": "/admin/comments/{id}/moderate",
-      "file": "runtime-node/src/modules/comments.ts"
+      "file": "backend/tests/fixtures/modules/comments/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/contact-messages/{id}/mark-read",
@@ -1540,6 +1546,18 @@
       "file": "runtime-node/src/modules/demo.ts"
     },
     {
+      "id": "POST /admin/deploy/telegram/redeem",
+      "method": "POST",
+      "path": "/admin/deploy/telegram/redeem",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/deploy/telegram/request",
+      "method": "POST",
+      "path": "/admin/deploy/telegram/request",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
       "id": "POST /admin/education",
       "method": "POST",
       "path": "/admin/education",
@@ -1557,13 +1575,13 @@
       "id": "POST /admin/form-submissions/bulk-status",
       "method": "POST",
       "path": "/admin/form-submissions/bulk-status",
-      "file": "runtime-node/src/modules/forms.ts"
+      "file": "backend/tests/fixtures/modules/forms/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/forms",
       "method": "POST",
       "path": "/admin/forms",
-      "file": "runtime-node/src/modules/forms.ts"
+      "file": "backend/tests/fixtures/modules/forms/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/homepage-sections",
@@ -1757,67 +1775,67 @@
       "id": "POST /admin/newsletter/campaigns",
       "method": "POST",
       "path": "/admin/newsletter/campaigns",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/newsletter/campaigns/{id}/pause",
       "method": "POST",
       "path": "/admin/newsletter/campaigns/{id}/pause",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/newsletter/campaigns/{id}/send",
       "method": "POST",
       "path": "/admin/newsletter/campaigns/{id}/send",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/newsletter/campaigns/{id}/test",
       "method": "POST",
       "path": "/admin/newsletter/campaigns/{id}/test",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/newsletter/lists",
       "method": "POST",
       "path": "/admin/newsletter/lists",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/newsletter/subscribers",
       "method": "POST",
       "path": "/admin/newsletter/subscribers",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/newsletter/subscribers/import",
       "method": "POST",
       "path": "/admin/newsletter/subscribers/import",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/notification-templates",
       "method": "POST",
       "path": "/admin/notification-templates",
-      "file": "runtime-node/src/modules/notifications.ts"
+      "file": "backend/tests/fixtures/modules/notifications/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/notifications/{id}/read",
       "method": "POST",
       "path": "/admin/notifications/{id}/read",
-      "file": "runtime-node/src/modules/notifications.ts"
+      "file": "backend/tests/fixtures/modules/notifications/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/notifications/read-all",
       "method": "POST",
       "path": "/admin/notifications/read-all",
-      "file": "runtime-node/src/modules/notifications.ts"
+      "file": "backend/tests/fixtures/modules/notifications/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/notifications/test",
       "method": "POST",
       "path": "/admin/notifications/test",
-      "file": "runtime-node/src/modules/notifications.ts"
+      "file": "backend/tests/fixtures/modules/notifications/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/orders",
@@ -1830,19 +1848,19 @@
       "id": "POST /admin/orders/{id}/notes",
       "method": "POST",
       "path": "/admin/orders/{id}/notes",
-      "file": "runtime-node/src/modules/orders.ts"
+      "file": "backend/tests/fixtures/modules/orders/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/orders/{id}/refunds",
       "method": "POST",
       "path": "/admin/orders/{id}/refunds",
-      "file": "runtime-node/src/modules/orders.ts"
+      "file": "backend/tests/fixtures/modules/orders/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/orders/{id}/status",
       "method": "POST",
       "path": "/admin/orders/{id}/status",
-      "file": "runtime-node/src/modules/orders.ts"
+      "file": "backend/tests/fixtures/modules/orders/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/overload/clear-events",
@@ -1937,13 +1955,13 @@
       "id": "POST /admin/projects/{id}/publish",
       "method": "POST",
       "path": "/admin/projects/{id}/publish",
-      "file": "runtime-node/src/modules/projects.ts"
+      "file": "backend/tests/fixtures/modules/projects/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/projects/reorder",
       "method": "POST",
       "path": "/admin/projects/reorder",
-      "file": "runtime-node/src/modules/projects.ts"
+      "file": "backend/tests/fixtures/modules/projects/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/redirects",
@@ -2026,37 +2044,37 @@
       "id": "POST /admin/support/faq",
       "method": "POST",
       "path": "/admin/support/faq",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/support/presence",
       "method": "POST",
       "path": "/admin/support/presence",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/support/test-telegram",
       "method": "POST",
       "path": "/admin/support/test-telegram",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/support/tickets/{id}/assign",
       "method": "POST",
       "path": "/admin/support/tickets/{id}/assign",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/support/tickets/{id}/close",
       "method": "POST",
       "path": "/admin/support/tickets/{id}/close",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/support/tickets/{id}/messages",
       "method": "POST",
       "path": "/admin/support/tickets/{id}/messages",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/system/last-error/clear",
@@ -2075,13 +2093,13 @@
       "id": "POST /admin/translate/purge-invalid",
       "method": "POST",
       "path": "/admin/translate/purge-invalid",
-      "file": "runtime-node/src/modules/translate.ts"
+      "file": "backend/tests/fixtures/modules/translate/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/translate/warmup",
       "method": "POST",
       "path": "/admin/translate/warmup",
-      "file": "runtime-node/src/modules/translate.ts"
+      "file": "backend/tests/fixtures/modules/translate/backend/node/domain.ts"
     },
     {
       "id": "POST /admin/trash/{resource}/{id}/restore",
@@ -2108,6 +2126,18 @@
       "file": "runtime-node/src/modules/system.ts"
     },
     {
+      "id": "POST /admin/updates/pending/{id}/approve",
+      "method": "POST",
+      "path": "/admin/updates/pending/{id}/approve",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
+      "id": "POST /admin/updates/pending/{id}/reject",
+      "method": "POST",
+      "path": "/admin/updates/pending/{id}/reject",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
       "id": "POST /admin/users",
       "method": "POST",
       "path": "/admin/users",
@@ -2124,7 +2154,7 @@
       "id": "POST /analytics/collect",
       "method": "POST",
       "path": "/analytics/collect",
-      "file": "runtime-node/src/modules/analytics.ts"
+      "file": "backend/tests/fixtures/modules/analytics/backend/node/domain.ts"
     },
     {
       "id": "POST /auth/2fa/disable",
@@ -2190,25 +2220,25 @@
       "id": "POST /auth/register",
       "method": "POST",
       "path": "/auth/register",
-      "file": "runtime-node/src/modules/registration.ts"
+      "file": "backend/tests/fixtures/modules/registration/backend/node/domain.ts"
     },
     {
       "id": "POST /auth/resend-verification",
       "method": "POST",
       "path": "/auth/resend-verification",
-      "file": "runtime-node/src/modules/registration.ts"
+      "file": "backend/tests/fixtures/modules/registration/backend/node/domain.ts"
     },
     {
       "id": "POST /auth/verify-email",
       "method": "POST",
       "path": "/auth/verify-email",
-      "file": "runtime-node/src/modules/registration.ts"
+      "file": "backend/tests/fixtures/modules/registration/backend/node/domain.ts"
     },
     {
       "id": "POST /comments",
       "method": "POST",
       "path": "/comments",
-      "file": "runtime-node/src/modules/comments.ts"
+      "file": "backend/tests/fixtures/modules/comments/backend/node/domain.ts"
     },
     {
       "id": "POST /contact",
@@ -2220,7 +2250,7 @@
       "id": "POST /forms/{slug}/submit",
       "method": "POST",
       "path": "/forms/{slug}/submit",
-      "file": "runtime-node/src/modules/forms.ts"
+      "file": "backend/tests/fixtures/modules/forms/backend/node/domain.ts"
     },
     {
       "id": "POST /mail/contact",
@@ -2232,79 +2262,79 @@
       "id": "POST /newsletter/subscribe",
       "method": "POST",
       "path": "/newsletter/subscribe",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "POST /orders/cart/items",
       "method": "POST",
       "path": "/orders/cart/items",
-      "file": "runtime-node/src/modules/orders.ts"
+      "file": "backend/tests/fixtures/modules/orders/backend/node/domain.ts"
     },
     {
       "id": "POST /orders/checkout",
       "method": "POST",
       "path": "/orders/checkout",
-      "file": "runtime-node/src/modules/orders.ts"
+      "file": "backend/tests/fixtures/modules/orders/backend/node/domain.ts"
     },
     {
       "id": "POST /payments/checkout",
       "method": "POST",
       "path": "/payments/checkout",
-      "file": "runtime-node/src/modules/payments.ts"
+      "file": "backend/tests/fixtures/modules/payments/backend/node/domain.ts"
     },
     {
       "id": "POST /payments/webhook",
       "method": "POST",
       "path": "/payments/webhook",
-      "file": "runtime-node/src/modules/payments.ts"
+      "file": "backend/tests/fixtures/modules/payments/backend/node/domain.ts"
     },
     {
       "id": "POST /payments/webhook/{provider}",
       "method": "POST",
       "path": "/payments/webhook/{provider}",
-      "file": "runtime-node/src/modules/payments.ts"
+      "file": "backend/tests/fixtures/modules/payments/backend/node/domain.ts"
     },
     {
       "id": "POST /registration/register",
       "method": "POST",
       "path": "/registration/register",
-      "file": "runtime-node/src/modules/registration.ts"
+      "file": "backend/tests/fixtures/modules/registration/backend/node/domain.ts"
     },
     {
       "id": "POST /support/faq/{id}/ask",
       "method": "POST",
       "path": "/support/faq/{id}/ask",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "POST /support/heartbeat",
       "method": "POST",
       "path": "/support/heartbeat",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "POST /support/session",
       "method": "POST",
       "path": "/support/session",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "POST /support/tickets",
       "method": "POST",
       "path": "/support/tickets",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "POST /support/tickets/{publicId}/contact",
       "method": "POST",
       "path": "/support/tickets/{publicId}/contact",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "POST /support/tickets/{publicId}/messages",
       "method": "POST",
       "path": "/support/tickets/{publicId}/messages",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "POST /system/scheduler/tick",
@@ -2313,22 +2343,28 @@
       "file": "runtime-node/src/modules/scheduler.ts"
     },
     {
+      "id": "POST /telegram/deploy-webhook",
+      "method": "POST",
+      "path": "/telegram/deploy-webhook",
+      "file": "runtime-node/src/modules/system.ts"
+    },
+    {
       "id": "POST /translate/auto-warmup",
       "method": "POST",
       "path": "/translate/auto-warmup",
-      "file": "runtime-node/src/modules/translate.ts"
+      "file": "backend/tests/fixtures/modules/translate/backend/node/domain.ts"
     },
     {
       "id": "POST /translate/batch",
       "method": "POST",
       "path": "/translate/batch",
-      "file": "runtime-node/src/modules/translate.ts"
+      "file": "backend/tests/fixtures/modules/translate/backend/node/domain.ts"
     },
     {
       "id": "POST /webhooks/test",
       "method": "POST",
       "path": "/webhooks/test",
-      "file": "runtime-node/src/modules/webhooks.ts"
+      "file": "backend/tests/fixtures/modules/webhooks/backend/node/domain.ts"
     },
     {
       "id": "PUT /admin/{resource}",
@@ -2358,7 +2394,7 @@
       "id": "PUT /admin/automations/{id}",
       "method": "PUT",
       "path": "/admin/automations/{id}",
-      "file": "runtime-node/src/modules/automation.ts"
+      "file": "backend/tests/fixtures/modules/automation/backend/node/domain.ts"
     },
     {
       "id": "PUT /admin/blog-categories/{id}",
@@ -2420,13 +2456,13 @@
       "id": "PUT /admin/form-submissions/{id}",
       "method": "PUT",
       "path": "/admin/form-submissions/{id}",
-      "file": "runtime-node/src/modules/forms.ts"
+      "file": "backend/tests/fixtures/modules/forms/backend/node/domain.ts"
     },
     {
       "id": "PUT /admin/forms/{id}",
       "method": "PUT",
       "path": "/admin/forms/{id}",
-      "file": "runtime-node/src/modules/forms.ts"
+      "file": "backend/tests/fixtures/modules/forms/backend/node/domain.ts"
     },
     {
       "id": "PUT /admin/hero",
@@ -2471,25 +2507,25 @@
       "id": "PUT /admin/newsletter/campaigns/{id}",
       "method": "PUT",
       "path": "/admin/newsletter/campaigns/{id}",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "PUT /admin/newsletter/lists/{id}",
       "method": "PUT",
       "path": "/admin/newsletter/lists/{id}",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "PUT /admin/newsletter/subscribers/{id}",
       "method": "PUT",
       "path": "/admin/newsletter/subscribers/{id}",
-      "file": "runtime-node/src/modules/newsletter.ts"
+      "file": "backend/tests/fixtures/modules/newsletter/backend/node/domain.ts"
     },
     {
       "id": "PUT /admin/notification-templates/{id}",
       "method": "PUT",
       "path": "/admin/notification-templates/{id}",
-      "file": "runtime-node/src/modules/notifications.ts"
+      "file": "backend/tests/fixtures/modules/notifications/backend/node/domain.ts"
     },
     {
       "id": "PUT /admin/orders/{id}",
@@ -2528,7 +2564,7 @@
       "id": "PUT /admin/products-meta/templates",
       "method": "PUT",
       "path": "/admin/products-meta/templates",
-      "file": "runtime-node/src/modules/products.ts"
+      "file": "backend/tests/fixtures/modules/products/backend/node/domain.ts"
     },
     {
       "id": "PUT /admin/products/{id}",
@@ -2623,7 +2659,7 @@
       "id": "PUT /admin/support/faq/{id}",
       "method": "PUT",
       "path": "/admin/support/faq/{id}",
-      "file": "runtime-node/src/modules/support.ts"
+      "file": "backend/tests/fixtures/modules/support/backend/node/domain.ts"
     },
     {
       "id": "PUT /admin/testimonials/{id}",
@@ -2662,7 +2698,7 @@
       "id": "PUT /orders/cart/items/{id}",
       "method": "PUT",
       "path": "/orders/cart/items/{id}",
-      "file": "runtime-node/src/modules/orders.ts"
+      "file": "backend/tests/fixtures/modules/orders/backend/node/domain.ts"
     }
   ],
   "coverage_pct": 100,

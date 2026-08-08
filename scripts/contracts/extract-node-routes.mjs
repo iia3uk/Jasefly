@@ -3,6 +3,9 @@
  * Static inventory of Node Hono route registrations.
  * Emits contracts/baseline/node-routes.v1.json and optionally checks coverage vs PHP baseline.
  *
+ * Host modules: runtime-node/src/modules/*
+ * External packages: backend/node under catalog package sources (fixtures / Jasefly-Modules)
+ *
  * Usage:
  *   node scripts/contracts/extract-node-routes.mjs
  *   node scripts/contracts/extract-node-routes.mjs --check
@@ -10,6 +13,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveModulesRoots } from '../modules-root.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const check = process.argv.includes('--check');
@@ -24,15 +28,17 @@ function normalizeRoutePath(pth) {
 
 function extractFromSource(src, file) {
   const routes = [];
-  // `${p}/path` pattern
+  // Host modules: `${p}/path` pattern
   const re1 = /ctx\.app\.(get|post|put|patch|delete)\(\s*`\$\{p\}([^`]+)`/g;
   const re2 = /app\.(get|post|put|patch|delete)\(\s*`\$\{p\}([^`]+)`/g;
   const re3 = /app\.(get|post|put|patch|delete)\(\s*['"`](\/api\/v1[^'"`]*)['"`]/g;
-  for (const re of [re1, re2, re3]) {
+  // Package Platform HTTP: http.get('/admin/forms', …)
+  const rePkg = /\bhttp\.(get|post|put|patch|delete)\(\s*(['"`])(\/[^'"`]+?)\2/g;
+  for (const re of [re1, re2, re3, rePkg]) {
     let m;
     while ((m = re.exec(src))) {
       const method = m[1].toUpperCase();
-      let pth = m[2];
+      let pth = re === rePkg ? m[3] : m[2];
       if (pth.startsWith('/api/v1')) pth = pth.slice('/api/v1'.length) || '/';
       if (!pth.startsWith('/')) pth = '/' + pth;
       pth = normalizeRoutePath(pth);
@@ -47,9 +53,55 @@ function extractFromSource(src, file) {
   return routes;
 }
 
+function walkTsFiles(dir, out = []) {
+  if (!fs.existsSync(dir)) return out;
+  for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (ent.name === 'node_modules' || ent.name === 'sdk' || ent.name === '.git') continue;
+    const abs = path.join(dir, ent.name);
+    if (ent.isDirectory()) walkTsFiles(abs, out);
+    else if (ent.isFile() && /\.(ts|mts|js|mjs)$/.test(ent.name)) out.push(abs);
+  }
+  return out;
+}
+
+/** Catalog package Node adapters (not in registerAll). */
+function packageNodeSourceFiles() {
+  const catalogPath = path.join(root, 'release/catalog/packages.json');
+  if (!fs.existsSync(catalogPath)) return [];
+  let catalog;
+  try {
+    catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+  } catch {
+    return [];
+  }
+  const slugs = new Set(
+    (Array.isArray(catalog.packages) ? catalog.packages : [])
+      .map((p) => (p && typeof p.slug === 'string' ? p.slug : ''))
+      .filter(Boolean),
+  );
+  if (slugs.size === 0) return [];
+
+  const files = [];
+  const seen = new Set();
+  for (const modulesRoot of resolveModulesRoots(root)) {
+    for (const slug of slugs) {
+      const nodeDir = path.join(modulesRoot, slug, 'backend', 'node');
+      if (!fs.existsSync(nodeDir)) continue;
+      for (const f of walkTsFiles(nodeDir)) {
+        const key = path.resolve(f);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        files.push(f);
+      }
+    }
+  }
+  return files;
+}
+
 const files = [
   appFile,
   ...fs.readdirSync(modulesDir).filter((f) => f.endsWith('.ts')).map((f) => path.join(modulesDir, f)),
+  ...packageNodeSourceFiles(),
 ];
 
 let routes = [];

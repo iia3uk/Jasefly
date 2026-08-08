@@ -132,14 +132,71 @@ function main() {
     }
   }
 
-  // Module registry: Node registerAll must import every contracts module name
+  /** External domain packages — Node adapter lives in package source, not registerAll. */
+  const catalogPackages = (() => {
+    const p = path.join(ROOT, 'release/catalog/packages.json');
+    if (!fs.existsSync(p)) return new Set();
+    try {
+      const doc = JSON.parse(fs.readFileSync(p, 'utf8'));
+      return new Set(
+        (Array.isArray(doc.packages) ? doc.packages : [])
+          .map((row) => (row && typeof row.slug === 'string' ? row.slug : ''))
+          .filter(Boolean),
+      );
+    } catch {
+      return new Set();
+    }
+  })();
+
+  function resolvePackageNodeEntry(slug) {
+    const roots = [
+      path.join(ROOT, 'Jasefly-Modules', 'modules-src'),
+      path.join(ROOT, 'modules-src'),
+      path.join(ROOT, 'backend', 'tests', 'fixtures', 'modules'),
+    ];
+    for (const base of roots) {
+      const dir = path.join(base, slug);
+      const mfPath = path.join(dir, 'module.json');
+      if (!fs.existsSync(mfPath)) continue;
+      let mf;
+      try {
+        mf = JSON.parse(fs.readFileSync(mfPath, 'utf8'));
+      } catch {
+        continue;
+      }
+      const declared = mf?.entrypoints?.node;
+      const candidates = [
+        typeof declared === 'string' ? declared : null,
+        'backend/node/index.ts',
+        'backend/node/index.js',
+        'backend/node/domain.ts',
+      ].filter(Boolean);
+      for (const rel of candidates) {
+        const abs = path.join(dir, rel);
+        if (fs.existsSync(abs)) return abs;
+      }
+    }
+    return null;
+  }
+
+  // Host modules must be in registerAll; catalog packages must have a Node package entry.
   const registerAll = path.join(ROOT, 'runtime-node/src/modules/registerAll.ts');
   if (fs.existsSync(registerAll)) {
     const src = fs.readFileSync(registerAll, 'utf8');
     for (const name of phpModules) {
       const fileHint = name === 'module-manager' ? 'module-manager' : name;
+      if (catalogPackages.has(name)) {
+        const identity = path.join(ROOT, 'release/catalog/manifests', `${name}.json`);
+        if (!fs.existsSync(identity)) {
+          errors.push(`catalog identity missing for package module: ${name}`);
+        }
+        if (!resolvePackageNodeEntry(name)) {
+          errors.push(`package Node entry missing for catalog module: ${name}`);
+        }
+        nodeModules.add(name);
+        continue;
+      }
       if (!src.includes(`'./${fileHint}.js'`) && !src.includes(`"./${fileHint}.js"`) && !src.includes(`./${fileHint}`)) {
-        // also allow underscore variants
         if (!fs.existsSync(path.join(ROOT, 'runtime-node/src/modules', `${fileHint}.ts`))) {
           errors.push(`Node module file missing for contracts module: ${name}`);
         }
