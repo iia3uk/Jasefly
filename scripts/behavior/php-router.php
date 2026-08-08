@@ -23,6 +23,12 @@ $app['mcp_api_token'] = getenv('BEHAVIOR_MCP_TOKEN') ?: 'behavior-mcp-token';
 $app['storage'] = $storage;
 $app['env'] = 'test';
 $app['url'] = getenv('BEHAVIOR_PHP_URL') ?: 'http://127.0.0.1:3082';
+// Behavior seed copies packages into {phpStorage}/modules (same layout as Node
+// ModulePaths). Point package paths at storage so InstalledModuleLoader resolves them.
+$app['paths'] = array_merge(is_array($app['paths'] ?? null) ? $app['paths'] : [], [
+    'api_root' => $storage,
+    'web_root' => $storage,
+]);
 
 use App\Database;
 use App\Core\ModuleRegistry;
@@ -54,6 +60,16 @@ $container->set(\App\Platform\Access\AccessService::class, $access);
 $registry = new ModuleRegistry($db, $app, $apiRoot . '/src/Modules');
 $container->set(\App\Core\EventDispatcher::class, $registry->events());
 $registry->discover();
+// Installable ZIP/fixture packages — same order as Bootstrap::boot().
+try {
+    $paths = \App\Core\Modules\ModulePackagePaths::fromApp($app);
+    $repo = new \App\Services\Modules\ModuleRegistryRepository($db);
+    $safe = new \App\Services\Modules\ModuleSafeMode($paths);
+    $loader = new \App\Services\Modules\InstalledModuleLoader($repo, $paths, $safe, $db, $app);
+    $loader->loadEnabled($registry);
+} catch (Throwable $e) {
+    // continue — host modules still boot
+}
 try {
     $registry->boot();
 } catch (Throwable $e) {
