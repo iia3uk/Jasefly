@@ -462,6 +462,10 @@ export function SiteLayout({ children }: { children: ReactNode }) {
   const customHtml = site?.theme?.custom_html?.trim()
   const overlayNav = String(site?.theme?.header_style || 'overlay') !== 'solid'
   const navEmpty = Array.isArray(site?.navigation) && site.navigation.length === 0
+  const bannerOn = site?.site_settings?.cookie_banner_enabled === undefined
+    || site?.site_settings?.cookie_banner_enabled === null
+    ? true
+    : Boolean(Number(site.site_settings.cookie_banner_enabled))
 
   return (
     <>

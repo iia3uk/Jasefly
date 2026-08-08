@@ -11,7 +11,7 @@ export type HostSlotContribution = {
   id: string
   slug: string
   slot: HostSlotId
-  Component: ComponentType<Record<string, never>>
+  Component: ComponentType
   /** Cookie consent category required (e.g. "analytics", "marketing"). */
   requiresConsentCategory?: string
   order?: number
