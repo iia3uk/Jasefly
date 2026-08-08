@@ -109,6 +109,7 @@
 | React #185 в админке (дашборд) | `frontend/src/admin/dashboard/DashboardShell.tsx` — `getPackageDashboardCards()` нестабилен для useSyncExternalStore; кэш по sig |
 | Админка 404 на comments/notifications/overload | FE: `moduleRegistry.setPluginEnabled` не должен ставить `pluginsHydrated` (гонка с `/site`); BE: пустой `/admin/plugins` = `json_encode` fail → `Response.php` + `ModuleRegistry::jsonSafeCatalogRow` |
 | GET `/admin/plugins` пустое тело / `data: null` | `Response::json` + sanitizer в `ModuleRegistry::catalog()` (битый UTF-8/INF в settings модуля) |
+| Admin CRUD 500 `extractRelations()` | `AdminController` — stubs `extractRelations`/`syncRelations` (pivots → ContentResourcesAdapter); без domain maps |
 | CI FAIL `* ZIP present` (9 domain packages) | ZIP не в Core git; assert → `jasefly_test_assert_package_identity` + `release/catalog/manifests/{slug}.json` |
 | CI FAIL contracts `Node module file missing` (15 packages) | Пакеты не в `registerAll`; `validate-contracts.js` + `extract-node-routes.mjs` читают catalog/fixtures `backend/node` |
 | FE runtime пакетных модулей | `packageModuleLoader.ts` + `GET /modules/runtime-assets` + `/modules/{slug}/` assets |

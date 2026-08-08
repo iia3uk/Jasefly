@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-08-08T19:08:39.525Z",
-  "version": "backup-before-author-rewrite-23-g747fb58",
-  "commit": "747fb58",
+  "generated_at": "2026-08-08T21:10:16.097Z",
+  "version": "backup-before-author-rewrite-32-g0a32015",
+  "commit": "0a32015",
   "metrics": {
-    "files": 4837,
+    "files": 11539,
     "php_classes": 264,
     "builder_widgets": 68,
     "rest_routes_core": 62,
     "sdk_interfaces": 29,
-    "git_commits": 115,
-    "repo_size_mb": 30,
+    "git_commits": 124,
+    "repo_size_mb": 30.3,
     "core_modules": 15,
     "package_scaffolds": 10
   },
@@ -20,29 +20,29 @@
     "latest_commit_date": "2026-08-08",
     "commits": [
       {
-        "hash": "747fb58",
+        "hash": "0a32015",
         "date": "2026-08-08",
-        "subject": "fix(frontend): restore SiteLayout bannerOn for host slot consent gate"
+        "subject": "fix(admin): restore analytics UTF-8, dashboard pulse, broken package labels"
       },
       {
-        "hash": "daf6c59",
+        "hash": "e3ca1b5",
         "date": "2026-08-08",
-        "subject": "docs: point agents to Jasefly-Modules GitHub for package sources"
+        "subject": "fix(behavior): align POST /admin/projects/reorder to 405"
       },
       {
-        "hash": "19b46c4",
+        "hash": "5257c6c",
         "date": "2026-08-08",
-        "subject": "refactor: separate domain packages from Jasefly core"
+        "subject": "ci(behavior): gate on auth probes only"
       },
       {
-        "hash": "8815dea",
+        "hash": "965a718",
         "date": "2026-08-08",
-        "subject": "refactor: finalize package architecture and separate domain modules from core"
+        "subject": "fix(behavior): PHP package autoload root + Node admin CRUD parity"
       },
       {
-        "hash": "5fa5d9a",
+        "hash": "51bf064",
         "date": "2026-08-08",
-        "subject": "Harden Node VPS deploy gate and restore PHP-Node behavior parity."
+        "subject": "fix(behavior): run package sync script under runtime-node"
       }
     ]
   }

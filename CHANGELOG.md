@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-08-08 — Fix Admin CRUD: restore extractRelations/syncRelations stubs
+
+- AdminController: stub extractRelations/syncRelations so pages/navigation create-update no longer 500
+- Domain pivots stay in ContentResourcesAdapter (no Core blog maps)
+- CMS_MAP: symptom row for Admin CRUD extractRelations
+
 ## 2026-08-08 — Fix admin encoding + restore dashboard analytics pulse
 
 - Restore UTF-8 Russian copy on AnalyticsAdminPage (mojibake in host page)

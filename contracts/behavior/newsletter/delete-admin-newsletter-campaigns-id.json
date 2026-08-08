@@ -40,6 +40,7 @@
         "status": [
           401,
           403,
+          404,
           405
         ],
         "success": false
@@ -61,6 +62,7 @@
       "expect": {
         "status": [
           401,
+          404,
           405
         ],
         "success": false
@@ -74,5 +76,5 @@
       }
     }
   ],
-  "content_hash": "20ff48338a1aedb9"
+  "content_hash": "48054f2b6a4d92df"
 }

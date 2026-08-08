@@ -672,6 +672,18 @@ final class AdminController
         Response::json(['message' => 'Password updated']);
     }
 
+    private function extractRelations(string $resource, array &$payload): array
+    {
+        // Domain packages own pivots via ContentResourcesAdapter.
+        // Keep the hook so create/update never fatal for host resources (pages, navigation, …).
+        return [];
+    }
+
+    private function syncRelations(string $resource, int $id, array $relations): void
+    {
+        // Intentionally empty — package ContentResources handle relation writes.
+    }
+
     private function normalizePageRow(array $row): array
     {
         $raw = $row['layout_json'] ?? null;
