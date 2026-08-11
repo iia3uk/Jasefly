@@ -56,6 +56,7 @@ $required = [
     'GET /api/v1/auth/me',
     'GET /api/v1/admin/dashboard',
     'GET /api/v1/admin/system/status',
+    'POST /api/v1/admin/system/https',
     'GET /api/v1/admin/roles',
     'GET /api/v1/admin/permissions',
     'GET /api/v1/admin/pages',

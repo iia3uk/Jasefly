@@ -281,6 +281,9 @@ require_once "$root/tests/DemoSandboxTest.php";
 echo "Maintainability\n";
 require_once "$root/tests/MaintainabilityTest.php";
 
+echo "HttpsPolicy\n";
+require_once "$root/tests/HttpsPolicyTest.php";
+
 // вЂ”вЂ” SiteUpdater Vite assets prune вЂ”вЂ”
 echo "SiteUpdater assets prune\n";
 require_once "$root/tests/SiteUpdaterAssetsPruneTest.php";

@@ -305,6 +305,7 @@ type McpStatus = {
 }
 
 export function SystemStatusPage() {
+  const client = useQueryClient()
   const [tab, setTab] = useState<SystemTab>('health')
   const [copied, setCopied] = useState<string | null>(null)
   const { data, isLoading } = useQuery({ queryKey: ['system-status'], queryFn: endpoints.systemStatus })
@@ -314,7 +315,21 @@ export function SystemStatusPage() {
     enabled: tab === 'mcp',
   })
 
+  const httpsMut = useMutation({
+    mutationFn: (body: { mode?: 'auto' | 'force' | 'off'; probe?: boolean }) => endpoints.systemHttps(body),
+    onSuccess: () => void client.invalidateQueries({ queryKey: ['system-status'] }),
+  })
+
   const mcp = (data?.mcp && typeof data.mcp === 'object' ? data.mcp : null) as McpStatus | null
+  const https = (data?.https && typeof data.https === 'object' && !Array.isArray(data.https)
+    ? data.https
+    : null) as {
+    mode?: string
+    marker?: boolean
+    request_is_https?: boolean
+    force_redirect?: boolean
+    last_probe?: { ok?: boolean; error?: string; url?: string; status?: number; at?: string } | null
+  } | null
   const cursorSnippet =
     typeof mcp?.cursor_snippet === 'string' && mcp.cursor_snippet.trim()
       ? mcp.cursor_snippet.trim()
@@ -332,6 +347,8 @@ export function SystemStatusPage() {
       key !== 'mcp'
       && key !== 'module_load_failures'
       && key !== 'module_safe_mode'
+      && key !== 'https'
+      && key !== 'telegram_deploy_approve'
       && (typeof value !== 'object' || value === null),
     )
   }, [data])
@@ -350,6 +367,9 @@ export function SystemStatusPage() {
     { id: 'health', label: t.systemTabHealth },
     { id: 'mcp', label: t.systemTabMcp },
   ]
+
+  const httpsMode = (https?.mode === 'force' || https?.mode === 'off' ? https.mode : 'auto') as
+    'auto' | 'force' | 'off'
 
   return (
     <div>
@@ -390,6 +410,74 @@ export function SystemStatusPage() {
                 </GlassPanel>
               ))}
           </div>
+
+          <GlassPanel className="space-y-4 p-5">
+            <div>
+              <h2 className="font-heading text-lg text-white">{t.httpsPanelTitle}</h2>
+              <p className="mt-1 text-sm text-zinc-500">{t.httpsPanelHint}</p>
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-24" />
+            ) : (
+              <>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={`rounded-lg border px-2.5 py-1 text-xs font-medium ${
+                      https?.marker
+                        ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
+                        : 'border-white/15 bg-white/[0.04] text-zinc-300'
+                    }`}
+                  >
+                    {https?.marker ? t.httpsMarkerOn : t.httpsMarkerOff}
+                  </span>
+                  <span className="rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-400">
+                    {https?.request_is_https ? t.httpsRequestSecure : t.httpsRequestPlain}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(
+                    [
+                      ['auto', t.httpsModeAuto, t.httpsModeAutoHint],
+                      ['force', t.httpsModeForce, t.httpsModeForceHint],
+                      ['off', t.httpsModeOff, t.httpsModeOffHint],
+                    ] as const
+                  ).map(([id, label, hint]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      title={hint}
+                      disabled={httpsMut.isPending}
+                      onClick={() => httpsMut.mutate({ mode: id })}
+                      className={`rounded-lg border px-3 py-1.5 text-sm transition ${
+                        httpsMode === id
+                          ? 'border-cyan-400/40 bg-cyan-500/15 text-cyan-100'
+                          : 'border-white/10 text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                  <Button
+                    type="button"
+                    className="px-3 text-sm"
+                    disabled={httpsMut.isPending}
+                    onClick={() => httpsMut.mutate({ probe: true })}
+                  >
+                    {httpsMut.isPending && httpsMut.variables?.probe ? t.httpsProbing : t.httpsProbe}
+                  </Button>
+                </div>
+                {https?.last_probe ? (
+                  <p className="font-mono text-xs text-zinc-500">
+                    {(https.last_probe.ok ? t.httpsProbeOk : t.httpsProbeFail)}
+                    {https.last_probe.url ? ` · ${https.last_probe.url}` : ''}
+                    {https.last_probe.status ? ` · HTTP ${https.last_probe.status}` : ''}
+                    {https.last_probe.error ? ` · ${https.last_probe.error}` : ''}
+                    {https.last_probe.at ? ` · ${https.last_probe.at}` : ''}
+                  </p>
+                ) : null}
+              </>
+            )}
+          </GlassPanel>
 
           {!isLoading && (loadFailures.length > 0 || safeModeEntries.length > 0) ? (
             <GlassPanel className="space-y-4 border-amber-500/25 p-5">

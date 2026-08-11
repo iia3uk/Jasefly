@@ -228,3 +228,8 @@ assert_true(str_contains($hdrSrc, 'Cross-Origin-Resource-Policy'), 'API Security
 $installSrc = (string) file_get_contents(dirname(__DIR__) . '/install.php');
 assert_true(str_contains($installSrc, 'function resolveAdminPassword'), 'installer requires explicit admin password');
 assert_true(!preg_match("/password_hash\\(\\s*'Admin123!'/", $installSrc), 'installer does not hardcode Admin123!');
+assert_true(str_contains($installSrc, 'MigrationService::FILES'), 'installer applies full MigrationService::FILES');
+assert_true(str_contains($installSrc, 'HttpsPolicy::MODE_OFF'), 'installer disables Force-HTTPS for http:// app_url');
+
+$bootSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Bootstrap.php');
+assert_true(str_contains($bootSrc, 'Bootstrap auto-migrate'), 'Bootstrap auto-migrates before module routes');

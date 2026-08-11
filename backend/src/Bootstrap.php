@@ -132,6 +132,18 @@ final class Bootstrap
         $db = Database::get($dbConfig);
         self::applyDatabaseTimezone($db, (string) ($app['timezone'] ?? 'Europe/Moscow'));
 
+        // Apply pending SQL before ModuleRegistry registers routes.
+        // Clean/shared-host installs historically stopped at 007; shell plugins
+        // (content/media/seo) are seeded in 028 — without this, first parallel
+        // admin requests 404 until a later /site hit migrates mid-request.
+        try {
+            $migrationsDir = dirname(__DIR__) . '/migrations';
+            $storage = (string) ($app['storage'] ?? dirname(__DIR__) . '/storage');
+            (new \App\Services\MigrationService($db, $migrationsDir, $storage))->status(true);
+        } catch (\Throwable $e) {
+            @error_log('Bootstrap auto-migrate: ' . $e->getMessage());
+        }
+
         $container = Container::getInstance();
         $container->set('app', $app);
         $container->set('db', $db);

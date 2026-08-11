@@ -58,6 +58,7 @@ final class SystemHealthService
             ],
             'module_load_failures' => $this->moduleLoadFailures(),
             'module_safe_mode' => $this->moduleSafeMode(),
+            'https' => \App\Support\HttpsPolicy::status($this->db, $this->app),
         ];
     }
 

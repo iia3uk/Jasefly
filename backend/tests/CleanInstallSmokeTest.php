@@ -28,6 +28,20 @@ try {
         assert_true((bool) $ok, "clean install has table {$table}");
     }
 
+    // 028 seed must leave shell plugins ON (otherwise GET /admin/media 404 after install).
+    foreach (['content', 'media', 'seo'] as $plugin) {
+        $row = $pdo->query(
+            'SELECT is_enabled FROM modules WHERE name=' . $pdo->quote($plugin)
+        )->fetch(PDO::FETCH_ASSOC);
+        assert_true(is_array($row) && (int) ($row['is_enabled'] ?? 0) === 1, "clean install enables {$plugin}");
+    }
+
+    $installSrc = (string) file_get_contents($ctx['backendRoot'] . '/install.php');
+    assert_true(
+        str_contains($installSrc, 'MigrationService::FILES'),
+        'install.php applies MigrationService::FILES (includes 028 media seed)'
+    );
+
     // clean_base_seed if present (best-effort across drivers)
     $cleanPhp = $ctx['backendRoot'] . '/migrations/clean_base_seed.php';
     if (is_file($cleanPhp)) {

@@ -37,7 +37,7 @@ return function (Router $router, $db, array $app, string $prefix = '/api/v1'): v
     $search = new SearchController(new \App\Services\SearchService($db));
     $perms = new PermissionService($db);
     $activity = new ActivityController(new ActivityLogService($db), $perms);
-    $system = new SystemController(new \App\Services\SystemHealthService($db, $app), $perms);
+    $system = new SystemController(new \App\Services\SystemHealthService($db, $app), $perms, $app, $db);
 
     $protected = [
         new AuthMiddleware($app['jwt_secret']),
@@ -79,6 +79,7 @@ return function (Router $router, $db, array $app, string $prefix = '/api/v1'): v
     $router->get($p('/admin/search'), [$search, 'global'], $protected);
     $router->get($p('/admin/activity'), [$activity, 'index'], $protected);
     $router->get($p('/admin/system/status'), [$system, 'status'], $protected);
+    $router->post($p('/admin/system/https'), [$system, 'https'], $protected);
     $router->get($p('/admin/roles'), [$system, 'roles'], $protected);
     $router->get($p('/admin/permissions'), [$system, 'permissions'], $protected);
 

@@ -63,7 +63,7 @@ final class SystemModule extends AbstractModule
         $search = new SearchController(new SearchService($db));
         $perms = new PermissionService($db);
         $activity = new ActivityController(new ActivityLogService($db), $perms);
-        $system = new SystemController(new SystemHealthService($db, $app), $perms);
+        $system = new SystemController(new SystemHealthService($db, $app), $perms, $app, $db);
         $rate = new RateLimitMiddleware($db);
         $loginRate = new RateLimitMiddleware($db, 5, 900, true);
         // OriginCheckMiddleware is global (public/index.php) — covers Content/Media/… too.
@@ -307,6 +307,7 @@ final class SystemModule extends AbstractModule
         $router->get($p('/admin/search'), [$search, 'global'], $protected);
         $router->get($p('/admin/activity'), [$activity, 'index'], $protected);
         $router->get($p('/admin/system/status'), [$system, 'status'], $protected);
+        $router->post($p('/admin/system/https'), [$system, 'https'], $protected);
         $router->get($p('/admin/system/last-error'), function () {
             $report = \App\Services\ErrorReportService::last();
             Response::json([

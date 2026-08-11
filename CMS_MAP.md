@@ -75,7 +75,9 @@
 | Пустая шапка/футер OOB | `SiteLayout.tsx`: Header → null если `navigation=[]`; Footer → null если нет copyright/tagline/колонок/footer_nav/контактов/соцсетей |
 | Breadcrumbs | `SiteBreadcrumbs.tsx` + JSON-LD / prerender `BreadcrumbList` |
 | Privacy / Terms | `/privacy`, `/terms` + footer columns |
-| Canonical host / HTTPS / www 301 | `scripts/build-hosting.js` → `rootHtaccess()` + `frontend/public/.htaccess` |
+| Canonical host / HTTPS / www 301 | `scripts/build-hosting.js` → `rootHtaccess()` + `frontend/public/.htaccess`; Force HTTPS **только** при `api/storage/.https_ok` (`Support/HttpsPolicy`: auto/force/off, learn + probe); UI `/admin/system` |
+| HTTP install / нет SSL-сертификата | Не форсится HTTPS без маркера → `install.php` по HTTP; после выпуска SSL: открыть `https://` или «Проверить сертификат» в System → появится `.https_ok` |
+| После install 404 `/site` `/admin/media` (auth 401) | Shell-плагины default-off: `install.php` → `MigrationService::FILES` (+028); `Bootstrap::init` auto-migrate **до** `registerRoutes`. Симптом: auth жив (CORE), content/media 404. HTTP-only Beget: `app_url=http://` → `.https_mode=off` (нет Force-HTTPS на tech-домене без :443) |
 | Bot H1 для hero-block | `PrerenderService::walkLayout` (`hero` + `hero-block`) |
 | Cookie-баннер + GA gate | `components/layout/CookieBanner.tsx` + `lib/cookieConsent.ts` + `site_settings`; ZIP `modules-src/cookie-consent/` (категории/пресеты/лог/JS API) скрывает core-баннер |
 | Cookie Consent (ZIP, GDPR/152-ФЗ) | `modules-src/cookie-consent/` → ZIP; админка `/admin/cookie-consent`; `window.jaseflyCookieGate`; `data-jasefly-cookie-open` |

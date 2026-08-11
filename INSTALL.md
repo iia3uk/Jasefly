@@ -197,11 +197,12 @@ node scripts/build-hosting.js --mode=full --domain=https://YOUR_DOMAIN --demo=no
 
 1. Создайте пустую БД MySQL (utf8mb4).
 2. Загрузите и распакуйте **install** ZIP в корень сайта (`public_html` и т.п.).
-3. Откройте `https://YOUR_DOMAIN/install.php` (или `/api/install.php` — зависит от layout пакета).
+3. Откройте `http://YOUR_DOMAIN/install.php` (или `https://…`, если сертификат уже есть). Без TLS редирект на HTTPS **не** включается — установщик доступен по HTTP.
 4. Укажите БД, URL сайта, email администратора. Demo-контент — по желанию.
 5. Войдите в админку, смените пароль.
 6. Убедитесь, что инсталлер удалён / недоступен после установки.
 7. Заполните `api/config/.env` на сервере (`JWT_SECRET`, `MCP_API_TOKEN`, …).
+8. После выпуска SSL: откройте сайт по `https://` один раз **или** в **Система** нажмите «Проверить сертификат» (режим Auto) — появится маркер `api/storage/.https_ok` и включится Force HTTPS. Для HTTP-only теста оставьте режим «Только HTTP».
 
 Подробнее: [CLEAN_INSTALL.md](CLEAN_INSTALL.md).
 

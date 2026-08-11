@@ -272,14 +272,27 @@ function rootHtaccess() {
     'RewriteEngine On',
     'RewriteBase /',
     '',
-    '# Canonical host: strip www in one hop (HTTPS enforced next if needed).',
-    'RewriteCond %{HTTP_HOST} ^www\\.(.+)$ [NC]',
-    'RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]',
+    '# TLS gate: api/storage/.https_ok is written by HttpsPolicy when cert works',
+    '# (passive HTTPS hit, admin probe, or force mode). Without it, stay on HTTP',
+    '# so install.php / test domains without a certificate remain usable.',
+    '# Set env for HSTS (Header) only — rewrite rules re-check the file (-f).',
+    'RewriteCond %{DOCUMENT_ROOT}/api/storage/.https_ok -f',
+    'RewriteRule ^ - [E=JASEFLY_HTTPS_OK:1]',
     '',
-    '# Force HTTPS (single hop). Skip if proxy already terminated TLS.',
+    '# Canonical host: strip www in one hop (https only when TLS confirmed).',
+    'RewriteCond %{HTTP_HOST} ^www\\.(.+)$ [NC]',
+    'RewriteCond %{DOCUMENT_ROOT}/api/storage/.https_ok -f',
+    'RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]',
+    'RewriteCond %{HTTP_HOST} ^www\\.(.+)$ [NC]',
+    'RewriteRule ^ http://%1%{REQUEST_URI} [R=301,L]',
+    '',
+    '# Force HTTPS only after platform confirmed TLS (.https_ok marker).',
+    '# Use 302 (not 301): permanent redirects poison browser cache when a test',
+    '# host never had working TLS — Edge/Chrome keep upgrading http→https forever.',
+    'RewriteCond %{DOCUMENT_ROOT}/api/storage/.https_ok -f',
     'RewriteCond %{HTTPS} !=on',
     'RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]',
-    'RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]',
+    'RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=302,L]',
     '',
     '# Public marketing page must not collide with package asset dir /modules/.',
     '# Match original request (THE_REQUEST) so DirectorySlash cannot win first;',
@@ -394,7 +407,8 @@ function rootHtaccess() {
     '  Header always set Referrer-Policy "strict-origin-when-cross-origin"',
     '  Header always set X-Frame-Options "SAMEORIGIN"',
     '  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"',
-    '  Header always set Strict-Transport-Security "max-age=31536000"',
+    // HSTS only when TLS gate is on (avoids poisoning HTTP-only test domains).
+    '  Header always set Strict-Transport-Security "max-age=31536000" env=JASEFLY_HTTPS_OK',
     // Compatible CSP: self + Google Fonts + same-origin API/media. No unsafe-eval.
     // frame-src: Yandex Maps widget (+ Google/OSM embeds for Maps module adapters)
     "  Header always set Content-Security-Policy \"default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://www.google-analytics.com https://www.googletagmanager.com; media-src 'self' blob: data:; worker-src 'self' blob:; frame-src 'self' https://yandex.ru https://*.yandex.ru https://yandex.com https://*.yandex.com https://api-maps.yandex.ru https://www.google.com https://maps.google.com https://www.openstreetmap.org\"",
@@ -934,6 +948,12 @@ function jasefly_spa_fail_open(): never
 try {
     require __DIR__ . '/api/src/Bootstrap.php';
     [$app, $db] = Bootstrap::init();
+
+    try {
+        \\App\\Support\\HttpsPolicy::learnFromRequest(isset($app['storage']) ? (string) $app['storage'] : null);
+    } catch (\\Throwable) {
+        // never block public HTML
+    }
 
     // Overload protection: shed public HTML early (before prerender/SPA work).
     try {

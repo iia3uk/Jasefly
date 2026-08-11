@@ -440,6 +440,18 @@ export const endpoints = {
     }>(`/admin/activity${qs ? `?${qs}` : ''}`)
   },
   systemStatus: () => one<Record<string, unknown>>('/admin/system/status'),
+  systemHttps: async (body: { mode?: 'auto' | 'force' | 'off'; probe?: boolean }) =>
+    unwrap(
+      await api.post<
+        ApiEnvelope<{
+          mode: string
+          marker: boolean
+          request_is_https: boolean
+          force_redirect: boolean
+          last_probe?: Record<string, unknown> | null
+        }>
+      >('/admin/system/https', body),
+    ),
   reorder: async (resource: string, ids: Array<number | string>) => {
     const res = await api.post<ApiEnvelope<{ message?: string }> | { message?: string }>(
       `/admin/${resource}/reorder`,

@@ -15,9 +15,22 @@ if (is_file($lock)) {
     exit('Installer locked. Delete storage/.installed only if you intentionally need to reinstall.');
 }
 
+// Passive TLS learn (no Force-HTTPS until .https_ok exists — see root .htaccess).
+$httpsPolicy = __DIR__ . '/src/Support/HttpsPolicy.php';
+if (is_file($httpsPolicy)) {
+    require_once $httpsPolicy;
+    try {
+        \App\Support\HttpsPolicy::learnFromRequest(__DIR__ . '/storage');
+    } catch (Throwable) {
+        // ignore
+    }
+}
+
 require __DIR__ . '/src/Core/Db/SqlTranspiler.php';
+require __DIR__ . '/src/Services/MigrationService.php';
 
 use App\Core\Db\SqlTranspiler;
+use App\Services\MigrationService;
 
 /* INSTALLER_PLACEHOLDER */
 
@@ -127,6 +140,39 @@ function isIgnorableDup(string $msg): bool
         || str_contains($msg, 'duplicate key')
         || str_contains($msg, '1050') || str_contains($msg, '1060')
         || str_contains($msg, '1061') || str_contains($msg, '1062');
+}
+
+/** Create `_migrations` so install and later auto-migrate share one ledger. */
+function ensureInstallMigrationMeta(PDO $pdo, SqlTranspiler $t): void
+{
+    $t->reset();
+    execSql(
+        $pdo,
+        'CREATE TABLE IF NOT EXISTS `_migrations` (
+          `id` VARCHAR(120) NOT NULL PRIMARY KEY,
+          `applied_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+        $t
+    );
+    foreach ($t->drainTriggers() as $tr) {
+        try {
+            $pdo->exec($tr);
+        } catch (Throwable) {
+            // already exists / driver without triggers
+        }
+    }
+}
+
+function markInstallMigrationApplied(PDO $pdo, string $file): void
+{
+    try {
+        $stmt = $pdo->prepare('INSERT INTO `_migrations` (id) VALUES (?)');
+        $stmt->execute([$file]);
+    } catch (Throwable $e) {
+        if (!isIgnorableDup(strtolower($e->getMessage()))) {
+            throw $e;
+        }
+    }
 }
 
 function execSql(PDO $pdo, string $sql, SqlTranspiler $t): void
@@ -279,11 +325,17 @@ function install(array $c): string
         throw new RuntimeException("Table `users` was not created from 001_schema.sql.");
     }
 
-    foreach (['002_enterprise.sql', '003_site_templates.sql', '004_project_media.sql', '005_page_layouts.sql', '006_page_revisions.sql', '007_plugins.sql'] as $f) {
+    // Full core migration set (same ordered list as MigrationService::FILES).
+    // Must include 028/029 so shell plugins (content/media/seo/module-manager) are ON
+    // before the first admin request — otherwise GET /admin/media 404s until /site auto-migrates.
+    ensureInstallMigrationMeta($pdo, $t);
+    foreach (MigrationService::FILES as $f) {
         $path = "$root/migrations/$f";
-        if (is_file($path)) {
-            runSqlFile($pdo, $path, $t, true);
+        if (!is_file($path)) {
+            continue;
         }
+        runSqlFile($pdo, $path, $t, true);
+        markInstallMigrationApplied($pdo, $f);
     }
 
     $seedFile = is_file("$root/migrations/002_seed.sql")
@@ -371,6 +423,17 @@ function install(array $c): string
 
     file_put_contents("$root/config/config.local.php", "<?php\nreturn " . var_export($local, true) . ";\n", LOCK_EX);
     file_put_contents($lock, gmdate(DATE_ATOM));
+
+    // HTTP-only hosts (Beget tech-domains without SSL): never enable Force-HTTPS.
+    // Otherwise a false X-Forwarded-Proto / accidental probe can write .https_ok and
+    // poison the browser with https:// upgrades that fail (no listener on :443).
+    if (preg_match('#^http://#i', $appUrl)) {
+        @file_put_contents("$root/storage/.https_mode", \App\Support\HttpsPolicy::MODE_OFF . "\n", LOCK_EX);
+        $httpsOk = "$root/storage/.https_ok";
+        if (is_file($httpsOk)) {
+            @unlink($httpsOk);
+        }
+    }
 
     return "Installed successfully.\nDriver: {$driver}\nAdmin: {$adminEmail}\nPassword: (as provided — not echoed; store it securely).";
 }

@@ -128,6 +128,12 @@ require dirname(__DIR__) . '/src/Bootstrap.php';
 
 [$app, $db, $registry] = \App\Bootstrap::init();
 
+try {
+    \App\Support\HttpsPolicy::learnFromRequest(isset($app['storage']) ? (string) $app['storage'] : null);
+} catch (\Throwable) {
+    // never block API boot
+}
+
 if (($app['jwt_secret'] ?? '') === '') {
     \App\Response::error('JWT_SECRET is not configured. Run install.php.', 503);
 }

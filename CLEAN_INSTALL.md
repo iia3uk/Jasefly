@@ -25,7 +25,7 @@ FLUSH PRIVILEGES;
 
 ## 4. Run the installer
 
-Open `https://YOUR_DOMAIN/install.php` (or `/api/install.php` depending on layout).
+Open `http://YOUR_DOMAIN/install.php` (HTTPS if the cert already works). Without a certificate the package does **not** force HTTPS until `api/storage/.https_ok` exists (auto after a successful `https://` visit or System → «Проверить сертификат»).
 
 Fill in:
 
