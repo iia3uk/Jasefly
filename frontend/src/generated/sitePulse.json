@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-11T17:43:15.774Z",
-  "version": "backup-before-author-rewrite-34-g4985857",
-  "commit": "4985857",
+  "generated_at": "2026-08-11T18:12:39.148Z",
+  "version": "backup-before-author-rewrite-35-gb0d971f",
+  "commit": "b0d971f",
   "metrics": {
     "files": 11529,
     "php_classes": 265,
     "builder_widgets": 68,
     "rest_routes_core": 63,
     "sdk_interfaces": 29,
-    "git_commits": 126,
+    "git_commits": 127,
     "repo_size_mb": 30.5,
     "core_modules": 15,
     "package_scaffolds": 10
@@ -17,8 +17,13 @@
     "repo": "iia3uk/jasefly",
     "url": "https://github.com/iia3uk/jasefly",
     "latest_tag": "backup-before-author-rewrite",
-    "latest_commit_date": "2026-08-09",
+    "latest_commit_date": "2026-08-11",
     "commits": [
+      {
+        "hash": "b0d971f",
+        "date": "2026-08-11",
+        "subject": "fix(https): gate Force-HTTPS on .https_ok so HTTP install/demos survive"
+      },
       {
         "hash": "4985857",
         "date": "2026-08-09",
@@ -38,11 +43,6 @@
         "hash": "e3ca1b5",
         "date": "2026-08-08",
         "subject": "fix(behavior): align POST /admin/projects/reorder to 405"
-      },
-      {
-        "hash": "5257c6c",
-        "date": "2026-08-08",
-        "subject": "ci(behavior): gate on auth probes only"
       }
     ]
   }
