@@ -224,6 +224,9 @@ $hdrSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Middleware/Securit
 assert_true(str_contains($hdrSrc, 'Strict-Transport-Security'), 'API SecurityHeaders sets HSTS on HTTPS');
 assert_true(str_contains($hdrSrc, 'Cross-Origin-Opener-Policy'), 'API SecurityHeaders sets COOP');
 assert_true(str_contains($hdrSrc, 'Cross-Origin-Resource-Policy'), 'API SecurityHeaders sets CORP');
+assert_true(str_contains($hdrSrc, 'RuntimeHardening::hidePhpFingerprint'), 'API SecurityHeaders strips PHP X-Powered-By');
+assert_true(str_contains($hdrSrc, 'PlatformFingerprint::applyResponseHeaders'), 'API SecurityHeaders sets public X-Jasefly');
+assert_true(!preg_match("/header\\(\\s*['\"]X-Powered-By:/", $hdrSrc), 'SecurityHeaders does not re-set X-Powered-By');
 
 $installSrc = (string) file_get_contents(dirname(__DIR__) . '/install.php');
 assert_true(str_contains($installSrc, 'function resolveAdminPassword'), 'installer requires explicit admin password');

@@ -26,7 +26,9 @@ function prerender_spa_path(): ?string
 function prerender_bootstrap(): array
 {
     require dirname(__DIR__) . '/src/Bootstrap.php';
-    return Bootstrap::init();
+    $boot = Bootstrap::init();
+    \App\Support\RuntimeHardening::hidePhpFingerprint();
+    return $boot;
 }
 
 try {
@@ -44,6 +46,10 @@ try {
     $path = '/' . trim(str_replace('\\', '/', $reqPath), '/');
     if ($path === '/prerender.php' || $path === '') {
         $path = '/';
+    }
+
+    if (\App\Support\PlatformFingerprint::isWellKnownPath($path)) {
+        \App\Support\PlatformFingerprint::sendWellKnown();
     }
 
     // Root SEO files for all clients (not only bots)
@@ -79,6 +85,7 @@ try {
             $html = (string) file_get_contents($spa);
             $svc = new PrerenderService($db, $app);
             header('Content-Type: text/html; charset=utf-8');
+            \App\Support\PlatformFingerprint::applyResponseHeaders();
             header('X-Jasefly-Shell: enriched');
             echo $svc->enrichSpaHtml($html, '/');
             exit;
@@ -93,6 +100,7 @@ try {
     }
     http_response_code($result['status']);
     header('Content-Type: text/html; charset=utf-8');
+    \App\Support\PlatformFingerprint::applyResponseHeaders();
     header('X-Prerender: ' . ($result['cached'] ? 'cache' : 'fresh'));
     header('X-Robots-Tag: all');
     echo $result['html'];

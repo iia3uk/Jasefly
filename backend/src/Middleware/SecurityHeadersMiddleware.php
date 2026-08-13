@@ -50,11 +50,10 @@ final class SecurityHeadersMiddleware
         header('X-XSS-Protection: 1; mode=block');
         header('Cross-Origin-Opener-Policy: same-origin');
         header('Cross-Origin-Resource-Policy: same-origin');
-        // Hide PHP version fingerprint (nginx/php may still add their own).
-        if (function_exists('header_remove')) {
-            header_remove('X-Powered-By');
-        }
-        header('X-Powered-By: ');
+        // Hide PHP/runtime version. Do not set X-Powered-By (empty or Jasefly):
+        // an empty CGI header is filled back as PHP/{version} by php-fpm.
+        \App\Support\RuntimeHardening::hidePhpFingerprint();
+        \App\Support\PlatformFingerprint::applyResponseHeaders();
 
         if (self::isHttps()) {
             header('Strict-Transport-Security: max-age=31536000; includeSubDomains');

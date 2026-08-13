@@ -25,7 +25,9 @@ final class DdosGuardMiddleware
         }
 
         // Health checks always pass (uptime monitors may hit origin directly).
-        if (str_ends_with($r->path, '/health') || str_ends_with($r->path, '/payments/webhook')) {
+        if (str_ends_with($r->path, '/health')
+            || str_ends_with($r->path, '/payments/webhook')
+            || \App\Support\PlatformFingerprint::isWellKnownPath($r->path)) {
             // Still resolve real IP for webhooks when behind edge.
             $this->service->inspectPeer($r);
             return $next();

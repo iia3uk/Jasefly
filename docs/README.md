@@ -36,7 +36,7 @@ Implementation is authoritative. Agent path lookup: root [`CMS_MAP.md`](../CMS_M
 10. [frontend-architecture.md](frontend-architecture.md) · [page-builder.md](page-builder.md)
 11. [database-and-migrations.md](database-and-migrations.md)
 12. [diagnostics.md](diagnostics.md) · [cli.md](cli.md) · [testing.md](testing.md)
-13. [deployment.md](deployment.md) · [mcp-multi-site.md](mcp-multi-site.md) · [recovery.md](recovery.md) · [security.md](security.md)
+13. [deployment.md](deployment.md) · [mcp-multi-site.md](mcp-multi-site.md) · [recovery.md](recovery.md) · [security.md](security.md) · [platform-fingerprint.md](platform-fingerprint.md)
 14. [extension-points.md](extension-points.md) · [content-import.md](content-import.md)
 15. Feature ownership: [modules/](modules/)
 

@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-08-13 — Hide PHP X-Powered-By leak on shared hosting
+
+- Strip X-Powered-By via RuntimeHardening, .user.ini expose_php=Off, and Apache Header unset + always unset
+- Do not re-set empty X-Powered-By (PHP-FPM was filling PHP/8.2.28)
+- Keep X-Jasefly: 1; document that Server nginx-reuseport is host-level and cannot be removed on Beget
+
+## 2026-08-13 — Public Jasefly platform fingerprint for CMS detectors
+
+- Public identity is X-Jasefly: 1 (X-Powered-By stays stripped to hide PHP/runtime versions)
+- HTML meta generator=Jasefly via SPA shell, SiteLayout, and prerender
+- GET /.well-known/jasefly returns {platform: Jasefly} only — no version, runtime, modules, or debug data
+- PHP and Node parity plus detector docs in docs/platform-fingerprint.md
+
 ## 2026-08-08 — Fix Admin CRUD: restore extractRelations/syncRelations stubs
 
 - AdminController: stub extractRelations/syncRelations so pages/navigation create-update no longer 500

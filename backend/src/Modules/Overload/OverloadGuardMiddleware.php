@@ -17,6 +17,7 @@ final class OverloadGuardMiddleware
         // Never sample/trip on health, webhooks, scheduler, or update pipeline.
         if (str_ends_with($r->path, '/health')
             || str_ends_with($r->path, '/payments/webhook')
+            || \App\Support\PlatformFingerprint::isWellKnownPath($r->path)
             || str_contains($r->path, '/system/scheduler/tick')
             || str_contains($r->path, '/system/update')
             || str_contains($r->path, '/admin/updates')) {

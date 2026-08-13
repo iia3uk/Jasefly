@@ -14,6 +14,8 @@ use App\Support\PublicOrigin;
 $adminSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Controllers/AdminController.php');
 assert_true(str_contains($adminSrc, 'requireContentMutation'), 'AdminController gates content mutations');
 assert_true(!str_contains($adminSrc, "'webhooks' => 'webhooks'"), 'AdminController no longer hardcodes webhooks resource map');
+assert_true(str_contains($adminSrc, 'function extractRelations'), 'AdminController keeps extractRelations hook (no fatal on pages save)');
+assert_true(str_contains($adminSrc, 'function syncRelations'), 'AdminController keeps syncRelations hook');
 
 $mwSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Middleware/PermissionMiddleware.php');
 assert_true(str_contains($mwSrc, 'requireContentMutation'), 'PermissionMiddleware gates content mutations');

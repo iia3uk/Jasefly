@@ -77,6 +77,28 @@ function main() {
   mustExist('mcp/mcp-tools.v1.json');
   mustExist('builder/widget-types.v1.json');
   mustExist('platform/api-snapshot.v1.json');
+  mustExist('platform-fingerprint.v1.json');
+
+  const fingerprint = readJson('platform-fingerprint.v1.json');
+  if (fingerprint) {
+    if (fingerprint.platform !== 'Jasefly') errors.push('fingerprint.platform must be Jasefly');
+    if (fingerprint.http?.header !== 'X-Jasefly' || fingerprint.http?.value !== '1') {
+      errors.push('fingerprint HTTP header must be X-Jasefly: 1');
+    }
+    if (fingerprint.http?.not_used !== 'X-Powered-By') {
+      errors.push('fingerprint must not use X-Powered-By');
+    }
+    if (fingerprint.html?.meta_name !== 'generator' || fingerprint.html?.meta_content !== 'Jasefly') {
+      errors.push('fingerprint HTML generator meta must be Jasefly');
+    }
+    if (fingerprint.well_known?.path !== '/.well-known/jasefly') {
+      errors.push('fingerprint well-known path mismatch');
+    }
+    const body = fingerprint.well_known?.body;
+    if (!body || body.platform !== 'Jasefly' || Object.keys(body).length !== 1) {
+      errors.push('fingerprint well-known body must be {platform:Jasefly} only');
+    }
+  }
 
   const modsDir = path.join(C, 'modules');
   const phpModules = new Set();

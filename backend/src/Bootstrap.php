@@ -109,6 +109,7 @@ final class Bootstrap
     public static function init(): array
     {
         self::registerAutoload();
+        \App\Support\RuntimeHardening::hidePhpFingerprint();
 
         // Secrets from config/.env (blocked from HTTP). Does not override real OS env.
         require_once __DIR__ . '/Support/EnvFile.php';

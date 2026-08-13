@@ -21,7 +21,7 @@ List security controls that exist in this codebase (not a marketing checklist).
 | MCP status | `SystemHealthService::mcpStatus` → `configured` / `signing_configured` / `auth_mode` / `ip_allowlist_enabled` (no secret fragments) |
 | Rate limits | Login/demo: 5 / 15m fail-closed (`RateLimitMiddleware`); others fail-open if table missing; `SoftRateLimitMiddleware` |
 | CSRF Origin | Global `OriginCheckMiddleware` in `public/index.php` (all modules); MCP Bearer exempt via `mcp_api_token` |
-| CORS / security headers | `CorsMiddleware`, `SecurityHeadersMiddleware` (strips `X-Powered-By`) |
+| CORS / security headers | `CorsMiddleware`, `SecurityHeadersMiddleware` + `RuntimeHardening` (strips `X-Powered-By`; public ID is `X-Jasefly: 1`) |
 | Upload MIME allowlist | `MediaService` — **SVG uploads banned** (422); legacy SVG stream = attachment + CSP; uploads `.htaccess` no PHP |
 | Package FE assets | `/modules/*` → `module-asset.php`; admin-only packs need staff cookie |
 | Encrypted backups | `BackupService` (`.sql.enc`) |
@@ -44,7 +44,8 @@ Regression suite: `SecurityVerificationTest` + `PentestHardeningTest` inside `ba
 | CSRF Origin not checked | Closed (global Origin allowlist on mutating `/admin/*`) | No Origin + non-MCP Bearer/CLI intentionally allowed; SameSite=Lax remains browser control |
 | Public admin module JS | Closed for known admin packs (`ai-content-optimizer`, `indexnow`) via gate | Other packs default public for public widgets; set `"public": false` in frontend-dist manifest |
 | Editor without TOTP | Recommend (`totp_recommended` + admin banner) | Hard enforce / lockout not default (avoids locking prod editors) |
-| `X-Powered-By` | Softened in API SecurityHeaders | nginx/PHP-FPM may still emit; host config out of app scope |
+| `X-Powered-By` | Closed (app + Apache + `.user.ini`) | Residual only if the **front nginx** ignores Apache `Header unset` *and* PHP `expose_php` is forced On at the host panel. Do not set `X-Powered-By: Jasefly`. See [platform-fingerprint.md](platform-fingerprint.md) |
+| `Server` (nginx-reuseport/…) | Out of app scope on shared hosting | Front nginx is the host's reverse proxy (e.g. Beget). PHP/Node cannot unset it. Do not fake a `Server` header from the app. VPS operators: [deployment.md](deployment.md#server-header-nginx) |
 
 ### Secrets locations
 
@@ -66,6 +67,7 @@ Not a single flow — controls apply at login, middleware, outbound HTTP, media 
 - `backend/src/Support/OutboundHttp.php`
 - `backend/src/Support/SecretRedactor.php`
 - `backend/src/Support/McpRequestAuth.php`
+- `backend/src/Support/RuntimeHardening.php`
 - `backend/src/Middleware/*`
 - `backend/tests/SecurityVerificationTest.php`
 - `backend/tests/McpRequestAuthTest.php`

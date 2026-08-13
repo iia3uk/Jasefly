@@ -10,6 +10,11 @@ declare(strict_types=1);
  * Admins: System → Last error (authenticated).
  */
 
+@ini_set('expose_php', '0');
+if (function_exists('header_remove')) {
+    header_remove('X-Powered-By');
+}
+
 function portfolio_wants_debug(): bool
 {
     // Autoload may not be ready during very early fatals — keep a local fallback.
@@ -147,6 +152,8 @@ $router->middleware(new \App\Middleware\OriginCheckMiddleware($app));
 foreach ($registry->globalMiddleware() as $mw) {
     $router->middleware($mw);
 }
+
+\App\Support\PlatformFingerprint::register($router);
 
 $versions = $app['api']['versions'] ?? ['/api/v1', '/api'];
 foreach ($versions as $prefix) {

@@ -237,6 +237,14 @@ function uploadsHtaccess() {
   ].join('\n');
 }
 
+function exposePhpOffUserIni() {
+  return [
+    '; Hide PHP version from X-Powered-By (CGI / PHP-FPM). Apache Header unset is the other half.',
+    'expose_php = Off',
+    '',
+  ].join('\n');
+}
+
 function publicApiHtaccess() {
   return [
     'Options -Indexes',
@@ -254,6 +262,9 @@ function publicApiHtaccess() {
     'RewriteCond %{REQUEST_FILENAME} !-d',
     'RewriteRule ^ index.php [QSA,L]',
     '<IfModule mod_headers.c>',
+    '  Header unset X-Powered-By',
+    '  Header always unset X-Powered-By',
+    '  Header always set X-Jasefly "1"',
     '  Header always set X-Content-Type-Options "nosniff"',
     '  Header always set X-Frame-Options "DENY"',
     '  Header always set Referrer-Policy "strict-origin-when-cross-origin"',
@@ -357,6 +368,9 @@ function rootHtaccess() {
     'RewriteCond %{REQUEST_URI} !^/api/public/',
     'RewriteRule ^api(?:/.*)?$ api/public/index.php [QSA,L]',
     '',
+    '# Public platform fingerprint (CMS detectors). JSON, never SPA/prerender HTML.',
+    'RewriteRule ^\\.well-known/jasefly$ index.php [QSA,L]',
+    '',
     '# SEO: sitemap & robots at site root',
     'RewriteRule ^sitemap\\.xml$ prerender.php?path=/sitemap.xml [L,QSA]',
     'RewriteRule ^robots\\.txt$ prerender.php?path=/robots.txt [L,QSA]',
@@ -370,6 +384,7 @@ function rootHtaccess() {
     'RewriteCond %{REQUEST_URI} !^/prerender\\.php',
     'RewriteCond %{REQUEST_URI} !^/index\\.php',
     'RewriteCond %{REQUEST_URI} !^/admin',
+    'RewriteCond %{REQUEST_URI} !^/\\.well-known/',
     // Exclude static .html (Yandex/Google webmaster verification at site root)
     'RewriteCond %{REQUEST_URI} !\\.(js|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|map|txt|xml|html)$ [NC]',
     'RewriteCond %{HTTP_USER_AGENT} (googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegrambot|discordbot|applebot|petalbot|semrushbot|ahrefsbot|mj12bot|dotbot|bytespider|gptbot|claudebot|google-inspectiontool|chrome-lighthouse|beget|site-?analyzer|screaming\\ frog|serpstat|megaindex|crawler|spider|preview|httpclient|python-requests) [NC]',
@@ -379,6 +394,7 @@ function rootHtaccess() {
     'RewriteCond %{REQUEST_URI} !^/api/',
     'RewriteCond %{REQUEST_URI} !^/prerender\\.php',
     'RewriteCond %{REQUEST_URI} !^/index\\.php',
+    'RewriteCond %{REQUEST_URI} !^/\\.well-known/',
     'RewriteCond %{REQUEST_URI} !\\.(js|css|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|map)$ [NC]',
     'RewriteRule ^(.*)$ prerender.php?path=/$1&prerender=1 [L,QSA]',
     '',
@@ -402,7 +418,9 @@ function rootHtaccess() {
     '</IfModule>',
     '',
     '<IfModule mod_headers.c>',
+    '  Header unset X-Powered-By',
     '  Header always unset X-Powered-By',
+    '  Header always set X-Jasefly "1"',
     '  Header always set X-Content-Type-Options "nosniff"',
     '  Header always set Referrer-Policy "strict-origin-when-cross-origin"',
     '  Header always set X-Frame-Options "SAMEORIGIN"',
@@ -851,6 +869,7 @@ function copyBackend(mode) {
 
   writeFile(path.join(dest, '.htaccess'), apiRootHtaccess());
   writeFile(path.join(dest, 'public', '.htaccess'), publicApiHtaccess());
+  writeFile(path.join(dest, 'public', '.user.ini'), exposePhpOffUserIni());
   writeFile(path.join(dest, 'config', '.htaccess'), denyHtaccess());
   writeFile(path.join(dest, 'src', '.htaccess'), denyHtaccess());
   writeFile(path.join(dest, 'migrations', '.htaccess'), denyHtaccess());
@@ -904,6 +923,7 @@ function copyFrontendDist() {
   writeFile(path.join(PUBLIC_HTML, 'index.php'), rootIndexPhp());
   // Our generated root htaccess replaces any SPA-only dist one
   writeFile(path.join(PUBLIC_HTML, '.htaccess'), rootHtaccess());
+  writeFile(path.join(PUBLIC_HTML, '.user.ini'), exposePhpOffUserIni());
   say(TAG.ok, 'Frontend dist copied');
 }
 
@@ -972,6 +992,12 @@ try {
         $path = '/';
     }
 
+    \\App\\Support\\RuntimeHardening::hidePhpFingerprint();
+
+    if (\\App\\Support\\PlatformFingerprint::isWellKnownPath(\$path)) {
+        \\App\\Support\\PlatformFingerprint::sendWellKnown();
+    }
+
     $force = (isset($_GET['prerender']) && (string) $_GET['prerender'] === '1')
         || isset($_GET['_escaped_fragment_']);
     $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
@@ -1000,6 +1026,7 @@ try {
             http_response_code((int) ($result['status'] ?? 200));
             header('Content-Type: text/html; charset=utf-8');
             $sendCacheHeaders($svc, $path);
+            \\App\\Support\\PlatformFingerprint::applyResponseHeaders();
             header('X-Prerender: ' . (!empty($result['cached']) ? 'cache' : 'fresh'));
             header('X-Robots-Tag: all');
             echo (string) ($result['html'] ?? '');
@@ -1025,6 +1052,7 @@ try {
     $html = (string) file_get_contents($spa);
     header('Content-Type: text/html; charset=utf-8');
     $sendCacheHeaders($svc, $path);
+    \\App\\Support\\PlatformFingerprint::applyResponseHeaders();
     header('X-Jasefly-Shell: enriched');
     echo $svc->enrichSpaHtml($html, $path);
     exit;

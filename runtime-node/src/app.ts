@@ -15,6 +15,10 @@ import { registerAllModules } from './modules/registerAll.js';
 import { PackageLoader } from './packages/PackageLoader.js';
 import { registerModuleAssetRoutes } from './packages/ModuleAssets.js';
 import { syncPackageSources } from './packages/PackageSourceSync.js';
+import {
+  platformFingerprintMiddleware,
+  registerPlatformFingerprint,
+} from './support/platformFingerprint.js';
 
 type Vars = {
   Variables: {
@@ -50,6 +54,9 @@ export async function createApp(db: Database, cfg: AppConfig) {
       credentials: true,
     }),
   );
+
+  app.use('*', platformFingerprintMiddleware());
+  registerPlatformFingerprint(app);
 
   for (const p of prefixes) {
     app.get(`${p}/health`, (c) => healthHandler(c));

@@ -103,6 +103,32 @@ As above; output under `release/`. Hosting layout docs emitted beside ZIP when b
 - Committing `.env` / `config.local.php`.
 - Skipping Ctrl+F5 after deploy (hashed SPA assets).
 
+## Server header (nginx)
+
+The `Server` response header is **not** an application fingerprint. Jasefly never sets it and must not fake one.
+
+| Environment | Who emits `Server` | What Jasefly can do |
+| --- | --- | --- |
+| PHP shared hosting (Beget and similar) | Front nginx (`nginx-reuseport/…`) in front of Apache/PHP-FPM | **Nothing safe.** No nginx config access. Do not send a dummy `Server` from PHP — it will not replace the proxy header and only adds noise. |
+| Node VPS (operator-managed reverse proxy) | Your nginx/Caddy in front of Hono | Hide version with the proxy config below. |
+
+Recommended nginx (Node VPS / any host you control):
+
+```nginx
+server_tokens off;
+# optional, needs headers-more-nginx-module:
+# more_clear_headers Server;
+```
+
+If PHP-FPM is ever behind the same proxy, also:
+
+```nginx
+fastcgi_hide_header X-Powered-By;
+proxy_hide_header X-Powered-By;
+```
+
+Jasefly already strips `X-Powered-By` in PHP (`RuntimeHardening` + `.user.ini` + Apache unset) and does not emit it from Node. Public identity remains `X-Jasefly: 1`.
+
 ## Extension points
 
 - Extend verify checks in `verify.js`.

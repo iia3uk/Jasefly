@@ -251,6 +251,9 @@ require_once "$root/tests/OperationIntegrityTest.php";
 echo "Router / core\n";
 require_once "$root/tests/RouterTest.php";
 
+echo "Platform fingerprint\n";
+require_once "$root/tests/PlatformFingerprintTest.php";
+
 // вЂ”вЂ” Contract governance (API / caps / services / perms / events / MCP) вЂ”вЂ”
 echo "Contract governance\n";
 require_once "$root/tests/ContractGovernanceTest.php";

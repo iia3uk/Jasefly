@@ -21,6 +21,7 @@ Behavioral parity (covered baseline): **28/28** modules · **879/879** cases —
 | `builder/` | Widget type freeze |
 | `platform/` | Platform SDK API snapshot |
 | `baseline/` | Route inventories (PHP / Node) |
+| `platform-fingerprint.v1.json` | Public CMS-detector signals (`X-Jasefly`, generator meta, `/.well-known/jasefly`) |
 
 ## Rules
 

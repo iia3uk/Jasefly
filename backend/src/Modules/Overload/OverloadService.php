@@ -277,6 +277,10 @@ final class OverloadService
         if (!self::pluginEnabled($db)) {
             return;
         }
+        $reqPath = parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
+        if (is_string($reqPath) && \App\Support\PlatformFingerprint::isWellKnownPath($reqPath)) {
+            return;
+        }
         $settings = self::loadSettings($db);
         $storage = (string) ($app['storage'] ?? dirname(__DIR__, 3) . '/storage');
         $svc = new self($db, $settings, $storage, $app);

@@ -7,6 +7,7 @@ declare(strict_types=1);
 $apiRoot = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'backend';
 require_once $apiRoot . '/src/Bootstrap.php';
 \App\Bootstrap::registerAutoload();
+\App\Support\RuntimeHardening::hidePhpFingerprint();
 
 $dbPath = getenv('BEHAVIOR_PHP_DB') ?: '';
 $storage = getenv('BEHAVIOR_PHP_STORAGE') ?: ($apiRoot . '/storage');
@@ -41,6 +42,7 @@ use App\Router;
 use App\Request;
 use App\Middleware\CorsMiddleware;
 use App\Middleware\SecurityHeadersMiddleware;
+use App\Support\PlatformFingerprint;
 
 $ref = new ReflectionClass(Database::class);
 if ($ref->hasProperty('instance')) {
@@ -87,6 +89,7 @@ $router->middleware(new SecurityHeadersMiddleware());
 foreach ($registry->globalMiddleware() as $mw) {
     $router->middleware($mw);
 }
+PlatformFingerprint::register($router);
 foreach (['/api/v1', '/api'] as $prefix) {
     $registry->registerRoutes($router, $prefix);
 }

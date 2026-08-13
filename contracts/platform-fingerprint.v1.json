@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "platform-fingerprint",
+  "platform": "Jasefly",
+  "http": {
+    "header": "X-Jasefly",
+    "value": "1",
+    "not_used": "X-Powered-By",
+    "notes": "Jasefly strips X-Powered-By to hide PHP/runtime versions (SecurityHeadersMiddleware + Apache Header always unset). Public identification uses the dedicated X-Jasefly header instead."
+  },
+  "html": {
+    "meta_name": "generator",
+    "meta_content": "Jasefly"
+  },
+  "well_known": {
+    "path": "/.well-known/jasefly",
+    "method": "GET",
+    "status": 200,
+    "content_type": "application/json",
+    "body": {
+      "platform": "Jasefly"
+    },
+    "forbidden_keys": [
+      "version",
+      "runtime",
+      "modules",
+      "env",
+      "environment",
+      "debug",
+      "php",
+      "node",
+      "paths",
+      "path",
+      "config",
+      "modules_list",
+      "security"
+    ]
+  },
+  "detection_rules": [
+    "HTTP response header X-Jasefly equals 1 (any public URL, including / and API)",
+    "HTML <head> contains <meta name=\"generator\" content=\"Jasefly\">",
+    "GET /.well-known/jasefly returns JSON {\"platform\":\"Jasefly\"} with no extra identity keys",
+    "Do not match WordPress, Drupal, Joomla, or other CMS signatures",
+    "Any one of the three signals is sufficient; two or more is high confidence"
+  ]
+}

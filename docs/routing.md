@@ -21,6 +21,8 @@ Modules call `$router->get/post/…` during `ModuleRegistry::registerRoutes`. Th
 4. Middleware list = `array_merge(global, route)`; chain built with `array_reverse` so first-registered runs first.
 5. Handler receives `Request` and path params; typically exits via `Response::json` / `Response::error`.
 
+Host (not API-prefixed) public identity: `GET /.well-known/jasefly` is registered once via `PlatformFingerprint::register($router)` in `public/index.php` / behavior `php-router.php`, and on Node via `registerPlatformFingerprint(app)`. See [platform-fingerprint.md](platform-fingerprint.md).
+
 ## Key components
 
 | Component | Role |

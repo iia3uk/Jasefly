@@ -137,6 +137,7 @@
 | Диагностика модулей (load fail / safe-mode) | `ModuleRegistry::loadFailures`, `ModuleSafeMode`, `SystemHealthService` → `/admin/system` (`EnterprisePages.tsx`) |
 | Целостность ops (snapshot/migrate/schedule/content pack) | `ModulePackageService` + `ModuleSnapshotService` + `PageScheduleService` + `ContentPackImporter` / `import-content.php --confirm` |
 | Router 404/405 / CORS OPTIONS / RateLimit | `backend/src/Router.php`, `Request.php`, `public/index.php`, `Middleware/RateLimitMiddleware.php` |
+| CMS detector / platform fingerprint | `Support/PlatformFingerprint.php` + `runtime-node/src/support/platformFingerprint.ts`; HTML: `SiteLayout` + `frontend/index.html` + `PrerenderService`; Apache: `scripts/build-hosting.js` `rootHtaccess`; hide PHP version: `Support/RuntimeHardening.php` + `.user.ini` `expose_php=Off`; docs `docs/platform-fingerprint.md` |
 | `/api/v1/projects` 404 при выкл. Projects | public GET на ZIP `modules-src/projects` через `$ctx->resources()`; FE gate = `projects` (Portfolio = deprecated composition only) |
 | `/api/v1/admin/projects` при выкл. Projects | Design B: package `registersRoutesWhenDisabled`; GET list `[]`, GET item 404; mutations fail when resource unregistered |
 | `/admin/{resource}` 404 при выкл. плагине | `ADMIN_RESOURCE_PLUGINS` + `useAdminResourceEnabled`; `adminList`/`adminGet` silent 404→[]; Dashboard `contentHealth` gated; PluginsPage re-sync `setPluginStates` |
@@ -311,7 +312,7 @@ portfolio/
 | Публичный bootstrap | `Controllers/PublicController.php` |
 | Конфиг | `backend/config/app.php`, `config.local.php`, `.env` |
 | Установка/миграции CLI | `backend/migrate.php`, `install.php` (`--password=` / `admin_password`, min 12; без дефолта) |
-| Production hardening (debug/headers/secrets) | `ErrorReportService::shouldExposeDetails` (только `.show_errors` / APP_ENV local\|dev\|test); `SecurityHeadersMiddleware` (CSP/HSTS/COOP/CORP); `Bootstrap` empty JWT in production; uploads `MediaService` + `build-hosting` `.htaccess` |
+| Production hardening (debug/headers/secrets) | `ErrorReportService::shouldExposeDetails` (только `.show_errors` / APP_ENV local\|dev\|test); `SecurityHeadersMiddleware` (CSP/HSTS/COOP/CORP) + `RuntimeHardening` (strips `X-Powered-By`, never re-set); `.user.ini` `expose_php=Off`; Apache `Header unset` + `always unset`; public fingerprint `X-Jasefly: 1` + `/.well-known/jasefly` + meta generator — `Support/PlatformFingerprint` · `runtime-node/src/support/platformFingerprint.ts` · `docs/platform-fingerprint.md`; `Server` nginx — out of app scope on shared (`docs/deployment.md`); `Bootstrap` empty JWT in production; uploads `MediaService` + `build-hosting` `.htaccess` |
 
 ---
 

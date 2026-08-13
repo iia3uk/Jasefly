@@ -20,6 +20,7 @@ import { allowsConsentCategory } from '@/platform/consentBridge'
 import { SiteBreadcrumbs } from '@/components/layout/SiteBreadcrumbs'
 import { useContactInfo } from '@/hooks/useApi'
 import { withSiteNameSuffix } from '@/lib/seoTitle'
+import { PLATFORM_GENERATOR } from '@/lib/platformFingerprint'
 import sitePulse from '@/generated/sitePulse.json'
 
 function parseJson<T>(value: unknown, fallback: T): T {
@@ -469,6 +470,9 @@ export function SiteLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
+      <Helmet>
+        <meta name="generator" content={PLATFORM_GENERATOR} />
+      </Helmet>
       <ThemeApplier />
       <SiteTemplateInjector />
       <AdminBar />

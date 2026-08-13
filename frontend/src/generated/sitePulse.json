@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-11T18:12:39.148Z",
-  "version": "backup-before-author-rewrite-35-gb0d971f",
-  "commit": "b0d971f",
+  "generated_at": "2026-08-13T20:35:03.162Z",
+  "version": "backup-before-author-rewrite-36-g89e9c36",
+  "commit": "89e9c36",
   "metrics": {
-    "files": 11529,
-    "php_classes": 265,
+    "files": 11541,
+    "php_classes": 267,
     "builder_widgets": 68,
     "rest_routes_core": 63,
     "sdk_interfaces": 29,
-    "git_commits": 127,
+    "git_commits": 128,
     "repo_size_mb": 30.5,
     "core_modules": 15,
     "package_scaffolds": 10
@@ -19,6 +19,11 @@
     "latest_tag": "backup-before-author-rewrite",
     "latest_commit_date": "2026-08-11",
     "commits": [
+      {
+        "hash": "89e9c36",
+        "date": "2026-08-11",
+        "subject": "chore: refresh sitePulse after https gate commit"
+      },
       {
         "hash": "b0d971f",
         "date": "2026-08-11",
@@ -38,11 +43,6 @@
         "hash": "0a32015",
         "date": "2026-08-08",
         "subject": "fix(admin): restore analytics UTF-8, dashboard pulse, broken package labels"
-      },
-      {
-        "hash": "e3ca1b5",
-        "date": "2026-08-08",
-        "subject": "fix(behavior): align POST /admin/projects/reorder to 405"
       }
     ]
   }

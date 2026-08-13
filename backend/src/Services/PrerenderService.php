@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Database;
+use App\Support\PlatformFingerprint;
 use App\Utils\HtmlSanitizer;
 
 /**
@@ -110,6 +111,7 @@ final class PrerenderService
         }
 
         $meta = [];
+        $meta[] = PlatformFingerprint::generatorMetaTag();
         $meta[] = '<meta name="description" content="' . $descEsc . '">';
         if ($canonical !== '') {
             $meta[] = '<link rel="canonical" href="' . $canonEsc . '">';
@@ -142,7 +144,8 @@ final class PrerenderService
         }
         $block = implode("\n", $meta) . "\n";
 
-        // Drop stale description / og from the static shell, then inject fresh tags.
+        // Drop stale description / og / generator from the static shell, then inject fresh tags.
+        $html = preg_replace('/<meta\s+name=["\']generator["\'][^>]*>\s*/i', '', $html) ?? $html;
         $html = preg_replace('/<meta\s+name=["\']description["\'][^>]*>\s*/i', '', $html) ?? $html;
         $html = preg_replace('/<meta\s+property=["\']og:[^"\']+["\'][^>]*>\s*/i', '', $html) ?? $html;
         $html = preg_replace('/<meta\s+name=["\']twitter:[^"\']+["\'][^>]*>\s*/i', '', $html) ?? $html;
@@ -1083,6 +1086,7 @@ final class PrerenderService
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="Jasefly">
 <meta name="HandheldFriendly" content="true">
 <meta name="MobileOptimized" content="width">
 <title>{$titleEsc}</title>
