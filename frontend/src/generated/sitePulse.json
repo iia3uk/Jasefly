@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-13T20:35:03.162Z",
-  "version": "backup-before-author-rewrite-36-g89e9c36",
-  "commit": "89e9c36",
+  "generated_at": "2026-08-13T20:42:49.025Z",
+  "version": "backup-before-author-rewrite-37-ga843c08",
+  "commit": "a843c08",
   "metrics": {
     "files": 11541,
     "php_classes": 267,
     "builder_widgets": 68,
     "rest_routes_core": 63,
     "sdk_interfaces": 29,
-    "git_commits": 128,
+    "git_commits": 129,
     "repo_size_mb": 30.5,
     "core_modules": 15,
     "package_scaffolds": 10
@@ -17,8 +17,13 @@
     "repo": "iia3uk/jasefly",
     "url": "https://github.com/iia3uk/jasefly",
     "latest_tag": "backup-before-author-rewrite",
-    "latest_commit_date": "2026-08-11",
+    "latest_commit_date": "2026-08-13",
     "commits": [
+      {
+        "hash": "a843c08",
+        "date": "2026-08-13",
+        "subject": "feat(security): identify Jasefly without leaking PHP runtime"
+      },
       {
         "hash": "89e9c36",
         "date": "2026-08-11",
@@ -38,11 +43,6 @@
         "hash": "364297c",
         "date": "2026-08-09",
         "subject": "fix(admin): stub extractRelations/syncRelations for host CRUD"
-      },
-      {
-        "hash": "0a32015",
-        "date": "2026-08-08",
-        "subject": "fix(admin): restore analytics UTF-8, dashboard pulse, broken package labels"
       }
     ]
   }
