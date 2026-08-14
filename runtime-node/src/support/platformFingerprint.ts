@@ -31,7 +31,7 @@ export function platformFingerprintMiddleware(): MiddlewareHandler {
   };
 }
 
-export function registerPlatformFingerprint(app: Hono): void {
+export function registerPlatformFingerprint(app: Hono<any>): void {
   app.get(PLATFORM_FINGERPRINT.wellKnownPath, (c) => {
     c.header('Cache-Control', 'public, max-age=86400, must-revalidate');
     c.header('X-Content-Type-Options', 'nosniff');
